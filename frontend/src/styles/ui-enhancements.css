@@ -1,0 +1,290 @@
+/* Global UI enhancement styles */
+
+/* Page transitions and layouts */
+.page-header {
+  margin-bottom: 2rem;
+  text-align: center;
+  padding: 1rem 0 2rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, var(--color-primary), #4a90e2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.page-description {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Enhanced card styles */
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Enhanced button styles with gradients */
+.btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #4a90e2 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(46, 31, 94, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(46, 31, 94, 0.3);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary, #2E1F5E);
+  color: var(--color-primary, #2E1F5E);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(46, 31, 94, 0.05);
+  transform: translateY(-2px);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #ff8e8e 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+}
+
+.btn-accent:hover {
+  box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Button row for aligned buttons */
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Call-to-action button for consistent styling */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-primary, #2E1F5E);
+  color: white;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(46, 31, 94, 0.2);
+}
+
+.cta-button:hover, 
+.cta-button:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(46, 31, 94, 0.3);
+  color: white;
+}
+
+.cta-button .cta-icon {
+  margin-left: 8px;
+}
+
+/* Form enhancements */
+.form-control {
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 31, 94, 0.15);
+  outline: none;
+}
+
+/* Labels with gradient */
+label.gradient-label {
+  font-weight: 600;
+  background: linear-gradient(90deg, var(--color-primary), #4a90e2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* Loading indicators */
+.loading-container {
+  text-align: center;
+  padding: 3rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(46, 31, 94, 0.1);
+  border-top-color: var(--color-primary);
+  animation: spinner 1.2s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-success {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+}
+
+.badge-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.badge-info {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
+/* Tables with hover effects */
+.table-enhanced {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-enhanced th {
+  background: linear-gradient(90deg, var(--color-primary), #4a90e2);
+  color: white;
+  padding: 1rem;
+  text-align: left;
+}
+
+.table-enhanced td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table-enhanced tr {
+  transition: all 0.2s ease;
+}
+
+.table-enhanced tr:hover {
+  background-color: rgba(46, 31, 94, 0.03);
+}
+
+/* Tooltip component */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Add media queries for responsive behavior */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1.2rem;
+  }
+  
+  .card-header, .card-body, .card-footer {
+    padding: 1rem;
+  }
+}

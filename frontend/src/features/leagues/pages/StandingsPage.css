@@ -1,0 +1,169 @@
+/* StandingsPage specific styles */
+
+.standings-page {
+  font-family: 'Roboto', sans-serif;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.standings-container {
+  width: 100%;
+}
+
+.standings-table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  background: white;
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* League selector */
+.league-selector {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.league-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 280px;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+/* Standings legend */
+.standings-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-color.promotion {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+
+.legend-color.relegation {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+/* Standings table */
+.standings-table {
+  width: 100%;
+  background-color: white;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Position badges */
+.position-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.position-badge.champion {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+  box-shadow: 0 2px 5px rgba(255, 215, 0, 0.5);
+}
+
+.position-badge.promotion {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  color: white;
+}
+
+.position-badge.relegation {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+/* Row hover effects */
+.table-enhanced tr:hover {
+  background-color: rgba(46, 31, 94, 0.03) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+/* Special styling for top teams */
+.top-team td:first-child {
+  position: relative;
+}
+
+.top-team td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: var(--color-accent);
+}
+
+/* Add animation for row entry */
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .standings-table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .table-enhanced {
+    min-width: 700px;
+  }
+
+  .standings-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .standings-page {
+    padding: 1rem;
+  }
+}

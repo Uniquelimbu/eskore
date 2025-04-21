@@ -1,0 +1,58 @@
+/* Modern CSS Reset with Theme Support */
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin and padding */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.6;
+  font-family: var(--fontPrimary);
+  background-color: var(--backgroundColor);
+  color: var(--textColor);
+}
+
+/* Theme-specific body styling */
+body.theme-light {
+  background-color: #ffffff;
+  color: #222729;
+}
+
+body.theme-athlete {
+  background-color: #222729;
+  color: #ffffff;
+}
+
+/* Apply theming to commonly used elements */
+a {
+  color: var(--primaryColor);
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--fontPrimary);
+}
+
+/* ...other reset styles... */

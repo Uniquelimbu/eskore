@@ -1,0 +1,171 @@
+/* LeaguesPage Styling */
+.leagues-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.leagues-container {
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.page-description {
+  max-width: 700px;
+  margin: 0.5rem auto 0;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Search Bar */
+.search-bar-container {
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 25px;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 15px rgba(46, 31, 94, 0.15);
+}
+
+/* Leagues Grid */
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.league-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  overflow: hidden;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.league-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.league-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.league-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.league-country {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.league-teams {
+  font-size: 0.8rem;
+  background-color: #f5f5f5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  margin-bottom: 1rem;
+}
+
+.league-actions {
+  margin-top: auto;
+}
+
+.view-standings {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.league-card:hover .view-standings {
+  text-decoration: underline;
+}
+
+/* Loading State */
+.loading-container {
+  text-align: center;
+  padding: 3rem;
+  grid-column: 1 / -1;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(46, 31, 94, 0.1);
+  border-top-color: var(--color-primary);
+  animation: spinner 1.2s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.no-leagues-message {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .leagues-page {
+    padding: 1rem;
+  }
+  
+  .leagues-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .page-description {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+}

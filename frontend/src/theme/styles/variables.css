@@ -1,0 +1,66 @@
+:root {
+  /* Base theme variables (light theme) */
+  --backgroundColor: #ffffff;
+  --textColor: #222729;
+  --cardBackground: #ffffff;
+  --primaryColor: #2E1F5E; 
+  --accentColor: #FF6B6B;
+  --borderColor: #eaeaea;
+  
+  /* Font settings */
+  --fontPrimary: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Sizes */
+  --sidebarWidth: 220px;
+  --headerHeight: 70px;
+  --containerWidth: 1200px;
+  
+  /* Common values */
+  --borderRadius: 10px;
+  --boxShadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  
+  /* Primary colors */
+  --color-primary: #2E1F5E;
+  --color-primary-darker: #231748;
+  --color-primary-light: #ECEAF5;
+  
+  /* Secondary colors */
+  --color-secondary: #4a90e2;
+  --color-accent: #FF6B6B;
+  
+  /* Text colors */
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  
+  /* Background colors */
+  --color-background-main: #f7f8fa;
+  --color-background-card: #ffffff;
+  --color-background-light: #f1f1f1;
+  
+  /* Border colors */
+  --color-border: #e0e0e0;
+  --color-border-light: #f0f0f0;
+  
+  /* Status colors */
+  --color-success: #28a745;
+  --color-info: #17a2b8;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  
+  /* Other UI variables */
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  
+  /* Athlete theme variables */
+  --athlete-background: #222729;
+  --athlete-sidebar-width: 240px;
+}
+
+/* Media query variables */
+@media (max-width: 768px) {
+  :root {
+    --sidebarWidth: 0px;
+    --headerHeight: 60px;
+  }
+}

@@ -1,0 +1,204 @@
+.stats-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.page-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+/* Loading state */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Key Stats Grid */
+.stats-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: var(--color-background-card);
+  border-radius: 10px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-name {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* Stats sections */
+.stats-section {
+  background-color: var(--color-background-card);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.stats-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  color: var(--color-text-primary);
+}
+
+/* Performance metrics */
+.performance-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.metric-name {
+  width: 100px;
+  font-weight: 500;
+}
+
+.metric-bar-container {
+  flex: 1;
+  height: 10px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.metric-bar {
+  height: 100%;
+  border-radius: 5px;
+}
+
+.metric-value {
+  width: 30px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Performance table */
+.performance-table-container {
+  overflow-x: auto;
+}
+
+.performance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.performance-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-background-light);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.performance-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.rating-badge {
+  display: inline-block;
+  color: white;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+  min-width: 36px;
+}
+
+/* Season chart */
+.season-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 200px;
+  margin-top: 2rem;
+}
+
+.chart-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+}
+
+.chart-bar {
+  width: 40px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.bar-value {
+  position: absolute;
+  top: -20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bar-label {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stats-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .metric-name {
+    width: 80px;
+  }
+  
+  .chart-bar-container {
+    width: 30px;
+  }
+  
+  .chart-bar {
+    width: 30px;
+  }
+}

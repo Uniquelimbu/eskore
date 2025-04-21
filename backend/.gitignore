@@ -1,0 +1,36 @@
+# Environment variables
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build files
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage directory used by testing tools
+coverage/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo

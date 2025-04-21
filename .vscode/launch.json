@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Backend Server",
+      "program": "${workspaceFolder}/backend/server.js",
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "DEBUG": "express:*,auth:*"
+      }
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Backend",
+      "port": 9229,
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Debug Frontend in Edge",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/src/*"
+      }
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Frontend in Chrome",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/src/*"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Auth Setup",
+      "program": "${workspaceFolder}/backend/scripts/debugAuth.js",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Auth Data",
+      "program": "${workspaceFolder}/backend/scripts/debugAuthData.js",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Current File",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack: Backend + Frontend",
+      "configurations": ["Debug Backend Server", "Debug Frontend in Chrome"]
+    }
+  ]
+}

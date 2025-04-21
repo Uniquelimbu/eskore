@@ -1,0 +1,292 @@
+/* Settings Page Styling */
+.settings-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.settings-container {
+  width: 100%;
+}
+
+/* Settings Layout */
+.settings-layout {
+  display: flex;
+  gap: 2rem;
+}
+
+/* Settings Sidebar */
+.settings-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  height: fit-content;
+}
+
+.settings-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.settings-nav button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-nav button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-primary);
+}
+
+.settings-nav button.active {
+  background-color: rgba(46, 31, 94, 0.1);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.settings-nav button svg {
+  color: #666;
+}
+
+.settings-nav button.active svg {
+  color: var(--color-primary);
+}
+
+/* Settings Content */
+.settings-content {
+  flex: 1;
+}
+
+.settings-section {
+  padding-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--color-primary);
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+/* Settings Groups */
+.settings-group {
+  margin-bottom: 2rem;
+}
+
+.settings-group h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* Setting Row */
+.setting-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.setting-info {
+  max-width: 70%;
+}
+
+.setting-info label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.setting-description {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+}
+
+/* Toggle Switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  margin-bottom: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--color-primary);
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px var(--color-primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Connected accounts section */
+.connected-accounts {
+  margin-bottom: 2rem;
+}
+
+/* Danger zone */
+.danger-zone {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1.5rem;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+/* Settings footer */
+.settings-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.save-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #28a745;
+  font-weight: 500;
+}
+
+.save-success svg {
+  color: #28a745;
+}
+
+.btn.loading {
+  position: relative;
+}
+
+.btn.loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  position: absolute;
+  right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 1rem;
+  }
+  
+  .settings-layout {
+    flex-direction: column;
+  }
+  
+  .settings-sidebar {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .settings-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .settings-nav button {
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .settings-nav button svg {
+    margin-right: 0;
+  }
+  
+  .setting-row {
+    flex-direction: column;
+  }
+  
+  .setting-info {
+    max-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .setting-control {
+    width: 100%;
+  }
+  
+  .setting-control select {
+    width: 100%;
+  }
+}

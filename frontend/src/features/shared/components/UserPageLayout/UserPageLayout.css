@@ -1,0 +1,59 @@
+/* Shared styles that apply to all user types but with variables for customization */
+
+.athlete-page-layout,
+.manager-page-layout,
+.team-page-layout {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.athlete-page-layout {
+  background-color: #222729;
+  color: white;
+}
+
+.manager-page-layout {
+  background-color: #1a2236;
+  color: white;
+}
+
+.team-page-layout {
+  background-color: #1f3341;
+  color: white;
+}
+
+/* Content containers */
+.athlete-page-content,
+.manager-page-content,
+.team-page-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Ensure proper spacing with sidebars */
+.main-content-with-sidebar .athlete-page-content,
+.main-content-with-sidebar .manager-page-content,
+.main-content-with-sidebar .team-page-content {
+  margin-left: 220px;
+  padding-left: 2rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .athlete-page-content,
+  .manager-page-content,
+  .team-page-content {
+    padding: 1rem;
+  }
+  
+  .main-content-with-sidebar .athlete-page-content,
+  .main-content-with-sidebar .manager-page-content,
+  .main-content-with-sidebar .team-page-content {
+    margin-left: 0;
+  }
+}

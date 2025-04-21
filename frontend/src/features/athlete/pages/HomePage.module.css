@@ -1,0 +1,241 @@
+/* Athlete dashboard styles now fully isolated with CSS Modules */
+
+.athleteDashboard {
+  width: 100%;
+  background-color: var(--backgroundColor);
+  color: var(--textColor);
+  font-family: var(--fontPrimary);
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboardHeader {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.dashboardHeader h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: var(--accentColor);
+}
+
+.lastLogin {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.dashboardContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.dashboardCard {
+  background-color: var(--cardBackground);
+  border-radius: var(--borderRadius);
+  box-shadow: var(--boxShadow);
+  padding: 1.5rem;
+  transition: transform 0.2s ease;
+  background: var(--color-background-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.dashboardCard:hover {
+  transform: translateY(-3px);
+}
+
+.welcomeSection {
+  margin-bottom: 2rem;
+}
+
+.welcomeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.welcomeHeader h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--color-text-primary);
+}
+
+.dashboardDate {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.cardHeader {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-text-primary);
+}
+
+.cardContent {
+  padding: 1rem;
+}
+
+.viewAllLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+/* Upcoming Matches Section */
+.upcomingMatch {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.upcomingMatch:last-child {
+  border-bottom: none;
+}
+
+.matchDate {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.matchTeams {
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.vs {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.matchVenue {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Stats Section */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.statItem {
+  text-align: center;
+  padding: 1rem 0.5rem;
+  background-color: var(--color-background-light);
+  border-radius: 8px;
+}
+
+.statValue {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Teams Section */
+.teamItem {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.teamItem:last-child {
+  border-bottom: none;
+}
+
+.teamLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 1rem;
+}
+
+.teamName {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.teamRole {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* Activity Feed */
+.activityFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+}
+
+.activityIcon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.activityText {
+  margin-bottom: 0.25rem;
+}
+
+.activityTime {
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcomeHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .welcomeHeader h1 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}

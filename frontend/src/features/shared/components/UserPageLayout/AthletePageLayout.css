@@ -1,0 +1,36 @@
+/* Ensure athlete styles don't leak to other components */
+.athlete-page-layout {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #222729; /* Dark theme for athlete pages */
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure styles are isolated from landing page */
+.athlete-page-layout .athlete-page-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: #222729; /* Keep dark background at all levels */
+}
+
+/* Ensure the page has proper spacing when used with our sidebar */
+.main-content-with-sidebar .athlete-page-content {
+  margin-left: 220px; /* Match sidebar width exactly */
+  padding-left: 2rem;
+}
+
+@media (max-width: 768px) {
+  .athlete-page-layout .athlete-page-content {
+    padding: 1rem;
+  }
+  
+  /* Adjust for mobile view */
+  .main-content-with-sidebar .athlete-page-content {
+    margin-left: 0; /* Remove margin on mobile */
+  }
+}

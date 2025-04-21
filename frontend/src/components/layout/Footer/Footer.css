@@ -1,0 +1,258 @@
+/* Footer Styles */
+.site-footer {
+  background-color: #2e1f5e;
+  color: #f8f9fa;
+  font-size: 0.95rem;
+  margin-top: auto;
+  width: 100%;
+  z-index: 10;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+}
+
+/* Footer Content */
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2.5rem;
+}
+
+/* Brand Section */
+.footer-brand {
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.footer-logo img {
+  height: 36px;
+  width: auto;
+  margin-right: 0.75rem;
+}
+
+.footer-logo span {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.company-description {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+/* Social Links */
+.social-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-links a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.social-links a:hover {
+  background-color: var(--color-accent, #FF6B6B);
+  transform: translateY(-3px);
+}
+
+/* Links Section */
+.footer-links {
+  min-width: 200px;
+}
+
+.footer-links h3, .footer-newsletter h3 {
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  position: relative;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer-links ul li a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links ul li a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+/* Newsletter Section */
+.footer-newsletter {
+  min-width: 250px;
+  max-width: 350px;
+}
+
+.newsletter-form .form-group {
+  display: flex;
+}
+
+.form-group input {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 4px 0 0 4px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+}
+
+.form-group input::placeholder {
+  color: #6c757d;
+}
+
+.form-group button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background-color: var(--color-accent, #FF6B6B);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 0 4px 4px 0;
+}
+
+.form-group button:hover {
+  background-color: #ff5252;
+}
+
+.subscription-success {
+  padding: 0.75rem 1rem;
+  background-color: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #10b981;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copyright {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.legal-links {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 1.5rem;
+}
+
+.legal-links li a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.legal-links li a:hover {
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .footer-brand, .footer-links, .footer-newsletter {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .legal-links {
+    justify-content: center;
+  }
+}
+
+/* Landing page specific footer styles */
+.landing-page .site-footer,
+.landing-page + .site-footer {
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 3rem;
+  margin-top: 0;
+  color: #333;
+}
+
+.landing-page .footer-logo span {
+  color: var(--color-primary, #2E1F5E);
+  font-weight: 700;
+}
+
+.landing-page .company-description {
+  color: #4a5568;
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+.landing-page .footer-links h3,
+.landing-page .footer-newsletter h3 {
+  color: var(--color-primary, #2E1F5E);
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.landing-page .site-footer a {
+  color: #4a5568;
+}
+
+.landing-page .site-footer a:hover {
+  color: var(--color-primary, #2E1F5E);
+  transition: color 0.2s ease;
+}
+
+.landing-page .newsletter-form .form-group {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}

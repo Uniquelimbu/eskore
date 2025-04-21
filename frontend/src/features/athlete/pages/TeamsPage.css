@@ -1,0 +1,336 @@
+.athlete-teams-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #222729;
+  font-weight: 700;
+}
+
+.section-title {
+  font-size: 1.4rem;
+  margin: 1.5rem 0;
+  color: #333;
+}
+
+/* Loading state */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--color-primary, #2E1F5E);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.empty-state {
+  background-color: white;
+  border-radius: 10px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state p {
+  color: #777;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Invitations section */
+.invitations-section {
+  margin-bottom: 2rem;
+}
+
+.invitations-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.invitation-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.invitation-info {
+  flex: 1;
+}
+
+.invitation-team {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.invitation-details {
+  color: #555;
+  margin-bottom: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.invitation-date {
+  color: #888;
+}
+
+.invitation-role {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.invitation-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-accept, .btn-reject {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-accept {
+  background-color: var(--color-primary, #2E1F5E);
+  color: white;
+}
+
+.btn-accept:hover {
+  background-color: var(--color-primary-darker, #231748);
+}
+
+.btn-reject {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ccc;
+}
+
+.btn-reject:hover {
+  background-color: #f5f5f5;
+}
+
+/* Teams grid */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.team-card {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.team-card:hover {
+  transform: translateY(-3px);
+}
+
+.team-header {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.team-logo-container {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.team-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.team-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: var(--color-primary-light, #ECEAF5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-primary, #2E1F5E);
+}
+
+.team-header-info {
+  flex: 1;
+}
+
+.team-name {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.team-details {
+  padding: 1rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.team-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.team-next-match {
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.team-next-match h4 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.next-match-details {
+  font-size: 0.9rem;
+}
+
+.match-date, .match-opponent, .match-location {
+  margin-bottom: 0.25rem;
+}
+
+.team-actions {
+  padding: 1rem 1.5rem;
+  text-align: center;
+}
+
+.btn-team-action {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--color-primary, #2E1F5E);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-team-action:hover {
+  background-color: var(--color-primary-darker, #231748);
+}
+
+.btn-primary {
+  padding: 0.75rem 2rem;
+  background-color: var(--color-primary, #2E1F5E);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-darker, #231748);
+}
+
+.find-teams-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.find-teams-section p {
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .invitation-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .invitation-info {
+    margin-bottom: 1rem;
+  }
+
+  .invitation-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
+}

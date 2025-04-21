@@ -1,0 +1,138 @@
+/* Rename from AthleteSidebar.css */
+/* Main Athlete Sidebar Styling */
+.athlete-sidebar {
+  background-color: #222729;
+  color: white;
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.sidebar-logo img {
+  height: 32px;
+  margin-right: 0.75rem;
+}
+
+/* Navigation Styling */
+.sidebar-nav {
+  flex: 1;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 0.5rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Make active items more prominent */
+.nav-link.active {
+  background-color: #FF6B6B;
+  color: white;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+  display: flex;
+}
+
+/* Footer with User Section */
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  background-color: #FF6B6B;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  margin: 0 0 0.25rem;
+  font-weight: 500;
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+.logout-button:hover {
+  color: white;
+}
+
+/* Responsive Styling */
+@media (max-width: 768px) {
+  .athlete-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .athlete-sidebar.sidebar-active {
+    transform: translateX(0);
+  }
+}
