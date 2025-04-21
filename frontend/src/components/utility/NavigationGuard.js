@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuth } from '../../features/auth/context/AuthContext'; // Corrected path
 
 /**
  * Navigation guard component to handle protected routes and redirects

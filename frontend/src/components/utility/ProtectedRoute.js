@@ -1,8 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../features/auth/context/AuthContext';
-import { ROLES } from '../constants';
-import LoadingSpinner from './feedback/LoadingSpinner';
+import { useAuth } from '../../features/auth/context/AuthContext'; // Corrected path
+import { ROLES } from '../../constants'; // Corrected path
+import LoadingSpinner from '../feedback/LoadingSpinner'; // Corrected path
 
 /**
  * A wrapper for routes that require authentication

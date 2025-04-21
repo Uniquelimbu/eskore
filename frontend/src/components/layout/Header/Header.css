@@ -99,6 +99,13 @@
   transition: font-size 0.3s ease;
 }
 
+/* Ensure the logo text always uses the primary color and is bold */
+.header-logo-text,
+.landing-page .header-logo-text {
+  color: var(--color-primary, #2E1F5E) !important;
+  font-weight: 700;
+}
+
 /* Right side actions */
 .header-right {
   display: flex;

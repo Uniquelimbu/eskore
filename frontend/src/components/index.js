@@ -11,7 +11,6 @@ import SidebarToggle from './layout/SidebarToggle/SidebarToggle';
 // Import utility components
 import ErrorBoundary from './ErrorBoundary/ErrorBoundary';
 import ProtectedRoute from './utility/ProtectedRoute';
-import NavigationGuard from './utility/NavigationGuard';
 
 // Import feedback components
 import LoadingFallback from './feedback/LoadingFallback';
@@ -35,7 +34,6 @@ export {
   // Utility Components
   ErrorBoundary,
   ProtectedRoute,
-  NavigationGuard,
   
   // Feedback Components
   LoadingFallback,
@@ -71,3 +69,6 @@ export {
   Chart,
   */
 };
+
+// If you need NavigationGuard as a named export, do this:
+export { NavigationGuard } from './utility/NavigationGuard';

@@ -71,22 +71,13 @@ const HomePage = () => {
         {/* Hero Image - App Mockup */}
         <div className={`hero-image ${heroActive ? 'active' : ''}`}>
           <div className="hero-image-wrapper">
-            {/* Replace with actual app screenshot when available */}
-            {/* <img 
-              src={appScreenshot} 
+            <img 
+              src={require('../assets/images/mockups/eskore-mockup.png')} // Use require for webpack to resolve
               alt="eSkore mobile app showing match statistics" 
-              className={`hero-mockup-image ${imageLoaded ? 'loaded' : ''}`}
+              className={`hero-mockup-image${imageLoaded ? ' loaded' : ''}`}
               onLoad={handleImageLoad}
-            /> */}
-            
-            {/* Placeholder until image is available */}
-            <div className="hero-image-placeholder">
-              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-            </div>
+              style={{ width: '100%', maxWidth: 420, borderRadius: 24, boxShadow: '0 8px 32px rgba(46,31,94,0.08)', background: '#fff', opacity: 1 }}
+            />
           </div>
         </div>
       </section>

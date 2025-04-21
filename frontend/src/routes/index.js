@@ -86,61 +86,61 @@ const routes = [
     path: '/profile',
     element: <ProfilePage />,
     public: false,    
-    roles: ['athlete', 'athlete_admin', 'manager', 'team', 'admin'],
+    roles: ['athlete', 'athlete_admin', 'manager', 'team'], // Removed 'admin'
   },
   {
     path: '/settings',
     element: <SettingsPage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'manager', 'team', 'admin'],
+    roles: ['athlete', 'athlete_admin', 'manager', 'team'], // Removed 'admin'
   },
   // Athlete routes
   {
     path: '/athlete',
     element: <Navigate to="/athlete/home" replace />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
   },
   {
     path: '/athlete/home',
     element: <AthleteHomePage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   {
     path: '/athlete/profile',
     element: <AthleteProfilePage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   {
     path: '/athlete/stats',
     element: <AthleteStatsPage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   {
     path: '/athlete/matches',
     element: <AthleteMatchesPage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   {
     path: '/athlete/teams',
     element: <AthleteTeamsPage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   {
     path: '/athlete/settings',
     element: <AthleteSettingsPage />,
     public: false,
-    roles: ['athlete', 'athlete_admin', 'admin'],
+    roles: ['athlete', 'athlete_admin'], // Removed 'admin'
     layout: 'athlete',
   },
   // Manager routes

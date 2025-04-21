@@ -73,7 +73,7 @@ Builds the app for production to the `build` folder.
 
 The application includes a comprehensive authentication system with:
 - Login with email/password
-- Role-based access control (athlete, manager, team, admin)
+- Role-based access control (athlete, manager, team) 
 - Protected routes
 
 ### Athlete Dashboard

@@ -1,18 +1,20 @@
-import { useContext } from 'react';
-import { ThemeContext } from '../contexts/ThemeContext';
-
 /**
- * Custom hook to access theme context throughout the application
- * @returns {Object} Theme context value including currentTheme, switchTheme, and themes
+ * Custom hook to access the theme context.
+ * This simply re-exports the useTheme hook from the context file
+ * for potentially cleaner imports in components.
  */
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  
-  return context;
-};
+export { useTheme } from '../contexts/ThemeContext';
 
-export default useTheme;
+/* 
+  Removed the previous implementation:
+  import { useContext } from 'react';
+  import { ThemeContext } from '../contexts/ThemeContext'; // This import was causing the error
+
+  export const useTheme = () => {
+    const context = useContext(ThemeContext); 
+    if (!context) {
+      throw new Error('useTheme must be used within a ThemeProvider');
+    }
+    return context;
+  }; 
+*/

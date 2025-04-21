@@ -102,7 +102,17 @@
   margin-bottom: 1.5rem;
   font-weight: 800;
   line-height: 1.1;
-  color: var(--color-primary, #2E1F5E);
+  color: var(--color-primary, #2E1F5E); /* Ensure primary color */
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Make the logo text in the header use the primary color */
+.header-logo-text,
+.landing-page .header-logo-text {
+  color: var(--color-primary, #2E1F5E) !important;
+  font-weight: 700;
+  opacity: 1 !important;
 }
 
 .hero-subtitle {
@@ -110,6 +120,8 @@
   margin-bottom: 2.5rem;
   line-height: 1.6;
   color: #666666;
+  opacity: 1 !important;
+  text-shadow: none !important;
 }
 
 .hero-cta {
@@ -120,25 +132,41 @@
 }
 
 .cta-button {
-  background: var(--color-primary, #2E1F5E);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 50px;
+  background: var(--color-primary, #2E1F5E) !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 24px;
+  padding: 1rem 2.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  font-size: 1rem;
+  margin-right: 1.2rem;
+  box-shadow: 0 4px 16px rgba(46, 31, 94, 0.12);
+  cursor: pointer;
   text-decoration: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 20px rgba(46, 31, 94, 0.2);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: fit-content;
+  gap: 0.5rem;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
-.cta-button:hover {
-  background: #3a2976;
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(46, 31, 94, 0.3);
+.cta-button:hover,
+.cta-button:focus {
+  background: #231748 !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(46, 31, 94, 0.18);
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* The Explore Matches button stays accent color, so only target the first button */
+.hero-cta .cta-button:first-child {
+  background: var(--color-primary, #2E1F5E) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 .cta-arrow {
@@ -183,10 +211,16 @@
   filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.15));
   transform: scale(0.95);
   transition: transform 0.5s ease;
+  opacity: 1 !important;
+  filter: none !important;
+  background: #fff;
 }
 
 .hero-mockup-image.loaded {
   transform: scale(1);
+  opacity: 1 !important;
+  filter: none !important;
+  background: #fff;
 }
 
 .hero-image-placeholder {
@@ -518,8 +552,8 @@
 .loading-hero .hero-cta,
 .loading-hero .hero-mockup-image,
 .loading-hero .cta-button {
-  opacity: 0;
-  transform: none;
+  opacity: 1 !important;
+  filter: none !important;
   transition: none;
 }
 
