@@ -1,0 +1,122 @@
+.not-found-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.not-found-content {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.not-found-code {
+  font-size: 10rem;
+  font-weight: 700;
+  color: #4a6cf7;
+  line-height: 1;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #4a6cf7 0%, #5e2ced 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.not-found-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  color: #2d3748;
+}
+
+.not-found-content p {
+  color: #6c757d;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.not-found-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.home-button, .dashboard-button {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.home-button {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.home-button:hover {
+  background-color: #3a5bd9;
+}
+
+.dashboard-button {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.dashboard-button:hover {
+  background-color: #cbd5e0;
+}
+
+.not-found-help {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+}
+
+.not-found-help p {
+  margin-bottom: 12px;
+}
+
+.not-found-help ul {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+}
+
+.not-found-help a {
+  color: #4a6cf7;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.not-found-help a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .not-found-code {
+    font-size: 7rem;
+  }
+  
+  .not-found-content h1 {
+    font-size: 2rem;
+  }
+  
+  .not-found-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .not-found-help ul {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
