@@ -7,36 +7,34 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Always check scroll position from window
-      if (window.scrollY > 60) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      // Use a small threshold like 10px
+      setScrolled(window.scrollY > 10);
     };
-    // Attach scroll event
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initial check in case user reloads while scrolled
+
+    // Initial check in case page loads scrolled
     handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header className={`home-header${scrolled ? ' scrolled' : ''}`}>
+    // Apply scrolled class based on state
+    <header className={`home-header ${scrolled ? 'scrolled' : ''}`}>
       <div className="header-container">
         <div className="logo-container">
-          <img 
-            src={`${process.env.PUBLIC_URL}/images/logos/eskore-logo.png`} 
-            alt="eSkore Logo" 
+          <img
+            src={`${process.env.PUBLIC_URL}/images/logos/eskore-logo.png`}
+            alt="eSkore Logo"
             className="logo-image"
           />
           <span className="logo-text">eSkore</span>
         </div>
-        {scrolled && (
-          <Link to="/role-selection" className="header-get-started">
-            Get Started
-          </Link>
-        )}
+
+        {/* The button is always rendered, CSS handles visibility */}
+        <Link to="/role-selection" className="header-get-started">
+          Get Started
+        </Link>
       </div>
     </header>
   );

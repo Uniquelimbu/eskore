@@ -1,33 +1,36 @@
+:root {
+  --header-height: 76px; /* Approximate height: 20px padding + 36px logo + 20px padding */
+}
+
 .home-header {
-  position: fixed;
+  position: fixed !important; /* Force fixed position */
   top: 0;
   left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 20px 0;
-  transition: background-color 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
-              box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  background-color: #2E1F5E; /* Use solid primary color instead of gradient */
-  /* Add GPU acceleration to prevent paint flickers during scroll */
-  transform: translateZ(0);
-  will-change: background-color, box-shadow;
-  /* Reserve space for logo to prevent layout shifts */
-  height: 76px;
+  right: 0; /* Ensure it spans full width */
+  width: 100%;
+  height: var(--header-height);
+  z-index: 1000; /* Ensure it's above other content */
+  background-color: #2E1F5E;
+  transition: box-shadow 0.3s ease;
+  padding: 0; /* Remove padding here, apply to container */
+  display: flex; /* Use flex to center container */
+  align-items: center; /* Vertically center container */
+  box-sizing: border-box;
 }
 
 .home-header.scrolled {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  /* No padding change to maintain consistent size */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .header-container {
   max-width: 1400px;
+  width: 100%; /* Take full width within header */
   margin: 0 auto;
-  padding: 0 30px;
+  padding: 0 30px; /* Apply horizontal padding here */
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .logo-container {
@@ -37,10 +40,8 @@
 
 .logo-image {
   height: 36px;
-  width: 36px; /* Set explicit width */
+  width: auto;
   margin-right: 10px;
-  /* Prevent layout shift during loading */
-  object-fit: contain;
 }
 
 .logo-text {
@@ -124,34 +125,31 @@
 }
 
 .header-get-started {
+  display: inline-block;
   background-color: #4a6cf7;
   color: white;
   border: none;
   padding: 8px 18px;
   border-radius: 6px;
   font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   text-decoration: none;
   font-size: 0.95rem;
-  opacity: 0;
-  will-change: opacity;
-  animation: fadeIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+  opacity: 0; /* Hidden by default */
+  transform: translateY(-10px); /* Start slightly up */
+  pointer-events: none; /* Not clickable when hidden */
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.home-header.scrolled .header-get-started {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .header-get-started:hover {
   background-color: #3a5bd9;
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.25);
+  color: white;
 }
 
 /* Responsive styles */
@@ -161,7 +159,12 @@
   }
 }
 
+/* Responsive adjustments */
 @media (max-width: 576px) {
+  :root {
+     /* Adjust if header height changes on mobile */
+    --header-height: 66px;
+  }
   .header-container {
     padding: 0 15px;
   }

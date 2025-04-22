@@ -1,3 +1,8 @@
+/* Import header height variable if needed, or redefine */
+:root {
+  --header-height: 76px; /* Ensure this matches Header.css */
+}
+
 .home-page {
   display: flex;
   flex-direction: column;
@@ -10,6 +15,18 @@
   width: 100%;
   position: relative;
   will-change: auto; /* Let browser decide what properties need GPU acceleration */
+  /* Remove any margin/padding that could push content down */
+  margin: 0;
+  padding: 0;
+  /* Add padding top to push content below the fixed header */
+  padding-top: var(--header-height);
+}
+
+.home-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 /* Use content-visibility to improve rendering performance for sections not in view */
@@ -98,29 +115,23 @@
   transform: translateY(-2px);
 }
 
-/* Animation classes with improved timing functions and containment */
-.reveal {
-  position: relative;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1), 
-              transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
-  /* Optimize animation performance */
-  will-change: opacity, transform;
-  /* Contain layout changes to this element */
-  contain: layout paint style;
-}
-
+/* Remove reveal animation styles */
+.reveal,
 .reveal.active {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+  transition: none;
+  will-change: auto;
+  contain: none;
 }
 
-/* Stagger child elements with improved timing */
-.stagger-children .reveal:nth-child(1) { transition-delay: 0.1s; }
-.stagger-children .reveal:nth-child(2) { transition-delay: 0.25s; }
-.stagger-children .reveal:nth-child(3) { transition-delay: 0.4s; }
-.stagger-children .reveal:nth-child(4) { transition-delay: 0.55s; }
+/* Remove staggered animation delays */
+.stagger-children .reveal:nth-child(1),
+.stagger-children .reveal:nth-child(2),
+.stagger-children .reveal:nth-child(3),
+.stagger-children .reveal:nth-child(4) {
+  transition-delay: 0s;
+}
 
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -143,4 +154,14 @@
     width: 100%;
     max-width: 300px;
   }
+}
+
+@media (max-width: 576px) {
+  :root {
+    --header-height: 66px; /* Match mobile header height */
+  }
+  .home-page {
+     padding-top: var(--header-height); /* Adjust padding for mobile */
+  }
+  /* ... other mobile styles ... */
 }

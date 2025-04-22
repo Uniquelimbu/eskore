@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './FeatureHighlights.css';
 
 const FeatureHighlights = () => {
@@ -26,38 +26,12 @@ const FeatureHighlights = () => {
     }
   ];
 
-  useEffect(() => {
-    const revealElements = document.querySelectorAll('.reveal');
-    const options = {
-      threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, options);
-
-    revealElements.forEach(element => {
-      observer.observe(element);
-    });
-
-    return () => {
-      revealElements.forEach(element => {
-        observer.unobserve(element);
-      });
-    };
-  }, []);
-
   return (
     <div className="features-section">
-      <h2 className="features-heading reveal">Why Choose eSkore?</h2>
+      <h2 className="features-heading">Why Choose eSkore?</h2>
       <div className="features-grid stagger-children">
         {features.map(feature => (
-          <div key={feature.id} className="feature-card reveal">
+          <div key={feature.id} className="feature-card">
             <div className="feature-icon">
               {feature.imagePath ? (
                 <img 

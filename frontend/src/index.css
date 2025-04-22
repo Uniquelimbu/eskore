@@ -13,6 +13,7 @@ html, body {
   height: 100%;
   width: 100%;
   overflow-x: hidden; /* Prevent horizontal scrolling */
+  position: relative; /* Create stacking context */
 }
 
 body {
@@ -23,6 +24,7 @@ body {
   color: #2d3748;
   transition: background-color 0.3s ease, color 0.3s ease;
   position: relative; /* For proper overflow containment */
+  overflow-y: auto !important; /* Ensure vertical scrolling works */
 }
 
 /* Light/dark mode support via data attribute */
@@ -181,7 +183,8 @@ html {
 
 /* Prevent horizontal overflow for all content */
 #root {
-  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
-  position: relative;
 }

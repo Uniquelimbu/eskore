@@ -3,10 +3,11 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  position: relative; /* Create a stacking context */
-  visibility: visible; /* Ensure immediate visibility */
-  contain: layout style; /* Improve rendering performance */
+  overflow-x: hidden;
+  position: relative;
+  visibility: visible;
+  contain: layout style;
+  padding-top: 0; /* Ensure no padding here */
 }
 
 /* Smooth fade-in effect when app is ready */
