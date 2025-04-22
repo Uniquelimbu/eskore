@@ -50,11 +50,13 @@ const LoginPage = () => {
     
     if (validateForm()) {
       try {
-        await login(credentials.email, credentials.password);
-        navigate('/dashboard');
+        const result = await login(credentials.email, credentials.password);
+        if (result) {
+          navigate('/dashboard');
+        }
       } catch (err) {
-        // Error already handled by context
-        console.log('Failed to login:', err);
+        // In case auth context doesn't set error
+        console.error('Login error:', err);
       }
     }
   };
@@ -67,7 +69,7 @@ const LoginPage = () => {
         
         {error && <div className="error-banner">{error}</div>}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -78,8 +80,11 @@ const LoginPage = () => {
               onChange={handleChange}
               placeholder="Enter your email"
               disabled={loading}
+              required
+              autoComplete="email"
+              aria-required="true"
             />
-            {formErrors.email && <div className="error">{formErrors.email}</div>}
+            {formErrors.email && <div className="error" role="alert">{formErrors.email}</div>}
           </div>
           
           <div className="form-group">

@@ -35,6 +35,44 @@ const dashboardService = {
     } catch (error) {
       throw error;
     }
+  },
+  
+  // Get leaderboard data 
+  getLeaderboard: async (gameId, metric = 'winRate', limit = 10) => {
+    try {
+      return await apiClient.get(`/api/leaderboard`, {
+        params: { gameId, metric, limit }
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Get athlete profile
+  getAthleteProfile: async (athleteId) => {
+    try {
+      return await apiClient.get(`/api/athletes/${athleteId}/profile`);
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Update athlete profile
+  updateAthleteProfile: async (profileData) => {
+    try {
+      return await apiClient.put('/api/athletes/profile', profileData);
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Submit match result
+  submitMatchResult: async (matchData) => {
+    try {
+      return await apiClient.post('/api/matches', matchData);
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

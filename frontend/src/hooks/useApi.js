@@ -1,45 +1,163 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import apiClient from '../services/apiClient';
 
-export const useApi = () => {
+export const useApi = (options = {}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  
+  // For tracking mounted state to prevent state updates after unmount
+  const isMounted = useRef(true);
+  
+  // Track if any request is currently active
+  const activeRequestRef = useRef(null);
+  
+  // Optional auto-retry and caching settings
+  const { 
+    autoRetry = false, 
+    maxRetries = 2, 
+    retryDelay = 1000,
+    cacheTime = 5 * 60 * 1000 // 5 minutes default cache time
+  } = options;
 
-  const request = useCallback(async (method, url, payload = null) => {
-    try {
-      setLoading(true);
-      setError(null);
+  useEffect(() => {
+    return () => {
+      // When component unmounts, we set isMounted to false
+      isMounted.current = false;
       
-      const response = await apiClient({
-        method,
-        url,
-        data: payload,
-      });
-      
-      setData(response.data);
-      return response.data;
-    } catch (err) {
-      const errorMessage = 
-        err.response?.data?.error?.message || 
-        err.message || 
-        'An unexpected error occurred';
-      
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+      // Cancel any active request if possible
+      if (activeRequestRef.current) {
+        activeRequestRef.current.cancel && activeRequestRef.current.cancel();
+      }
+    };
   }, []);
+
+  const handleRequest = useCallback(async (method, url, payload = null, config = {}) => {
+    if (!isMounted.current) return;
+    
+    // Reset state
+    setLoading(true);
+    setError(null);
+    
+    // Track this request
+    const requestId = Symbol();
+    activeRequestRef.current = requestId;
+    
+    try {
+      // Configure caching options for GET requests
+      if (method.toLowerCase() === 'get') {
+        config.cache = {
+          ...config.cache,
+          useCache: true,
+          maxAge: cacheTime
+        };
+      }
+      
+      // Make the request using the apiClient
+      const response = await apiClient[method.toLowerCase()](url, 
+        method.toLowerCase() === 'get' ? config : payload, 
+        method.toLowerCase() !== 'get' ? config : undefined
+      );
+      
+      // Only update state if this is still the active request and component is mounted
+      if (activeRequestRef.current === requestId && isMounted.current) {
+        setData(response);
+        setLoading(false);
+      }
+      
+      return response;
+    } catch (err) {
+      // If this request is no longer active or component unmounted, don't update state
+      if (activeRequestRef.current !== requestId || !isMounted.current) {
+        return;
+      }
+      
+      // For auto-retry with network errors
+      if (autoRetry && 
+          err.status && 
+          (err.status === 'NETWORK_ERROR' || err.status === 'OFFLINE' || 
+           (err.status >= 500 && err.status < 600))) {
+        
+        let retryCount = 0;
+        let lastError = err;
+        
+        while (retryCount < maxRetries) {
+          try {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+            
+            // If no longer mounted or request changed, abort retry
+            if (!isMounted.current || activeRequestRef.current !== requestId) {
+              return;
+            }
+            
+            // Try again
+            const response = await apiClient[method.toLowerCase()](url, 
+              method.toLowerCase() === 'get' ? config : payload, 
+              method.toLowerCase() !== 'get' ? config : undefined
+            );
+            
+            // Success on retry
+            if (isMounted.current && activeRequestRef.current === requestId) {
+              setData(response);
+              setLoading(false);
+            }
+            
+            return response;
+          } catch (retryError) {
+            lastError = retryError;
+            retryCount++;
+          }
+        }
+        
+        // All retries failed
+        if (isMounted.current && activeRequestRef.current === requestId) {
+          setError(lastError);
+          setLoading(false);
+        }
+        
+        throw lastError;
+      }
+      
+      // No retry or not a retriable error
+      setError(err);
+      setLoading(false);
+      throw err;
+    }
+  }, [autoRetry, maxRetries, retryDelay, cacheTime]);
 
   return {
     loading,
     error,
     data,
-    get: (url) => request('get', url),
-    post: (url, data) => request('post', url, data),
-    put: (url, data) => request('put', url, data),
-    patch: (url, data) => request('patch', url, data),
-    delete: (url) => request('delete', url),
+    setData, // Allow manual updates to the data
+    clearError: () => setError(null),
+    get: (url, config) => handleRequest('get', url, null, config),
+    post: (url, data, config) => handleRequest('post', url, data, config),
+    put: (url, data, config) => handleRequest('put', url, data, config),
+    patch: (url, data, config) => handleRequest('patch', url, data, config),
+    delete: (url, config) => handleRequest('delete', url, null, config),
+    // Helper to invalidate cache for specific URLs
+    invalidateCache: (url) => apiClient.clearCache(url)
   };
+};
+
+// Create a hook for resource loading with auto-fetch
+export const useResource = (url, options = {}) => {
+  const { 
+    initialFetch = true,
+    dependencies = [], 
+    ...apiOptions 
+  } = options;
+  
+  const api = useApi(apiOptions);
+  
+  // Auto-fetch on mount or when dependencies change
+  useEffect(() => {
+    if (initialFetch && url) {
+      api.get(url);
+    }
+  }, [url, initialFetch, ...dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  return api;
 };

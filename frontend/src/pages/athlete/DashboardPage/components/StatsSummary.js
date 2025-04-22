@@ -1,26 +1,26 @@
 import React from 'react';
 
 const StatsSummary = ({ stats, loading, onTimeframeChange, currentTimeframe }) => {
-  // Only create stat items if stats is not null
-  const statItems = stats ? [
+  // Only create stat items if stats exists and isn't loading
+  const statItems = !loading && stats ? [
     {
       label: 'Total Matches',
-      value: stats.totalMatches,
+      value: stats.totalMatches || 0,
       icon: '🎮'
     },
     {
       label: 'Win Rate',
-      value: `${stats.winRate}%`,
+      value: `${stats.winRate || 0}%`,
       icon: '🏆'
     },
     {
       label: 'KDA Ratio',
-      value: stats.kda.toFixed(1),
+      value: stats.kda ? stats.kda.toFixed(1) : '0.0',
       icon: '⚔️'
     },
     {
       label: 'Avg Score',
-      value: stats.averageScore,
+      value: stats.averageScore || 0,
       icon: '📊'
     }
   ] : [];

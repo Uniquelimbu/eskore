@@ -1,5 +1,79 @@
-/* Add to your existing CSS */
+/* CSS Reset and Base Styles */
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
+/* Remove default margin and padding */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+  color: #2d3748;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative; /* For proper overflow containment */
+}
+
+/* Light/dark mode support via data attribute */
+body[data-theme='dark'] {
+  background-color: #1a202c;
+  color: #f7fafc;
+}
+
+/* Reset default focus styles */
+:focus {
+  outline: 2px solid #4a6cf7;
+  outline-offset: 2px;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Accessibility improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Button reset */
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Links */
+a {
+  color: #4a6cf7;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Global loading spinner */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -24,6 +98,7 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Error messages */
 .error-banner {
   background-color: #fee2e2;
   color: #b91c1c;
@@ -32,4 +107,81 @@
   margin-bottom: 20px;
   border-left: 4px solid #ef4444;
   font-size: 0.9rem;
+}
+
+/* Support high-contrast mode */
+@media (forced-colors: active) {
+  .loading-spinner {
+    border-color: CanvasText;
+    border-top-color: Highlight;
+  }
+  
+  .error-banner {
+    background-color: Canvas;
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Error boundary styles */
+.error-boundary {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.error-reload-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4a6cf7;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.error-reload-btn:hover {
+  background-color: #3a5bd9;
+}
+
+/* Responsive typography */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Prevent horizontal overflow for all content */
+#root {
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
 }

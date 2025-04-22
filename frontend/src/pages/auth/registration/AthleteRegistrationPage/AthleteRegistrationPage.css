@@ -145,3 +145,20 @@
 .back-button:hover {
   background-color: #cbd5e0;
 }
+
+/* Add disabled state for buttons */
+.next-button:disabled, 
+.submit-button:disabled, 
+.back-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.next-button:disabled, 
+.submit-button:disabled {
+  background-color: #a0aec0;
+}
+
+.back-button:disabled {
+  background-color: #e2e8f0;
+}

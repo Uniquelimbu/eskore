@@ -1,16 +1,48 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import GetStartedButton from './GetStartedButton';
+import './HeroSection.css';
 
 const HeroSection = () => {
+  // Remove image loading state since we don't need animations anymore
+  const imgRef = useRef(null);
+  const heroImgPath = `${process.env.PUBLIC_URL}/images/mockups/eskore-mockup.png`;
+
   return (
     <div className="hero-section">
-      <div className="hero-content">
-        <h1>Track, Analyze, Dominate</h1>
-        <p>The ultimate eSports performance tracking platform for serious gamers</p>
-        <GetStartedButton />
+      <div className="hero-background">
+        <div className="hero-overlay"></div>
       </div>
-      <div className="hero-image">
-        {/* Hero image would go here */}
+      
+      <div className="hero-container">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            <span>Track,</span>
+            <span>Analyze,</span>
+            <span>Dominate</span>
+          </h1>
+          <p className="hero-description">
+            The ultimate eSports performance tracking platform for serious gamers
+          </p>
+          <div className="hero-buttons">
+            <GetStartedButton />
+            <Link to="/login" className="existing-account-button">
+              I already have an Account
+            </Link>
+          </div>
+        </div>
+        <div className="hero-image">
+          <img 
+            ref={imgRef}
+            src={heroImgPath}
+            alt="eSkore Dashboard Preview"
+            onError={(e) => {
+              console.warn('Image load error, using fallback');
+              e.target.onerror = null;
+              e.target.src = `${process.env.PUBLIC_URL}/logo192.png`;
+            }}
+          />
+        </div>
       </div>
     </div>
   );

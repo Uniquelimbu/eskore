@@ -12,10 +12,79 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>eSkore - eSports Performance Platform</title>
+    
+    <!-- Improved resource handling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="%PUBLIC_URL%/images/mockups/eskore-mockup.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/images/logos/eskore-logo.png" as="image">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Initial loading styles to prevent FOUC (Flash of Unstyled Content) -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: #2E1F5E;
+        overflow-x: hidden;
+      }
+      
+      #root {
+        height: 100vh;
+        width: 100vw;
+        overflow-x: hidden;
+      }
+      
+      .initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #2E1F5E;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s ease-out;
+      }
+      
+      .initial-loader.hide {
+        opacity: 0;
+      }
+      
+      .initial-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+      }
+      
+      .initial-spinner {
+        border: 3px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        border-top: 3px solid white;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Enhanced initial loader with spinner -->
+    <div id="initial-loader" class="initial-loader">
+      <img src="%PUBLIC_URL%/images/logos/eskore-logo.png" alt="eSkore Loading" class="initial-logo" />
+      <div class="initial-spinner"></div>
+    </div>
     <div id="root"></div>
     <!--
       This HTML file is a template.

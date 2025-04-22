@@ -52,8 +52,8 @@ const AthleteRegistrationPage = () => {
   const handleSubmit = async (completeData) => {
     try {
       // Format data according to backend expectations
-      const nameParts = completeData.profileInfo.displayName.split(' ');
-      const firstName = nameParts[0];
+      const nameParts = completeData.profileInfo.displayName ? completeData.profileInfo.displayName.split(' ') : ['', ''];
+      const firstName = nameParts[0] || '';
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
       
       const registrationData = {
@@ -62,21 +62,23 @@ const AthleteRegistrationPage = () => {
         email: completeData.basicInfo.email,
         password: completeData.basicInfo.password,
         username: completeData.basicInfo.username,
-        dob: completeData.profileInfo.dateOfBirth,
-        country: completeData.profileInfo.country,
-        bio: completeData.profileInfo.bio,
-        primaryGame: completeData.gameInfo.primaryGame,
-        skillLevel: completeData.gameInfo.skillLevel,
-        playingExperience: completeData.gameInfo.playingExperience,
-        preferredPlatform: completeData.gameInfo.preferredPlatform
+        dob: completeData.profileInfo.dateOfBirth || null,
+        country: completeData.profileInfo.country || '',
+        bio: completeData.profileInfo.bio || '',
+        primaryGame: completeData.gameInfo.primaryGame || '',
+        skillLevel: completeData.gameInfo.skillLevel || '',
+        playingExperience: completeData.gameInfo.playingExperience || '',
+        preferredPlatform: completeData.gameInfo.preferredPlatform || ''
       };
       
       // Register using auth context
-      await registerAthlete(registrationData);
-      navigate('/dashboard');
+      const result = await registerAthlete(registrationData);
+      if (result) {
+        navigate('/dashboard');
+      }
     } catch (err) {
-      // Error is handled by auth context
       console.error('Registration failed:', err);
+      // Consider showing a local error message if context doesn't handle it
     }
   };
 

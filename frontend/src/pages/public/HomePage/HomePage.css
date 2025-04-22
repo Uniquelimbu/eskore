@@ -3,23 +3,144 @@
   flex-direction: column;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  /* Prevent FOUC (Flash of Unstyled Content) */
+  visibility: visible;
+  opacity: 1;
+  width: 100%;
+  position: relative;
+  will-change: auto; /* Let browser decide what properties need GPU acceleration */
+}
+
+/* Use content-visibility to improve rendering performance for sections not in view */
+.content-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px; /* Estimated size for the section */
 }
 
 .cta-section {
-  background-color: #f8f9fa;
-  padding: 60px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 100px 20px;
   text-align: center;
-  margin-top: 40px;
+  position: relative;
+  overflow: hidden; /* Prevent content from causing horizontal overflow */
+  width: 100%;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
 }
 
 .cta-section h2 {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   margin-bottom: 16px;
-  color: #1e2022;
+  color: #1a103C;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .cta-section p {
-  font-size: 1.2rem;
-  color: #5d646b;
-  margin-bottom: 30px;
+  font-size: 1.3rem;
+  color: #4a5568;
+  margin-bottom: 40px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.primary-cta-button {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 10px rgba(74, 108, 247, 0.3);
+}
+
+.primary-cta-button:hover {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(74, 108, 247, 0.4);
+}
+
+.secondary-cta-button {
+  background-color: transparent;
+  color: #4a6cf7;
+  border: 2px solid #4a6cf7;
+  padding: 12px 34px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.secondary-cta-button:hover {
+  background-color: rgba(74, 108, 247, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Animation classes with improved timing functions and containment */
+.reveal {
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1), 
+              transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+  /* Optimize animation performance */
+  will-change: opacity, transform;
+  /* Contain layout changes to this element */
+  contain: layout paint style;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger child elements with improved timing */
+.stagger-children .reveal:nth-child(1) { transition-delay: 0.1s; }
+.stagger-children .reveal:nth-child(2) { transition-delay: 0.25s; }
+.stagger-children .reveal:nth-child(3) { transition-delay: 0.4s; }
+.stagger-children .reveal:nth-child(4) { transition-delay: 0.55s; }
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .cta-section h2 {
+    font-size: 2.25rem;
+  }
+  
+  .cta-section p {
+    font-size: 1.1rem;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .primary-cta-button, 
+  .secondary-cta-button {
+    width: 100%;
+    max-width: 300px;
+  }
 }

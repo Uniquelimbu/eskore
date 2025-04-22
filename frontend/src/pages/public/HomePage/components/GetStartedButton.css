@@ -1,0 +1,49 @@
+.get-started-button {
+  background: linear-gradient(to right, #4a6cf7, #5e2ced);
+  color: white;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.4);
+  text-transform: none;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.get-started-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.get-started-button:hover {
+  background: linear-gradient(to right, #3a5bd9, #4e25ce);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.5);
+}
+
+.get-started-button:hover::before {
+  left: 100%;
+}
+
+.get-started-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(74, 108, 247, 0.4);
+}
+
+@media (max-width: 768px) {
+  .get-started-button {
+    width: 100%;
+    padding: 14px 20px;
+  }
+}

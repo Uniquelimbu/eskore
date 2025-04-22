@@ -1,0 +1,82 @@
+.App {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  position: relative; /* Create a stacking context */
+  visibility: visible; /* Ensure immediate visibility */
+  contain: layout style; /* Improve rendering performance */
+}
+
+/* Smooth fade-in effect when app is ready */
+.App.app-ready {
+  animation: fadeAppIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeAppIn {
+  from {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Container for content pages */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  overflow: hidden; /* Prevent children from creating horizontal scroll */
+}
+
+/* Responsive grid system */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+  width: 100%; /* Ensure full width */
+}
+
+.col {
+  padding: 0 10px;
+  flex: 1;
+  min-width: 0; /* Allow columns to shrink below content size */
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+
+/* Responsive classes */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .col-mobile-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Dark mode support */
+[data-theme='dark'] .App {
+  background-color: #1a202c;
+  color: #f7fafc;
+}
