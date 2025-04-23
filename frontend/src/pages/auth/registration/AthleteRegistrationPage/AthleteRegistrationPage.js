@@ -9,7 +9,9 @@ const AthleteRegistrationPage = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     basicInfo: {
-      username: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -51,17 +53,14 @@ const AthleteRegistrationPage = () => {
 
   const handleSubmit = async (completeData) => {
     try {
-      // Format data according to backend expectations
-      const nameParts = completeData.profileInfo.displayName ? completeData.profileInfo.displayName.split(' ') : ['', ''];
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-      
+      // Use the new fields for registrationData
       const registrationData = {
-        firstName,
-        lastName,
+        firstName: completeData.basicInfo.firstName,
+        middleName: completeData.basicInfo.middleName,
+        lastName: completeData.basicInfo.lastName,
         email: completeData.basicInfo.email,
         password: completeData.basicInfo.password,
-        username: completeData.basicInfo.username,
+        // username removed
         dob: completeData.profileInfo.dateOfBirth || null,
         country: completeData.profileInfo.country || '',
         bio: completeData.profileInfo.bio || '',
@@ -82,6 +81,10 @@ const AthleteRegistrationPage = () => {
     }
   };
 
+  const handleBackToRoleSelection = () => {
+    navigate('/role-selection');
+  };
+
   return (
     <div className="athlete-registration-page">
       <h1>Create Your Athlete Account</h1>
@@ -96,6 +99,13 @@ const AthleteRegistrationPage = () => {
         onPrevStep={handlePrevStep}
         isLoading={loading}
       />
+      <button
+        type="button"
+        className="back-to-role-selection-link"
+        onClick={handleBackToRoleSelection}
+      >
+        ← Back to Role Selection
+      </button>
     </div>
   );
 };

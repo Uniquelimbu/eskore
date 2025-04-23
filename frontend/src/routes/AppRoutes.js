@@ -8,7 +8,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import HomePage from '../pages/public/HomePage';
 
 // Lazy loaded components for other routes
-const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
+const LoginPage = lazy(() => import('../pages/auth/LoginPage/LoginPage'));
 const RoleSelectionPage = lazy(() => import('../pages/auth/RoleSelectionPage'));
 const AthleteRegistrationPage = lazy(() => import('../pages/auth/registration/AthleteRegistrationPage'));
 const DashboardPage = lazy(() => import('../pages/athlete/DashboardPage'));

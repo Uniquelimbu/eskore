@@ -19,14 +19,19 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
     const newErrors = {};
     
     if (step === 1) {
-      if (!stepData.username) newErrors.username = 'Username is required';
-      else if (stepData.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
-      else if (!/^[a-zA-Z0-9_]+$/.test(stepData.username)) 
-        newErrors.username = 'Username can only contain letters, numbers, and underscores';
-      
+      // First Name validation
+      if (!stepData.firstName) newErrors.firstName = 'First name is required';
+      else if (stepData.firstName.length < 2) newErrors.firstName = 'First name must be at least 2 characters';
+
+      // Last Name validation
+      if (!stepData.lastName) newErrors.lastName = 'Last name is required';
+      else if (stepData.lastName.length < 2) newErrors.lastName = 'Last name must be at least 2 characters';
+
+      // Email validation
       if (!stepData.email) newErrors.email = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(stepData.email)) newErrors.email = 'Email is invalid';
       
+      // Password validation
       if (!stepData.password) newErrors.password = 'Password is required';
       else if (stepData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
       else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(stepData.password))
@@ -76,19 +81,39 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
       case 1:
         return (
           <>
-            <h2>Account Information</h2>
+            {/* Removed <h2>Account Information</h2> */}
             <div className="form-group">
-              <label>Username</label>
+              <label>First Name</label>
               <input 
                 type="text" 
-                name="username" 
-                placeholder="Choose a unique username"
-                value={stepData.username || ''} 
+                name="firstName" 
+                placeholder="Enter your first name"
+                value={stepData.firstName || ''} 
                 onChange={handleChange} 
               />
-              {errors.username && <div className="error">{errors.username}</div>}
+              {errors.firstName && <div className="error">{errors.firstName}</div>}
             </div>
-            
+            <div className="form-group">
+              <label>Middle Name <span style={{color:'#a0aec0', fontWeight:400}}>(Optional)</span></label>
+              <input 
+                type="text" 
+                name="middleName" 
+                placeholder="Enter your middle name"
+                value={stepData.middleName || ''} 
+                onChange={handleChange} 
+              />
+            </div>
+            <div className="form-group">
+              <label>Last Name</label>
+              <input 
+                type="text" 
+                name="lastName" 
+                placeholder="Enter your last name"
+                value={stepData.lastName || ''} 
+                onChange={handleChange} 
+              />
+              {errors.lastName && <div className="error">{errors.lastName}</div>}
+            </div>
             <div className="form-group">
               <label>Email</label>
               <input 
@@ -100,7 +125,6 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
               />
               {errors.email && <div className="error">{errors.email}</div>}
             </div>
-            
             <div className="form-group">
               <label>Password</label>
               <input 
@@ -112,7 +136,6 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
               />
               {errors.password && <div className="error">{errors.password}</div>}
             </div>
-            
             <div className="form-group">
               <label>Confirm Password</label>
               <input 

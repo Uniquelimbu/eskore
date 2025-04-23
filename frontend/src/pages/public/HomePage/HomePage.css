@@ -22,42 +22,30 @@
 }
 
 .cta-section {
-  /* Re-apply gradient background */
-  background: linear-gradient(135deg, #4a6cf7 0%, #5e2ced 100%); 
-  padding: 6rem 2rem; 
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+  background: #f8f9fa; /* Creamy off-white */
   width: 100%;
-  /* Re-apply container styles */
-  border-radius: 12px; 
-  margin: 4rem auto; 
-  max-width: 1200px; 
-  box-shadow: 0 10px 30px rgba(74, 108, 247, 0.2); 
-  /* Remove extra padding added previously */
-  /* padding-top: 6rem; */
-  /* padding-bottom: 6rem; */
+  margin: 0;
+  padding: 5rem 0 4rem 0;
+  text-align: center;
+  border-radius: 0;
+  box-shadow: none;
+  /* Remove max-width, border-radius, margin, and box-shadow if present */
 }
 
-/* Remove the top border line */
-/* Removed empty ruleset for .cta-section::before */
-
 .cta-section h2 {
-  font-size: 2.5rem; 
-  margin-bottom: 1rem; 
-  /* Revert text color to white */
-  color: #ffffff; /* Was #2d3748 */
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #2d3748;
   font-weight: 700;
-  line-height: 1.3; 
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+  line-height: 1.3;
+  text-shadow: none;
 }
 
 .cta-section p {
-  font-size: 1.15rem; 
-  /* Revert text color to light white */
-  color: rgba(255, 255, 255, 0.85); /* Was #718096 */
-  margin-bottom: 2.5rem; 
-  max-width: 600px; 
+  font-size: 1.15rem;
+  color: #718096;
+  margin-bottom: 2.5rem;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
@@ -66,58 +54,51 @@
 .cta-buttons {
   display: flex;
   justify-content: center;
-  gap: 1rem; /* Adjust gap */
-  margin-top: 0; /* Remove margin-top, handled by paragraph margin */
-  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  align-items: center;
+  gap: 0;
+  margin-top: 2.5rem;
 }
 
-/* Revert Primary Button for gradient background */
 .primary-cta-button {
-  background-color: #ffffff; /* White background */
-  color: #4a6cf7; /* Primary color text */
-  border: 2px solid transparent; 
-  padding: 12px 30px; 
-  border-radius: 30px; 
+  background-color: #4a6cf7;
+  color: #fff;
+  border: 2px solid transparent;
+  padding: 14px 32px;
+  border-radius: 30px;
   font-weight: 600;
-  font-size: 1rem; 
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
-  text-transform: none; 
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s, border-color 0.3s;
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.15);
   text-decoration: none;
   display: inline-block;
   text-align: center;
 }
 
-.primary-cta-button:hover {
-  background-color: transparent; /* Transparent background on hover */
-  color: #ffffff; /* White text */
-  border-color: #ffffff; /* White border */
-  transform: translateY(-3px); 
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); 
-}
-
-/* Revert Secondary Button for gradient background */
-.secondary-cta-button {
-  background-color: transparent;
-  color: #ffffff; /* White text */
-  border: 2px solid rgba(255, 255, 255, 0.7); /* Semi-transparent white border */
-  padding: 12px 30px; 
-  border-radius: 30px; 
-  font-weight: 600;
-  font-size: 1rem; 
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: none; 
+.primary-cta-button:hover,
+.primary-cta-button:focus {
+  background-color: #3a5bd9;
+  color: #fff;
+  border-color: #3a5bd9;
+  box-shadow: 0 8px 24px rgba(74, 108, 247, 0.18);
   text-decoration: none;
-  display: inline-block;
-  text-align: center;
 }
 
-.secondary-cta-button:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Subtle white background */
-  border-color: #ffffff; /* Solid white border */
-  transform: translateY(-3px); 
+/* Remove underline from all links and buttons site-wide */
+a,
+a:hover,
+a:focus,
+button,
+button:hover,
+button:focus {
+  text-decoration: none !important;
+}
+
+/* Specifically for CTA button */
+.primary-cta-button,
+.primary-cta-button:hover,
+.primary-cta-button:focus {
+  text-decoration: none !important;
 }
 
 /* Responsive styles */
@@ -141,8 +122,7 @@
   }
   
   /* Ensure buttons don't stretch full width unless needed */
-  .primary-cta-button, 
-  .secondary-cta-button {
+  .primary-cta-button {
     width: auto; /* Allow natural width */
     max-width: none; /* Remove max-width */
     padding: 10px 24px; /* Slightly smaller padding */

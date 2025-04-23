@@ -1,12 +1,24 @@
+/* Set the background for the entire viewport */
+body,
+#root,
+.role-selection-root-bg {
+  background: #f8f9fa !important;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+/* Main container centers the content */
 .role-selection-page {
+  min-height: 100vh;
+  background: transparent;
   max-width: 550px;
-  margin: 40px auto;
-  padding: 20px;
+  margin: 0 auto;
+  padding: 48px 20px 24px 20px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 80vh;
+  box-sizing: border-box;
 }
 
 /* Rename to avoid conflicts with header logo */
@@ -17,7 +29,6 @@
   gap: 8px;
 }
 
-/* Rename to avoid conflicts with header logo */
 .role-page-logo {
   width: 36px;
   height: 36px;
@@ -28,72 +39,83 @@
   justify-content: center;
   font-weight: bold;
   font-size: 22px;
-  border-radius: 3px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(72,61,139,0.08);
+}
+
+.role-page-logo-image {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
 }
 
 /* Rename to avoid conflicts with header logo */
 .role-page-logo-text {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   color: #483D8B;
+  letter-spacing: 0.5px;
 }
 
 .role-selection-page h1 {
-  font-size: 28px;
+  font-size: 2rem;
   margin-bottom: 10px;
   color: #2d3748;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
   color: #6c757d;
   margin-bottom: 40px;
   max-width: 350px;
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 1.08rem;
+  line-height: 1.5;
 }
 
 .roles-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 18px;
   margin-bottom: 40px;
   width: 100%;
 }
 
 .role-card {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  background-color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(72, 61, 139, 0.07), 0 1.5px 4px rgba(0,0,0,0.03);
+  padding: 22px 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s;
   text-align: left;
   display: flex;
   align-items: center;
   gap: 20px;
   border: 2px solid transparent;
+  position: relative;
 }
 
-.role-card:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-}
-
-.role-card.selected {
+.role-card:hover, .role-card.selected {
+  box-shadow: 0 8px 32px rgba(74, 108, 247, 0.10), 0 2px 8px rgba(0,0,0,0.04);
   border-color: #4a6cf7;
-  background-color: rgba(74, 108, 247, 0.03);
+  transform: translateY(-2px) scale(1.012);
+  background-color: #f4f7fe;
 }
 
 .role-icon {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background-color: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 60%, #e9eafc 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
-  color: #f8b84e;
+  font-size: 2rem;
+  color: #4a6cf7;
+  box-shadow: 0 2px 8px rgba(74, 108, 247, 0.07);
+  flex-shrink: 0;
 }
 
 .role-icon.athlete {
@@ -109,31 +131,42 @@
 }
 
 .role-content h3 {
-  margin: 0 0 5px 0;
-  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-weight: 700;
   color: #2d3748;
-  font-size: 18px;
+  font-size: 1.15rem;
+  letter-spacing: -0.2px;
 }
 
 .role-content p {
   margin: 0;
   color: #6c757d;
-  font-size: 14px;
+  font-size: 0.98rem;
+  line-height: 1.4;
 }
 
 .back-link {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #4a6cf7;
+  color: #a0aec0;
   text-decoration: none;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 15px;
   margin-top: auto;
+  transition: color 0.2s;
 }
 
-.back-link:hover {
-  text-decoration: underline;
+.back-link,
+.back-link:hover,
+.back-link:focus {
+  text-decoration: none !important;
+}
+
+.back-link:hover,
+.back-link:focus {
+  text-decoration: none;
+  color: #4a5568;
 }
 
 .continue-button {
@@ -155,13 +188,26 @@
 
 @media (max-width: 576px) {
   .role-selection-page {
-    padding: 15px;
-    margin: 20px auto;
+    padding: 24px 6px 16px 6px;
   }
-  
+  .role-page-logo {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+  .role-page-logo-text {
+    font-size: 1.2rem;
+  }
+  .roles-container {
+    gap: 12px;
+  }
+  .role-card {
+    padding: 16px 10px;
+    gap: 12px;
+  }
   .role-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
   }
 }

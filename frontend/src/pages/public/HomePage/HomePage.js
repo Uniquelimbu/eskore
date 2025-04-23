@@ -58,10 +58,7 @@ const HomePage = () => {
           <p>Join thousands of athletes tracking their progress with eSkore</p>
           <div className="cta-buttons">
             <Link to="/role-selection" className="primary-cta-button">
-              Get Started
-            </Link>
-            <Link to="/contact" className="secondary-cta-button">
-              Contact Sales
+              Start Your Journey
             </Link>
           </div>
         </div>

@@ -24,6 +24,7 @@
   display: flex;
   align-items: center;
   will-change: transform, opacity;
+  transition: opacity 0.3s, transform 0.3s;
 }
 
 /* Add hidden state for header */
@@ -53,9 +54,9 @@
   align-items: center;
   height: 100%;
   position: relative;
+  padding: 0 32px;
 }
 
-/* Explicitly scope header logo styles */
 .home-header__logo {
   display: flex;
   align-items: center;
@@ -64,6 +65,7 @@
   margin: 0;
   padding: 0;
   position: relative;
+  gap: 10px;
 }
 
 .home-header__logo-image {
@@ -74,7 +76,7 @@
   object-fit: contain;
   /* Remove any potential transform or position that could cause shifts */
   transform: none;
-  vertical-align: middle; /* Ensure proper vertical alignment */
+  display: block;
 }
 
 .home-header__logo-text {
@@ -196,6 +198,50 @@
   box-shadow: 0 8px 20px rgba(74, 108, 247, 0.5);
 }
 
+.home-header__get-started {
+  background: #4a6cf7;
+  color: #fff;
+  padding: 14px 30px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.4);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+  display: inline-block;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px) scale(0.98);
+  transition: 
+    opacity 0.35s cubic-bezier(.4,0,.2,1),
+    transform 0.35s cubic-bezier(.4,0,.2,1);
+  text-decoration: none !important;
+}
+
+.home-header__get-started.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.home-header__get-started:hover,
+.home-header__get-started:focus {
+  background: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.5);
+  text-decoration: none !important;
+}
+
+/* Remove underline from all links and buttons in header */
+.home-header a,
+.home-header a:hover,
+.home-header a:focus,
+.home-header button,
+.home-header button:hover,
+.home-header button:focus {
+  text-decoration: none !important;
+}
+
 /* Responsive styles */
 @media (max-width: 992px) {
   .header-nav {
@@ -235,5 +281,19 @@
     padding: 10px 24px; /* Was 6px 12px */
     font-size: 0.95rem;
     border-radius: 30px;
+  }
+
+  .home-header__container {
+    padding: 0 12px;
+  }
+  .home-header__logo-image {
+    height: 28px;
+  }
+  .home-header__logo-text {
+    font-size: 1.1rem;
+  }
+  .home-header__get-started {
+    padding: 10px 18px;
+    font-size: 0.95rem;
   }
 }

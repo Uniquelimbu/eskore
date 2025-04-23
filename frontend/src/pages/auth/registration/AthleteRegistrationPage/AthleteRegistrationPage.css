@@ -136,14 +136,19 @@
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .next-button:hover, .submit-button:hover {
   background-color: #3a5bd9;
 }
 
-.back-button:hover {
-  background-color: #cbd5e0;
+.back-button:hover,
+.back-button:focus {
+  background-color: #a0aec0;
+  color: #2d3748;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+  outline: none;
 }
 
 /* Add disabled state for buttons */
@@ -161,4 +166,42 @@
 
 .back-button:disabled {
   background-color: #e2e8f0;
+}
+
+/* Remove previous .back-to-role-selection-btn styles and add this: */
+.back-to-role-selection-link,
+.back-link {
+  margin: 32px auto 0 auto;
+  display: block;
+  background: none;
+  color: #a0aec0; /* light gray */
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  box-shadow: none;
+  text-align: center;
+  outline: none;
+  text-decoration: none;
+}
+
+.back-to-role-selection-link:hover,
+.back-to-role-selection-link:focus,
+.back-link:hover,
+.back-link:focus {
+  color: #4a5568; /* darker gray */
+  text-decoration: none;
+  outline: none;
+}
+
+.back-to-role-selection-link,
+.back-to-role-selection-link:hover,
+.back-to-role-selection-link:focus,
+.back-button,
+.back-button:hover,
+.back-button:focus {
+  text-decoration: none !important;
 }
