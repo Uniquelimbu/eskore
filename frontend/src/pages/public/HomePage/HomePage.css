@@ -22,36 +22,42 @@
 }
 
 .cta-section {
-  /* Use a more vibrant gradient */
-  background: linear-gradient(135deg, #4a6cf7 0%, #5e2ced 100%);
-  padding: 6rem 2rem; /* Increase padding for more space */
+  /* Re-apply gradient background */
+  background: linear-gradient(135deg, #4a6cf7 0%, #5e2ced 100%); 
+  padding: 6rem 2rem; 
   text-align: center;
   position: relative;
   overflow: hidden;
   width: 100%;
-  border-radius: 12px; /* Add subtle rounding */
-  margin: 4rem auto; /* Add vertical margin */
-  max-width: 1200px; /* Limit width */
-  box-shadow: 0 10px 30px rgba(74, 108, 247, 0.2); /* Add a subtle shadow */
+  /* Re-apply container styles */
+  border-radius: 12px; 
+  margin: 4rem auto; 
+  max-width: 1200px; 
+  box-shadow: 0 10px 30px rgba(74, 108, 247, 0.2); 
+  /* Remove extra padding added previously */
+  /* padding-top: 6rem; */
+  /* padding-bottom: 6rem; */
 }
 
 /* Remove the top border line */
 /* Removed empty ruleset for .cta-section::before */
 
 .cta-section h2 {
-  font-size: 2.5rem; /* Slightly smaller, more refined */
-  margin-bottom: 1rem; /* Adjust spacing */
-  color: #ffffff; /* White text on gradient */
+  font-size: 2.5rem; 
+  margin-bottom: 1rem; 
+  /* Revert text color to white */
+  color: #ffffff; /* Was #2d3748 */
   font-weight: 700;
-  line-height: 1.3; /* Improve line height */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+  line-height: 1.3; 
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
 }
 
 .cta-section p {
-  font-size: 1.15rem; /* Adjust size */
-  color: rgba(255, 255, 255, 0.85); /* Lighter white */
-  margin-bottom: 2.5rem; /* Increase spacing before buttons */
-  max-width: 600px; /* Limit width for readability */
+  font-size: 1.15rem; 
+  /* Revert text color to light white */
+  color: rgba(255, 255, 255, 0.85); /* Was #718096 */
+  margin-bottom: 2.5rem; 
+  max-width: 600px; 
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
@@ -65,47 +71,53 @@
   flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
 }
 
-/* Redesign Primary Button */
+/* Revert Primary Button for gradient background */
 .primary-cta-button {
   background-color: #ffffff; /* White background */
   color: #4a6cf7; /* Primary color text */
-  border: 2px solid transparent; /* Add border for consistency */
-  padding: 12px 30px; /* Adjust padding */
-  border-radius: 30px; /* Pill shape */
+  border: 2px solid transparent; 
+  padding: 12px 30px; 
+  border-radius: 30px; 
   font-weight: 600;
-  font-size: 1rem; /* Adjust font size */
+  font-size: 1rem; 
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-  text-transform: none; /* Remove uppercase if previously set */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+  text-transform: none; 
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .primary-cta-button:hover {
   background-color: transparent; /* Transparent background on hover */
   color: #ffffff; /* White text */
   border-color: #ffffff; /* White border */
-  transform: translateY(-3px); /* Slightly lift */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Enhance shadow */
+  transform: translateY(-3px); 
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); 
 }
 
-/* Redesign Secondary Button */
+/* Revert Secondary Button for gradient background */
 .secondary-cta-button {
   background-color: transparent;
   color: #ffffff; /* White text */
   border: 2px solid rgba(255, 255, 255, 0.7); /* Semi-transparent white border */
-  padding: 12px 30px; /* Match primary button padding */
-  border-radius: 30px; /* Pill shape */
+  padding: 12px 30px; 
+  border-radius: 30px; 
   font-weight: 600;
-  font-size: 1rem; /* Match primary button font size */
+  font-size: 1rem; 
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: none; /* Remove uppercase if previously set */
+  text-transform: none; 
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .secondary-cta-button:hover {
   background-color: rgba(255, 255, 255, 0.1); /* Subtle white background */
   border-color: #ffffff; /* Solid white border */
-  transform: translateY(-3px); /* Slightly lift */
+  transform: translateY(-3px); 
 }
 
 /* Responsive styles */
@@ -134,6 +146,8 @@
     width: auto; /* Allow natural width */
     max-width: none; /* Remove max-width */
     padding: 10px 24px; /* Slightly smaller padding */
+    /* Ensure pill shape on mobile too */
+    border-radius: 30px;
   }
 }
 

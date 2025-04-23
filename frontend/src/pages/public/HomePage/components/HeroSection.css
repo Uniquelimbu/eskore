@@ -154,7 +154,8 @@
   color: #ffffff;
   border: 2px solid rgba(255, 255, 255, 0.7);
   padding: 13px 28px;
-  border-radius: 8px;
+  /* Update border-radius for pill shape */
+  border-radius: 30px; /* Was 8px */
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;

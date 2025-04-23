@@ -12,18 +12,33 @@
   z-index: 1000; /* Ensure it's above other content */
   /* Change background color to a lighter shade */
   background-color: #483D8B; /* Was #2E1F5E */
-  transition: box-shadow 0.3s ease;
+  /* Add transition for opacity/transform */
+  transition: box-shadow 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
   padding: 0; /* Remove padding here, apply to container */
   display: flex; /* Use flex to center container */
   align-items: center; /* Vertically center container */
   box-sizing: border-box;
+  /* Ensure the header has a consistent height and doesn't shift */
+  height: var(--header-height);
+  /* Ensure vertical alignment is centered */
+  display: flex;
+  align-items: center;
+  will-change: transform, opacity;
 }
 
-.home-header.scrolled {
+/* Add hidden state for header */
+.home-header--hidden {
+  opacity: 0;
+  transform: translateY(-100%); /* Move up and out of view */
+  pointer-events: none; /* Disable interactions when hidden */
+  /* Add will-change to optimize the animation */
+}
+
+.home-header--scrolled {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.header-container {
+.home-header__container {
   max-width: 1400px;
   width: 100%; /* Take full width within header */
   margin: 0 auto;
@@ -32,24 +47,44 @@
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
+  /* Ensure flexbox alignment is consistent */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  position: relative;
 }
 
-.logo-container {
+/* Explicitly scope header logo styles */
+.home-header__logo {
   display: flex;
   align-items: center;
+  height: 100%; /* Ensure the logo container takes full height */
+  /* Reset any potential inherited styles that could be causing issues */
+  margin: 0;
+  padding: 0;
+  position: relative;
 }
 
-.logo-image {
+.home-header__logo-image {
   height: 36px;
   width: auto;
   margin-right: 10px;
+  /* Prevent the image from stretching or shifting */
+  object-fit: contain;
+  /* Remove any potential transform or position that could cause shifts */
+  transform: none;
+  vertical-align: middle; /* Ensure proper vertical alignment */
 }
 
-.logo-text {
+.home-header__logo-text {
   font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.5px;
+  /* Prevent text from shifting during transitions */
+  display: inline-block;
+  vertical-align: middle; /* Ensure proper vertical alignment */
 }
 
 .header-nav ul {
@@ -129,19 +164,23 @@
   display: inline-block;
   background-color: #4a6cf7;
   color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
+  /* Increase padding to match hero button size */
+  padding: 14px 30px; /* Was 8px 18px */
+  /* Update border-radius for pill shape */
+  border-radius: 30px;
   font-weight: 600;
+  /* Adjust font size to match hero button */
+  font-size: 1rem; /* Was 0.95rem */
   text-decoration: none;
-  font-size: 0.95rem;
   transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+  /* Add box-shadow to match hero button */
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.4);
   opacity: 0; /* Hidden by default */
   transform: translateY(-10px); /* Start slightly up */
   pointer-events: none; /* Not clickable when hidden */
 }
 
-.home-header.scrolled .header-get-started {
+.home-header--scrolled .header-get-started {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
@@ -151,6 +190,10 @@
   background-color: #3a5bd9;
   text-decoration: none;
   color: white;
+  /* Add transform on hover to match hero button */
+  transform: translateY(-2px);
+  /* Enhance shadow on hover to match hero button */
+  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.5);
 }
 
 /* Responsive styles */
@@ -188,7 +231,9 @@
   }
   
   .header-get-started {
-    padding: 6px 12px;
-    font-size: 0.9rem;
+    /* Adjust for mobile but keep proportional to new desktop size */
+    padding: 10px 24px; /* Was 6px 12px */
+    font-size: 0.95rem;
+    border-radius: 30px;
   }
 }

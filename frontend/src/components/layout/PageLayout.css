@@ -1,0 +1,26 @@
+.page-layout {
+  width: 100%;
+  position: relative;
+}
+
+.page-layout--full-height {
+  min-height: calc(100vh - var(--header-height, 0px));
+  display: flex;
+  flex-direction: column;
+}
+
+.page-layout__container {
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.page-layout__container--padded {
+  padding: 2rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-layout__container--padded {
+    padding: 1.5rem 1rem;
+  }
+}

@@ -1,51 +1,60 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from '../pages/public/HomePage';
-import RoleSelectionPage from '../pages/auth/RoleSelectionPage';
-import LoginPage from '../pages/auth/LoginPage/LoginPage';
-import AthleteRegistrationPage from '../pages/auth/registration/AthleteRegistrationPage';
-import DashboardPage from '../pages/athlete/DashboardPage';
-import NotFoundPage from '../pages/public/NotFoundPage';
 import { useAuth } from '../contexts/AuthContext';
+import Loading from '../components/ui/Loading/Loading';
+import ErrorBoundary from '../components/ErrorBoundary';
 
-// Protected route component that uses the auth context
+// Eagerly loaded components for critical routes
+import HomePage from '../pages/public/HomePage';
+
+// Lazy loaded components for other routes
+const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
+const RoleSelectionPage = lazy(() => import('../pages/auth/RoleSelectionPage'));
+const AthleteRegistrationPage = lazy(() => import('../pages/auth/registration/AthleteRegistrationPage'));
+const DashboardPage = lazy(() => import('../pages/athlete/DashboardPage'));
+const NotFoundPage = lazy(() => import('../pages/public/NotFoundPage'));
+
+// Wrapper for protected routes
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  
-  // Show loading indicator while checking auth status
+
   if (loading) {
-    return <div className="loading-container">
-      <div className="loading-spinner"></div>
-      <p>Verifying authentication...</p>
-    </div>;
+    return <Loading />;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 };
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/role-selection" element={<RoleSelectionPage />} />
-      <Route path="/register/athlete" element={<AthleteRegistrationPage />} />
-      
-      {/* Protected routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      } />
-      
-      {/* 404 route - replace the fallback route */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <ErrorBoundary>
+      <Suspense fallback={<Loading fullPage message="Loading content..." />}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/role-selection" element={<RoleSelectionPage />} />
+          <Route path="/register/athlete" element={<AthleteRegistrationPage />} />
+          
+          {/* Protected routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Fallback route */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

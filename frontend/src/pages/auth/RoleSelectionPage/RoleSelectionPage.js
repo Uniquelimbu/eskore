@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import RoleCard from './components/RoleCard';
-import RoleDescription from './components/RoleDescription';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import './RoleSelectionPage.css';
 
@@ -21,64 +19,67 @@ const RoleSelectionPage = () => {
     {
       id: 'athlete',
       title: 'Athlete',
-      description: 'Track your performance, analyze your stats, and improve your game.',
-      icon: '🎮'
+      description: 'Build your profile and get discovered',
+      icon: '🏃'
     },
     {
       id: 'coach',
-      title: 'Coach',
-      description: 'Manage your team, track player performance, and develop strategies.',
-      icon: '👨‍🏫'
+      title: 'Manager/Coach',
+      description: 'Manage teams and discover talent',
+      icon: '👨‍💼'
     },
     {
       id: 'team',
-      title: 'Team Manager',
-      description: 'Oversee team operations, schedule matches, and track overall performance.',
+      title: 'Team',
+      description: 'Create your team profile and build community',
       icon: '🏆'
     }
   ];
 
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
-  };
-
-  const handleContinue = () => {
-    if (selectedRole === 'athlete') {
+    
+    // Navigate directly when clicking a role card
+    if (roleId === 'athlete') {
       navigate('/register/athlete');
-    } else if (selectedRole === 'coach') {
+    } else if (roleId === 'coach') {
       navigate('/register/coach');
-    } else if (selectedRole === 'team') {
+    } else if (roleId === 'team') {
       navigate('/register/team');
     }
   };
 
   return (
     <div className="role-selection-page">
-      <h1>Choose Your Role</h1>
-      <p className="subtitle">Select how you'll be using eSkore</p>
+      <div className="role-page-logo-container">
+        <div className="role-page-logo">e</div>
+        <span className="role-page-logo-text">eSkore</span>
+      </div>
+      
+      <h1>Select Your Role</h1>
+      <p className="subtitle">Choose how you want to participate in the eSkore community</p>
       
       <div className="roles-container">
         {roles.map(role => (
-          <RoleCard 
+          <div
             key={role.id}
-            role={role}
-            isSelected={selectedRole === role.id}
-            onSelect={() => handleRoleSelect(role.id)}
-          />
+            className={`role-card ${selectedRole === role.id ? 'selected' : ''}`}
+            onClick={() => handleRoleSelect(role.id)}
+          >
+            <div className={`role-icon ${role.id}`}>
+              {role.icon}
+            </div>
+            <div className="role-content">
+              <h3>{role.title}</h3>
+              <p>{role.description}</p>
+            </div>
+          </div>
         ))}
       </div>
       
-      {selectedRole && (
-        <>
-          <RoleDescription roleId={selectedRole} />
-          <button 
-            className="continue-button"
-            onClick={handleContinue}
-          >
-            Continue
-          </button>
-        </>
-      )}
+      <Link to="/" className="back-link">
+        ← Back to home
+      </Link>
     </div>
   );
 };

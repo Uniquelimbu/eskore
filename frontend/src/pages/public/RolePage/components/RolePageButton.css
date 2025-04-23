@@ -1,0 +1,27 @@
+/* Page-specific button styling that won't affect global buttons */
+.page-role__button-btn {
+  border-radius: 8px; /* Different from global 30px radius */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.page-role__button-btn--primary {
+  background-color: #6B46C1; /* Different color than global primary */
+  color: white;
+  box-shadow: 0 4px 10px rgba(107, 70, 193, 0.3);
+}
+
+.page-role__button-btn--primary:hover:not(:disabled) {
+  background-color: #553C9A;
+  transform: translateY(-2px);
+}
+
+/* Only define what's different from global styles */
+.page-role__button-btn--secondary {
+  background-color: transparent;
+  border: 2px solid #6B46C1;
+  color: #6B46C1;
+}
+
+/* ...other custom styles for this page's buttons... */

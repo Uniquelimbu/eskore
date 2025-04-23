@@ -76,9 +76,3 @@
     max-width: 100%;
   }
 }
-
-/* Dark mode support */
-[data-theme='dark'] .App {
-  background-color: #1a202c; /* Ensure dark mode background doesn't interfere */
-  color: #f7fafc;
-}

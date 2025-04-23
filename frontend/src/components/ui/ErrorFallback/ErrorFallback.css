@@ -1,0 +1,64 @@
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.error-fallback--inline {
+  padding: 1.5rem;
+  margin: 1rem 0;
+  min-height: 200px;
+}
+
+.error-fallback__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-fallback__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #e53e3e;
+}
+
+.error-fallback__message {
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+.error-fallback__button {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.error-fallback__button:hover {
+  background-color: #3a5bd9;
+}
+
+[data-theme='dark'] .error-fallback {
+  background-color: #2d3748;
+}
+
+[data-theme='dark'] .error-fallback__title {
+  color: #fc8181;
+}
+
+[data-theme='dark'] .error-fallback__message {
+  color: #e2e8f0;
+}

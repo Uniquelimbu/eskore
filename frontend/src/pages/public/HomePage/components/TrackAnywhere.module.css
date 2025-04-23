@@ -1,0 +1,290 @@
+/* Convert existing classes to camelCase naming for easier usage in JS */
+.section {
+  /* From track-anywhere-section */
+  background: linear-gradient(135deg, #E0F2FE 0%, #ddf0ff 35%, #c6e4ff 100%);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden; 
+  width: 100%;
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Redesigned elements */
+.elements {
+  /* From soccer-elements */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.designCircle1 {
+  /* From design-circle-1 */
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.08) 0%, rgba(74, 108, 247, 0.12) 100%);
+  box-shadow: 0 20px 60px rgba(74, 108, 247, 0.07);
+  animation: float 15s ease-in-out infinite;
+}
+
+.designCircle2 {
+  /* From design-circle-2 */
+  position: absolute;
+  bottom: 15%;
+  left: 8%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.06) 0%, rgba(94, 44, 237, 0.10) 100%);
+  box-shadow: 0 20px 60px rgba(94, 44, 237, 0.05);
+  animation: float 18s ease-in-out infinite reverse;
+}
+
+.fieldGraphic {
+  /* From field-graphic */
+  position: absolute;
+  bottom: -5%;
+  left: 0;
+  width: 100%;
+  height: 35%;
+  background: radial-gradient(ellipse at center, rgba(124, 205, 124, 0.05) 0%, transparent 70%);
+  border-top: 1px solid rgba(74, 108, 247, 0.08);
+}
+
+.fieldCenter {
+  /* From field-center */
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(74, 108, 247, 0.12);
+  border-radius: 50%;
+}
+
+.centerLine {
+  /* From center-line */
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 35%;
+  background: linear-gradient(to bottom, rgba(74, 108, 247, 0.08), transparent);
+}
+
+.dotsPattern {
+  /* From dots-pattern */
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(74, 108, 247, 0.1) 1px, transparent 2px);
+  background-size: 40px 40px;
+  opacity: 0.2;
+}
+
+.accentShape1 {
+  /* From accent-shape-1 */
+  position: absolute;
+  top: 20%;
+  left: 15%;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.12) 0%, rgba(74, 108, 247, 0.18) 100%);
+  border-radius: 12px;
+  transform: rotate(25deg);
+  animation: float 12s ease-in-out infinite;
+}
+
+.accentShape2 {
+  /* From accent-shape-2 */
+  position: absolute;
+  bottom: 25%;
+  right: 15%;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(94, 44, 237, 0.1) 0%, rgba(124, 58, 237, 0.15) 100%);
+  border-radius: 8px;
+  transform: rotate(-15deg);
+  animation: float 14s ease-in-out infinite 1s;
+}
+
+.soccerIllustration {
+  /* From soccer-illustration */
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 255, 255, 0.8) 40%, 
+    rgba(240, 240, 240, 0.6) 100%);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.07),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.05);
+  opacity: 0.2;
+  overflow: hidden;
+}
+
+.soccerPattern {
+  /* From soccer-pattern */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(0deg, transparent 39%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.2) 60%, transparent 61%),
+    linear-gradient(90deg, transparent 39%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.2) 60%, transparent 61%),
+    linear-gradient(45deg, transparent 39%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.15) 60%, transparent 61%),
+    linear-gradient(135deg, transparent 39%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.15) 60%, transparent 61%);
+  border-radius: 50%;
+}
+
+/* Animations need to be globally defined */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+.heading {
+  /* From track-anywhere-heading */
+  font-size: 3.5rem; 
+  font-weight: 800;
+  color: #1E293B; 
+  margin-bottom: 2.5rem;
+  line-height: 1.2;
+  max-width: 800px;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.buttonsContainer {
+  /* From store-buttons-container */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem; 
+  flex-wrap: wrap; 
+  position: relative;
+  z-index: 2;
+}
+
+.storeButton {
+  /* From store-button */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(to bottom, #262F3D 0%, #1A1F2C 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: 
+    transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+    box-shadow 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1), 
+    0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.storeButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.15), 
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(to bottom, #2B3548 0%, #1A1F2C 100%);
+}
+
+.storeButton img {
+  display: block; 
+  height: 30px;
+  width: auto;
+  filter: brightness(1.05);
+}
+
+.storeButton span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: left;
+  letter-spacing: 0.2px;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .section {
+    padding: 4rem 1.5rem;
+    min-height: auto;
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+  
+  .heading {
+    font-size: 2.5rem;
+  }
+  
+  .buttonsContainer {
+    gap: 1rem;
+  }
+  
+  .storeButton {
+    padding: 0.6rem 1.2rem;
+    gap: 0.5rem;
+  }
+
+  .storeButton img {
+    height: 24px;
+  }
+
+  .storeButton span {
+    font-size: 0.8rem;
+  }
+
+  .designCircle1 {
+    width: 150px;
+    height: 150px;
+    top: 10%;
+    right: 5%;
+  }
+  
+  .designCircle2 {
+    width: 120px;
+    height: 120px;
+    bottom: 10%;
+    left: 5%;
+  }
+  
+  .fieldCenter {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .soccerIllustration {
+    width: 100px;
+    height: 100px;
+    top: 5%;
+    right: 5%;
+  }
+  
+  .accentShape1, .accentShape2 {
+    width: 30px;
+    height: 30px;
+  }
+}
