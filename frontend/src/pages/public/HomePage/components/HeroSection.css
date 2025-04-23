@@ -29,8 +29,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #2E1F5E;
-  opacity: 1;
+  /* Change background color to match the header */
+  background-color: #483D8B; /* Was #2E1F5E */
+  opacity: 1; /* Keep opacity if you want a solid color */
+  /* You could reduce opacity (e.g., 0.9) if you have a background image/video */
 }
 
 .hero-container {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import FeatureHighlights from './components/FeatureHighlights';
@@ -15,12 +16,19 @@ const HomePage = () => {
         <div id="features" className="content-section">
           <FeatureHighlights />
         </div>
+        {/* CTA Section */}
         <div className="cta-section">
           <h2>Ready to elevate your eSports career?</h2>
           <p>Join thousands of athletes tracking their progress with eSkore</p>
           <div className="cta-buttons">
-            <button className="primary-cta-button">Get Started</button>
-            <button className="secondary-cta-button">Contact Sales</button>
+            {/* Wrap primary button in Link */}
+            <Link to="/role-selection" className="primary-cta-button">
+              Get Started
+            </Link>
+            {/* Keep secondary as button or link to /contact */}
+            <Link to="/contact" className="secondary-cta-button">
+              Contact Sales
+            </Link>
           </div>
         </div>
       </main>

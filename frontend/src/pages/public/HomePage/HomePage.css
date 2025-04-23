@@ -14,7 +14,6 @@
   opacity: 1;
   width: 100%;
   position: relative;
-  will-change: auto; /* Let browser decide what properties need GPU acceleration */
   /* Remove any margin/padding that could push content down */
   margin: 0;
   padding: 0;
@@ -22,51 +21,37 @@
   padding-top: var(--header-height);
 }
 
-.home-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-/* Use content-visibility to improve rendering performance for sections not in view */
-.content-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px; /* Estimated size for the section */
-}
-
 .cta-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 100px 20px;
+  /* Use a more vibrant gradient */
+  background: linear-gradient(135deg, #4a6cf7 0%, #5e2ced 100%);
+  padding: 6rem 2rem; /* Increase padding for more space */
   text-align: center;
   position: relative;
-  overflow: hidden; /* Prevent content from causing horizontal overflow */
+  overflow: hidden;
   width: 100%;
+  border-radius: 12px; /* Add subtle rounding */
+  margin: 4rem auto; /* Add vertical margin */
+  max-width: 1200px; /* Limit width */
+  box-shadow: 0 10px 30px rgba(74, 108, 247, 0.2); /* Add a subtle shadow */
 }
 
-.cta-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
-}
+/* Remove the top border line */
+/* Removed empty ruleset for .cta-section::before */
 
 .cta-section h2 {
-  font-size: 2.75rem;
-  margin-bottom: 16px;
-  color: #1a103C;
+  font-size: 2.5rem; /* Slightly smaller, more refined */
+  margin-bottom: 1rem; /* Adjust spacing */
+  color: #ffffff; /* White text on gradient */
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.3; /* Improve line height */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
 }
 
 .cta-section p {
-  font-size: 1.3rem;
-  color: #4a5568;
-  margin-bottom: 40px;
-  max-width: 700px;
+  font-size: 1.15rem; /* Adjust size */
+  color: rgba(255, 255, 255, 0.85); /* Lighter white */
+  margin-bottom: 2.5rem; /* Increase spacing before buttons */
+  max-width: 600px; /* Limit width for readability */
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
@@ -75,84 +60,80 @@
 .cta-buttons {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  margin-top: 30px;
+  gap: 1rem; /* Adjust gap */
+  margin-top: 0; /* Remove margin-top, handled by paragraph margin */
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
 }
 
+/* Redesign Primary Button */
 .primary-cta-button {
-  background-color: #4a6cf7;
-  color: white;
-  border: none;
-  padding: 14px 36px;
-  border-radius: 8px;
+  background-color: #ffffff; /* White background */
+  color: #4a6cf7; /* Primary color text */
+  border: 2px solid transparent; /* Add border for consistency */
+  padding: 12px 30px; /* Adjust padding */
+  border-radius: 30px; /* Pill shape */
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Adjust font size */
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 10px rgba(74, 108, 247, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  text-transform: none; /* Remove uppercase if previously set */
 }
 
 .primary-cta-button:hover {
-  background-color: #3a5bd9;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(74, 108, 247, 0.4);
+  background-color: transparent; /* Transparent background on hover */
+  color: #ffffff; /* White text */
+  border-color: #ffffff; /* White border */
+  transform: translateY(-3px); /* Slightly lift */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Enhance shadow */
 }
 
+/* Redesign Secondary Button */
 .secondary-cta-button {
   background-color: transparent;
-  color: #4a6cf7;
-  border: 2px solid #4a6cf7;
-  padding: 12px 34px;
-  border-radius: 8px;
+  color: #ffffff; /* White text */
+  border: 2px solid rgba(255, 255, 255, 0.7); /* Semi-transparent white border */
+  padding: 12px 30px; /* Match primary button padding */
+  border-radius: 30px; /* Pill shape */
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Match primary button font size */
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.3s ease;
+  text-transform: none; /* Remove uppercase if previously set */
 }
 
 .secondary-cta-button:hover {
-  background-color: rgba(74, 108, 247, 0.1);
-  transform: translateY(-2px);
-}
-
-/* Remove reveal animation styles */
-.reveal,
-.reveal.active {
-  opacity: 1;
-  transform: none;
-  transition: none;
-  will-change: auto;
-  contain: none;
-}
-
-/* Remove staggered animation delays */
-.stagger-children .reveal:nth-child(1),
-.stagger-children .reveal:nth-child(2),
-.stagger-children .reveal:nth-child(3),
-.stagger-children .reveal:nth-child(4) {
-  transition-delay: 0s;
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle white background */
+  border-color: #ffffff; /* Solid white border */
+  transform: translateY(-3px); /* Slightly lift */
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
+  .cta-section {
+    padding: 4rem 1.5rem; /* Adjust padding */
+    margin: 3rem 1rem; /* Adjust margin */
+  }
+
   .cta-section h2 {
-    font-size: 2.25rem;
+    font-size: 2rem; /* Adjust font size */
   }
   
   .cta-section p {
-    font-size: 1.1rem;
+    font-size: 1rem; /* Adjust font size */
   }
   
   .cta-buttons {
-    flex-direction: column;
-    align-items: center;
+    /* Keep flex-direction: row, but allow wrapping */
     gap: 12px;
   }
   
+  /* Ensure buttons don't stretch full width unless needed */
   .primary-cta-button, 
   .secondary-cta-button {
-    width: 100%;
-    max-width: 300px;
+    width: auto; /* Allow natural width */
+    max-width: none; /* Remove max-width */
+    padding: 10px 24px; /* Slightly smaller padding */
   }
 }
 

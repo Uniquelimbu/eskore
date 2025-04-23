@@ -10,7 +10,8 @@
   width: 100%;
   height: var(--header-height);
   z-index: 1000; /* Ensure it's above other content */
-  background-color: #2E1F5E;
+  /* Change background color to a lighter shade */
+  background-color: #483D8B; /* Was #2E1F5E */
   transition: box-shadow 0.3s ease;
   padding: 0; /* Remove padding here, apply to container */
   display: flex; /* Use flex to center container */

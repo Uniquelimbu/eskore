@@ -7,23 +7,29 @@
 }
 
 /* Remove default margin and padding */
-html, body {
+html {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  position: relative; /* Create stacking context */
+  /* Remove overflow-x: hidden from html if present */
+  /* overflow-x: hidden; */
+  position: relative; /* Keep for stacking context if needed */
 }
 
 body {
+  margin: 0; /* Ensure body margin is 0 */
+  padding: 0; /* Ensure body padding is 0 */
+  height: 100%; /* Ensure body takes full height */
+  width: 100%; /* Ensure body takes full width */
+  overflow-x: hidden; /* Prevent horizontal scrolling on body */
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8f9fa;
   color: #2d3748;
   transition: background-color 0.3s ease, color 0.3s ease;
-  position: relative; /* For proper overflow containment */
+  position: relative;
   overflow-y: auto !important; /* Ensure vertical scrolling works */
 }
 
@@ -186,5 +192,6 @@ html {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Keep overflow hidden on root */
+  width: 100%; /* Ensure root takes full width */
 }

@@ -3,10 +3,11 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  position: relative;
-  visibility: visible;
-  contain: layout style;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  /* Remove position: relative and contain */
+  /* position: relative; */
+  visibility: visible; /* Ensure immediate visibility */
+  /* contain: layout style; */
   padding-top: 0; /* Ensure no padding here */
 }
 
@@ -78,6 +79,6 @@
 
 /* Dark mode support */
 [data-theme='dark'] .App {
-  background-color: #1a202c;
+  background-color: #1a202c; /* Ensure dark mode background doesn't interfere */
   color: #f7fafc;
 }
