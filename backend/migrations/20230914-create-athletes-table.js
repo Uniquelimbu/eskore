@@ -41,18 +41,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      province: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      district: {
-        type: Sequelize.STRING,
-        allowNull: true
-      },
-      city: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
       googleId: {
         type: Sequelize.STRING,
         allowNull: true,

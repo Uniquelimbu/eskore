@@ -47,9 +47,9 @@
   align-items: stretch;
 }
 
-.back-to-home-btn {
+.centered-back-btn {
   display: block;
-  margin: 24px auto 0 auto;
+  margin: 32px auto 0 auto; /* More space from the card */
   background: none;
   color: #a0aec0;
   border: none;
@@ -58,15 +58,16 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.2s;
-  box-shadow: none;
   text-align: center;
-  outline: none;
-  text-decoration: none;
+  width: fit-content;
+  /* Remove any negative margin or left alignment from shared styles */
+  margin-left: auto !important;
+  margin-right: auto !important;
+  position: static; /* Ensure not absolute/relative */
 }
 
-.back-to-home-btn:hover,
-.back-to-home-btn:focus {
+.centered-back-btn:hover,
+.centered-back-btn:focus {
   color: #4a6cf7;
   text-decoration: underline;
 }
@@ -189,9 +190,6 @@
   border: none;
   font-size: 0.98rem;
   font-weight: 500;
-  margin-bottom: 18px;
-  margin-top: -8px;
-  margin-left: 0;
   cursor: pointer;
   text-align: left;
   transition: color 0.2s;
@@ -217,5 +215,9 @@
   }
   .login-container {
     padding: 25px 10px;
+  }
+  .centered-back-btn {
+    margin-top: 24px;
+    font-size: 0.95rem;
   }
 }

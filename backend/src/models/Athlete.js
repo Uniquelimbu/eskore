@@ -51,18 +51,6 @@ Athlete.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  province: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  district: {
-    type: DataTypes.STRING,
-    allowNull: true, // Only required for Nepal
-  },
-  city: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   googleId: {
     type: DataTypes.STRING,
     allowNull: true,

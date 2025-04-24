@@ -23,13 +23,11 @@ module.exports = {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
-        passwordHash: passwordHash, // Using freshly generated hash
+        passwordHash: passwordHash,
         dob: '1995-05-15',
         height: 180.5,
         position: 'FW',
         country: 'Canada',
-        province: 'on',
-        city: 'toronto',
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -37,14 +35,11 @@ module.exports = {
         firstName: 'Jane',
         lastName: 'Smith',
         email: 'jane.smith@example.com',
-        passwordHash: passwordHash, // Using freshly generated hash
+        passwordHash: passwordHash,
         dob: '1998-08-22',
         height: 165.0,
         position: 'MD',
         country: 'Nepal',
-        province: 'bagmati',
-        district: 'taplejung',
-        city: 'phungling',
         createdAt: new Date(),
         updatedAt: new Date()
       }

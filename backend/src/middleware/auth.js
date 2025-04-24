@@ -3,71 +3,110 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('./errorHandler');
 const logger = require('../utils/logger');
+const User = require('../models/User');
+const Athlete = require('../models/Athlete');
+const Team = require('../models/Team');
+const Manager = require('../models/Manager');
+const { sanitizeUserData } = require('../utils/userUtils'); // Import sanitizeUserData
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
 
 /**
  * requireAuth:
- * Checks for a valid JWT in cookies or Authorization header.
- * If valid, attaches decoded payload (user info) to req.user.
- * If invalid, returns 401.
+ * Middleware to verify JWT token from Authorization header or cookie.
+ * Decodes token, finds user based on role, attaches sanitized user to req.user.
  */
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
+  let token;
+
+  // 1. Extract token from Authorization header or cookie
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.auth_token) {
+    token = req.cookies.auth_token;
+  }
+
+  if (!token) {
+    // No token found, user is not authenticated
+    return next(new ApiError('Authentication required', 401, 'NO_TOKEN'));
+  }
+
   try {
-    let token;
-    
-    // Log authentication details for debugging
-    logger.debug('Auth check - Headers:', {
-      cookies: Object.keys(req.cookies || {}),
-      hasAuthHeader: !!req.headers.authorization,
-      method: req.method,
-      path: req.path
-    });
-    
-    // First check for cookie (preferred method)
-    if (req.cookies && req.cookies.auth_token) {
-      token = req.cookies.auth_token;
-      logger.debug('Using token from cookie');
-    } 
-    // Fall back to Authorization header
-    else if (req.headers.authorization) {
-      const authHeader = req.headers.authorization;
-      
-      // Handle Bearer token format
-      if (authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
-        logger.debug('Using token from Authorization header');
-      } else {
-        logger.warn('Malformed Authorization header:', authHeader);
-        throw new ApiError('Malformed authorization header', 401, 'UNAUTHORIZED');
-      }
-    }
-    
-    // No token found
-    if (!token) {
-      logger.warn('No authentication token found');
-      throw new ApiError('No token provided', 401, 'UNAUTHORIZED');
+    // 2. Verify and decode token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    logger.debug(`Token decoded: userId=${decoded.userId}, role=${decoded.role}`);
+
+    if (!decoded.userId || !decoded.role) {
+      // Token is invalid or doesn't contain required fields
+      throw new ApiError('Invalid token payload', 401, 'INVALID_TOKEN');
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-default-secret');
-    
-    // Attach the decoded user data to the request object
-    req.user = decoded; 
-    
-    // Log the decoded token information
-    logger.debug('Authentication successful:', {
-      userId: decoded.userId,
-      role: decoded.role
-    });
-    
-    return next();
-  } catch (error) {
-    logger.warn(`Authentication failed: ${error.message}`);
-    
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      return next(new ApiError('Invalid or expired token', 401, 'TOKEN_INVALID'));
+    // 3. Fetch user based on role from token
+    let userInstance = null;
+    const userId = decoded.userId;
+    const role = decoded.role; // Role from the token
+
+    // Select attributes carefully to exclude sensitive data like password hashes early
+    const commonAttributes = ['id', 'email'];
+    const nameAttributes = ['firstName', 'lastName'];
+
+    switch (role) {
+      case 'user':
+      case 'admin':
+      case 'athlete_admin':
+        userInstance = await User.findByPk(userId, { attributes: [...commonAttributes, 'role'] });
+        break;
+      case 'athlete':
+        userInstance = await Athlete.findByPk(userId, { attributes: [...commonAttributes, ...nameAttributes, 'position', 'country'] });
+        break;
+      case 'team':
+        userInstance = await Team.findByPk(userId, { attributes: [...commonAttributes, 'name', 'logoUrl'] });
+        break;
+      case 'manager':
+        userInstance = await Manager.findByPk(userId, { attributes: [...commonAttributes, ...nameAttributes, 'teamId'] });
+        break;
+      default:
+        logger.warn(`Authentication failed: Unknown role in token: ${role}`);
+        throw new ApiError('Invalid user role in token', 401, 'INVALID_ROLE');
     }
-    
-    return next(error);
+
+    if (!userInstance) {
+      logger.warn(`Authentication failed: User not found for id=${userId}, role=${role}. Token might be stale.`);
+      // Clear potentially invalid cookie
+      res.clearCookie('auth_token', { path: '/' }); // Use basic clearing options
+      throw new ApiError('User not found or invalid token', 401, 'USER_NOT_FOUND');
+    }
+
+    // 4. Attach SANITIZED user data to req.user
+    // Use sanitizeUserData, passing the role from the TOKEN to ensure correct sanitization logic
+    req.user = sanitizeUserData(userInstance.toJSON(), role);
+
+    // Double-check sanitization result
+    if (!req.user) {
+        logger.error(`Authentication failed: Could not sanitize user data for id=${userId}, role=${role}`);
+        throw new ApiError('Internal server error during authentication', 500, 'AUTH_SANITIZE_ERROR');
+    }
+
+    // Ensure the role attached matches the token's role for consistency
+    req.user.role = role;
+
+    logger.debug(`User authenticated: id=${req.user.id}, role=${req.user.role}`);
+    next(); // Proceed to the next middleware or route handler
+
+  } catch (error) {
+    // Handle JWT errors specifically
+    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
+      logger.warn(`Authentication failed: Invalid or expired token: ${error.message}`);
+      res.clearCookie('auth_token', { path: '/' }); // Clear bad token cookie
+      return next(new ApiError('Invalid or expired token', 401, 'INVALID_TOKEN'));
+    }
+    // Handle known ApiErrors
+    if (error instanceof ApiError) {
+      return next(error);
+    }
+    // Handle unexpected errors
+    logger.error(`Unexpected authentication error: ${error.message}`, error);
+    return next(new ApiError('Authentication failed due to an internal error', 500, 'AUTH_ERROR'));
   }
 }
 
@@ -91,29 +130,6 @@ function requireAdmin(req, res, next) {
 }
 
 /**
- * requireRole:
- * Middleware factory to check for specific roles
- * @param {string|Array} roles - Single role or array of allowed roles
- * @returns {function} Express middleware
- */
-function requireRole(roles) {
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
-  
-  return (req, res, next) => {
-    requireAuth(req, res, (err) => {
-      if (err) return next(err);
-      
-      if (req.user && allowedRoles.includes(req.user.role)) {
-        return next();
-      }
-      
-      logger.warn(`Role-based access denied for user ${req.user.id} at ${req.path} - Required: ${allowedRoles.join(', ')}, Found: ${req.user.role}`);
-      return next(new ApiError('Forbidden - Insufficient permissions', 403, 'FORBIDDEN'));
-    });
-  };
-}
-
-/**
  * requireAthleteAdmin:
  * Middleware to check for admin or athlete_admin role
  */
@@ -131,9 +147,4 @@ function requireAthleteAdmin(req, res, next) {
   });
 }
 
-module.exports = {
-  requireAuth,
-  requireAdmin,
-  requireRole,
-  requireAthleteAdmin  // Add the new middleware
-};
+module.exports = { requireAuth, requireAdmin, requireAthleteAdmin };

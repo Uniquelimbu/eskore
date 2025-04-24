@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import StatsSummary from './components/StatsSummary';
 import RecentActivity from './components/RecentActivity';
+import Sidebar from '../components/Sidebar/Sidebar'; // Updated import path
 import { useAuth } from '../../../contexts/AuthContext';
 import dashboardService from '../../../services/dashboardService';
 import './DashboardPage.css';
@@ -14,7 +15,7 @@ const DashboardPage = () => {
   const [error, setError] = useState(null);
   
   const { user } = useAuth();
-  
+
   // Fetch stats data
   useEffect(() => {
     const fetchStats = async () => {
@@ -65,26 +66,29 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="dashboard-page">
-      <header className="dashboard-header">
-        <h1>Welcome back, {user?.firstName || user?.username || 'Athlete'}!</h1>
-        <p className="last-login">Last login: {new Date().toLocaleDateString()}</p>
-      </header>
-      
-      {error && <div className="error-banner">{error}</div>}
-      
-      <div className="dashboard-content">
-        <StatsSummary 
-          stats={stats} 
-          loading={loadingStats} 
-          onTimeframeChange={handleTimeframeChange}
-          currentTimeframe={timeframe}
-        />
-        
-        <RecentActivity 
-          activities={activities} 
-          loading={loadingActivities} 
-        />
+    <div className="dashboard-layout">
+      <Sidebar /> {/* Path updated */}
+      <div className="dashboard-main-content">
+        <header className="dashboard-header">
+          <h1>Welcome back, {user?.firstName || user?.username || 'Athlete'}!</h1>
+          <p className="last-login">Last login: {new Date().toLocaleDateString()}</p>
+        </header>
+
+        {error && <div className="error-banner">{error}</div>}
+
+        <div className="dashboard-content-grid">
+          <StatsSummary
+            stats={stats}
+            loading={loadingStats}
+            onTimeframeChange={handleTimeframeChange}
+            currentTimeframe={timeframe}
+          />
+
+          <RecentActivity
+            activities={activities}
+            loading={loadingActivities}
+          />
+        </div>
       </div>
     </div>
   );

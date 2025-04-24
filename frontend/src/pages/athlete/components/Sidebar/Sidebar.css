@@ -1,0 +1,236 @@
+.sidebar {
+  width: 260px; /* Adjust width as needed */
+  height: 100vh; /* Full viewport height */
+  background-color: #1a202c; /* Dark background */
+  color: #e2e8f0; /* Light text */
+  display: flex;
+  flex-direction: column;
+  position: fixed; /* Fixed position */
+  top: 0;
+  left: 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 100; /* Ensure it's above other content */
+}
+
+.sidebar-header {
+  padding: 20px;
+  /* border-bottom: 1px solid #2d3748; */ /* Removed border */
+}
+
+.sidebar-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sidebar-logo {
+  height: 32px; /* Adjust size */
+  width: auto;
+  margin-right: 10px;
+}
+
+.sidebar-logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sidebar-nav {
+  flex-grow: 1; /* Takes up available space */
+  padding: 20px 0;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li a {
+  display: block;
+  padding: 12px 20px;
+  color: #a0aec0; /* Muted color for links */
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  border-radius: 4px;
+  margin: 0 10px 5px 10px;
+}
+
+.sidebar-nav li a:hover,
+.sidebar-nav li a.active { /* Add .active class for current page */
+  background-color: #2d3748; /* Highlight background */
+  color: #fff; /* White text on hover/active */
+}
+
+.sidebar-footer {
+  padding: 15px 20px; /* Adjusted padding */
+  border-top: 1px solid #2d3748;
+  position: relative; /* Needed for absolute positioning of options menu */
+}
+
+.user-profile-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space out profile and toggle */
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  flex-grow: 1; /* Allow profile to take available space */
+  margin-right: 10px; /* Add some space before the toggle */
+  overflow: hidden; /* Prevent text overflow */
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4a6cf7; /* Primary color */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 12px;
+  font-size: 1.1rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.user-role {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  text-transform: capitalize;
+}
+
+.options-toggle {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem; /* Make ellipsis larger */
+  line-height: 1;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.options-toggle:hover {
+  background-color: #2d3748;
+  color: #fff;
+}
+
+.options-menu {
+  position: absolute;
+  bottom: 100%; /* Position above the footer */
+  left: 15px; /* Align with footer padding */
+  right: 15px; /* Align with footer padding */
+  background-color: #2d3748; /* Slightly lighter than sidebar bg */
+  border-radius: 8px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 110; /* Ensure it's above other sidebar content */
+  padding: 8px 0;
+  margin-bottom: 10px; /* Space between menu and footer */
+  display: flex;
+  flex-direction: column;
+  animation: slideUpFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.options-menu-item {
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  padding: 10px 15px;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s;
+}
+
+.options-menu-item:hover {
+  background-color: #4a5568; /* Hover background */
+}
+
+.options-menu-item span {
+  font-size: 1rem;
+}
+
+.options-menu-item--logout {
+  color: #f56565; /* Red color for logout */
+}
+
+.options-menu-item--logout:hover {
+  background-color: rgba(245, 101, 101, 0.2); /* Lighter red hover */
+}
+
+
+/* Responsive adjustments for narrow sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100px; /* Reduced width */
+  }
+
+  .sidebar-header {
+    display: none; /* Hide header in narrow view */
+  }
+
+  .sidebar-logo {
+    height: 24px; /* Adjusted logo size */
+  }
+
+  .sidebar-logo-text {
+    font-size: 1rem;
+  }
+
+  .sidebar-nav li a {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-footer {
+    text-align: center;
+  }
+
+  .user-profile-area {
+    justify-content: center; /* Center the toggle button when profile info is hidden */
+  }
+
+  .user-profile {
+     display: none; /* Hide user profile details */
+  }
+
+  .options-toggle {
+    font-size: 1.3rem;
+  }
+
+  .options-menu {
+    left: 5px;
+    right: 5px;
+  }
+}

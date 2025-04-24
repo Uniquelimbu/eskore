@@ -7,7 +7,7 @@ const { errorHandler } = require('./middleware/errorHandler');
 const { requestLogger, responseHandler } = require('./middleware/requestMiddleware');
 const logger = require('./utils/logger');
 const compression = require('compression');
-const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser'); // Ensure this is required
 const { safeJsonMiddleware } = require('./middleware/safeResponseMiddleware');
 const tokenRefreshMiddleware = require('./middleware/tokenRefresh');
 
@@ -29,13 +29,20 @@ app.use(helmet({
   }
 }));
 
-// Updated CORS implementation with more robust handling
+// Essential Middleware
+app.use(cookieParser()); // <-- Make sure this is used early, before routes
+app.use(express.json({ limit: '10kb' })); // Body parser for JSON
+app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Body parser for URL-encoded data
+app.use(compression()); // Compress responses
+
+// Logging middleware
+app.use(morgan('combined', { stream: logger.stream })); // Request logging
+app.use(requestLogger);
+
+// CORS Middleware (ensure credentials allowed)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  // Development environment - accept all origins or localhost
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-    // Accept requests from any origin in development mode
     res.header('Access-Control-Allow-Origin', origin || 'http://localhost:3000');
     res.header('Access-Control-Allow-Credentials', 'true');
     
@@ -47,9 +54,7 @@ app.use((req, res, next) => {
         console.log(`CORS: Allowing origin ${origin || 'http://localhost:3000'} in development mode (Path: ${req.path})`);
       }
     }
-  } 
-  // Production environment - check against allowed origins
-  else {
+  } else {
     const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(o => o.trim());
     
     if (origin && allowedOrigins.includes(origin)) {
@@ -124,7 +129,6 @@ app.use('/api/health', healthCheckLimiter);
 
 // Optimized middleware order for performance
 app.use(compression()); // Compress all responses
-app.use(cookieParser()); // Parse cookies early
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use(requestLogger); // Add request ID and logging
@@ -186,7 +190,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/leagues', leagueRoutes);
-app.use('/api/locations', locationRoutes);
+app.use('/api/locations', locationRoutes); // This is now always safe (empty router)
 
 // 404 handler for undefined routes
 app.use((req, res) => {

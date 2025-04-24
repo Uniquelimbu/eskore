@@ -4,8 +4,8 @@ const { Op } = require('sequelize');
 const { ApiError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 const { sanitizeUserData } = require('../utils/userUtils');
-const { toSafeObject } = require('../utils/serializationUtils');
-const { sendSafeJson } = require('../utils/safeSerializer');
+// Removed toSafeObject as sendSafeJson handles it
+const { sendSafeJson } = require('../utils/safeSerializer'); // Use the robust serializer
 
 // Model imports
 const Athlete = require('../models/Athlete');
@@ -29,6 +29,18 @@ const generateToken = (userId, role) => {
   );
 };
 
+// Secure cookie options
+const getCookieOptions = () => ({
+  httpOnly: true, // Must be true to prevent XSS
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+  // sameSite: 'strict' is most secure, but 'lax' might be needed if redirects occur across sites
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  // secure: true should always be used in production (requires HTTPS)
+  secure: process.env.NODE_ENV === 'production',
+});
+
+
 // Login function that checks multiple tables
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -37,210 +49,117 @@ exports.login = async (req, res) => {
     throw new ApiError('Email and password required', 400, 'MISSING_CREDENTIALS');
   }
 
-  logger.info(`Login attempt for email: ${email}`);
-  
+  const lowerCaseEmail = String(email).toLowerCase().trim();
+  logger.info(`Login attempt for email: ${lowerCaseEmail}`);
+
   let userInstance = null;
   let userType = null;
   let userId = null;
-  let athleteUser = null;
-  
+  let passwordToCompare = null;
+
   try {
-    // First check in User table
-    userInstance = await User.findOne({ 
-      where: { email },
-      attributes: ['id', 'email', 'password', 'role']
-    });
-    
+    // Find user across relevant tables
+    // Prioritize User table (for admins) then Athlete, Manager, Team
+    userInstance = await User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id', 'email', 'password', 'role'] });
     if (userInstance) {
-      userType = 'user';
+      userType = 'user'; // Could be admin or regular user
       userId = userInstance.id;
-      logger.debug(`User found: ${userInstance.id}`);
-      
-      // For admin users, also check if they have an athlete record
+      passwordToCompare = userInstance.password; // Hashed password from User table
+      logger.debug(`User found in User table: ${userId}, Role: ${userInstance.role}`);
+
+      // If admin, try to fetch associated athlete data for richer profile
       if (userInstance.role === 'admin' || userInstance.role === 'athlete_admin') {
         const athleteRecord = await Athlete.findOne({
-          where: { email },
-          attributes: ['id', 'firstName', 'lastName', 'position', 'country']
+          where: { email: lowerCaseEmail },
+          attributes: { exclude: ['passwordHash', 'createdAt', 'updatedAt'] } // Exclude sensitive/unneeded fields
         });
-        
-        // If admin has an athlete record, treat them as an athlete
         if (athleteRecord) {
-          // Keep the user record for authentication but use athlete data
-          athleteUser = athleteRecord;
-          logger.debug(`Admin has athlete record: ${athleteRecord.id}`);
+          // Merge athlete data into userInstance for sanitization later
+          // Be careful not to overwrite essential User fields like id, role
+          userInstance = { ...athleteRecord.toJSON(), ...userInstance.toJSON() };
+          logger.debug(`Admin user ${userId} has associated athlete record ${athleteRecord.id}`);
         }
       }
-    }
-    
-    // If not found in User table, check in Athlete table
-    if (!userInstance) {
-      userInstance = await Athlete.findOne({ 
-        where: { email },
-        attributes: ['id', 'firstName', 'lastName', 'email', 'passwordHash', 'position', 'country']
-      });
-      
+
+    } else {
+      userInstance = await Athlete.findOne({ where: { email: lowerCaseEmail }, attributes: { exclude: ['createdAt', 'updatedAt'] } });
       if (userInstance) {
         userType = 'athlete';
         userId = userInstance.id;
-        logger.debug(`Athlete found: ${userInstance.firstName} ${userInstance.lastName}`);
+        passwordToCompare = userInstance.passwordHash; // Hashed password from Athlete table
+        logger.debug(`User found in Athlete table: ${userId}`);
       }
+      // Add checks for Manager and Team if login via those tables is supported
+      // else if (...) { ... }
     }
-    
-    // If not found in Athlete table, check in Manager table
-    if (!userInstance) {
-      try {
-        userInstance = await Manager.findOne({ 
-          where: { email },
-          attributes: ['id', 'firstName', 'lastName', 'email', 'passwordHash']
-        });
-        
-        if (userInstance) {
-          userType = 'manager';
-          userId = userInstance.id;
-          logger.debug(`Manager found with ID: ${userInstance.id}`);
-        }
-      } catch (err) {
-        logger.error(`Error checking manager: ${err.message}`);
-        // Continue the flow even if Manager model fails
-      }
-    }
-    
-    // If not found in Manager table, check in Team table
-    if (!userInstance) {
-      try {
-        userInstance = await Team.findOne({ 
-          where: { email },
-          attributes: ['id', 'name', 'email', 'passwordHash']
-        });
-        
-        if (userInstance) {
-          userType = 'team';
-          userId = userInstance.id;
-          logger.debug(`Team found: ${userInstance.name}`);
-        }
-      } catch (err) {
-        logger.error(`Error checking team: ${err.message}`);
-      }
-    }
-    
-    // If user not found in any table
-    if (!userInstance) {
-      logger.warn(`User not found in any table for email: ${email}`);
+
+    // If user not found in any relevant table
+    if (!userInstance || !userType || !passwordToCompare) {
+      logger.warn(`User not found or password field missing for email: ${lowerCaseEmail}`);
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
-    
-    // Validate password based on user type
-    let isPasswordValid = false;
-    
-    try {
-      logger.debug(`Authenticating ${userType} with email ${email}`);
-      
-      if (userType === 'athlete') {
-        logger.debug(`Athlete password hash: ${userInstance.passwordHash ? userInstance.passwordHash.substring(0, 20) + '...' : 'null'}`);
-        isPasswordValid = await bcrypt.compare(password, userInstance.passwordHash);
-      } else if (userType === 'user') {
-        isPasswordValid = await bcrypt.compare(password, userInstance.password);
-      } else {
-        const passwordField = userInstance.passwordHash ? 'passwordHash' : 'password';
-        isPasswordValid = await bcrypt.compare(password, userInstance[passwordField]);
-      }
-  
-      logger.debug(`Password validation result: ${isPasswordValid}`);
-    } catch (err) {
-      if (err instanceof ApiError) throw err;
-      logger.error(`Error validating password for ${email}:`, err);
-      throw new ApiError('Error processing login', 500, 'AUTH_ERROR');
-    }
-    
+
+    // Validate password
+    const isPasswordValid = await bcrypt.compare(password, passwordToCompare);
+
     if (!isPasswordValid) {
-      logger.warn(`Invalid password for ${userType}: ${email}`);
+      logger.warn(`Invalid password for ${userType}: ${lowerCaseEmail}`);
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
-    
-    // Create JWT token
-    const token = generateToken(userId, userType);
-    
-    // Configure cookie settings with enhanced security
-    const cookieOptions = {
-      httpOnly: true, // Prevent JavaScript access
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/', // Available across the entire site
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      secure: process.env.NODE_ENV === 'production'
-    };
-    
-    // Set the cookie
+
+    // Password is valid, proceed with token generation and response
+
+    // Determine the role to put in the token (use User role if found there, otherwise userType)
+    const tokenRole = userInstance.role && userType === 'user' ? userInstance.role : userType;
+    const token = generateToken(userId, tokenRole);
+
+    // Set the secure cookie
+    const cookieOptions = getCookieOptions();
     res.cookie('auth_token', token, cookieOptions);
     logger.debug('Auth cookie set with options:', cookieOptions);
-    
-    // Create a minimal, safe user object with only essential data
-    const safeUserData = {
-      id: parseInt(userId, 10) || 0,
-      email: String(email).substring(0, 255),
-      role: String(userType).substring(0, 50)
-    };
-    
-    // Add minimal fields based on user type - be very conservative
-    if (userType === 'athlete' && userInstance) {
-      if (userInstance.firstName) {
-        safeUserData.firstName = String(userInstance.firstName).substring(0, 100);
-      }
-      if (userInstance.lastName) {
-        safeUserData.lastName = String(userInstance.lastName).substring(0, 100);
-      }
-    } else if (userType === 'team' && userInstance && userInstance.name) {
-      safeUserData.name = String(userInstance.name).substring(0, 200);
+
+    // Sanitize user data before sending
+    // Pass the determined role (tokenRole) to ensure correct sanitization
+    const safeUserData = sanitizeUserData(userInstance, tokenRole);
+
+    if (!safeUserData) {
+        logger.error(`Login failed: Could not sanitize user data for id=${userId}`);
+        throw new ApiError('Internal server error during login', 500, 'AUTH_SANITIZE_ERROR');
     }
-    
-    // After successful authentication, handle admin with athlete data
-    if (userType === 'user' && (userInstance.role === 'admin' || userInstance.role === 'athlete_admin') && athleteUser) {
-      // Add athlete fields to the user data
-      if (athleteUser.firstName) {
-        safeUserData.firstName = String(athleteUser.firstName).substring(0, 100);
-      }
-      if (athleteUser.lastName) {
-        safeUserData.lastName = String(athleteUser.lastName).substring(0, 100);
-      }
-      if (athleteUser.position) {
-        safeUserData.position = String(athleteUser.position).substring(0, 10);
-      }
-      // Keep admin role for permissions
-      safeUserData.role = String(userInstance.role).substring(0, 50);
-    }
-    
-    logger.info(`Successful login for ${userType}: ${email}`);
-    
-    // Determine redirect URL based on user role
+
+    logger.info(`Successful login for ${userType}: ${lowerCaseEmail}, UserID: ${userId}`);
+
+    // Determine redirect URL (optional, frontend might handle routing)
     let redirectUrl = '/dashboard'; // Default
-    
-    // Send all users (admin, user, athlete) to athlete dashboard for now
-    if (userType === 'athlete' || userType === 'admin' || userType === 'user') {
-      redirectUrl = '/athlete/home';
-    } else if (userType === 'team') {
-      redirectUrl = '/team/dashboard';
-    } else if (userType === 'manager') {
-      redirectUrl = '/manager/dashboard';
-    }
-    
-    // Use our ultra-safe direct response method
+    // Adjust based on role if needed
+    // if (tokenRole === 'admin' || tokenRole === 'athlete_admin') redirectUrl = '/admin/dashboard';
+    // else if (tokenRole === 'athlete') redirectUrl = '/athlete/dashboard';
+
+    // Use sendSafeJson for the final response
     return sendSafeJson(res, {
       success: true,
-      token,
+      // token: token, // Optionally include token in body if needed by frontend (cookie is primary)
       user: safeUserData,
-      redirectUrl  // Add the redirectUrl to the response
+      redirectUrl // Include if frontend uses it
     });
-    
+
   } catch (error) {
     // Handle known application errors
     if (error instanceof ApiError) {
-      throw error;
+      // Log specific auth errors differently if needed
+      if (error.statusCode === 401) {
+         logger.warn(`Login failed for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
+      } else {
+         logger.error(`Login error for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
+      }
+      throw error; // Re-throw for the global error handler
     }
-    
-    // Log the error for debugging
-    logger.error(`Unexpected login error for ${email}:`, error);
-    
-    // Return a safe error response
-    throw new ApiError('Login failed', 500, 'AUTH_FAILURE');
+
+    // Log unexpected errors
+    logger.error(`Unexpected login error for ${lowerCaseEmail}:`, error);
+
+    // Return a generic safe error response
+    throw new ApiError('Login failed due to an internal error', 500, 'AUTH_FAILURE');
   }
 };
 
@@ -248,65 +167,77 @@ exports.login = async (req, res) => {
 exports.registerAthlete = async (req, res) => {
   let {
     firstName, lastName, middleName, email, password, dob,
-    height, position, country, province, district, city
+    height, position, country
   } = req.body;
 
   // Normalize email
-  email = String(email || '').toLowerCase().trim();
+  const lowerCaseEmail = String(email || '').toLowerCase().trim();
 
-  // Robust: Check for email in all relevant tables
-  const [existingAthlete, existingUser, existingTeam, existingManager] = await Promise.all([
-    Athlete.findOne({ where: { email } }),
-    User.findOne({ where: { email } }),
-    Team.findOne({ where: { email } }),
-    Manager.findOne({ where: { email } }),
+  // Robust: Check for email in all relevant tables (User, Athlete, Team, Manager)
+  const [existingUser, existingAthlete, existingTeam, existingManager] = await Promise.all([
+    User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
+    Athlete.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
+    // Add Team and Manager checks if they have email fields and uniqueness constraints
+    // Team.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
+    // Manager.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
   ]);
-  if (existingAthlete || existingUser || existingTeam || existingManager) {
+  if (existingUser || existingAthlete /* || existingTeam || existingManager */) {
     throw new ApiError('Email already in use', 409, 'EMAIL_IN_USE');
   }
 
-  // Create athlete record (passwordHash will be hashed by model hook)
-  const athlete = await Athlete.create({
-    firstName,
-    middleName,
-    lastName,
-    email,
-    passwordHash: password,
-    dob,
-    height,
-    position,
-    country,
-    province,
-    district,
-    city
-  });
+  try {
+    // Create athlete record. Password will be hashed by the Athlete model's beforeCreate hook.
+    const athlete = await Athlete.create({
+      firstName,
+      middleName: middleName || null, // Ensure null if empty
+      lastName,
+      email: lowerCaseEmail,
+      passwordHash: password, // Pass plain password to be hashed by hook
+      dob,
+      height,
+      position,
+      country
+    });
 
-  // Generate JWT token
-  const token = generateToken(athlete.id, 'athlete');
+    // Generate JWT token
+    const token = generateToken(athlete.id, 'athlete');
 
-  // Set HTTP-only cookie
-  res.cookie('auth_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  });
+    // Set HTTP-only cookie
+    const cookieOptions = getCookieOptions();
+    res.cookie('auth_token', token, cookieOptions);
 
-  // Minimal safe user object
-  const safeUserData = {
-    id: Number(athlete.id) || 0,
-    email: String(athlete.email || ''),
-    firstName: String(athlete.firstName || ''),
-    lastName: String(athlete.lastName || ''),
-    role: 'athlete'
-  };
+    // Sanitize the newly created athlete data
+    const safeAthleteData = sanitizeUserData(athlete, 'athlete');
 
-  res.status(201).json({
-    success: true,
-    message: 'Athlete registered successfully',
-    token,
-    athlete: safeUserData
-  });
+    if (!safeAthleteData) {
+        logger.error(`Registration failed: Could not sanitize new athlete data for id=${athlete.id}`);
+        throw new ApiError('Internal server error after registration', 500, 'AUTH_SANITIZE_ERROR');
+    }
+
+    logger.info(`Athlete registered successfully: ${lowerCaseEmail}, ID: ${athlete.id}`);
+
+    // Use sendSafeJson for the response
+    return sendSafeJson(res, {
+      success: true,
+      message: 'Athlete registered successfully',
+      // token: token, // Optionally include token
+      athlete: safeAthleteData
+    }, 201); // Use 201 Created status
+
+  } catch (error) {
+     if (error instanceof ApiError) {
+       logger.error(`Athlete registration error for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
+       throw error;
+     }
+     // Handle potential validation errors from Sequelize if not caught by express-validator
+     if (error.name === 'SequelizeValidationError') {
+        const messages = error.errors.map(e => e.message).join(', ');
+        logger.warn(`Athlete registration validation failed for ${lowerCaseEmail}: ${messages}`);
+        throw new ApiError(`Validation failed: ${messages}`, 400, 'VALIDATION_ERROR');
+     }
+     logger.error(`Unexpected athlete registration error for ${lowerCaseEmail}:`, error);
+     throw new ApiError('Registration failed due to an internal error', 500, 'REGISTRATION_FAILURE');
+  }
 };
 
 // Google OAuth handler
@@ -321,18 +252,25 @@ exports.facebookAuth = async (req, res) => {
   res.redirect(`/athlete/home?token=sample-token`);
 };
 
-// Update logout function for better security and to avoid serialization issues
+// Update logout function for better security and reliability
 exports.logout = async (req, res) => {
   try {
     // Clear cookie with same settings used to create it
+    const cookieOptions = getCookieOptions();
+    // Ensure domain is not set if it wasn't set during creation, or set it explicitly if needed
+    // delete cookieOptions.maxAge; // MaxAge is for setting, not clearing
     res.clearCookie('auth_token', {
-      httpOnly: true,
-      path: '/',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      secure: process.env.NODE_ENV === 'production'
+        httpOnly: cookieOptions.httpOnly,
+        path: cookieOptions.path,
+        sameSite: cookieOptions.sameSite,
+        secure: cookieOptions.secure,
+        // domain: cookieOptions.domain // Add if domain was specified when setting
     });
-    
-    // Use direct response to avoid serialization middleware issues
+
+    logger.info(`User logged out successfully (cookie cleared). UserID from token (if available): ${req.user?.id}`);
+
+    // Use a direct response method to bypass potential serialization issues
+    // Send minimal success response
     res.status(200).setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify({
       success: true,
@@ -340,11 +278,12 @@ exports.logout = async (req, res) => {
     }));
   } catch (error) {
     logger.error('Logout error:', error);
+    // Avoid sending detailed errors during logout
     res.status(500).setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify({
       success: false,
       error: {
-        message: 'Error processing logout'
+        message: 'Logout failed due to an internal error'
       }
     }));
   }

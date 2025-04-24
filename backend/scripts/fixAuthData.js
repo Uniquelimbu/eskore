@@ -71,14 +71,11 @@ async function fixAuthData() {
           firstName: 'Admin',
           lastName: 'User',
           email: 'admin@eskore.com',
-          passwordHash: passwordHash, // Use the same password
-          dob: '1990-01-01', // Default values
+          passwordHash: passwordHash,
+          dob: '1990-01-01',
           height: 175,
           position: 'FW',
-          country: 'Nepal',
-          province: 'bagmati',
-          district: 'kathmandu',
-          city: 'kathmandu'
+          country: 'Nepal'
         });
         
         console.log('✅ Created athlete record for admin user');

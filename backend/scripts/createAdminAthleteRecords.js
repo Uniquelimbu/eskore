@@ -44,10 +44,10 @@ async function createAdminAthleteRecords() {
           dob: '1990-01-01',
           height: 175,
           position: 'FW',
-          country: 'Nepal',
-          province: 'bagmati',
-          district: 'kathmandu',
-          city: 'kathmandu'
+          country: 'Nepal'
+          // province: 'bagmati',
+          // district: 'kathmandu',
+          // city: 'kathmandu'
         });
         
         console.log('✅ Athlete record created successfully');

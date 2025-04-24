@@ -51,15 +51,12 @@ const LoginPage = () => {
           navigate('/dashboard');
         }
       } catch (err) {
-        // In case auth context doesn't set error
-        console.error('Login error:', err);
+        // Error is handled by context and shown in UI
+        // Optionally, you can log or show a toast here
       }
     }
   };
 
-  // --- NEW: Top right sign up button ---
-  // Use absolute positioning for top right
-  // --- NEW: Forgot password handler ---
   const handleForgotPassword = (e) => {
     e.preventDefault();
     navigate('/not-found');
@@ -103,10 +100,12 @@ const LoginPage = () => {
                   onChange={handleChange}
                   placeholder="Enter your password"
                   disabled={loading}
+                  required
+                  autoComplete="current-password"
+                  aria-required="true"
                 />
-                {formErrors.password && <div className="error">{formErrors.password}</div>}
+                {formErrors.password && <div className="error" role="alert">{formErrors.password}</div>}
               </div>
-              {/* Forgot password button */}
               <button
                 type="button"
                 className="forgot-password-btn"
@@ -124,9 +123,10 @@ const LoginPage = () => {
               </button>
             </form>
           </div>
+          {/* Move Back to Home button OUTSIDE the card */}
           <button
             type="button"
-            className="back-to-home-btn"
+            className="back-to-home-btn centered-back-btn"
             onClick={() => navigate('/')}
           >
             ← Back to Home

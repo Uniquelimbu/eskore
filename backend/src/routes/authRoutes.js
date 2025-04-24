@@ -13,7 +13,7 @@ const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { requireAuth } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sanitizeUserData } = require('../utils/userUtils');
-const { sendSafeJson } = require('../utils/safeSerializer');
+const { sendSafeJson } = require('../utils/safeSerializer'); // Use safe serializer
 
 // For generating tokens
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -39,11 +39,9 @@ const validateAthleteRegistration = [
   body('height').isNumeric().withMessage('Height must be a number'),
   body('position').isIn(['FW', 'MD', 'DF', 'GK']).withMessage('Valid position is required'),
   body('country').custom((value) => {
-    if (!validCountries.includes(value)) throw new Error('Country must be Nepal, Canada, np, or ca');
+    if (!['Nepal', 'Canada', 'United States', 'np', 'ca', 'us'].includes(value)) throw new Error('Country must be Nepal, Canada, United States, np, ca, or us');
     return true;
   }),
-  body('province').notEmpty().withMessage('Province is required'),
-  body('city').notEmpty().withMessage('City is required'),
   // Add validation results middleware
   (req, res, next) => {
     const errors = validationResult(req);
@@ -63,146 +61,44 @@ const validateAthleteRegistration = [
 
 /**
  * POST /api/auth/register
- * Body: { "email": "test@example.com", "password": "secret", "role": "admin" (optional) }
+ * Deprecated or for basic user roles if needed. Athlete registration uses /register/athlete.
  */
-router.post('/register', catchAsync(async (req, res) => {
-  let { email, password, role } = req.body;
-  email = String(email || '').toLowerCase().trim();
-
-  // Basic validation
-  if (!email || !password) {
-    throw new ApiError('Email and password required', 400, 'MISSING_CREDENTIALS');
-  }
-
-  // Robust: Check for email in all relevant tables
-  const [existingUser, existingAthlete, existingTeam, existingManager] = await Promise.all([
-    User.findOne({ where: { email } }),
-    Athlete.findOne({ where: { email } }),
-    Team.findOne({ where: { email } }),
-    Manager.findOne({ where: { email } }),
-  ]);
-  if (existingUser || existingAthlete || existingTeam || existingManager) {
-    throw new ApiError('Email is already in use', 409, 'EMAIL_IN_USE');
-  }
-
-  // Hash the password
-  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
-  // Create user
-  const newUser = await User.create({
-    email,
-    password: hashedPassword,
-    role: role || 'user'
-  });
-
-  return res.status(201).json({
-    id: newUser.id,
-    email: newUser.email,
-    role: newUser.role
-  });
-}));
+// router.post('/register', catchAsync(async (req, res) => { ... })); // Keep or remove based on needs
 
 /**
  * POST /api/auth/login
- * Body: { "email": "test@example.com", "password": "secret" }
- * Returns: { token: <jwt>, user: { id, email, role } }
+ * Body: { "email": "...", "password": "..." }
+ * Returns: { success: true, user: { ... }, redirectUrl: "..." }
  */
 router.post('/login', catchAsync(authController.login));
 
 /**
  * POST /api/auth/register/athlete
  * Registers a new athlete with additional fields
+ * Returns: { success: true, message: "...", athlete: { ... } }
  */
 router.post('/register/athlete', validateAthleteRegistration, catchAsync(authController.registerAthlete));
 
 /**
  * GET /api/auth/me
- * Returns the current logged-in user based on their token
+ * Returns the current logged-in user based on their token (populated by requireAuth middleware)
+ * Returns: { id, email, role, ...other sanitized fields }
  */
-router.get('/me', requireAuth, catchAsync(async (req, res) => {
-  const { userId, role } = req.user;
-  
-  // Create a minimal safe user object as fallback
-  const safeMinimalUser = {
-    id: parseInt(userId, 10) || 0,
-    role: String(role).substring(0, 50)
-  };
-  
-  try {
-    let userInstance = null;
-    
-    // SELECT ONLY NEEDED FIELDS - this is crucial
-    const selectFields = {
-      athlete: ['id', 'firstName', 'lastName', 'email', 'position'],
-      user: ['id', 'email', 'role'],
-      team: ['id', 'name', 'email', 'logoUrl'],
-      manager: ['id', 'firstName', 'lastName', 'email', 'teamId']
-    };
-    
-    // Fetch user data based on role with minimal fields
-    switch (role) {
-      case 'athlete':
-        userInstance = await Athlete.findByPk(userId, {
-          attributes: selectFields.athlete
-        });
-        break;
-      case 'user':
-        userInstance = await User.findByPk(userId, {
-          attributes: selectFields.user
-        });
-        break;
-      case 'team':
-        userInstance = await Team.findByPk(userId, {
-          attributes: selectFields.team
-        });
-        break;
-      case 'manager':
-        userInstance = await Manager.findByPk(userId, {
-          attributes: selectFields.manager
-        });
-        break;
-    }
-    
-    if (!userInstance) {
-      logger.warn(`[/me] User not found for ID: ${userId}, Role: ${role}`);
-      return sendSafeJson(res, {
-        success: false,
-        error: { 
-          message: 'User not found', 
-          code: 'USER_NOT_FOUND' 
-        }
-      }, 404);
-    }
-    
-    // Convert to plain object
-    const userObject = userInstance.toJSON ? userInstance.toJSON() : userInstance;
-    
-    // Sanitize the object
-    const userData = sanitizeUserData(userObject, role);
-    
-    if (!userData) {
-      logger.error(`[/me] Failed to sanitize user data for ID: ${userId}`);
-      return sendSafeJson(res, safeMinimalUser);
-    }
-
-    logger.debug('[/me] User data retrieved and sanitized successfully');
-    
-    // Use the safe direct JSON response
-    return sendSafeJson(res, userData);
-    
-  } catch (error) {
-    logger.error(`[/me] Error: ${error.message}`);
-    return sendSafeJson(res, safeMinimalUser);
-  }
-}));
+router.get('/me', requireAuth, (req, res) => {
+  // requireAuth middleware verifies token and attaches sanitized user data to req.user
+  logger.debug(`[/me] Sending sanitized user data from req.user for UserID: ${req.user?.id}`);
+  // Use sendSafeJson to ensure the response is safe, even though req.user should already be sanitized
+  return sendSafeJson(res, req.user); // Send the req.user object directly
+});
 
 /**
  * POST /api/auth/logout
  * Clears the auth cookie
+ * Returns: { success: true, message: "Logged out successfully" }
  */
-router.post('/logout', (req, res) => {
-  // Direct implementation to avoid going through catchAsync
-  return authController.logout(req, res);
+router.post('/logout', (req, res, next) => {
+  // Call controller directly, bypassing catchAsync if it handles errors internally
+  authController.logout(req, res).catch(next); // Ensure potential errors are passed to error handler
 });
 
 /**
@@ -214,28 +110,37 @@ router.get('/facebook', catchAsync(authController.facebookAuth));
 /**
  * GET /api/auth/check-email?email=someone@example.com
  * Returns: { exists: true/false }
- * Checks User, Athlete, Team, and Manager tables for future-proofing.
+ * Checks User, Athlete, Team, and Manager tables.
  */
 router.get('/check-email', async (req, res) => {
   try {
     const email = String(req.query.email || '').toLowerCase().trim();
-    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
-      return res.status(400).json({ exists: false, error: 'Invalid or missing email' });
+    // Basic email format validation
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      // Return false for invalid email format, but maybe log it
+      logger.debug(`[/check-email] Invalid email format received: ${req.query.email}`);
+      return res.status(400).json({ exists: false, error: 'Invalid email format' });
     }
 
-    // Check all relevant tables for the email
-    const [user, athlete, team, manager] = await Promise.all([
-      User.findOne({ where: { email } }),
-      Athlete.findOne({ where: { email } }),
-      Team.findOne({ where: { email } }),
-      Manager.findOne({ where: { email } }),
+    // Check all relevant tables concurrently
+    const results = await Promise.allSettled([
+      User.findOne({ where: { email }, attributes: ['id'] }),
+      Athlete.findOne({ where: { email }, attributes: ['id'] }),
+      // Add Team and Manager if they have unique email constraints
+      // Team.findOne({ where: { email }, attributes: ['id'] }),
+      // Manager.findOne({ where: { email }, attributes: ['id'] }),
     ]);
 
-    res.json({ exists: !!user || !!athlete || !!team || !!manager });
+    // Check if any query found a result
+    const exists = results.some(result => result.status === 'fulfilled' && result.value !== null);
+
+    return res.json({ exists });
+
   } catch (err) {
-    // Log error for debugging, but don't leak details to client
-    console.error('Error in /api/auth/check-email:', err);
-    res.status(500).json({ exists: false, error: 'Internal server error' });
+    // Log the error for debugging, but don't leak details to the client
+    logger.error('Error in /api/auth/check-email:', err);
+    // Return a generic error and assume email doesn't exist to avoid blocking user
+    return res.status(500).json({ exists: false, error: 'Internal server error during email check' });
   }
 });
 
@@ -251,7 +156,7 @@ if (process.env.NODE_ENV !== 'production') {
       acc[key] = key.includes('token') ? `${cookies[key].substring(0, 10)}...` : cookies[key];
       return acc;
     }, {});
-    
+
     res.json({
       cookies: sanitizedCookies,
       headers: {

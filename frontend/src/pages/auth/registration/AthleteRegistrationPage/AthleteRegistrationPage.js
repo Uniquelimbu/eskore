@@ -17,16 +17,12 @@ const AthleteRegistrationPage = () => {
       confirmPassword: ''
     },
     profileInfo: {
-      displayName: '',
-      bio: '',
       country: '',
-      dateOfBirth: ''
+      dob: '',
+      // province removed
     },
     gameInfo: {
-      primaryGame: '',
-      skillLevel: '',
-      playingExperience: '',
-      preferredPlatform: ''
+      // No longer used, but keep for step logic
     }
   });
   
@@ -53,21 +49,17 @@ const AthleteRegistrationPage = () => {
 
   const handleSubmit = async (completeData) => {
     try {
-      // Use the new fields for registrationData
       const registrationData = {
         firstName: completeData.basicInfo.firstName,
         middleName: completeData.basicInfo.middleName,
         lastName: completeData.basicInfo.lastName,
         email: completeData.basicInfo.email,
         password: completeData.basicInfo.password,
-        dob: completeData.profileInfo.dateOfBirth || null,
-        country: completeData.profileInfo.country || '',
-        // ...other fields as needed...
-        bio: completeData.profileInfo.bio || '',
-        primaryGame: completeData.gameInfo.primaryGame || '',
-        skillLevel: completeData.gameInfo.skillLevel || '',
-        playingExperience: completeData.gameInfo.playingExperience || '',
-        preferredPlatform: completeData.gameInfo.preferredPlatform || ''
+        dob: completeData.profileInfo.dob,
+        height: completeData.profileInfo.height,
+        position: completeData.profileInfo.position,
+        country: completeData.profileInfo.country
+        // province removed
       };
       
       // Register using auth context

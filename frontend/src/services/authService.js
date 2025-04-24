@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 
-// Helper for retry logic
+// Helper for retry logic (keep as is or refine if needed)
 const withRetry = async (fn, maxRetries = 2, delay = 1000) => {
   let lastError;
   
@@ -36,15 +36,18 @@ const authService = {
   login: async (credentials) => {
     return withRetry(async () => {
       try {
-        return await apiClient.post('/api/auth/login', credentials);
-      } catch (error) {
-        // Enhanced error handling
-        if (error.status === 401) {
-          throw { ...error, message: "Invalid email or password" };
-        } else if (error.status === 429) {
-          throw { ...error, message: "Too many login attempts. Please try again later." };
+        const response = await apiClient.post('/api/auth/login', credentials);
+        if (response && response.success && response.user) {
+          return response;
         }
-        throw error;
+        throw new Error(response?.message || 'Login failed: Invalid response from server');
+      } catch (error) {
+        if (error.status === 401 || error.code === 'INVALID_CREDENTIALS') {
+          throw new Error("Invalid email or password.");
+        } else if (error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED') {
+          throw new Error("Too many login attempts. Please try again later.");
+        }
+        throw error instanceof Error ? error : new Error(error.message || 'Login failed');
       }
     });
   },
@@ -53,13 +56,19 @@ const authService = {
   registerAthlete: async (userData) => {
     return withRetry(async () => {
       try {
-        return await apiClient.post('/api/auth/register/athlete', userData);
-      } catch (error) {
-        // Enhanced error messages based on status codes
-        if (error.status === 409) {
-          throw { ...error, message: "An account with this email already exists." };
+        const response = await apiClient.post('/api/auth/register/athlete', userData);
+        if (response && response.success && response.athlete) {
+          return response;
         }
-        throw error;
+        throw new Error(response?.message || 'Registration failed: Invalid response from server');
+      } catch (error) {
+        if (error.status === 409 || error.code === 'EMAIL_IN_USE') {
+          throw new Error("An account with this email already exists.");
+        } else if (error.status === 400 && error.fields) {
+          const fieldErrors = Object.values(error.fields).map(e => e.msg).join(' ');
+          throw new Error(`Registration failed: ${fieldErrors}`);
+        }
+        throw error instanceof Error ? error : new Error(error.message || 'Registration failed');
       }
     });
   },
@@ -69,32 +78,29 @@ const authService = {
     try {
       return await apiClient.post('/api/auth/logout');
     } catch (error) {
-      console.error('Logout error:', error);
-      return { success: true, message: 'Logged out locally' };
+      console.error('Logout API error:', error);
+      return { success: true, message: 'Logged out locally despite API error' };
     }
   },
 
   // Get the current user's profile
   getCurrentUser: async () => {
-    return withRetry(async () => {
-      try {
-        return await apiClient.get('/api/auth/me');
-      } catch (error) {
-        // Return null instead of throwing for 401s (not authenticated)
-        if (error.status === 401) {
-          return null;
-        }
-        throw error;
+    try {
+      const response = await apiClient.get('/api/auth/me');
+      return response;
+    } catch (error) {
+      if (error.status === 401 || error.code === 'NO_TOKEN' || error.code === 'INVALID_TOKEN') {
+        return null;
       }
-    });
+      throw error instanceof Error ? error : new Error(error.message || 'Get current user failed');
+    }
   },
-  
+
   // Reset password request
   requestPasswordReset: async (email) => {
     try {
       return await apiClient.post('/api/auth/reset-password-request', { email });
     } catch (error) {
-      // Always return success even if email doesn't exist (security best practice)
       if (error.status === 404) {
         return { success: true, message: "If your email exists, you'll receive reset instructions" };
       }
@@ -108,7 +114,7 @@ const authService = {
       return await apiClient.post('/api/auth/reset-password', { token, newPassword });
     } catch (error) {
       if (error.status === 400) {
-        throw { ...error, message: "Invalid or expired reset token" };
+        throw new Error("Invalid or expired reset token");
       }
       throw error;
     }

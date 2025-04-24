@@ -1,7 +1,14 @@
-.dashboard-page {
+.dashboard-layout { /* Changed from .dashboard-page */
+  display: flex; /* Use flexbox for layout */
+  min-height: 100vh; /* Ensure layout takes full height */
+  background-color: #f8f9fa; /* Light background for the content area */
+}
+
+.dashboard-main-content {
+  flex-grow: 1; /* Allow content area to take remaining space */
   padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
+  margin-left: 260px; /* Add left margin equal to sidebar width */
+  max-width: calc(100% - 260px); /* Ensure content doesn't overlap sidebar */
   font-family: 'Inter', sans-serif;
 }
 
@@ -19,17 +26,25 @@
   font-size: 0.9rem;
 }
 
-.dashboard-content {
+.dashboard-content-grid { /* Renamed from .dashboard-content */
   display: grid;
   grid-template-columns: 1fr;
   gap: 30px;
 }
 
-@media (min-width: 768px) {
-  .dashboard-content {
-    grid-template-columns: 1fr 1fr;
+@media (min-width: 992px) { /* Adjusted breakpoint */
+  .dashboard-content-grid {
+    grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
   }
 }
+
+@media (min-width: 1400px) { /* Optional: Adjust for very large screens */
+  .dashboard-content-grid {
+     /* Example: Maybe make stats wider */
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
 
 .loading {
   display: flex;
@@ -224,4 +239,17 @@
   text-align: center;
   padding: 30px;
   color: #a0aec0;
+}
+
+/* Responsive adjustments for smaller screens where sidebar might hide or change */
+@media (max-width: 768px) {
+  .dashboard-main-content {
+    margin-left: 100px; /* Adjust margin to match narrow sidebar width (was 60px) */
+    max-width: calc(100% - 100px); /* Adjust max-width */
+    padding: 20px;
+  }
+
+  .dashboard-content-grid {
+    grid-template-columns: 1fr; /* Force single column */
+  }
 }

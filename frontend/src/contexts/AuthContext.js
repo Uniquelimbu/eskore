@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import authService from '../services/authService';
+import authService from '../services/authService'; // Assumes authService uses apiClient
 
 // Define action types
 const AUTH_INIT = 'AUTH_INIT';
@@ -11,7 +11,7 @@ const AUTH_LOADING = 'AUTH_LOADING';
 // Initial state
 const initialState = {
   user: null,
-  loading: true,
+  loading: true, // Start loading initially to check auth status
   error: null,
   isAuthenticated: false
 };
@@ -20,28 +20,30 @@ const initialState = {
 const authReducer = (state, action) => {
   switch (action.type) {
     case AUTH_INIT:
-      return { ...state, loading: false, error: null };
+      // Initialize state, typically when auth check completes with no user
+      return { ...initialState, loading: false };
     case AUTH_SUCCESS:
-      return { 
-        ...state, 
-        user: action.payload, 
-        loading: false, 
+      // Ensure payload is the user object itself
+      const userPayload = action.payload && typeof action.payload === 'object' ? action.payload : null;
+      return {
+        ...state,
+        user: userPayload, // Store the user object directly
+        loading: false,
         error: null,
-        isAuthenticated: true 
+        isAuthenticated: !!userPayload, // Set isAuthenticated based on userPayload presence
       };
     case AUTH_ERROR:
-      return { 
-        ...state, 
-        error: action.payload, 
-        loading: false 
+      return {
+        ...state,
+        error: action.payload,
+        loading: false,
+        // Keep user potentially, but mark as not authenticated if error implies it
+        // isAuthenticated: false // Consider if errors should always de-authenticate
       };
     case AUTH_LOGOUT:
-      return { 
-        ...state, 
-        user: null, 
-        loading: false, 
-        error: null,
-        isAuthenticated: false 
+      return {
+        ...initialState, // Reset to initial state on logout
+        loading: false, // Ensure loading is false after logout
       };
     case AUTH_LOADING:
       return { ...state, loading: true, error: null };
@@ -57,45 +59,72 @@ const AuthContext = createContext(initialState);
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  // Logout function (defined early to be used in checkAuth error handling)
+  const logout = async () => {
+    try {
+      dispatch({ type: AUTH_LOADING });
+      await authService.logout(); // Call API logout
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Still proceed with local logout even if API fails
+    } finally {
+      // Ensure local state is always cleared on logout attempt
+      dispatch({ type: AUTH_LOGOUT });
+    }
+  };
+
+
   // Effect to check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
+      // No need to dispatch loading here, initial state is loading: true
       try {
-        dispatch({ type: AUTH_LOADING });
-        const response = await authService.getCurrentUser();
-        
-        if (response && response.user) {
-          dispatch({ type: AUTH_SUCCESS, payload: response.user });
+        const currentUser = await authService.getCurrentUser();
+
+        if (currentUser && typeof currentUser === 'object') {
+          // User is authenticated
+          dispatch({ type: AUTH_SUCCESS, payload: currentUser });
         } else {
-          dispatch({ type: AUTH_INIT });
+          // No user data returned (likely 401 handled by authService returning null)
+          // Or getCurrentUser returned null/undefined explicitly
+          dispatch({ type: AUTH_INIT }); // Initialize without user, loading becomes false
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        // Handle errors during initial check (e.g., network error)
+        console.error('Initial auth check error:', error.message || error);
+        // Initialize state without user, mark loading as false
         dispatch({ type: AUTH_INIT });
       }
     };
 
     checkAuth();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only on mount
 
   // Login function
   const login = async (email, password) => {
     try {
       dispatch({ type: AUTH_LOADING });
-      const response = await authService.login({ email, password });
-      
-      if (response && response.user) {
-        dispatch({ type: AUTH_SUCCESS, payload: response.user });
-        return response;
+      // Step 1: Call the login API endpoint
+      const loginResponse = await authService.login({ email, password });
+
+      // Check if login was successful (backend sets cookie, response has user data)
+      if (loginResponse && loginResponse.success && loginResponse.user) {
+        // Step 2: Use the user data directly from the login response
+        // No need to call /me again if login response is trusted and sanitized
+        dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user });
+        return loginResponse.user; // Return the user data
       } else {
-        throw new Error('Login response missing user data');
+        // Login API call itself failed or didn't return expected data
+        throw new Error(loginResponse?.message || 'Login failed');
       }
     } catch (error) {
-      dispatch({ 
-        type: AUTH_ERROR, 
-        payload: error.message || 'Login failed' 
+      // Handle errors from login API call
+      dispatch({
+        type: AUTH_ERROR,
+        payload: error.message || 'Login failed'
       });
-      throw error;
+      throw error; // Re-throw for the component to handle if needed
     }
   };
 
@@ -103,33 +132,23 @@ export const AuthProvider = ({ children }) => {
   const registerAthlete = async (userData) => {
     try {
       dispatch({ type: AUTH_LOADING });
-      const response = await authService.registerAthlete(userData);
-      
-      if (response && (response.user || response.athlete)) {
-        dispatch({ type: AUTH_SUCCESS, payload: response.user || response.athlete });
-        return response;
+      // Step 1: Call the register API endpoint
+      const registerResponse = await authService.registerAthlete(userData);
+
+      if (registerResponse && registerResponse.success && registerResponse.athlete) {
+         // Step 2: Use the athlete data directly from the registration response
+         // Assuming the backend returns the sanitized athlete object
+         dispatch({ type: AUTH_SUCCESS, payload: registerResponse.athlete });
+         return registerResponse.athlete; // Return the registered athlete data
       } else {
-        throw new Error('Registration response missing user data');
+        throw new Error(registerResponse?.message || 'Registration failed');
       }
     } catch (error) {
-      dispatch({ 
-        type: AUTH_ERROR, 
-        payload: error.message || 'Registration failed' 
+      dispatch({
+        type: AUTH_ERROR,
+        payload: error.message || 'Registration failed'
       });
       throw error;
-    }
-  };
-
-  // Logout function
-  const logout = async () => {
-    try {
-      dispatch({ type: AUTH_LOADING });
-      await authService.logout();
-      dispatch({ type: AUTH_LOGOUT });
-    } catch (error) {
-      // Still logout locally even if server logout fails
-      dispatch({ type: AUTH_LOGOUT });
-      console.error('Logout error:', error);
     }
   };
 

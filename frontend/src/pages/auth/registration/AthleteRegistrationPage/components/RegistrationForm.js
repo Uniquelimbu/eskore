@@ -8,7 +8,6 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   useEffect(() => {
-    // Initialize step data based on current step
     if (step === 1) {
       setStepData(formData.basicInfo);
     } else if (step === 2) {
@@ -20,7 +19,6 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
 
   const validateStep = () => {
     const newErrors = {};
-
     if (step === 1) {
       // First Name validation
       if (!stepData.firstName) newErrors.firstName = 'First name is required';
@@ -49,14 +47,11 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
         newErrors.height = 'Height must be between 100 and 250 cm';
 
       if (!stepData.position) newErrors.position = 'Position is required';
-
       if (!stepData.country) newErrors.country = 'Country is required';
-      // No displayName/bio validation
+      if (!stepData.dob) newErrors.dob = 'Date of birth is required';
     } else if (step === 3) {
       if (!stepData.agreeTerms) newErrors.agreeTerms = 'You must agree to the Terms and Services';
-      // allowLocation is now optional, so no validation error
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -227,10 +222,11 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
               <label>Date of Birth</label>
               <input
                 type="date"
-                name="dateOfBirth"
-                value={stepData.dateOfBirth || ''}
+                name="dob"
+                value={stepData.dob || ''}
                 onChange={handleChange}
               />
+              {errors.dob && <div className="error">{errors.dob}</div>}
             </div>
           </>
         );
