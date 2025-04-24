@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+// Add axios or use your apiClient if available
+import axios from 'axios';
 
 const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading }) => {
   const [stepData, setStepData] = useState({});
   const [errors, setErrors] = useState({});
-  
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
   useEffect(() => {
     // Initialize step data based on current step
     if (step === 1) {
@@ -17,7 +20,7 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
 
   const validateStep = () => {
     const newErrors = {};
-    
+
     if (step === 1) {
       // First Name validation
       if (!stepData.firstName) newErrors.firstName = 'First name is required';
@@ -41,36 +44,57 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
       else if (stepData.password !== stepData.confirmPassword) 
         newErrors.confirmPassword = 'Passwords do not match';
     } else if (step === 2) {
-      if (!stepData.displayName) newErrors.displayName = 'Display name is required';
-      else if (stepData.displayName.length < 2) 
-        newErrors.displayName = 'Display name must be at least 2 characters';
-      
+      if (!stepData.height) newErrors.height = 'Height is required';
+      else if (isNaN(Number(stepData.height)) || Number(stepData.height) < 100 || Number(stepData.height) > 250)
+        newErrors.height = 'Height must be between 100 and 250 cm';
+
+      if (!stepData.position) newErrors.position = 'Position is required';
+
       if (!stepData.country) newErrors.country = 'Country is required';
-      
-      if (stepData.bio && stepData.bio.length > 500) 
-        newErrors.bio = 'Bio cannot exceed 500 characters';
+      // No displayName/bio validation
     } else if (step === 3) {
-      if (!stepData.primaryGame) newErrors.primaryGame = 'Primary game is required';
-      if (!stepData.skillLevel) newErrors.skillLevel = 'Skill level is required';
+      if (!stepData.agreeTerms) newErrors.agreeTerms = 'You must agree to the Terms and Services';
+      // allowLocation is now optional, so no validation error
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setStepData({ ...stepData, [name]: value });
-    
-    // Clear error when user starts typing
+    const { name, type, checked, value } = e.target;
+    setStepData({ ...stepData, [name]: type === 'checkbox' ? checked : value });
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
   };
 
-  const handleSubmit = (e) => {
+  // Async email uniqueness check
+  const checkEmailExists = async (email) => {
+    try {
+      // Replace with your API client if available
+      const res = await axios.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+      return res.data.exists;
+    } catch (err) {
+      // If error, assume not exists to avoid blocking registration
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Step 1: Check email uniqueness before proceeding
+    if (step === 1) {
+      setCheckingEmail(true);
+      const emailExists = await checkEmailExists(stepData.email);
+      setCheckingEmail(false);
+      if (emailExists) {
+        setErrors({ ...errors, email: 'An account with this email already exists. Please use a different email.' });
+        return;
+      }
+    }
+
     if (validateStep()) {
       onNextStep(stepData);
     }
@@ -149,129 +173,117 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
             </div>
           </>
         );
-      
       case 2:
         return (
           <>
-            <h2>Profile Information</h2>
+            {/* Removed <h2>Profile Information</h2>, Display Name, and Bio */}
             <div className="form-group">
-              <label>Display Name</label>
-              <input 
-                type="text" 
-                name="displayName" 
-                value={stepData.displayName || ''} 
-                onChange={handleChange} 
+              <label>Height (cm)</label>
+              <input
+                type="number"
+                name="height"
+                placeholder="Enter your height in cm"
+                value={stepData.height || ''}
+                onChange={handleChange}
+                min={100}
+                max={250}
               />
-              {errors.displayName && <div className="error">{errors.displayName}</div>}
+              {errors.height && <div className="error">{errors.height}</div>}
             </div>
-            
             <div className="form-group">
-              <label>Bio</label>
-              <textarea 
-                name="bio" 
-                value={stepData.bio || ''} 
-                onChange={handleChange} 
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Country</label>
-              <select 
-                name="country" 
-                value={stepData.country || ''} 
+              <label>Position</label>
+              <select
+                name="position"
+                value={stepData.position || ''}
                 onChange={handleChange}
               >
-                <option value="">Select Country</option>
+                <option value="" disabled hidden>
+                  Select Position
+                </option>
+                <option value="FW">Forward (FW)</option>
+                <option value="MD">Midfield (MD)</option>
+                <option value="DF">Defence (DF)</option>
+                <option value="GK">Goalkeeper (GK)</option>
+              </select>
+              {errors.position && <div className="error">{errors.position}</div>}
+            </div>
+            <div className="form-group">
+              <label>Country</label>
+              <select
+                name="country"
+                value={stepData.country || ''}
+                onChange={handleChange}
+              >
+                <option value="" disabled hidden>
+                  Select Country
+                </option>
                 <option value="us">United States</option>
                 <option value="ca">Canada</option>
-                <option value="uk">United Kingdom</option>
-                <option value="au">Australia</option>
-                {/* More countries would be added here */}
+                <option value="np">Nepal</option>
               </select>
               {errors.country && <div className="error">{errors.country}</div>}
             </div>
-            
             <div className="form-group">
               <label>Date of Birth</label>
-              <input 
-                type="date" 
-                name="dateOfBirth" 
-                value={stepData.dateOfBirth || ''} 
-                onChange={handleChange} 
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={stepData.dateOfBirth || ''}
+                onChange={handleChange}
               />
             </div>
           </>
         );
-      
       case 3:
+        // Step 3: Register (Consent)
         return (
           <>
-            <h2>Gaming Information</h2>
-            <div className="form-group">
-              <label>Primary Game</label>
-              <select 
-                name="primaryGame" 
-                value={stepData.primaryGame || ''} 
-                onChange={handleChange}
-              >
-                <option value="">Select Game</option>
-                <option value="lol">League of Legends</option>
-                <option value="csgo">CS:GO</option>
-                <option value="valorant">Valorant</option>
-                <option value="dota2">Dota 2</option>
-                <option value="fortnite">Fortnite</option>
-                {/* More games would be added here */}
-              </select>
-              {errors.primaryGame && <div className="error">{errors.primaryGame}</div>}
+            <div className="form-group consent-group">
+              <div className="consent-wrapper">
+                <input
+                  type="checkbox"
+                  name="agreeTerms"
+                  id="agreeTerms"
+                  checked={!!stepData.agreeTerms}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="custom-checkbox"
+                />
+                <label htmlFor="agreeTerms" className="consent-text">
+                  I have read and agree to the{' '}
+                  <a 
+                    href="/terms" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="consent-link"
+                  >
+                    eSkore Terms of Service
+                  </a>{' '}
+                  and Privacy Policy.
+                </label>
+              </div>
+              {errors.agreeTerms && <div className="error">{errors.agreeTerms}</div>}
             </div>
             
-            <div className="form-group">
-              <label>Skill Level</label>
-              <select 
-                name="skillLevel" 
-                value={stepData.skillLevel || ''} 
-                onChange={handleChange}
-              >
-                <option value="">Select Skill Level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-                <option value="professional">Professional</option>
-              </select>
-              {errors.skillLevel && <div className="error">{errors.skillLevel}</div>}
-            </div>
-            
-            <div className="form-group">
-              <label>Years of Experience</label>
-              <select 
-                name="playingExperience" 
-                value={stepData.playingExperience || ''} 
-                onChange={handleChange}
-              >
-                <option value="">Select Experience</option>
-                <option value="less1">Less than 1 year</option>
-                <option value="1to3">1-3 years</option>
-                <option value="3to5">3-5 years</option>
-                <option value="5plus">5+ years</option>
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <label>Preferred Platform</label>
-              <select 
-                name="preferredPlatform" 
-                value={stepData.preferredPlatform || ''} 
-                onChange={handleChange}
-              >
-                <option value="">Select Platform</option>
-                <option value="pc">PC</option>
-                <option value="console">Console</option>
-                <option value="mobile">Mobile</option>
-              </select>
+            <div className="form-group consent-group">
+              <div className="consent-wrapper">
+                <input
+                  type="checkbox"
+                  name="allowLocation"
+                  id="allowLocation"
+                  checked={!!stepData.allowLocation}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="custom-checkbox"
+                />
+                <label htmlFor="allowLocation" className="consent-text">
+                  I consent to eSkore using my location to enhance my experience with improved team pairing and personalized regional features.
+                </label>
+              </div>
+              {errors.allowLocation && <div className="error">{errors.allowLocation}</div>}
             </div>
           </>
         );
-      
       default:
         return null;
     }
@@ -280,29 +292,32 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
   return (
     <form onSubmit={handleSubmit}>
       {renderStepForm()}
-      
       <div className="form-buttons">
-        {step > 1 && (
-          <button 
-            type="button" 
-            className="back-button" 
+        {/* Only show Back button if step > 1 and not step 2 or 3 */}
+        {step > 1 && step !== 2 && step !== 3 && (
+          <button
+            type="button"
+            className="back-button"
             onClick={onPrevStep}
             disabled={isLoading}
           >
             Back
           </button>
         )}
-        
-        <button 
-          type="submit" 
-          className={step === 3 ? 'submit-button' : 'next-button'}
-          disabled={isLoading}
+        <button
+          type="submit"
+          className={step === 3 ? 'submit-button center-register-btn' : 'next-button'}
+          disabled={isLoading || checkingEmail}
         >
-          {isLoading ? (
-            step === 3 ? 'Creating Account...' : 'Processing...'
-          ) : (
-            step === 3 ? 'Complete Registration' : 'Next Step'
-          )}
+          {checkingEmail
+            ? 'Checking Email...'
+            : isLoading
+            ? step === 3
+              ? 'Creating Account...'
+              : 'Processing...'
+            : step === 3
+            ? 'Register'
+            : 'Next'}
         </button>
       </div>
     </form>

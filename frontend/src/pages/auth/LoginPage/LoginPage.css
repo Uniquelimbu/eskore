@@ -1,4 +1,77 @@
 .login-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-signup-top-btn {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  background: linear-gradient(to right, #4a6cf7, #5e2ced);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 26px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.25);
+  text-decoration: none;
+  z-index: 10;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+
+.login-signup-top-btn:hover,
+.login-signup-top-btn:focus {
+  background: linear-gradient(to right, #3a5bd9, #4e25ce);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 108, 247, 0.35);
+  text-decoration: none;
+}
+
+.login-container {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.back-to-home-btn {
+  display: block;
+  margin: 24px auto 0 auto;
+  background: none;
+  color: #a0aec0;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  box-shadow: none;
+  text-align: center;
+  outline: none;
+  text-decoration: none;
+}
+
+.back-to-home-btn:hover,
+.back-to-home-btn:focus {
+  color: #4a6cf7;
+  text-decoration: underline;
+}
+
+.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -110,13 +183,39 @@
   outline-offset: 2px;
 }
 
-/* Add responsive adjustments for smaller screens */
-@media (max-width: 480px) {
-  .login-container {
-    padding: 25px 20px;
+.forgot-password-btn,
+.back-to-home-btn {
+  color: #6c757d; /* Slightly darker gray for visibility */
+  border: none;
+  font-size: 0.98rem;
+  font-weight: 500;
+  margin-bottom: 18px;
+  margin-top: -8px;
+  margin-left: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s;
+  display: block;
+  padding: 0;
+}
+
+.forgot-password-btn:hover,
+.forgot-password-btn:focus,
+.back-to-home-btn:hover,
+.back-to-home-btn:focus {
+  color: #4a6cf7;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .login-signup-top-btn {
+    top: 16px;
+    right: 16px;
+    padding: 8px 18px;
+    font-size: 0.95rem;
   }
-  
-  .login-container h1 {
-    font-size: 1.75rem;
+  .login-container {
+    padding: 25px 10px;
   }
 }

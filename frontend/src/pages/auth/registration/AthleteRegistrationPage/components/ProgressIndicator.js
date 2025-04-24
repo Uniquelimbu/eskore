@@ -20,7 +20,7 @@ const ProgressIndicator = ({ currentStep, totalSteps }) => {
           >
             <div className="step-number">{step}</div>
             <div className="step-label">
-              {step === 1 ? 'Account' : step === 2 ? 'Profile' : 'Gaming'}
+              {step === 1 ? 'Account' : step === 2 ? 'Profile' : 'Register'}
             </div>
           </div>
         ))}

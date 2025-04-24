@@ -253,3 +253,22 @@
     padding: 90px 0 60px;
   }
 }
+
+.hero-section.fade-out {
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+}
+
+.hero-section.slide-fade-out {
+  animation: slideFadeOut 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+  pointer-events: none;
+}
+
+@keyframes slideFadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.98);
+    filter: blur(2px);
+  }
+}

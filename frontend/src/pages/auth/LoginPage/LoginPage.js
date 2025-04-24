@@ -27,11 +27,9 @@ const LoginPage = () => {
     } else if (!/\S+@\S+\.\S+/.test(credentials.email)) {
       errors.email = 'Email is invalid';
     }
-    
     if (!credentials.password) {
       errors.password = 'Password is required';
     }
-    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -39,7 +37,6 @@ const LoginPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
-    // Clear error when user starts typing
     if (formErrors[name]) {
       setFormErrors({ ...formErrors, [name]: null });
     }
@@ -47,7 +44,6 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (validateForm()) {
       try {
         const result = await login(credentials.email, credentials.password);
@@ -61,57 +57,80 @@ const LoginPage = () => {
     }
   };
 
+  // --- NEW: Top right sign up button ---
+  // Use absolute positioning for top right
+  // --- NEW: Forgot password handler ---
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    navigate('/not-found');
+  };
+
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <h1>Welcome Back</h1>
-        <p className="subtitle">Sign in to continue to eSkore</p>
-        
-        {error && <div className="error-banner">{error}</div>}
-        
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={credentials.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              disabled={loading}
-              required
-              autoComplete="email"
-              aria-required="true"
-            />
-            {formErrors.email && <div className="error" role="alert">{formErrors.email}</div>}
+    <div className="page-bg-light">
+      <div className="login-page">
+        <Link to="/role-selection" className="login-signup-top-btn">
+          Sign up
+        </Link>
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+          <div className="login-container">
+            <h1>Welcome Back</h1>
+            <p className="subtitle">Sign in to continue to eSkore</p>
+            {error && <div className="error-banner">{error}</div>}
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={credentials.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  disabled={loading}
+                  required
+                  autoComplete="email"
+                  aria-required="true"
+                />
+                {formErrors.email && <div className="error" role="alert">{formErrors.email}</div>}
+              </div>
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  disabled={loading}
+                />
+                {formErrors.password && <div className="error">{formErrors.password}</div>}
+              </div>
+              {/* Forgot password button */}
+              <button
+                type="button"
+                className="forgot-password-btn"
+                onClick={handleForgotPassword}
+                tabIndex={0}
+              >
+                Forgot password?
+              </button>
+              <button 
+                type="submit" 
+                className="login-button" 
+                disabled={loading}
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              disabled={loading}
-            />
-            {formErrors.password && <div className="error">{formErrors.password}</div>}
-          </div>
-          
-          <button 
-            type="submit" 
-            className="login-button" 
-            disabled={loading}
+          <button
+            type="button"
+            className="back-to-home-btn"
+            onClick={() => navigate('/')}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            ← Back to Home
           </button>
-        </form>
-        
-        <div className="login-footer">
-          <p>Don't have an account? <Link to="/role-selection">Sign up</Link></p>
         </div>
       </div>
     </div>

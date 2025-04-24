@@ -60,9 +60,9 @@ const AthleteRegistrationPage = () => {
         lastName: completeData.basicInfo.lastName,
         email: completeData.basicInfo.email,
         password: completeData.basicInfo.password,
-        // username removed
         dob: completeData.profileInfo.dateOfBirth || null,
         country: completeData.profileInfo.country || '',
+        // ...other fields as needed...
         bio: completeData.profileInfo.bio || '',
         primaryGame: completeData.gameInfo.primaryGame || '',
         skillLevel: completeData.gameInfo.skillLevel || '',
@@ -72,7 +72,8 @@ const AthleteRegistrationPage = () => {
       
       // Register using auth context
       const result = await registerAthlete(registrationData);
-      if (result) {
+      if (result && (result.athlete || result.user)) {
+        // Registration successful, redirect to dashboard
         navigate('/dashboard');
       }
     } catch (err) {
@@ -81,31 +82,52 @@ const AthleteRegistrationPage = () => {
     }
   };
 
+  const handleBackToStep = () => {
+    if (step === 2) {
+      setStep(1);
+    } else if (step === 3) {
+      setStep(2);
+    }
+  };
+
   const handleBackToRoleSelection = () => {
     navigate('/role-selection');
   };
 
   return (
-    <div className="athlete-registration-page">
-      <h1>Create Your Athlete Account</h1>
-      <ProgressIndicator currentStep={step} totalSteps={3} />
-      
-      {error && <div className="error-banner">{error}</div>}
-      
-      <RegistrationForm 
-        step={step}
-        formData={formData}
-        onNextStep={handleNextStep}
-        onPrevStep={handlePrevStep}
-        isLoading={loading}
-      />
-      <button
-        type="button"
-        className="back-to-role-selection-link"
-        onClick={handleBackToRoleSelection}
-      >
-        ← Back to Role Selection
-      </button>
+    <div className="page-bg-light">
+      <div className="athlete-registration-page">
+        <h1>Create Your Athlete Account</h1>
+        <ProgressIndicator currentStep={step} totalSteps={3} />
+        
+        {error && <div className="error-banner">{error}</div>}
+        
+        <RegistrationForm 
+          step={step}
+          formData={formData}
+          onNextStep={handleNextStep}
+          onPrevStep={handlePrevStep}
+          isLoading={loading}
+        />
+        {step === 1 && (
+          <button
+            type="button"
+            className="back-to-role-selection-link"
+            onClick={handleBackToRoleSelection}
+          >
+            ← Back to Role Selection
+          </button>
+        )}
+        {(step === 2 || step === 3) && (
+          <button
+            type="button"
+            className="back-to-role-selection-link"
+            onClick={handleBackToStep}
+          >
+            {step === 2 ? '← Back to Account' : '← Back to Profile'}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

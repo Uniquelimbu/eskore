@@ -246,23 +246,32 @@ exports.login = async (req, res) => {
 
 // Register a new athlete
 exports.registerAthlete = async (req, res) => {
-  const { 
-    firstName, lastName, email, password, dob, 
-    height, position, country, province, district, city 
+  let {
+    firstName, lastName, middleName, email, password, dob,
+    height, position, country, province, district, city
   } = req.body;
 
-  // Check if athlete with this email already exists
-  const existingAthlete = await Athlete.findOne({ where: { email } });
-  if (existingAthlete) {
-    throw new ApiError('Email already in use', 400, 'EMAIL_IN_USE');
+  // Normalize email
+  email = String(email || '').toLowerCase().trim();
+
+  // Robust: Check for email in all relevant tables
+  const [existingAthlete, existingUser, existingTeam, existingManager] = await Promise.all([
+    Athlete.findOne({ where: { email } }),
+    User.findOne({ where: { email } }),
+    Team.findOne({ where: { email } }),
+    Manager.findOne({ where: { email } }),
+  ]);
+  if (existingAthlete || existingUser || existingTeam || existingManager) {
+    throw new ApiError('Email already in use', 409, 'EMAIL_IN_USE');
   }
 
-  // Create athlete record
+  // Create athlete record (passwordHash will be hashed by model hook)
   const athlete = await Athlete.create({
     firstName,
+    middleName,
     lastName,
     email,
-    passwordHash: password, // Will be hashed by the model hook
+    passwordHash: password,
     dob,
     height,
     position,
@@ -283,15 +292,15 @@ exports.registerAthlete = async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000
   });
 
-  // Create a strictly safe user object that will never fail
+  // Minimal safe user object
   const safeUserData = {
     id: Number(athlete.id) || 0,
-    email: String(email || ''),
-    firstName: String(firstName || ''),
-    lastName: String(lastName || ''),
+    email: String(athlete.email || ''),
+    firstName: String(athlete.firstName || ''),
+    lastName: String(athlete.lastName || ''),
     role: 'athlete'
   };
-  
+
   res.status(201).json({
     success: true,
     message: 'Athlete registered successfully',

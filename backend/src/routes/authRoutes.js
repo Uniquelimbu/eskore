@@ -4,9 +4,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/User');
-const Athlete = require('../models/Athlete');  
-const Team = require('../models/Team');        
-const Manager = require('../models/Manager');  
+const Athlete = require('../models/Athlete');
+const Team = require('../models/Team');
+const Manager = require('../models/Manager');
 const { body, validationResult } = require('express-validator');
 const authController = require('../controllers/authController');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
@@ -20,23 +20,42 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10; // used by bcrypt
 
 // Validation middleware for athlete registration
+const validCountries = ['Nepal', 'Canada', 'np', 'ca'];
+
 const validateAthleteRegistration = [
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
   body('email').isEmail().withMessage('Must be a valid email address'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('dob').isDate().withMessage('Valid date of birth is required'),
+  body('dob')
+    .custom((value) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Date of birth must be in YYYY-MM-DD format');
+      const date = new Date(value);
+      if (isNaN(date.getTime())) throw new Error('Date of birth is not a valid date');
+      const year = date.getFullYear();
+      if (year < 1900 || year > new Date().getFullYear() - 5) throw new Error('Date of birth year is out of range');
+      return true;
+    }),
   body('height').isNumeric().withMessage('Height must be a number'),
   body('position').isIn(['FW', 'MD', 'DF', 'GK']).withMessage('Valid position is required'),
-  body('country').isIn(['Nepal', 'Canada']).withMessage('Country must be Nepal or Canada'),
+  body('country').custom((value) => {
+    if (!validCountries.includes(value)) throw new Error('Country must be Nepal, Canada, np, or ca');
+    return true;
+  }),
   body('province').notEmpty().withMessage('Province is required'),
   body('city').notEmpty().withMessage('City is required'),
-  
   // Add validation results middleware
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
+      // Return all validation errors for better frontend UX
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Validation failed',
+          fields: errors.mapped()
+        }
+      });
     }
     next();
   }
@@ -47,16 +66,22 @@ const validateAthleteRegistration = [
  * Body: { "email": "test@example.com", "password": "secret", "role": "admin" (optional) }
  */
 router.post('/register', catchAsync(async (req, res) => {
-  const { email, password, role } = req.body;
+  let { email, password, role } = req.body;
+  email = String(email || '').toLowerCase().trim();
 
   // Basic validation
   if (!email || !password) {
     throw new ApiError('Email and password required', 400, 'MISSING_CREDENTIALS');
   }
 
-  // Check if user with the same email already exists
-  const existingUser = await User.findOne({ where: { email } });
-  if (existingUser) {
+  // Robust: Check for email in all relevant tables
+  const [existingUser, existingAthlete, existingTeam, existingManager] = await Promise.all([
+    User.findOne({ where: { email } }),
+    Athlete.findOne({ where: { email } }),
+    Team.findOne({ where: { email } }),
+    Manager.findOne({ where: { email } }),
+  ]);
+  if (existingUser || existingAthlete || existingTeam || existingManager) {
     throw new ApiError('Email is already in use', 409, 'EMAIL_IN_USE');
   }
 
@@ -185,6 +210,34 @@ router.post('/logout', (req, res) => {
  */
 router.get('/google', catchAsync(authController.googleAuth));
 router.get('/facebook', catchAsync(authController.facebookAuth));
+
+/**
+ * GET /api/auth/check-email?email=someone@example.com
+ * Returns: { exists: true/false }
+ * Checks User, Athlete, Team, and Manager tables for future-proofing.
+ */
+router.get('/check-email', async (req, res) => {
+  try {
+    const email = String(req.query.email || '').toLowerCase().trim();
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+      return res.status(400).json({ exists: false, error: 'Invalid or missing email' });
+    }
+
+    // Check all relevant tables for the email
+    const [user, athlete, team, manager] = await Promise.all([
+      User.findOne({ where: { email } }),
+      Athlete.findOne({ where: { email } }),
+      Team.findOne({ where: { email } }),
+      Manager.findOne({ where: { email } }),
+    ]);
+
+    res.json({ exists: !!user || !!athlete || !!team || !!manager });
+  } catch (err) {
+    // Log error for debugging, but don't leak details to client
+    console.error('Error in /api/auth/check-email:', err);
+    res.status(500).json({ exists: false, error: 'Internal server error' });
+  }
+});
 
 /**
  * GET /api/auth/debug

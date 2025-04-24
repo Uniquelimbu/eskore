@@ -18,12 +18,6 @@ const TrackAnywhere = () => {
         <div className={styles.designCircle2}></div>
         <div className={styles.accentShape1}></div>
         <div className={styles.accentShape2}></div>
-        <div className={styles.fieldGraphic}></div>
-        <div className={styles.fieldCenter}></div>
-        <div className={styles.centerLine}></div>
-        <div className={styles.soccerIllustration}>
-          <div className={styles.soccerPattern}></div>
-        </div>
       </div>
       <h2 className={styles.heading}>
         Track Progress Anywhere,<br />with eSkore

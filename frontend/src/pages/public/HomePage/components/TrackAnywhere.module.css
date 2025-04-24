@@ -52,38 +52,11 @@
   animation: float 18s ease-in-out infinite reverse;
 }
 
-.fieldGraphic {
-  /* From field-graphic */
-  position: absolute;
-  bottom: -5%;
-  left: 0;
-  width: 100%;
-  height: 35%;
-  background: radial-gradient(ellipse at center, rgba(124, 205, 124, 0.05) 0%, transparent 70%);
-  border-top: 1px solid rgba(74, 108, 247, 0.08);
-}
-
-.fieldCenter {
-  /* From field-center */
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  height: 300px;
-  border: 1px solid rgba(74, 108, 247, 0.12);
-  border-radius: 50%;
-}
-
-.centerLine {
-  /* From center-line */
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
-  height: 35%;
-  background: linear-gradient(to bottom, rgba(74, 108, 247, 0.08), transparent);
+.fieldGraphic,
+.fieldCenter,
+.centerLine,
+.soccerIllustration {
+  display: none !important;
 }
 
 .dotsPattern {
@@ -120,40 +93,6 @@
   border-radius: 8px;
   transform: rotate(-15deg);
   animation: float 14s ease-in-out infinite 1s;
-}
-
-.soccerIllustration {
-  /* From soccer-illustration */
-  position: absolute;
-  top: 10%;
-  right: 10%;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle at center, 
-    rgba(255, 255, 255, 0.95) 0%, 
-    rgba(255, 255, 255, 0.8) 40%, 
-    rgba(240, 240, 240, 0.6) 100%);
-  box-shadow: 
-    0 8px 30px rgba(0, 0, 0, 0.07),
-    inset 0 -3px 10px rgba(0, 0, 0, 0.05);
-  opacity: 0.2;
-  overflow: hidden;
-}
-
-.soccerPattern {
-  /* From soccer-pattern */
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(0deg, transparent 39%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.2) 60%, transparent 61%),
-    linear-gradient(90deg, transparent 39%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.2) 60%, transparent 61%),
-    linear-gradient(45deg, transparent 39%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.15) 60%, transparent 61%),
-    linear-gradient(135deg, transparent 39%, rgba(0, 0, 0, 0.15) 40%, rgba(0, 0, 0, 0.15) 60%, transparent 61%);
-  border-radius: 50%;
 }
 
 /* Animations need to be globally defined */
@@ -269,22 +208,5 @@
     height: 120px;
     bottom: 10%;
     left: 5%;
-  }
-  
-  .fieldCenter {
-    width: 200px;
-    height: 200px;
-  }
-  
-  .soccerIllustration {
-    width: 100px;
-    height: 100px;
-    top: 5%;
-    right: 5%;
-  }
-  
-  .accentShape1, .accentShape2 {
-    width: 30px;
-    height: 30px;
   }
 }

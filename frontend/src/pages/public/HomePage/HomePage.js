@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom'; 
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import FeatureHighlights from './components/FeatureHighlights';
@@ -9,50 +9,47 @@ import './HomePage.css';
 
 const HomePage = () => {
   const [hideHeader, setHideHeader] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
   const trackAnywhereRef = useRef(null);
-  
+  const navigate = useNavigate();
+
   // Set up intersection observer to detect when Track Anywhere section is visible
   useEffect(() => {
     if (!trackAnywhereRef.current) return;
-    
     const options = {
-      // Adjust rootMargin to not trigger early at the top
       rootMargin: '0px 0px -10% 0px', 
-      // Increase threshold so it requires more of the section to be visible
-      threshold: 0.6 // Trigger when 60% of the element is visible (was 0.3)
+      threshold: 0.6
     };
-    
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        // If the section is intersecting (visible), hide the header
-        // Otherwise, show it
         setHideHeader(entry.isIntersecting);
       });
     }, options);
-    
     observer.observe(trackAnywhereRef.current);
-    
     return () => {
       observer.disconnect();
     };
   }, []);
 
+  // Callback for fade out and navigation
+  const handleFadeOutAndNavigate = (to) => {
+    setFadeOut(true);
+    setTimeout(() => {
+      navigate(to);
+    }, 500); // Match CSS duration
+  };
+
   return (
-    <div className="home-page">
-      {/* Pass hideHeader state to Header component */}
+    <div className={`home-page${fadeOut ? ' home-fade-out' : ''}`}>
       <Header forceHidden={hideHeader} />
       <main className="home-content">
-        <HeroSection />
+        <HeroSection onLoginClick={() => handleFadeOutAndNavigate('/login')} />
         <div id="features" className="content-section">
           <FeatureHighlights />
         </div>
-        
-        {/* Add ref to the TrackAnywhere component */}
         <div ref={trackAnywhereRef}>
           <TrackAnywhere /> 
         </div>
-
-        {/* Existing CTA Section */}
         <div className="cta-section">
           <h2>Ready to elevate your eSports career?</h2>
           <p>Join thousands of athletes tracking their progress with eSkore</p>

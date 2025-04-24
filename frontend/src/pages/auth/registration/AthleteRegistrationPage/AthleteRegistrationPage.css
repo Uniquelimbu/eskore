@@ -114,7 +114,8 @@
 
 .form-buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center buttons horizontally */
+  gap: 16px;
   margin-top: 30px;
 }
 
@@ -204,4 +205,143 @@
 .back-button:hover,
 .back-button:focus {
   text-decoration: none !important;
+}
+
+.select-placeholder {
+  position: absolute;
+  left: 16px;
+  top: 38px;
+  color: #a0aec0;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.consent-group {
+  margin-bottom: 16px;
+}
+
+.consent-wrapper {
+  display: flex;
+  align-items: flex-start; /* Align items to the top */
+  width: 100%;
+}
+
+/* Strongest reset for all checkboxes (prevents browser default sizing) */
+input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: initial;
+  line-height: initial;
+}
+
+/* --- Google Style Checkbox - Remapped --- */
+input[type="checkbox"].custom-checkbox {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box !important;
+  display: inline-block;
+  vertical-align: middle;
+  user-select: none;
+  height: 14px !important;
+  width: 14px !important;
+  min-width: 14px !important;
+  max-width: 14px !important;
+  color: #1a73e8;
+  background-color: #fff;
+  border: 1.5px solid #dadce0 !important;
+  border-radius: 3px !important;
+  margin-top: 3px;
+  margin-right: 10px;
+  cursor: pointer;
+  position: relative;
+  padding: 0 !important;
+  font-size: initial !important;
+  line-height: initial !important;
+  transition: background-color 0.1s, border-color 0.1s;
+}
+
+/* Checked state */
+input[type="checkbox"].custom-checkbox:checked {
+  border-color: transparent !important;
+  background-color: currentColor !important;
+}
+
+/* Checkmark */
+input[type="checkbox"].custom-checkbox:checked::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0px;
+  left: 3.5px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Focus state */
+input[type="checkbox"].custom-checkbox:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25) !important;
+  border-color: #1a73e8 !important;
+  height: 14px !important;
+  width: 14px !important;
+}
+
+/* Disabled state */
+input[type="checkbox"].custom-checkbox:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background-color: #f1f3f4 !important;
+  border-color: #dadce0 !important;
+}
+input[type="checkbox"].custom-checkbox:disabled:checked {
+  background-color: #8ab4f8 !important;
+  border-color: transparent !important;
+}
+input[type="checkbox"].custom-checkbox:disabled:checked::after {
+  border-color: #f1f3f4 !important;
+}
+
+.consent-text {
+  display: inline-block;
+  font-weight: 400;
+  color: #3c4043; /* Google's standard text color */
+  font-size: 14px; /* Google often uses 14px */
+  line-height: 1.43; /* Match Google's line-height */
+  cursor: pointer;
+  flex: 1;
+}
+
+.consent-link {
+  color: #1a73e8; /* Google Blue for links */
+  text-decoration: none; /* Google links often don't have underline by default */
+}
+
+.consent-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+.consent-link:focus,
+.consent-link:active {
+  outline: none;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
+.center-register-btn {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }

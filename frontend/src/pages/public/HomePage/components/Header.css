@@ -232,6 +232,11 @@
   text-decoration: none !important;
 }
 
+.home-header__logo.no-outline:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Remove underline from all links and buttons in header */
 .home-header a,
 .home-header a:hover,

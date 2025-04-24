@@ -1,10 +1,8 @@
 import React, { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import GetStartedButton from './GetStartedButton';
 import './HeroSection.css';
 
-const HeroSection = () => {
-  // Remove image loading state since we don't need animations anymore
+const HeroSection = ({ onLoginClick }) => {
   const imgRef = useRef(null);
   const heroImgPath = `${process.env.PUBLIC_URL}/images/mockups/eskore-mockup.png`;
 
@@ -13,7 +11,6 @@ const HeroSection = () => {
       <div className="hero-background">
         <div className="hero-overlay"></div>
       </div>
-      
       <div className="hero-container">
         <div className="hero-content">
           <h1 className="hero-title">
@@ -26,9 +23,13 @@ const HeroSection = () => {
           </p>
           <div className="hero-buttons">
             <GetStartedButton />
-            <Link to="/login" className="existing-account-button">
+            <button
+              type="button"
+              className="existing-account-button"
+              onClick={onLoginClick}
+            >
               I already have an Account
-            </Link>
+            </button>
           </div>
         </div>
         <div className="hero-image">

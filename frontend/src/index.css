@@ -18,6 +18,8 @@ html {
 }
 
 body {
+  /* Default to dark background for most pages */
+  background-color: #1A1F2C;
   margin: 0; /* Ensure body margin is 0 */
   padding: 0; /* Ensure body padding is 0 */
   height: 100%; /* Ensure body takes full height */
@@ -26,13 +28,18 @@ body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Change default background back to dark neutral */
-  background-color: #1A1F2C; /* Was #e9ecef */
   /* Change default text color back to light */
   color: #e2e8f0; /* Was #2d3748 */
   transition: background-color 0.3s ease, color 0.3s ease;
   position: relative;
   overflow-y: auto !important; /* Ensure vertical scrolling works */
+}
+
+/* Utility: force light background for specific pages */
+.page-bg-light {
+  background-color: #f8f9fa !important;
+  min-height: 100vh;
+  width: 100%;
 }
 
 /* Light/dark mode support via data attribute - Remove dark theme rule as it's now default */

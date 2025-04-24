@@ -4,7 +4,7 @@ import './Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <footer className="home-footer">
       <div className="footer-container">
@@ -21,14 +21,35 @@ const Footer = () => {
             </div>
             <p>The ultimate eSports performance tracking platform for athletes, coaches, and teams</p>
             <div className="social-links">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-                <i className="social-icon">🐦</i>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <img
+                  src={`${process.env.PUBLIC_URL}/images/logos/facebook.jpg`}
+                  alt="Facebook"
+                  className="social-icon"
+                  width={24}
+                  height={24}
+                  style={{ display: 'block' }}
+                />
               </a>
-              <a href="https://discord.com" target="_blank" rel="noopener noreferrer" aria-label="Discord">
-                <i className="social-icon">💬</i>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                <img
+                  src={`${process.env.PUBLIC_URL}/images/logos/twitter.jpg`}
+                  alt="Twitter"
+                  className="social-icon"
+                  width={24}
+                  height={24}
+                  style={{ display: 'block' }}
+                />
               </a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                <i className="social-icon">📷</i>
+                <img
+                  src={`${process.env.PUBLIC_URL}/images/logos/instagram.png`}
+                  alt="Instagram"
+                  className="social-icon"
+                  width={24}
+                  height={24}
+                  style={{ display: 'block' }}
+                />
               </a>
             </div>
           </div>
@@ -60,7 +81,6 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
         <div className="footer-bottom">
           <p>© {currentYear} eSkore. All rights reserved.</p>
         </div>

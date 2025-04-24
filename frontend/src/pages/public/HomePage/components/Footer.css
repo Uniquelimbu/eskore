@@ -1,5 +1,5 @@
 .home-footer {
-  background-color: #1A103C;
+  background-color: #483D8B; /* Match Hero section background */
   color: #f8f9fa;
   padding: 5rem 0 2rem;
   margin-top: auto;
@@ -45,16 +45,23 @@
 .social-links {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .social-icon {
   font-size: 1.5rem;
-  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Remove transition on opacity if using images */
 }
 
 .social-links a {
   color: #cbd5e0;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  height: 32px;
 }
 
 .social-links a:hover {
