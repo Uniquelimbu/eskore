@@ -110,6 +110,19 @@
   color: #e53e3e;
   font-size: 0.85rem;
   margin-top: 5px;
+  text-align: left;
+  display: block;
+  font-weight: 500;
+}
+
+.error-banner {
+  background-color: rgba(229, 62, 62, 0.1);
+  border-left: 4px solid #e53e3e;
+  color: #e53e3e;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
 }
 
 .form-buttons {

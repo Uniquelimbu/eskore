@@ -47,14 +47,11 @@ const DashboardPage = () => {
                 <span className="quicklink-icon">👤</span>
                 <span className="quicklink-label">Update Profile</span>
               </a>
-              <a href="/practice" className="quicklink-button">
-                <span className="quicklink-icon">⚽</span>
-                <span className="quicklink-label">Log Practice</span>
-              </a>
               <a href="/leaderboards" className="quicklink-button">
                 <span className="quicklink-icon">🏆</span>
-                <span className="quicklink-label">View Leaderboards</span>
+                <span className="quicklink-label">Standings</span>
               </a>
+              {/* Additional quicklinks if needed */}
             </div>
           </div>
 

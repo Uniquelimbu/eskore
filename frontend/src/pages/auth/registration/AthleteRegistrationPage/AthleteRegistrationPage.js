@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
 import ProgressIndicator from './components/ProgressIndicator';
@@ -26,8 +26,17 @@ const AthleteRegistrationPage = () => {
     }
   });
   
+  const [registrationError, setRegistrationError] = useState(null);
   const navigate = useNavigate();
-  const { registerAthlete, loading, error } = useAuth();
+  // Make sure these are in the destructured props from useAuth
+  const { registerAthlete, loading, error, isAuthenticated } = useAuth();
+  
+  // This useEffect will handle redirect on successful authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleNextStep = (stepData) => {
     if (step === 1) {
@@ -49,6 +58,7 @@ const AthleteRegistrationPage = () => {
 
   const handleSubmit = async (completeData) => {
     try {
+      setRegistrationError(null);
       const registrationData = {
         firstName: completeData.basicInfo.firstName,
         middleName: completeData.basicInfo.middleName,
@@ -59,18 +69,14 @@ const AthleteRegistrationPage = () => {
         height: completeData.profileInfo.height,
         position: completeData.profileInfo.position,
         country: completeData.profileInfo.country
-        // province removed
       };
       
-      // Register using auth context
-      const result = await registerAthlete(registrationData);
-      if (result && (result.athlete || result.user)) {
-        // Registration successful, redirect to dashboard
-        navigate('/dashboard');
-      }
+      // Just await the registration - don't try to navigate manually
+      await registerAthlete(registrationData);
+      // The useEffect will handle redirection once auth state updates
     } catch (err) {
       console.error('Registration failed:', err);
-      // Consider showing a local error message if context doesn't handle it
+      setRegistrationError(err.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -86,13 +92,16 @@ const AthleteRegistrationPage = () => {
     navigate('/role-selection');
   };
 
+  // Use registration error or auth context error
+  const displayError = registrationError || error;
+
   return (
     <div className="page-bg-light">
       <div className="athlete-registration-page">
         <h1>Create Your Athlete Account</h1>
         <ProgressIndicator currentStep={step} totalSteps={3} />
         
-        {error && <div className="error-banner">{error}</div>}
+        {displayError && <div className="error-banner">{displayError}</div>}
         
         <RegistrationForm 
           step={step}

@@ -83,15 +83,9 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/practice">
-              <span role="img" aria-label="Practice" className="sidebar-nav-icon">🏋️‍♂️</span>
-              <span className="sidebar-nav-label">Practice</span>
-            </NavLink>
-          </li>
-          <li>
             <NavLink to="/leaderboards">
-              <span role="img" aria-label="Leaderboards" className="sidebar-nav-icon">🏆</span>
-              <span className="sidebar-nav-label">Leaderboards</span>
+              <span role="img" aria-label="Standings" className="sidebar-nav-icon">🏆</span>
+              <span className="sidebar-nav-label">Standings</span>
             </NavLink>
           </li>
           <li>
@@ -101,9 +95,9 @@ const Sidebar = () => {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/shop">
-              <span role="img" aria-label="Shop" className="sidebar-nav-icon">🛒</span>
-              <span className="sidebar-nav-label">Shop</span>
+            <NavLink to="/news">
+              <span role="img" aria-label="News" className="sidebar-nav-icon">📰</span>
+              <span className="sidebar-nav-label">News</span>
             </NavLink>
           </li>
           <li>

@@ -148,7 +148,7 @@ export const AuthProvider = ({ children }) => {
         type: AUTH_ERROR,
         payload: error.message || 'Registration failed'
       });
-      throw error;
+      throw error; // Re-throw the error to be caught by the component
     }
   };
 

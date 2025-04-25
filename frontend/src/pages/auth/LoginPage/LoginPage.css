@@ -171,6 +171,9 @@
   color: #e53e3e;
   font-size: 0.85rem;
   margin-top: 5px;
+  text-align: left;
+  display: block;
+  font-weight: 500;
 }
 
 /* Improve accessibility with visible focus styles for all interactive elements */
