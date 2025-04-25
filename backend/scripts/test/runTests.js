@@ -1,6 +1,8 @@
 /**
  * Master test script that runs all critical tests in sequence
- * Usage: node scripts/runTests.js [test-name]
+ * 
+ * Usage: 
+ *   node scripts/test/runTests.js [test-name]
  */
 require('dotenv').config();
 const { spawn } = require('child_process');
@@ -8,9 +10,9 @@ const path = require('path');
 
 // Define the available tests and their scripts
 const tests = {
-  'auth': ['verifyAuth.js', 'testLogin.js'],
-  'serialization': ['verifyAuthSerialization.js'],
-  'all': ['testLogin.js', 'verifyAuthSerialization.js', 'verifyAuth.js']
+  'auth': ['authTest.js'],
+  'serialization': ['serializationTest.js'],
+  'all': ['authTest.js', 'serializationTest.js']
 };
 
 // Get the requested test(s) from command line args or default to 'all'

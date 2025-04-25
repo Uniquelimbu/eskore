@@ -1,452 +1,263 @@
-# eSkore Backend API
+<div align="center">
+  <img src="../frontend/public/images/logos/eskore-logo.png" alt="eSkore API" width="120">
+  <h1>eSkore Backend API</h1>
+  <p>Robust REST API for eSports performance tracking and analysis</p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/node-v16.0.0+-blue.svg" alt="Node Version">
+    <img src="https://img.shields.io/badge/express-v5.x-green.svg" alt="Express Version">
+    <img src="https://img.shields.io/badge/PostgreSQL-v12+-9cf.svg" alt="PostgreSQL Version">
+    <img src="https://img.shields.io/badge/license-ISC-green" alt="License">
+  </p>
+  
+  <p>
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-api-documentation">API Docs</a> •
+    <a href="#-database">Database</a> •
+    <a href="#-authentication">Authentication</a> •
+    <a href="#-troubleshooting">Troubleshooting</a>
+  </p>
+</div>
 
-The eSkore backend provides a robust API for grassroots sports management, supporting athlete profiles, team management, league organization, and match tracking.
+## 📋 Overview
 
-## Known Issues and Solutions
+The eSkore backend provides a robust REST API for eSports performance tracking and analytics, supporting:
 
-### Path-to-RegExp Errors
+- Athlete profiles and statistics management
+- Team and league organization
+- Match tracking and detailed statistics
+- Authentication with secure cookie-based JWT
+- Real-time updates and data synchronization
 
-If you encounter the error `TypeError: Missing parameter name at 1: https://git.new/pathToRegexpError`, it's related to the path-to-regexp library used by Express and other dependencies.
+## 🚀 Quick Start
 
-**Solution**: We've pinned specific versions of express, path-to-regexp, and router packages to avoid this issue:
-- express@5.1.0
-- path-to-regexp@6.2.1
-- router@1.3.8 
+### Prerequisites
 
-If the error persists, run the included clean installation script:
-```bash
-node scripts/cleanInstall.js
-```
-
-This script:
-1. Removes node_modules and package-lock.json
-2. Reinstalls critical dependencies with specific versions
-3. Reinstalls all remaining dependencies
-
-We've also replaced the cors package with a manual implementation in app.js to avoid issues with URL pattern matching in CORS origin validation.
-
-## 📋 Table of Contents
-
-1. [Technologies](#-technologies)
-2. [Prerequisites](#-prerequisites)
-3. [Installation](#-installation)
-4. [Environment Configuration](#-environment-configuration)
-5. [Database Setup](#-database-setup)
-6. [Running the Server](#-running-the-server)
-7. [API Documentation](#-api-documentation)
-8. [Architecture](#-architecture)
-9. [Testing](#-testing)
-10. [Deployment](#-deployment)
-11. [Contributing](#-contributing)
-12. [Troubleshooting](#-troubleshooting)
-
-## 🛠 Technologies
-
-- **Framework**: Express.js 5.x
-- **Database**: PostgreSQL with Sequelize 6.x ORM
-- **Authentication**: JWT tokens with bcrypt/bcryptjs for password hashing
-- **Real-time**: Socket.IO 4.x for live updates
-- **Validation**: express-validator 7.x for request validation
-- **Security**: helmet, cors, express-rate-limit
-- **Development**: Nodemon, ESLint, Jest
-
-## 📋 Prerequisites
-
-- **Node.js**: v14.0.0 or higher (v16+ recommended)
-- **PostgreSQL**: v12 or higher
+- **Node.js**: v16.0.0+ ([download](https://nodejs.org/))
+- **PostgreSQL**: v12+ ([download](https://www.postgresql.org/download/))
 - **npm** or **yarn**
-- PostgreSQL client (optional, for direct database access)
 
-## 🚀 Installation
+### Installation
 
-1. Clone the repository:
+1. **Clone and navigate to the backend directory:**
    ```bash
    git clone https://github.com/yourusername/eskore.git
    cd eskore/backend
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. Install bcryptjs if not already included:
-   ```bash
-   npm install bcryptjs
-   ```
-
-## ⚙️ Environment Configuration
-
-1. Create a `.env` file in the root directory by copying the example:
+3. **Set up environment variables:**
    ```bash
    cp .env.example .env
+   # Edit .env with your configuration
    ```
 
-2. Customize your environment variables:
-   ```
-   # Server settings
-   PORT=5000
-   NODE_ENV=development
-   
-   # Database connection
-   DB_NAME=postgres        # Your PostgreSQL database name
-   DB_USER=postgres        # Your PostgreSQL username
-   DB_PASS=your_password   # Your PostgreSQL password
-   DB_HOST=localhost       # Database host
-   DB_PORT=5433            # PostgreSQL port (commonly 5432 or 5433)
-   
-   # Authentication
-   JWT_SECRET=your_jwt_secret_key_here   # Generate a strong secret key
-   
-   # CORS settings (Critical for frontend access)
-   ALLOWED_ORIGINS=http://localhost:3000  # Add your frontend URL here
-   ```
-
-## 🌐 Frontend Integration
-
-### CORS Configuration for Frontend Access
-
-The backend implements flexible CORS (Cross-Origin Resource Sharing) settings to allow your frontend application to communicate with the API:
-
-1. **Development Mode**: 
-   - In development mode, the API allows requests from all origins
-   - This makes local development easier without configuring specific origins
-
-2. **Production Mode**:
-   - In production, the API only allows requests from origins specified in the ALLOWED_ORIGINS environment variable
-   - Format: `ALLOWED_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com`
-
-3. **Troubleshooting CORS Issues**:
-   - If your frontend receives CORS errors, check:
-     - The NODE_ENV is set to 'development' OR
-     - Your frontend URL is included in ALLOWED_ORIGINS
-     - The request includes proper headers (Content-Type, Authorization)
-
-### Authentication Flow
-
-When integrating with the frontend:
-
-1. **Login Request**: Send POST to `/api/auth/login` with email and password
-2. **Token Handling**: Store the returned JWT token in localStorage or secure cookie
-3. **Authenticated Requests**: Include the token in all subsequent API requests:
-   ```javascript
-   headers: {
-     'Authorization': `Bearer ${token}`
-   }
-   ```
-
-## 🔐 Authentication
-
-### Cookie-Based Authentication
-
-eSkore uses secure, HttpOnly cookies for authentication:
-
-1. **Login Process**:
-   - When a user logs in, the server validates credentials and generates a JWT
-   - The JWT is stored in an HttpOnly cookie named `auth_token`
-   - The user object is returned in the response (without the token)
-
-2. **Authentication Flow**:
-   - The browser automatically sends the cookie with each request
-   - The server validates the JWT in the cookie
-   - If valid, the server processes the request
-   - If invalid or missing, the server returns a 401 error
-
-3. **Security Features**:
-   - **HttpOnly**: Prevents JavaScript from accessing the cookie
-   - **Secure** (in production): Only sent over HTTPS
-   - **SameSite=Lax**: Provides CSRF protection while allowing normal navigation
-   - **1-day expiration**: Limits the lifetime of the session
-
-### Integration with Frontend
-
-For frontend developers:
-
-1. Set up your API client with credentials support:
-   ```javascript
-   const api = axios.create({
-     baseURL: 'http://localhost:5000',
-     withCredentials: true // Important!
-   });
-   ```
-
-2. No need to manually handle tokens - cookies are automatically sent by the browser
-
-3. To check authentication status, call the `/api/auth/me` endpoint
-
-4. To logout, call `/api/auth/logout` to clear the cookie
-
-## 🗃️ Database Setup
-
-### Creating and Configuring Your Database
-
-1. Ensure PostgreSQL is installed and running:
+4. **Initialize the database:**
    ```bash
-   # Check PostgreSQL status on Windows
-   sc query postgresql
-
-   # Check PostgreSQL status on Linux/macOS
-   systemctl status postgresql
-   ```
-
-2. Verify your database exists or create it:
-   - **Option 1**: Using PostgreSQL command:
-     ```bash
-     createdb postgres
-     ```
-   - **Option 2**: Using SQL:
-     ```sql
-     CREATE DATABASE postgres;
-     ```
-
-3. Configure database access in your `.env` file:
-   ```
-   DB_NAME=postgres
-   DB_USER=postgres
-   DB_PASS=your_actual_password
-   DB_HOST=localhost
-   DB_PORT=5433
-   ```
-
-### Setting Up Tables and Data
-
-We provide several methods to initialize your database:
-
-1. **Safe Reset Method (Recommended)**:
-   ```bash
-   npm run db:reset:safe
-   ```
-   This approach:
-   - Preserves the database but removes all tables
-   - Runs all migrations to create tables with correct schema
-   - Seeds the database with initial test data
-   - Works even when you can't drop the database
-
-2. **Complete Database Setup (First-Time)**:
-   ```bash
-   # Apply migrations to create tables
    npm run db:migrate
-   
-   # Seed the database with initial data
    npm run db:seed
    ```
 
-3. **Advanced Database Management**:
+5. **Start the development server:**
    ```bash
-   # Undo the most recent migration
-   npm run db:migrate:undo
-   
-   # Undo all migrations
-   npm run db:migrate:undo:all
-   
-   # Remove all seed data
-   npm run db:seed:undo
-   
-   # Generate a new migration file
-   npm run migration:generate my-new-migration
-   
-   # Generate a new seed file
-   npm run seed:generate demo-new-data
+   npm run dev
    ```
 
-### Database Schema Overview
+6. **Access the API:** The server will be running at [http://localhost:5000](http://localhost:5000)
 
-The eSkore database includes these core tables:
-
-- **users**: Admin users with role-based access control
-  - Columns: id, email, password (hashed), role, createdAt, updatedAt
-
-- **athletes**: Player profiles with performance stats and location data
-  - Columns: id, firstName, lastName, email, passwordHash, dob, height, position, country, province, district, city, createdAt, updatedAt
-
-- **teams**: Team information, rosters and affiliations
-  - Columns: id, name, logoUrl, leagueId, createdAt, updatedAt
-
-- **leagues**: Tournament and competition data
-  - Columns: id, name, startDate, endDate, createdAt, updatedAt
-
-- **matches**: Game results and scheduling
-  - Columns: id, homeTeamId, awayTeamId, homeScore, awayScore, status, date, leagueId, createdAt, updatedAt
-
-## 🏃 Running the Server
-
-### Development Mode
-
-Start the server with hot-reloading for development:
-```bash
-npm run dev
-```
-The server will restart automatically when you make code changes.
-
-### Production Mode
-
-For production environments:
-```bash
-npm run start
-```
-
-### API Access
-
-- The API will be accessible at: `http://localhost:5000`
-- Health check endpoint: `http://localhost:5000/`
-- API base path: `http://localhost:5000/api/`
-
-## 📚 API Documentation
-
-Our API follows RESTful principles with consistent response formats and proper status codes.
-
-### Response Format
-
-Successful responses:
-```json
-{
-  "data": { ... },
-  "message": "Optional success message"
-}
-```
-
-Error responses:
-```json
-{
-  "error": {
-    "message": "Error description",
-    "code": "ERROR_CODE",
-    "stack": "Stack trace (development only)
-  }
-}
-```
-
-### Authentication Endpoints
-
-- `POST /api/auth/register`: Create admin/user account
-  ```json
-  { "email": "admin@example.com", "password": "securepass", "role": "admin" }
-  ```
-
-- `POST /api/auth/login`: Authenticate and get JWT token
-  ```json
-  { "email": "admin@example.com", "password": "securepass" }
-  ```
-
-- `POST /api/auth/register/athlete`: Register athlete account
-  ```json
-  {
-    "firstName": "John", 
-    "lastName": "Doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "dob": "1995-05-15",
-    "height": 180.5,
-    "position": "FW",
-    "country": "Nepal",
-    "province": "bagmati",
-    "district": "kathmandu",
-    "city": "kathmandu"
-  }
-  ```
-
-- `GET /api/auth/me`: Get current user profile (authenticated)
-
-### Team Management
-
-- `GET /api/teams?page=1&limit=10`: List teams with pagination
-- `GET /api/teams/:id`: Get team details by ID
-- `POST /api/teams`: Create team (admin only)
-  ```json
-  { "name": "Barcelona FC", "logoUrl": "url-to-logo", "leagueId": 1 }
-  ```
-- `PATCH /api/teams/:id`: Update team (admin only)
-- `DELETE /api/teams/:id`: Delete team (admin only)
-
-### League Management
-
-- `GET /api/leagues`: List all leagues
-- `GET /api/leagues/:id`: Get league details
-- `POST /api/leagues`: Create league (admin only)
-  ```json
-  { "name": "Premier League", "startDate": "2023-08-01", "endDate": "2024-05-30" }
-  ```
-
-### Match Management
-
-- `GET /api/matches?leagueId=1&status=finished`: List matches with optional filters
-- `GET /api/matches/:id`: Get match details
-- `POST /api/matches`: Create match (admin only)
-  ```json
-  {
-    "homeTeamId": 1,
-    "awayTeamId": 2,
-    "leagueId": 1,
-    "date": "2023-10-15T15:00:00Z"
-  }
-  ```
-- `PATCH /api/matches/:id`: Update match score/status (admin only)
-
-### Standings
-
-- `GET /api/standings/:leagueId`: Get league standings table
-
-### Location Data
-
-- `GET /api/locations/provinces?country=Nepal`: Get provinces by country
-- `GET /api/locations/districts?province=bagmati`: Get districts by province
-- `GET /api/locations/cities?province=on` or `?district=taplejung`: Get cities
-
-## 🏗 Architecture
-
-### Directory Structure
+## 🏗️ Project Structure
 
 ```
 backend/
 ├── migrations/        # Database migration files
 ├── seeders/           # Database seed files
-├── scripts/           # Utility scripts (DB reset, etc.)
+├── scripts/           # Utility scripts
 ├── src/
-│   ├── config/        # Configuration files
-│   │   ├── config.js  # Sequelize CLI config
-│   │   └── db.js      # Database connection
-│   ├── controllers/   # Route controller logic
-│   ├── helpers/       # Helper utilities
+│   ├── config/        # Configuration (DB, app settings)
+│   ├── controllers/   # Request handlers
 │   ├── middleware/    # Express middleware
-│   │   ├── auth.js    # Authentication middleware
-│   │   └── errorHandler.js # Centralized error handling
-│   ├── models/        # Sequelize models
-│   │   ├── associations.js # Model relationships
-│   │   └── index.js   # Model exports
+│   ├── models/        # Sequelize data models
 │   ├── routes/        # API route definitions
-│   ├── sockets/       # Socket.IO event handlers
-│   └── app.js         # Express application setup
-├── .env               # Environment variables (not in git)
-├── .env.example       # Example environment configuration
+│   ├── services/      # Business logic
+│   ├── utils/         # Helper utilities
+│   ├── app.js         # Express app setup
+│   └── server.js      # Server entry point
+├── .env.example       # Example environment variables
 ├── .sequelizerc       # Sequelize CLI configuration
-├── package.json       # Project metadata
-└── server.js          # Entry point
+└── package.json       # Project dependencies
 ```
 
-### Architecture Highlights
+## ⚙️ Environment Configuration
 
-1. **MVC Pattern**: Controllers handle request logic, Views are JSON responses, Models manage data
+Create a `.env` file with these variables:
 
-2. **Middleware**:
-   - Authentication & Authorization
-   - Request validation
-   - Error handling
-   - Security headers
-   - Rate limiting
+```properties
+# Server
+PORT=5000
+NODE_ENV=development
 
-3. **Real-time Updates with Socket.IO**:
-   - Live match score updates
-   - Standings table recomputation
-   - Room-based subscriptions (by league, match)
+# Database
+DB_NAME=eskore_db
+DB_USER=postgres
+DB_PASS=your_password
+DB_HOST=localhost
+DB_PORT=5432
 
-4. **Error Handling**:
-   - Centralized error processor with consistent format
-   - Custom ApiError class for specific error types
-   - catchAsync wrapper for promise rejection handling
+# Authentication
+JWT_SECRET=your_secure_jwt_secret_key
+JWT_EXPIRES_IN=1d
+
+# CORS (for frontend access)
+ALLOWED_ORIGINS=http://localhost:3000
+```
+
+## 🔐 Authentication
+
+eSkore uses secure, HttpOnly cookies with JWT tokens:
+
+### Login Flow
+
+1. Client POSTs credentials to `/api/auth/login`
+2. Server validates credentials, generates JWT, and sets secure HttpOnly cookie
+3. Server returns user data (without sensitive information)
+4. The cookie is automatically included in subsequent requests
+
+### Authentication Code Example
+
+```javascript
+// Login request
+const response = await fetch('http://localhost:5000/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include', // Important for cookies
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'yourpassword'
+  })
+});
+
+// Authenticated request
+const data = await fetch('http://localhost:5000/api/protected-route', {
+  credentials: 'include' // This sends the HttpOnly cookie
+});
+```
+
+## 🗃️ Database
+
+### Schema Overview
+
+The core data model includes:
+
+- **users** - Admin and system users
+- **athletes** - Player profiles with performance data
+- **teams** - Team information and management
+- **leagues** - Tournament/competition organization
+- **matches** - Game results and detailed statistics
+
+### Database Commands
+
+```bash
+# Apply migrations to create/update tables
+npm run db:migrate
+
+# Undo latest migration
+npm run db:migrate:undo
+
+# Seed database with sample data
+npm run db:seed
+
+# Safe database reset (keeps DB, resets tables)
+npm run db:reset:safe
+```
+
+## 📚 API Documentation
+
+### API Base URL
+
+- Development: `http://localhost:5000/api`
+- Production: `https://api.eskore.com/api` (example)
+
+### Interactive Documentation
+
+Access interactive API docs at `/api-docs` when the server is running:
+- Development: http://localhost:5000/api-docs
+
+### Core Endpoints
+
+#### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Authenticate and get JWT |
+| GET | `/api/auth/me` | Get current user profile |
+| POST | `/api/auth/logout` | Log out (clear cookie) |
+
+#### Athletes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/athletes` | List athletes (paginated) |
+| GET | `/api/athletes/:id` | Get athlete by ID |
+| POST | `/api/athletes` | Create athlete profile |
+| PATCH | `/api/athletes/:id` | Update athlete |
+| DELETE | `/api/athletes/:id` | Delete athlete |
+
+#### Teams
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/teams` | List teams (paginated) |
+| GET | `/api/teams/:id` | Get team details |
+| POST | `/api/teams` | Create team |
+| PATCH | `/api/teams/:id` | Update team |
+| DELETE | `/api/teams/:id` | Delete team |
+
+#### Matches
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/matches` | List matches (filtered) |
+| GET | `/api/matches/:id` | Get match details |
+| POST | `/api/matches` | Create match |
+| PATCH | `/api/matches/:id` | Update match score/status |
+
+#### Leagues & Standings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/leagues` | List all leagues |
+| GET | `/api/standings/:leagueId` | Get league standings |
+
+### Response Format
+
+Successful response:
+
+```json
+{
+  "data": { },
+  "message": "Optional success message"
+}
+```
+
+Error response:
+
+```json
+{
+  "error": {
+    "message": "Error description",
+    "code": "ERROR_CODE"
+  }
+}
+```
 
 ## 🧪 Testing
 
-Our testing stack uses Jest and Supertest:
+eSkore uses Jest and Supertest for testing:
 
 ```bash
 # Run all tests
@@ -461,70 +272,92 @@ npm run test:coverage
 
 ## 🌐 Deployment
 
-### Prerequisites
+### Production Setup
 
-- Node.js hosting environment (AWS, Heroku, Digital Ocean, etc.)
-- PostgreSQL database service
-- Environment variables configuration
+1. Configure production environment:
+   ```bash
+   # .env in production
+   NODE_ENV=production
+   PORT=5000
+   DB_HOST=your_production_db_host
+   # ... other vars
+   ```
 
-### Deployment Steps
+2. Install production dependencies:
+   ```bash
+   npm install --production
+   ```
 
-1. Set up your production database
-2. Configure environment variables for production
-3. Install dependencies: `npm install --production`
-4. Run database migrations: `NODE_ENV=production npm run db:migrate`
-5. Start the application: `NODE_ENV=production npm start`
+3. Run database migrations:
+   ```bash
+   NODE_ENV=production npm run db:migrate
+   ```
 
-### Production Considerations
+4. Start the server:
+   ```bash
+   npm start
+   ```
 
-- Use process manager like PM2 or Docker for reliability
-- Set up proper logging with a service like Winston
-- Configure HTTPS/TLS for security
-- Implement monitoring and alerts
+### Production Best Practices
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes following the code style
-4. Run linting and tests: `npm run prepare-release`
-5. Commit with clear messages: `git commit -m "Add feature X"`
-6. Push your branch: `git push origin feature-name`
-7. Submit a pull request
+- Use a process manager like [PM2](https://pm2.keymetrics.io/)
+- Set up HTTPS with a reverse proxy ([Nginx](https://nginx.org/))
+- Implement logging and monitoring
+- Use containerization ([Docker](https://www.docker.com/))
 
 ## ❓ Troubleshooting
 
-### Common Issues & Solutions
+<details>
+<summary><b>Common Issues</b></summary>
 
-#### Module Not Found Errors
-- Error: `Cannot find module 'bcryptjs'`
-  - Solution: Run `npm install bcryptjs`
-- Error: Other missing module
-  - Solution: Run `npm install` to reinstall all dependencies
+### Module Not Found Errors
+- **Error**: `Cannot find module 'bcryptjs'`
+- **Solution**: Run `npm install bcryptjs`
 
-#### Database Connection Issues
-- Error: `cannot drop the currently open database`
-  - Solution: Use `npm run db:reset:safe` instead or close other connections
-- Error: Connection refused
-  - Check PostgreSQL is running: `sc query postgresql` (Windows) or `systemctl status postgresql` (Linux)
-  - Verify credentials in `.env` match your PostgreSQL setup
-  - Check port number (commonly 5432 or 5433)
+### Database Connection Issues
+- **Error**: `Connection refused`
+- **Solution**: Check PostgreSQL is running, verify credentials in `.env`
 
-#### Migration Issues
-- Error: Migration failed
-  - Check migration files for syntax errors
-  - Ensure tables don't have conflicting constraints
-  - Try `npm run db:migrate:undo:all` then `npm run db:migrate`
+### Authentication Problems
+- **Error**: Invalid token
+- **Solution**: Ensure JWT_SECRET is properly set, verify token format
 
-#### Authentication Problems
-- Error: Invalid token
-  - Check JWT_SECRET is properly set in .env
-  - Verify token hasn't expired
-  - Ensure Authorization header format is `Bearer <token>`
+### CORS Errors
+- **Error**: CORS policy blocked request
+- **Solution**: Add frontend URL to ALLOWED_ORIGINS in .env
+</details>
 
-#### Server Starting Issues
-- Error: Address already in use
-  - Another process is using your port. Find and terminate it or change PORT in .env
+<details>
+<summary><b>Debugging Tools</b></summary>
+
+Run with enhanced logging:
+```bash
+DEBUG=express:*,auth:* npm run dev
+```
+
+Utility scripts:
+```bash
+# Check authentication setup
+node scripts/debugAuth.js
+
+# Reset database if needed
+npm run db:reset:safe
+```
+</details>
+
+> 📑 **Need more help?** See our detailed [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) guide for step-by-step solutions to common issues.
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `npm test`
+5. Commit with clear messages: `git commit -m "Add amazing feature"`
+6. Push your branch: `git push origin feature/amazing-feature`
+7. Submit a pull request
 
 ## 📄 License
 
@@ -532,4 +365,7 @@ This project is licensed under the ISC License.
 
 ---
 
-© 2023 eSkore Team
+<div align="center">
+  <p>© 2023 eSkore Team. All rights reserved.</p>
+  <p>Made with ❤️ for the eSports community</p>
+</div>

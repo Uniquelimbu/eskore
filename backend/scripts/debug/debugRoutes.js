@@ -1,17 +1,21 @@
-// A script to print and test all routes in the application
+/**
+ * Analyzes all routes in the application to verify they can be parsed correctly
+ * Useful for diagnosing path-to-regexp errors
+ * 
+ * Usage: node scripts/debug/debugRoutes.js
+ */
 const express = require('express');
-const path = require('path');
 
 // Create a temporary router to register routes for inspection
 const tempApp = express();
 
 // Load and initialize all route files in a controlled environment
-const authRoutes = require('../src/routes/authRoutes');
-const teamRoutes = require('../src/routes/teamRoutes');
-const matchRoutes = require('../src/routes/matchRoutes');
-const leagueRoutes = require('../src/routes/leagueRoutes');
-const standingsRoutes = require('../src/routes/standingsRoutes');
-const locationRoutes = require('../src/routes/locationRoutes');
+const authRoutes = require('../../src/routes/authRoutes');
+const teamRoutes = require('../../src/routes/teamRoutes');
+const matchRoutes = require('../../src/routes/matchRoutes');
+const leagueRoutes = require('../../src/routes/leagueRoutes');
+const standingsRoutes = require('../../src/routes/standingsRoutes');
+const locationRoutes = require('../../src/routes/locationRoutes');
 
 // Function to safely evaluate routes
 function inspectRoutes(router, basePath = '') {

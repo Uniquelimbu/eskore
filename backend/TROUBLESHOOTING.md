@@ -1,6 +1,15 @@
-# Authentication Troubleshooting Guide
+# eSkore Backend Troubleshooting Guide
 
-## Common Issues and Solutions
+This guide provides detailed solutions for common issues encountered when setting up, developing, or deploying the eSkore backend.
+
+## Table of Contents
+- [Authentication Issues](#authentication-issues)
+- [Database Issues](#database-issues)
+- [Environment Setup Issues](#environment-setup-issues)
+- [API Request Issues](#api-request-issues)
+- [Quick Fix Commands](#quick-fix-commands)
+
+## Authentication Issues
 
 ### 1. "No token provided" Error
 
@@ -44,6 +53,79 @@ If login succeeds but API calls fail with token errors:
 - Check token expiration (default is 24 hours)
 - Ensure clock synchronization between services if in a distributed environment
 
+## Database Issues
+
+### 1. Connection Failed
+
+If the server can't connect to PostgreSQL:
+
+**Solutions:**
+- Verify PostgreSQL is running: `sc query postgresql` (Windows) or `systemctl status postgresql` (Linux)
+- Check credentials in .env match your PostgreSQL setup
+- Confirm port number is correct (commonly 5432 or 5433)
+
+### 2. Migration Failures
+
+If database migrations fail:
+
+**Solutions:**
+- Check migration files for syntax errors
+- Verify database user has appropriate permissions
+- Run `npm run db:migrate:undo:all` then `npm run db:migrate`
+
+### 3. "Cannot drop the currently open database"
+
+**Solution:**
+- Use `npm run db:reset:safe` which avoids dropping the database
+- Close other connections to the database (e.g., pgAdmin, other applications)
+
+## Environment Setup Issues
+
+### 1. Missing Environment Variables
+
+If the server fails to start with environment variable errors:
+
+**Solutions:**
+- Copy .env.example to .env: `cp .env.example .env`
+- Fill in all required variables in .env
+- Check for typos in variable names
+
+### 2. Port Already In Use
+
+If you see "EADDRINUSE" errors:
+
+**Solutions:**
+- Change the PORT in .env
+- Find and terminate the process using that port:
+  ```bash
+  # On Windows
+  netstat -ano | findstr :5000
+  taskkill /PID <PID> /F
+  
+  # On macOS/Linux
+  lsof -i :5000
+  kill -9 <PID>
+  ```
+
+## API Request Issues
+
+### 1. 404 Not Found
+
+If an endpoint returns 404:
+
+**Solutions:**
+- Verify the route path is correct
+- Check the HTTP method (GET, POST, etc.)
+- Ensure the route is properly registered in app.js
+- Look for typos in the URL
+
+### 2. 500 Internal Server Error
+
+**Solutions:**
+- Check server logs for detailed error messages
+- Verify database operations aren't failing
+- Check for proper error handling in controllers
+
 ## Quick Fix Commands
 
 ```bash
@@ -60,4 +142,4 @@ npm run db:reset:safe
 DEBUG=express:*,auth:* npm run dev
 ```
 
-Need more help? Check the API logs for detailed error messages.
+Need more help? Join our [Discord community](https://discord.gg/example) or open an issue on GitHub.

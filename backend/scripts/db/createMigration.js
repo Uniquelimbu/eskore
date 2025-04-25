@@ -1,6 +1,6 @@
 /**
  * Helper script to create properly named migrations
- * Usage: node createMigration.js "create-users-table"
+ * Usage: node scripts/db/createMigration.js "create-users-table"
  */
 
 const { execSync } = require('child_process');
@@ -9,7 +9,7 @@ const migrationName = process.argv[2];
 
 if (!migrationName) {
   console.error('❌ Error: Migration name is required');
-  console.log('Usage: node createMigration.js "create-users-table"');
+  console.log('Usage: node scripts/db/createMigration.js "create-users-table"');
   process.exit(1);
 }
 

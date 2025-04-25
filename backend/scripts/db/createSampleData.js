@@ -1,15 +1,17 @@
 /**
  * Creates sample data for testing
+ * 
+ * Usage: node scripts/db/createSampleData.js
  */
 require('dotenv').config();
 const bcrypt = require('bcrypt');
-const sequelize = require('../src/config/db'); // Fix: Import directly, not as destructured
-const User = require('../src/models/User');
-const Athlete = require('../src/models/Athlete');
-const Team = require('../src/models/Team');
-const League = require('../src/models/League');
-const Match = require('../src/models/Match');
-const logger = require('../src/utils/logger');
+const sequelize = require('../../src/config/db');
+const User = require('../../src/models/User');
+const Athlete = require('../../src/models/Athlete');
+const Team = require('../../src/models/Team');
+const League = require('../../src/models/League');
+const Match = require('../../src/models/Match');
+const logger = require('../../src/utils/logger');
 
 async function createSampleData() {
   console.log('📝 Creating sample data for testing...');

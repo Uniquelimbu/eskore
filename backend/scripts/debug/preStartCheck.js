@@ -1,11 +1,13 @@
 /**
- * Pre-start health check to verify all critical components
- * Run with: node scripts/preStartCheck.js
+ * Pre-start health check to verify all critical components are available
+ * Useful to run before starting the server to ensure it will start correctly
+ * 
+ * Usage: node scripts/debug/preStartCheck.js
  */
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { dbReady } = require('../src/config/db');
+const { dbReady } = require('../../src/config/db');
 
 console.log('🔍 Running pre-start health check...');
 
@@ -36,7 +38,7 @@ criticalFiles.forEach(file => {
 // Check database config
 console.log('\n2. Checking database configuration...');
 try {
-  const dbConfig = require('../src/config/db');
+  const dbConfig = require('../../src/config/db');
   console.log('✅ Database configuration found');
   
   // Try to connect to database

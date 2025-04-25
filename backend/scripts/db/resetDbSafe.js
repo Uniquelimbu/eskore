@@ -1,17 +1,14 @@
+/**
+ * Safely resets the database by undoing all migrations, reapplying them, and reseeding
+ * This approach avoids dropping the database, which helps when there are connection issues
+ * 
+ * Usage: node scripts/db/resetDbSafe.js
+ */
 require('dotenv').config();
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 
-/**
- * This script provides a safer database reset method by:
- * 1. Undoing all migrations (which drops tables in the right order)
- * 2. Reapplying all migrations (which recreates tables)
- * 3. Reseeding the database
- * 
- * This avoids the need to drop the database itself, which can be problematic
- * when there are active connections.
- */
 async function safeReset() {
   try {
     // Show environment information

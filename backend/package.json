@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "predev": "node scripts/preStartCheck.js",
-    "prestart": "node scripts/preStartCheck.js",
+    "predev": "node scripts/debug/preStartCheck.js",
+    "prestart": "node scripts/debug/preStartCheck.js",
     "fix-dependencies": "node scripts/fixDependencies.js",
     "lint": "eslint src/**/*.js",
     "db:migrate": "npx sequelize-cli db:migrate",
@@ -17,7 +17,7 @@
     "db:create": "npx sequelize-cli db:create",
     "db:drop": "npx sequelize-cli db:drop",
     "db:reset": "node ./scripts/resetDb.js",
-    "db:reset:safe": "node ./scripts/resetDbSafe.js",
+    "db:reset:safe": "node scripts/db/resetDbSafe.js",
     "seed:generate": "npx sequelize-cli seed:generate --name",
     "migration:generate": "npx sequelize-cli migration:generate --name",
     "test": "jest",
@@ -25,8 +25,15 @@
     "test:coverage": "jest --coverage",
     "prepare-release": "npm run lint && npm test",
     "postinstall": "npm audit fix",
-    "create-test-user": "node scripts/createTestUser.js",
-    "check-network": "node scripts/testAuthFlow.js"
+    "create-test-user": "node scripts/utils/userManagement.js create-test",
+    "fix-auth-data": "node scripts/utils/userManagement.js fix-auth",
+    "link-admin-athletes": "node scripts/utils/userManagement.js link-admin",
+    "create:migration": "node scripts/db/createMigration.js",
+    "create:sample-data": "node scripts/db/createSampleData.js",
+    "test:auth": "node scripts/test/authTest.js",
+    "test:serialization": "node scripts/test/serializationTest.js",
+    "run:tests": "node scripts/test/runTests.js all",
+    "prestart:check": "node scripts/debug/preStartCheck.js"
   },
   "keywords": [
     "sports",
