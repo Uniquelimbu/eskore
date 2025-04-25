@@ -76,17 +76,10 @@ const Sidebar = () => {
       </div>
       <nav className="sidebar-nav">
         <ul>
-          {/* Replace Link with NavLink */}
           <li>
-            <NavLink to="/dashboard" end> {/* 'end' prop ensures exact match for root path */}
+            <NavLink to="/dashboard" end>
               <span role="img" aria-label="Home" className="sidebar-nav-icon">🏠</span>
               <span className="sidebar-nav-label">Home</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/profile">
-              <span role="img" aria-label="Profile" className="sidebar-nav-icon">👤</span>
-              <span className="sidebar-nav-label">Profile</span>
             </NavLink>
           </li>
           <li>
@@ -111,6 +104,12 @@ const Sidebar = () => {
             <NavLink to="/shop">
               <span role="img" aria-label="Shop" className="sidebar-nav-icon">🛒</span>
               <span className="sidebar-nav-label">Shop</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/profile">
+              <span role="img" aria-label="Profile" className="sidebar-nav-icon">👤</span>
+              <span className="sidebar-nav-label">Profile</span>
             </NavLink>
           </li>
           {/* More button remains a button, not a NavLink */}

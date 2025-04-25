@@ -12,7 +12,8 @@ const LoginPage = lazy(() => import('../pages/auth/LoginPage/LoginPage'));
 const RoleSelectionPage = lazy(() => import('../pages/auth/RoleSelectionPage'));
 const AthleteRegistrationPage = lazy(() => import('../pages/auth/registration/AthleteRegistrationPage'));
 const DashboardPage = lazy(() => import('../pages/athlete/DashboardPage'));
-const ProfilePage = lazy(() => import('../pages/athlete/ProfilePage')); // Import ProfilePage
+const ProfilePage = lazy(() => import('../pages/athlete/ProfilePage'));
+const SearchPage = lazy(() => import('../pages/athlete/SearchPage')); // Add SearchPage import
 const NotFoundPage = lazy(() => import('../pages/public/NotFoundPage'));
 
 // Wrapper for protected routes
@@ -52,10 +53,18 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/profile" // Add the profile route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <SearchPage />
               </ProtectedRoute>
             }
           />
