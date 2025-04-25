@@ -11,9 +11,25 @@ if (!fs.existsSync(logDir)) {
 
 // Define log format
 const logFormat = winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
-  return `${timestamp} [${level.toUpperCase()}]: ${message}${stack ? `\n${stack}` : ''}${
-    Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : ''
-  }`;
+  // If message is an object, stringify it
+  let msg = message;
+  if (typeof message === 'object') {
+    try {
+      msg = JSON.stringify(message, null, 2);
+    } catch (e) {
+      msg = '[Unserializable Object]';
+    }
+  }
+  // Stringify meta if it's an object and not empty
+  let metaString = '';
+  if (meta && Object.keys(meta).length) {
+    try {
+      metaString = '\n' + JSON.stringify(meta, null, 2);
+    } catch (e) {
+      metaString = '\n[Unserializable Meta]';
+    }
+  }
+  return `${timestamp} [${level.toUpperCase()}]: ${msg}${stack ? `\n${stack}` : ''}${metaString}`;
 });
 
 // Add a filter to reduce repetitive CORS logs

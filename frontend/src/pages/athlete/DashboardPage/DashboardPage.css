@@ -1,15 +1,17 @@
 .dashboard-layout { /* Changed from .dashboard-page */
-  display: flex; /* Use flexbox for layout */
-  min-height: 100vh; /* Ensure layout takes full height */
-  background-color: #f8f9fa; /* Light background for the content area */
+  display: flex;
+  min-height: 100vh;
+  background-color: #1a202c; /* Match sidebar dark background */
 }
 
 .dashboard-main-content {
-  flex-grow: 1; /* Allow content area to take remaining space */
+  flex-grow: 1;
   padding: 30px;
-  margin-left: 260px; /* Add left margin equal to sidebar width */
-  max-width: calc(100% - 260px); /* Ensure content doesn't overlap sidebar */
+  margin-left: 260px;
+  max-width: calc(100% - 260px);
   font-family: 'Inter', sans-serif;
+  background-color: #1a202c; /* Match sidebar */
+  color: #e2e8f0; /* Light text for dark bg */
 }
 
 .dashboard-header {
@@ -18,56 +20,57 @@
 
 .dashboard-header h1 {
   margin-bottom: 5px;
-  color: #2d3748;
+  color: #e2e8f0; /* Light text */
 }
 
 .last-login {
-  color: #718096;
+  color: #a0aec0;
   font-size: 0.9rem;
 }
 
-.dashboard-content-grid { /* Renamed from .dashboard-content */
+.dashboard-content-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 30px;
 }
 
-@media (min-width: 992px) { /* Adjusted breakpoint */
+@media (min-width: 992px) {
   .dashboard-content-grid {
-    grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-@media (min-width: 1400px) { /* Optional: Adjust for very large screens */
+@media (min-width: 1400px) {
   .dashboard-content-grid {
-     /* Example: Maybe make stats wider */
     grid-template-columns: 1.5fr 1fr;
   }
 }
-
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 50vh;
-  color: #4a5568;
+  color: #e2e8f0;
   font-size: 1.2rem;
 }
 
 .error {
-  color: #e53e3e;
+  color: #f56565;
   text-align: center;
   margin-top: 50px;
   font-size: 1.1rem;
+  background: #2d3748;
+  border-radius: 8px;
+  padding: 12px 0;
 }
 
-/* Stats Summary Styles */
 .stats-summary {
-  background-color: #fff;
+  background-color: #232b3a; /* Slightly lighter than sidebar for card effect */
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  color: #e2e8f0;
 }
 
 .section-header {
@@ -79,17 +82,17 @@
 
 .section-header h2 {
   font-size: 1.2rem;
-  color: #2d3748;
+  color: #e2e8f0;
   margin: 0;
 }
 
 .time-filter {
   padding: 6px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #2d3748;
   border-radius: 4px;
   font-size: 0.85rem;
-  color: #4a5568;
-  background-color: #f7fafc;
+  color: #e2e8f0;
+  background-color: #232b3a;
 }
 
 .stats-grid {
@@ -100,10 +103,11 @@
 }
 
 .stat-card {
-  background-color: #f7fafc;
+  background-color: #283046;
   border-radius: 8px;
   padding: 15px;
   text-align: center;
+  color: #e2e8f0;
 }
 
 .stat-icon {
@@ -114,20 +118,20 @@
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2d3748;
+  color: #fff;
   margin-bottom: 5px;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #718096;
+  color: #a0aec0;
 }
 
 .view-details-button {
   display: block;
   width: 100%;
   padding: 10px;
-  background-color: #fff;
+  background-color: #232b3a;
   border: 1px solid #4a6cf7;
   color: #4a6cf7;
   border-radius: 6px;
@@ -142,7 +146,6 @@
   color: #fff;
 }
 
-/* Loading state styles */
 .stats-loading,
 .activity-loading {
   display: flex;
@@ -150,7 +153,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: #718096;
+  color: #a0aec0;
 }
 
 .stats-loading .loading-spinner,
@@ -160,12 +163,12 @@
   margin-bottom: 12px;
 }
 
-/* Recent Activity Styles */
 .recent-activity {
-  background-color: #fff;
+  background-color: #232b3a;
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  color: #e2e8f0;
 }
 
 .section-action {
@@ -186,9 +189,10 @@
 .activity-item {
   display: flex;
   padding: 15px;
-  background-color: #f7fafc;
+  background-color: #283046;
   border-radius: 6px;
-  border-left: 4px solid #cbd5e0;
+  border-left: 4px solid #4a6cf7;
+  align-items: flex-start;
 }
 
 .activity-item.match.win {
@@ -220,19 +224,19 @@
 
 .activity-title {
   font-weight: 600;
-  color: #2d3748;
+  color: #e2e8f0;
   margin-bottom: 5px;
 }
 
 .activity-description {
   font-size: 0.85rem;
-  color: #718096;
+  color: #a0aec0;
   margin-bottom: 5px;
 }
 
 .activity-date {
   font-size: 0.75rem;
-  color: #a0aec0;
+  color: #718096;
 }
 
 .no-activity {
@@ -241,15 +245,91 @@
   color: #a0aec0;
 }
 
-/* Responsive adjustments for smaller screens where sidebar might hide or change */
 @media (max-width: 768px) {
   .dashboard-main-content {
-    margin-left: 100px; /* Adjust margin to match narrow sidebar width (was 60px) */
-    max-width: calc(100% - 100px); /* Adjust max-width */
+    margin-left: 100px;
+    max-width: calc(100% - 100px);
     padding: 20px;
   }
-
   .dashboard-content-grid {
-    grid-template-columns: 1fr; /* Force single column */
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-welcome-section {
+  background-color: #232b3a;
+  border-radius: 10px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-welcome-section h1 {
+  color: #e2e8f0;
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+
+.dashboard-welcome-section p {
+  color: #a0aec0;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.dashboard-quicklinks {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quicklink-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #283046;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 16px;
+  color: #e2e8f0;
+  text-decoration: none;
+  flex: 1;
+  min-width: 120px;
+  transition: all 0.2s;
+}
+
+.quicklink-button:hover {
+  background-color: #3a4556;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #4a6cf7;
+}
+
+.quicklink-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.quicklink-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-quicklinks {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .quicklink-button {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .quicklink-icon {
+    margin-bottom: 0;
+    font-size: 1.5rem;
   }
 }

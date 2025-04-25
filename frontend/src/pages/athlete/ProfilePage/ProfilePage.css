@@ -1,0 +1,289 @@
+.profile-page-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1a202c; /* Match dashboard background */
+}
+
+.profile-page-content {
+  flex-grow: 1;
+  /* Use PageLayout's padding, remove from here */
+  /* padding: 30px; */
+  margin-left: 260px; /* Adjust based on sidebar width */
+  max-width: calc(100% - 260px);
+  color: #e2e8f0;
+}
+
+/* General Card Styling */
+.card-style {
+  background-color: #232b3a; /* Consistent card background */
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Slightly stronger shadow */
+  margin-bottom: 24px;
+}
+
+.card-style h3 {
+  font-size: 1.2rem;
+  color: #e2e8f0;
+  margin-top: 0;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #2d3748; /* Separator line */
+  padding-bottom: 10px;
+}
+
+/* Profile Header */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  position: relative; /* For edit button positioning */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.profile-avatar-container {
+  flex-shrink: 0;
+}
+
+.profile-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a6cf7, #5e2ced);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 600;
+  border: 3px solid #2d3748;
+  text-transform: uppercase; /* Ensure consistent case */
+}
+
+/* Add styles for actual img if you implement it */
+/* .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; } */
+
+.profile-info {
+  flex-grow: 1;
+  min-width: 200px; /* Prevent excessive shrinking */
+}
+
+.profile-info h1 {
+  margin: 0 0 5px 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.profile-username {
+  margin: 0 0 12px 0;
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+.profile-meta {
+  display: flex;
+  flex-wrap: wrap; /* Allow meta items to wrap */
+  gap: 10px 18px; /* Row and column gap */
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.profile-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-profile-button {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.edit-profile-button:hover {
+  background-color: #4a5568;
+  transform: translateY(-1px);
+}
+
+.edit-profile-button:active {
+  transform: translateY(0);
+}
+
+/* Profile Body Grid */
+.profile-body-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); /* Allow columns to shrink */
+  gap: 24px;
+}
+
+/* Profile Stats Card */
+.profile-stats-card .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Responsive columns */
+  gap: 15px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #283046; /* Slightly different background */
+  padding: 15px 10px;
+  border-radius: 6px;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  text-align: center; /* Ensure label centers if it wraps */
+}
+
+.no-stats-message { /* Style for when stats are missing */
+  color: #a0aec0;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Profile Bio */
+.profile-bio p {
+  color: #cbd5e0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Profile Activity */
+/* Removed empty ruleset */
+.profile-activity .section-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+.profile-activity .activity-list {
+  max-height: 400px; /* Limit height and allow scroll if needed */
+  overflow-y: auto;
+  padding-right: 10px; /* Space for scrollbar */
+  margin-right: -10px; /* Counteract padding for alignment */
+}
+/* Customize scrollbar */
+.profile-activity .activity-list::-webkit-scrollbar {
+  width: 6px;
+}
+.profile-activity .activity-list::-webkit-scrollbar-track {
+  background: #283046;
+  border-radius: 3px;
+}
+.profile-activity .activity-list::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
+.profile-activity .activity-list::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Profile Achievements */
+.profile-achievements .no-achievements-message { /* Style for placeholder text */
+  color: #a0aec0;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.error-message {
+  color: #f56565;
+  background-color: rgba(245, 101, 101, 0.1);
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .profile-body-grid {
+    grid-template-columns: 1fr; /* Stack columns */
+  }
+}
+
+@media (max-width: 992px) { /* Adjust breakpoint if needed */
+  .profile-page-content {
+    margin-left: 90px; /* Adjust for smaller sidebar */
+    max-width: calc(100% - 90px);
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center; /* Center items when stacked */
+    text-align: center;
+    gap: 15px;
+  }
+
+  .profile-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+
+  .profile-info h1 {
+    font-size: 1.6rem;
+  }
+
+  .profile-meta {
+    justify-content: center; /* Center meta items */
+    gap: 8px 15px;
+  }
+
+  .edit-profile-button {
+    position: static; /* Reset position */
+    margin-top: 15px;
+  }
+
+  .profile-stats-card .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Allow more flexibility */
+  }
+}
+
+@media (max-width: 576px) {
+  .card-style {
+    padding: 20px;
+  }
+  .profile-info h1 {
+    font-size: 1.4rem;
+  }
+  .profile-username {
+    font-size: 0.9rem;
+  }
+  .profile-meta {
+    font-size: 0.85rem;
+  }
+  .edit-profile-button {
+    width: 100%;
+    padding: 10px 16px;
+  }
+  .stat-value {
+    font-size: 1.2rem;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+  }
+}

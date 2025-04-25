@@ -235,7 +235,7 @@ exports.registerAthlete = async (req, res) => {
         logger.warn(`Athlete registration validation failed for ${lowerCaseEmail}: ${messages}`);
         throw new ApiError(`Validation failed: ${messages}`, 400, 'VALIDATION_ERROR');
      }
-     logger.error(`Unexpected athlete registration error for ${lowerCaseEmail}:`, error);
+     logger.error('Unexpected athlete registration error for', lowerCaseEmail, error);
      throw new ApiError('Registration failed due to an internal error', 500, 'REGISTRATION_FAILURE');
   }
 };

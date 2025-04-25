@@ -12,6 +12,7 @@ const LoginPage = lazy(() => import('../pages/auth/LoginPage/LoginPage'));
 const RoleSelectionPage = lazy(() => import('../pages/auth/RoleSelectionPage'));
 const AthleteRegistrationPage = lazy(() => import('../pages/auth/registration/AthleteRegistrationPage'));
 const DashboardPage = lazy(() => import('../pages/athlete/DashboardPage'));
+const ProfilePage = lazy(() => import('../pages/athlete/ProfilePage')); // Import ProfilePage
 const NotFoundPage = lazy(() => import('../pages/public/NotFoundPage'));
 
 // Wrapper for protected routes
@@ -32,25 +33,35 @@ const ProtectedRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<Loading fullPage message="Loading content..." />}>
+      <Suspense fallback={<Loading />}>
         <Routes>
-          {/* Public routes */}
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/role-selection" element={<RoleSelectionPage />} />
           <Route path="/register/athlete" element={<AthleteRegistrationPage />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/dashboard" 
+          {/* Add other public routes like /features, /pricing, etc. if needed */}
+
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          {/* Fallback route */}
+          <Route
+            path="/profile" // Add the profile route
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Add other protected routes like /practice, /leaderboards, etc. */}
+
+          {/* Catch-all 404 Route */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

@@ -1,151 +1,208 @@
 .sidebar {
-  width: 260px; /* Adjust width as needed */
-  height: 100vh; /* Full viewport height */
-  background-color: #1a202c; /* Dark background */
-  color: #e2e8f0; /* Light text */
+  width: 260px;
+  height: 100vh;
+  background-color: #1a202c;
+  color: #e2e8f0;
   display: flex;
   flex-direction: column;
-  position: fixed; /* Fixed position */
+  position: fixed;
   top: 0;
   left: 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  z-index: 100; /* Ensure it's above other content */
+  box-shadow: 2px 0 12px rgba(0,0,0,0.10);
+  z-index: 100;
+  padding: 0;
 }
 
 .sidebar-header {
-  padding: 20px;
-  /* border-bottom: 1px solid #2d3748; */ /* Removed border */
+  padding: 32px 28px 24px 28px;
+  display: flex;
+  align-items: center;
+  min-height: 80px;
 }
 
 .sidebar-logo-link {
   display: flex;
   align-items: center;
+  gap: 12px;
   text-decoration: none;
   color: inherit;
 }
 
 .sidebar-logo {
-  height: 32px; /* Adjust size */
-  width: auto;
-  margin-right: 10px;
+  height: 36px;
+  width: 36px;
+  border-radius: 8px;
+  background: #483D8B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: contain;
 }
 
 .sidebar-logo-text {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-nav {
-  flex-grow: 1; /* Takes up available space */
-  padding: 20px 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  height: 100%;
 }
 
 .sidebar-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.sidebar-nav li a {
-  display: block;
-  padding: 12px 20px;
-  color: #a0aec0; /* Muted color for links */
-  text-decoration: none;
-  font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
-  border-radius: 4px;
-  margin: 0 10px 5px 10px;
-}
-
-.sidebar-nav li a:hover,
-.sidebar-nav li a.active { /* Add .active class for current page */
-  background-color: #2d3748; /* Highlight background */
-  color: #fff; /* White text on hover/active */
-}
-
-.sidebar-footer {
-  padding: 15px 20px; /* Adjusted padding */
-  border-top: 1px solid #2d3748;
-  position: relative; /* Needed for absolute positioning of options menu */
-}
-
-.user-profile-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Space out profile and toggle */
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  flex-grow: 1; /* Allow profile to take available space */
-  margin-right: 10px; /* Add some space before the toggle */
-  overflow: hidden; /* Prevent text overflow */
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #4a6cf7; /* Primary color */
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  margin-right: 12px;
-  font-size: 1.1rem;
-}
-
-.user-info {
   display: flex;
   flex-direction: column;
+  gap: 4px; /* Consistent vertical gap */
 }
 
-.user-name {
-  font-weight: 600;
-  color: #fff;
-  font-size: 0.95rem;
+.sidebar-nav li {
+  display: flex;
+  align-items: center; /* Vertically center content in li */
+  min-height: 44px; /* Ensure consistent height */
+  margin: 0;
+  position: relative;
 }
 
-.user-role {
-  font-size: 0.8rem;
-  color: #a0aec0;
-  text-transform: capitalize;
+.sidebar-profile-link {
+  margin: 0;
+  display: flex;
+  align-items: center;
 }
 
-.options-toggle {
+.sidebar-more-btn {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+}
+
+/* Apply to both links and the more button wrapper */
+.sidebar-nav a,
+.sidebar-more-button {
+  display: flex;
+  align-items: center; /* Vertically center icon and label */
+  width: 100%;
+  padding: 12px 28px;
+  border-radius: 8px;
   background: none;
   border: none;
-  color: #a0aec0;
-  font-size: 1.5rem; /* Make ellipsis larger */
-  line-height: 1;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
-  transition: background-color 0.2s, color 0.2s;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.18s, color 0.18s; /* Ensure transition is defined */
+  gap: 16px; /* Add space between icon and label */
 }
 
-.options-toggle:hover {
-  background-color: #2d3748;
-  color: #fff;
+.sidebar-nav a:hover,
+.sidebar-more-button:hover {
+  background: #2d3748; /* Slightly lighter background on hover */
+  color: #ffffff; /* White text on hover */
+}
+
+/* Style for the active NavLink */
+.sidebar-nav a.active {
+  background: #313b4f; /* Changed from green to a neutral dark gray */
+  color: #ffffff; /* White text for active link */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional subtle shadow */
+}
+
+/* Ensure icons within the active link also get the active color */
+.sidebar-nav a.active .sidebar-nav-icon,
+.sidebar-nav a.active .sidebar-generic-profile-icon {
+  color: #ffffff; /* Match text color */
+}
+
+/* Optional: Style for focus state (accessibility) */
+.sidebar-nav a:focus-visible,
+.sidebar-more-button:focus-visible {
+  outline: 2px solid #4299e1; /* Blue outline on focus */
+  outline-offset: 2px;
+}
+
+/* Optional: Style for active link focus state */
+.sidebar-nav a.active:focus-visible {
+  outline-color: #ffffff; /* White outline on active focused link */
+}
+
+.sidebar-nav-icon {
+  font-size: 1.35rem;
+  min-width: 28px; /* Fixed width for left alignment */
+  width: 28px; /* Fixed width */
+  height: 28px; /* Fixed height */
+  display: flex;
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  margin-right: 0; /* Remove margin, use gap on parent */
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.sidebar-generic-profile-icon {
+  font-size: 1.35rem; /* Match other icons */
+  min-width: 28px; /* Fixed width */
+  width: 28px; /* Fixed width */
+  height: 28px; /* Fixed height */
+  display: flex;
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  color: #a0aec0;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.sidebar-nav-label {
+  font-weight: 600;
+  color: inherit;
+  margin-left: 0; /* Remove margin, use gap on parent */
+  display: flex;
+  align-items: center; /* Vertically center label text */
+  flex-grow: 1; /* Allow label to take remaining space */
+}
+
+.sidebar-more-btn {
+  margin-bottom: 0;
+  display: flex; /* Use flex for alignment */
+  align-items: center; /* Vertically center content */
+  width: 100%;
+  min-height: 44px; /* Match other items */
+  position: relative; /* Ensure positioning context for menu */
+}
+
+/* Styles for .sidebar-more-button are in the shared rule with .sidebar-nav a above */
+
+.sidebar-more-button .sidebar-nav-icon {
+  font-size: 1.1rem !important; /* Keep specific size if desired */
+  min-width: 28px; /* Fixed width */
+  width: 28px; /* Fixed width */
+  height: 28px; /* Fixed height */
+  display: flex;
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
 .options-menu {
   position: absolute;
-  bottom: 100%; /* Position above the footer */
-  left: 15px; /* Align with footer padding */
-  right: 15px; /* Align with footer padding */
-  background-color: #2d3748; /* Slightly lighter than sidebar bg */
-  border-radius: 8px;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 110; /* Ensure it's above other sidebar content */
-  padding: 8px 0;
-  margin-bottom: 10px; /* Space between menu and footer */
+  left: 100%;
+  top: 0;
+  background: #232b3a;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  z-index: 200;
+  min-width: 170px;
+  padding: 10px 0;
+  margin-left: 10px;
   display: flex;
   flex-direction: column;
-  animation: slideUpFadeIn 0.2s ease-out forwards;
+  animation: slideUpFadeIn 0.18s ease;
 }
 
 @keyframes slideUpFadeIn {
@@ -163,74 +220,69 @@
   background: none;
   border: none;
   color: #e2e8f0;
-  padding: 10px 15px;
+  padding: 12px 22px;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
+  transition: background 0.18s;
+  border-radius: 6px;
   gap: 10px;
-  transition: background-color 0.2s;
 }
 
 .options-menu-item:hover {
-  background-color: #4a5568; /* Hover background */
-}
-
-.options-menu-item span {
-  font-size: 1rem;
+  background-color: #4a5568;
 }
 
 .options-menu-item--logout {
-  color: #f56565; /* Red color for logout */
+  color: #f56565;
 }
 
 .options-menu-item--logout:hover {
-  background-color: rgba(245, 101, 101, 0.2); /* Lighter red hover */
+  background-color: rgba(245, 101, 101, 0.18);
 }
 
+.sidebar-logo-link.sidebar-logo-refresh:focus,
+.sidebar-logo-link.sidebar-logo-refresh:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
 
 /* Responsive adjustments for narrow sidebar */
 @media (max-width: 768px) {
   .sidebar {
-    width: 100px; /* Reduced width */
+    width: 90px;
+    min-width: 90px;
   }
-
   .sidebar-header {
-    display: none; /* Hide header in narrow view */
+    padding: 18px 8px 12px 8px;
   }
-
   .sidebar-logo {
-    height: 24px; /* Adjusted logo size */
+    height: 28px;
+    width: 28px;
   }
-
   .sidebar-logo-text {
-    font-size: 1rem;
+    display: none;
   }
-
-  .sidebar-nav li a {
-    padding: 10px;
-    font-size: 0.9rem;
+  .sidebar-nav a,
+  .sidebar-more-button {
+    padding: 10px 10px;
+    font-size: 0.92rem;
+    justify-content: center;
   }
-
-  .sidebar-footer {
-    text-align: center;
+  .sidebar-nav-label {
+    display: none;
   }
-
-  .user-profile-area {
-    justify-content: center; /* Center the toggle button when profile info is hidden */
+  .sidebar-generic-profile-icon {
+    font-size: 1.2rem;
   }
-
-  .user-profile {
-     display: none; /* Hide user profile details */
+  .sidebar-more-btn {
+    margin-bottom: 10px;
   }
-
-  .options-toggle {
-    font-size: 1.3rem;
-  }
-
   .options-menu {
-    left: 5px;
-    right: 5px;
+    left: 90px;
+    min-width: 120px;
+    font-size: 0.95rem;
   }
 }
