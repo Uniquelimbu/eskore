@@ -4,14 +4,15 @@ const { Op } = require('sequelize');
 const { ApiError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 const { sanitizeUserData } = require('../utils/userUtils');
-// Removed toSafeObject as sendSafeJson handles it
-const { sendSafeJson } = require('../utils/safeSerializer'); // Use the robust serializer
+const { sendSafeJson } = require('../utils/safeSerializer');
 
 // Model imports
 const Athlete = require('../models/Athlete');
 const User = require('../models/User');
 const Team = require('../models/Team');
 const Manager = require('../models/Manager');
+const Role = require('../models/Role');
+const UserRole = require('../models/UserRole');
 
 // Helper function to generate JWT token with improved security
 const generateToken = (userId, role) => {
@@ -40,8 +41,7 @@ const getCookieOptions = () => ({
   secure: process.env.NODE_ENV === 'production',
 });
 
-
-// Login function that checks multiple tables
+// Login function that now uses the unified User model
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -52,102 +52,74 @@ exports.login = async (req, res) => {
   const lowerCaseEmail = String(email).toLowerCase().trim();
   logger.info(`Login attempt for email: ${lowerCaseEmail}`);
 
-  let userInstance = null;
-  let userType = null;
-  let userId = null;
-  let passwordToCompare = null;
-
   try {
-    // Find user across relevant tables
-    // TODO: In the future, once all data is migrated to the User table,
-    // this check across multiple tables can be simplified to only check User table
-    userInstance = await User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id', 'email', 'password', 'role'] });
-    if (userInstance) {
-      userType = 'user'; // Could be admin or regular user
-      userId = userInstance.id;
-      passwordToCompare = userInstance.password; // Hashed password from User table
-      logger.debug(`User found in User table: ${userId}, Role: ${userInstance.role}`);
+    // Find user in the unified User table
+    const user = await User.findOne({
+      where: { email: lowerCaseEmail },
+      attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName', 'status']
+    });
 
-      // If admin, try to fetch associated athlete data for richer profile
-      if (userInstance.role === 'admin' || userInstance.role === 'athlete_admin') {
-        const athleteRecord = await Athlete.findOne({
-          where: { email: lowerCaseEmail },
-          attributes: { exclude: ['passwordHash', 'createdAt', 'updatedAt'] } // Exclude sensitive/unneeded fields
-        });
-        if (athleteRecord) {
-          // Merge athlete data into userInstance for sanitization later
-          // Be careful not to overwrite essential User fields like id, role
-          userInstance = { ...athleteRecord.toJSON(), ...userInstance.toJSON() };
-          logger.debug(`Admin user ${userId} has associated athlete record ${athleteRecord.id}`);
-        }
-      }
-
-    } else {
-      userInstance = await Athlete.findOne({ where: { email: lowerCaseEmail }, attributes: { exclude: ['createdAt', 'updatedAt'] } });
-      if (userInstance) {
-        userType = 'athlete';
-        userId = userInstance.id;
-        passwordToCompare = userInstance.passwordHash; // Hashed password from Athlete table
-        logger.debug(`User found in Athlete table: ${userId}`);
-      }
-      // Add checks for Manager and Team if login via those tables is supported
-      // else if (...) { ... }
-    }
-
-    // If user not found in any relevant table
-    if (!userInstance || !userType || !passwordToCompare) {
-      logger.warn(`User not found or password field missing for email: ${lowerCaseEmail}`);
+    if (!user || user.status !== 'active') {
+      logger.warn(`Login failed: User not found or inactive for email: ${lowerCaseEmail}`);
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
     // Validate password
-    const isPasswordValid = await bcrypt.compare(password, passwordToCompare);
-
+    const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
-      logger.warn(`Invalid password for ${userType}: ${lowerCaseEmail}`);
+      logger.warn(`Invalid password for user: ${lowerCaseEmail}`);
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
-    // Password is valid, proceed with token generation and response
+    // Update last login time
+    await user.update({ lastLogin: new Date() });
 
-    // Determine the role to put in the token (use User role if found there, otherwise userType)
-    const tokenRole = userInstance.role && userType === 'user' ? userInstance.role : userType;
-    const token = generateToken(userId, tokenRole);
+    // Get user roles from the roles relationship
+    const userRoles = await UserRole.findAll({
+      where: { userId: user.id },
+      include: [{ model: Role, attributes: ['name'] }]
+    });
+
+    const rolesToAdd = [];
+    if (userRoles && userRoles.length > 0) {
+      rolesToAdd.push(...userRoles.map(ur => ur.Role.name));
+    }
+
+    // Generate JWT token using the main role from the user table
+    const token = generateToken(user.id, user.role);
 
     // Set the secure cookie
     const cookieOptions = getCookieOptions();
     res.cookie('auth_token', token, cookieOptions);
-    logger.debug('Auth cookie set with options:', cookieOptions);
 
     // Sanitize user data before sending
-    // Pass the determined role (tokenRole) to ensure correct sanitization
-    const safeUserData = sanitizeUserData(userInstance, tokenRole);
-
+    const safeUserData = sanitizeUserData(user.toJSON(), user.role);
+    
     if (!safeUserData) {
-        logger.error(`Login failed: Could not sanitize user data for id=${userId}`);
-        throw new ApiError('Internal server error during login', 500, 'AUTH_SANITIZE_ERROR');
+      logger.error(`Login failed: Could not sanitize user data for id=${user.id}`);
+      throw new ApiError('Internal server error during login', 500, 'AUTH_SANITIZE_ERROR');
     }
 
-    logger.info(`Successful login for ${userType}: ${lowerCaseEmail}, UserID: ${userId}`);
+    // Add additional roles to the user data (if any)
+    if (rolesToAdd.length > 0) {
+      safeUserData.roles = rolesToAdd;
+    }
+
+    logger.info(`Successful login for user: ${lowerCaseEmail}, UserID: ${user.id}`);
 
     // Determine redirect URL (optional, frontend might handle routing)
     let redirectUrl = '/dashboard'; // Default
-    // Adjust based on role if needed
-    // if (tokenRole === 'admin' || tokenRole === 'athlete_admin') redirectUrl = '/admin/dashboard';
-    // else if (tokenRole === 'athlete') redirectUrl = '/athlete/dashboard';
 
     // Use sendSafeJson for the final response
     return sendSafeJson(res, {
       success: true,
-      // token: token, // Optionally include token in body if needed by frontend (cookie is primary)
       user: safeUserData,
-      redirectUrl // Include if frontend uses it
+      redirectUrl
     });
 
   } catch (error) {
     // Handle known application errors
     if (error instanceof ApiError) {
-      // Log specific auth errors differently if needed
       if (error.statusCode === 401) {
          logger.warn(`Login failed for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
       } else {
@@ -168,25 +140,19 @@ exports.login = async (req, res) => {
 exports.registerUser = async (req, res) => {
   let {
     firstName, lastName, middleName, email, password, dob,
-    country, height, position // Include height and position as optional fields
+    country, height, position, roles = []
   } = req.body;
 
   // Normalize email
   const lowerCaseEmail = String(email || '').toLowerCase().trim();
 
-  // Check for existing email across all relevant tables
-  const [existingUser, existingAthlete] = await Promise.allSettled([
-    User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
-    Athlete.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
-    // Note: In the future, only User check will be needed once all data is migrated
-  ]);
+  // Check for existing email in User table
+  const existingUser = await User.findOne({ 
+    where: { email: lowerCaseEmail }, 
+    attributes: ['id'] 
+  });
 
-  // Check if any query found a result
-  const exists = [existingUser, existingAthlete].some(
-    result => result.status === 'fulfilled' && result.value !== null
-  );
-
-  if (exists) {
+  if (existingUser) {
     throw new ApiError('Email already in use', 409, 'EMAIL_IN_USE');
   }
 
@@ -202,10 +168,29 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       dob,
       country,
-      height,  // Add these fields from the request
+      height,
       position,
       role: 'user' // Default role
     });
+
+    // Assign additional roles if specified
+    if (roles && roles.length > 0) {
+      // Find role records
+      const roleRecords = await Role.findAll({
+        where: { 
+          name: { [Op.in]: roles } 
+        }
+      });
+      
+      // Create user-role associations
+      if (roleRecords.length > 0) {
+        const userRoles = roleRecords.map(role => ({
+          userId: user.id,
+          roleId: role.id
+        }));
+        await UserRole.bulkCreate(userRoles);
+      }
+    }
 
     // Generate JWT token
     const token = generateToken(user.id, 'user');
@@ -220,6 +205,11 @@ exports.registerUser = async (req, res) => {
     if (!safeUserData) {
       logger.error(`Registration failed: Could not sanitize new user data for id=${user.id}`);
       throw new ApiError('Internal server error after registration', 500, 'AUTH_SANITIZE_ERROR');
+    }
+
+    // Add roles to response if any were assigned
+    if (roles && roles.length > 0) {
+      safeUserData.roles = roles;
     }
 
     logger.info(`User registered successfully: ${lowerCaseEmail}, ID: ${user.id}`);
@@ -250,13 +240,13 @@ exports.registerUser = async (req, res) => {
 // Google OAuth handler
 exports.googleAuth = async (req, res) => {
   // Implementation would follow similar pattern to login
-  res.redirect(`/athlete/home?token=sample-token`);
+  res.redirect(`/dashboard?token=sample-token`);
 };
 
 // Facebook OAuth handler
 exports.facebookAuth = async (req, res) => {
   // Implementation would follow similar pattern to login
-  res.redirect(`/athlete/home?token=sample-token`);
+  res.redirect(`/dashboard?token=sample-token`);
 };
 
 // Update logout function for better security and reliability

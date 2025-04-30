@@ -51,6 +51,18 @@ function setupAssociations() {
   // Team - Tournament (many-to-many)
   Team.belongsToMany(Tournament, { through: TeamTournament, foreignKey: 'teamId', otherKey: 'tournamentId' });
   Tournament.belongsToMany(Team, { through: TeamTournament, foreignKey: 'tournamentId', otherKey: 'teamId' });
+  
+  // User Tournament relationships
+  User.hasMany(UserTournament, { foreignKey: 'userId' });
+  UserTournament.belongsTo(User, { foreignKey: 'userId' });
+  Tournament.hasMany(UserTournament, { foreignKey: 'tournamentId' });
+  UserTournament.belongsTo(Tournament, { foreignKey: 'tournamentId' });
+  
+  // Team Tournament relationships
+  Team.hasMany(TeamTournament, { foreignKey: 'teamId' });
+  TeamTournament.belongsTo(Team, { foreignKey: 'teamId' });
+  Tournament.hasMany(TeamTournament, { foreignKey: 'tournamentId' });
+  TeamTournament.belongsTo(Tournament, { foreignKey: 'tournamentId' });
 }
 
 module.exports = { setupAssociations };

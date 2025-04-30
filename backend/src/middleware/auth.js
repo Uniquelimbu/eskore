@@ -1,20 +1,17 @@
-// src/middleware/auth.js
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('./errorHandler');
 const logger = require('../utils/logger');
 const User = require('../models/User');
-const Athlete = require('../models/Athlete');
-const Team = require('../models/Team');
-const Manager = require('../models/Manager');
-const { sanitizeUserData } = require('../utils/userUtils'); // Import sanitizeUserData
+const Role = require('../models/Role');
+const { sanitizeUserData } = require('../utils/userUtils');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
 
 /**
  * requireAuth:
  * Middleware to verify JWT token from Authorization header or cookie.
- * Decodes token, finds user based on role, attaches sanitized user to req.user.
+ * Decodes token, finds user in the unified User table, attaches sanitized user to req.user.
  */
 async function requireAuth(req, res, next) {
   let token;
@@ -41,56 +38,44 @@ async function requireAuth(req, res, next) {
       throw new ApiError('Invalid token payload', 401, 'INVALID_TOKEN');
     }
 
-    // 3. Fetch user based on role from token
-    let userInstance = null;
-    const userId = decoded.userId;
-    const role = decoded.role; // Role from the token
+    // 3. Fetch user from User table
+    const userInstance = await User.findByPk(decoded.userId, {
+      attributes: [
+        'id', 'email', 'firstName', 'lastName', 'role', 'status', 
+        'dob', 'country', 'height', 'position'
+      ],
+      include: [{
+        model: Role,
+        through: { attributes: [] }, // Don't include junction table
+        attributes: ['name']
+      }]
+    });
 
-    // TODO: In the future, this can be simplified to only check the User table
-    // once all athlete/manager/team data is migrated
-    switch (role) {
-      case 'user':
-      case 'admin':
-      case 'athlete_admin':
-        userInstance = await User.findByPk(userId, { 
-          attributes: [...commonAttributes, 'role', 'firstName', 'lastName', 'dob', 'height', 'position', 'country'] 
-        });
-        break;
-      case 'athlete':
-        userInstance = await Athlete.findByPk(userId, { attributes: [...commonAttributes, ...nameAttributes, 'position', 'country'] });
-        break;
-      case 'team':
-        userInstance = await Team.findByPk(userId, { attributes: [...commonAttributes, 'name', 'logoUrl'] });
-        break;
-      case 'manager':
-        userInstance = await Manager.findByPk(userId, { attributes: [...commonAttributes, ...nameAttributes, 'teamId'] });
-        break;
-      default:
-        logger.warn(`Authentication failed: Unknown role in token: ${role}`);
-        throw new ApiError('Invalid user role in token', 401, 'INVALID_ROLE');
-    }
-
-    if (!userInstance) {
-      logger.warn(`Authentication failed: User not found for id=${userId}, role=${role}. Token might be stale.`);
+    if (!userInstance || userInstance.status !== 'active') {
+      logger.warn(`Authentication failed: User not found or inactive for id=${decoded.userId}`);
       // Clear potentially invalid cookie
-      res.clearCookie('auth_token', { path: '/' }); // Use basic clearing options
-      throw new ApiError('User not found or invalid token', 401, 'USER_NOT_FOUND');
+      res.clearCookie('auth_token', { path: '/' });
+      throw new ApiError('User not found or inactive', 401, 'USER_NOT_FOUND');
     }
 
-    // 4. Attach SANITIZED user data to req.user
-    // Use sanitizeUserData, passing the role from the TOKEN to ensure correct sanitization logic
-    req.user = sanitizeUserData(userInstance.toJSON(), role);
+    // 4. Attach sanitized user data to req.user
+    const userData = userInstance.toJSON();
+    req.user = sanitizeUserData(userData, decoded.role);
 
     // Double-check sanitization result
     if (!req.user) {
-        logger.error(`Authentication failed: Could not sanitize user data for id=${userId}, role=${role}`);
-        throw new ApiError('Internal server error during authentication', 500, 'AUTH_SANITIZE_ERROR');
+      logger.error(`Authentication failed: Could not sanitize user data for id=${decoded.userId}`);
+      throw new ApiError('Internal server error during authentication', 500, 'AUTH_SANITIZE_ERROR');
     }
 
-    // Ensure the role attached matches the token's role for consistency
-    req.user.role = role;
+    // Add roles array to user object from the included Role relationship
+    if (userData.Roles && userData.Roles.length > 0) {
+      req.user.roles = userData.Roles.map(role => role.name);
+    } else {
+      req.user.roles = [decoded.role]; // Fallback to the main role
+    }
 
-    logger.debug(`User authenticated: id=${req.user.id}, role=${req.user.role}`);
+    logger.debug(`User authenticated: id=${req.user.id}, role=${req.user.role}, roles=${req.user.roles.join(',')}`);
     next(); // Proceed to the next middleware or route handler
 
   } catch (error) {
@@ -111,22 +96,36 @@ async function requireAuth(req, res, next) {
 }
 
 /**
+ * requireRole:
+ * Middleware to check if user has a specific role or array of roles
+ * @param {string|string[]} roles - Role(s) to check
+ */
+function requireRole(roles) {
+  return (req, res, next) => {
+    requireAuth(req, res, (err) => {
+      if (err) return next(err);
+      
+      const rolesToCheck = Array.isArray(roles) ? roles : [roles];
+      
+      // Check if user has any of the required roles
+      const hasRole = req.user.roles.some(role => rolesToCheck.includes(role));
+      
+      if (hasRole) {
+        return next();
+      }
+      
+      logger.warn(`Role access denied for user ${req.user.id}. Required roles: ${rolesToCheck.join(',')}. User roles: ${req.user.roles.join(',')}`);
+      return next(new ApiError(`Forbidden - Requires one of these roles: ${rolesToCheck.join(', ')}`, 403, 'FORBIDDEN'));
+    });
+  };
+}
+
+/**
  * requireAdmin:
- * Extends requireAuth (user must be authenticated) AND checks user's role.
- * Only allows if user.role === "admin".
+ * Middleware to check for admin role
  */
 function requireAdmin(req, res, next) {
-  requireAuth(req, res, (err) => {
-    if (err) return next(err);
-    
-    // Check admin role
-    if (req.user && req.user.role === 'admin') {
-      return next();
-    }
-    
-    logger.warn(`Admin access denied for user ${req.user.id} at ${req.path}`);
-    return next(new ApiError('Forbidden - Admins only', 403, 'FORBIDDEN'));
-  });
+  return requireRole('admin')(req, res, next);
 }
 
 /**
@@ -134,17 +133,30 @@ function requireAdmin(req, res, next) {
  * Middleware to check for admin or athlete_admin role
  */
 function requireAthleteAdmin(req, res, next) {
-  requireAuth(req, res, (err) => {
-    if (err) return next(err);
-    
-    // Check for admin or athlete_admin role
-    if (req.user && (req.user.role === 'admin' || req.user.role === 'athlete_admin')) {
-      return next();
-    }
-    
-    logger.warn(`Athlete Admin access denied for user ${req.user.id} with role ${req.user.role}`);
-    return next(new ApiError('Forbidden - Athlete Admins only', 403, 'FORBIDDEN'));
-  });
+  return requireRole(['admin', 'athlete_admin'])(req, res, next);
 }
 
-module.exports = { requireAuth, requireAdmin, requireAthleteAdmin };
+/**
+ * requireOrganizer:
+ * Middleware to check for organizer role (for tournament creation)
+ */
+function requireOrganizer(req, res, next) {
+  return requireRole(['admin', 'organizer'])(req, res, next);
+}
+
+/**
+ * requireTeamManager:
+ * Middleware to check for team manager role
+ */
+function requireTeamManager(req, res, next) {
+  return requireRole(['admin', 'manager'])(req, res, next);
+}
+
+module.exports = { 
+  requireAuth, 
+  requireAdmin, 
+  requireAthleteAdmin, 
+  requireOrganizer,
+  requireTeamManager,
+  requireRole
+};

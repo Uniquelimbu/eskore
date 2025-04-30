@@ -15,6 +15,13 @@ class User extends Model {
     return roles.some(role => role.name === roleName);
   }
 
+  // Method to check if user has any of the provided roles
+  async hasAnyRole(roleNames) {
+    const roles = await this.getRoles();
+    const userRoleNames = roles.map(role => role.name);
+    return roleNames.some(role => userRoleNames.includes(role));
+  }
+
   // Method to check if user is part of a team with a specific role
   async isTeamMember(teamId, role = null) {
     const teamMemberships = await this.getUserTeams({
@@ -32,6 +39,16 @@ class User extends Model {
       include: [{ model: sequelize.models.Team }]
     });
     return userTeams.map(ut => ut.Team);
+  }
+
+  // Method to get user's tournaments
+  async getTournaments(role = null) {
+    const where = role ? { role } : {};
+    const userTournaments = await this.getUserTournaments({
+      where,
+      include: [{ model: sequelize.models.Tournament }]
+    });
+    return userTournaments.map(ut => ut.Tournament);
   }
 }
   
@@ -113,5 +130,5 @@ User.init({
     }
   }
 });
-  
-return User;
+
+module.exports = User;

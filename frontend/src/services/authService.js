@@ -52,7 +52,7 @@ const authService = {
     });
   },
 
-  // Register a user (replaces registerAthlete)
+  // Register a user with the unified user system
   registerUser: async (userData) => {
     return withRetry(async () => {
       try {
@@ -94,6 +94,27 @@ const authService = {
       }
       throw error instanceof Error ? error : new Error(error.message || 'Get current user failed');
     }
+  },
+
+  // Check if an email is already registered
+  checkEmailExists: async (email) => {
+    try {
+      const response = await apiClient.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+      return response.exists;
+    } catch (error) {
+      console.error('Email check error:', error);
+      return false; // Fail safe - assume email doesn't exist to allow registration attempt
+    }
+  },
+
+  // Update user profile
+  updateProfile: async (userId, profileData) => {
+    return apiClient.patch(`/api/users/${userId}`, profileData);
+  },
+
+  // Change password
+  changePassword: async (userId, passwordData) => {
+    return apiClient.post(`/api/users/${userId}/change-password`, passwordData);
   },
 
   // Reset password request

@@ -8,7 +8,7 @@ const logger = require('./logger');
  * Removes sensitive fields like passwords and ensures consistent structure.
  *
  * @param {Object} user - User object (plain JSON, e.g., from userInstance.toJSON())
- * @param {String} userType - Type of user (role from token: 'athlete', 'team', 'manager', 'user', 'admin', 'athlete_admin')
+ * @param {String} userType - Type of user (role from token: 'user', 'admin', 'athlete_admin', etc.)
  * @returns {Object|null} Sanitized user object or null if input is invalid
  */
 function sanitizeUserData(user, userType) {
@@ -25,39 +25,34 @@ function sanitizeUserData(user, userType) {
       role: String(userType || 'user').substring(0, 50) // Use role from token/input
     };
 
-    // Add user-specific fields based on role/type, ensuring no sensitive data
-    // Use optional chaining and default values for safety
-    switch (userType) {
-      case 'athlete':
-      case 'admin': // Admins might have associated athlete data merged in
-      case 'athlete_admin':
-        userData.firstName = String(user.firstName || '').substring(0, 100);
-        userData.lastName = String(user.lastName || '').substring(0, 100);
-        userData.position = String(user.position || '').substring(0, 10);
-        userData.country = String(user.country || '').substring(0, 100);
-        // Add other relevant non-sensitive athlete fields if needed
-        break;
-      case 'team':
-        userData.name = String(user.name || '').substring(0, 200);
-        userData.logoUrl = String(user.logoUrl || '').substring(0, 500);
-        break;
-      case 'manager':
-        userData.firstName = String(user.firstName || '').substring(0, 100);
-        userData.lastName = String(user.lastName || '').substring(0, 100);
-        userData.teamId = user.teamId ? parseInt(user.teamId, 10) : null;
-        break;
-      case 'user':
-        // Basic user might not have extra fields, or add them if applicable
-        // e.g., userData.displayName = String(user.displayName || '');
-        break;
-      default:
-        // Unknown role, stick to base data
-        break;
+    // Always include these fields if they exist
+    if (user.firstName) userData.firstName = String(user.firstName).substring(0, 100);
+    if (user.lastName) userData.lastName = String(user.lastName).substring(0, 100);
+    if (user.middleName) userData.middleName = String(user.middleName).substring(0, 100);
+    if (user.dob) userData.dob = user.dob;
+    if (user.country) userData.country = String(user.country).substring(0, 100);
+    if (user.status) userData.status = String(user.status).substring(0, 20);
+    if (user.lastLogin) userData.lastLogin = user.lastLogin;
+    
+    // Add specific fields based on role
+    if (['athlete', 'admin', 'athlete_admin', 'user'].includes(userType)) {
+      if (user.height) userData.height = parseFloat(user.height);
+      if (user.position) userData.position = String(user.position).substring(0, 10);
+    }
+    
+    if (['manager', 'admin'].includes(userType)) {
+      if (user.teamId) userData.teamId = parseInt(user.teamId, 10);
+    }
+    
+    // If Roles array is included from a relationship query
+    if (user.Roles && Array.isArray(user.Roles)) {
+      userData.roles = user.Roles.map(role => role.name);
     }
 
     // Explicitly remove any password-related fields that might have slipped through
     delete userData.password;
     delete userData.passwordHash;
+    
     // Remove other potentially sensitive or internal fields
     delete userData.createdAt;
     delete userData.updatedAt;

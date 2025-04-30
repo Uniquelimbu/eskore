@@ -49,6 +49,10 @@ const validateUserRegistration = [
     .optional()
     .isString()
     .withMessage('Country must be a string'),
+  body('roles')
+    .optional()
+    .isArray()
+    .withMessage('Roles must be an array'),
   // Add validation results middleware
   (req, res, next) => {
     const errors = validationResult(req);
@@ -110,31 +114,24 @@ router.get('/facebook', catchAsync(authController.facebookAuth));
 /**
  * GET /api/auth/check-email?email=someone@example.com
  * Returns: { exists: true/false }
- * Checks User, Athlete, Team, and Manager tables.
+ * Checks User table
  */
 router.get('/check-email', async (req, res) => {
   try {
     const email = String(req.query.email || '').toLowerCase().trim();
     // Basic email format validation
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      // Return false for invalid email format, but maybe log it
       logger.debug(`[/check-email] Invalid email format received: ${req.query.email}`);
       return res.status(400).json({ exists: false, error: 'Invalid email format' });
     }
 
-    // Check all relevant tables concurrently
-    const results = await Promise.allSettled([
-      User.findOne({ where: { email }, attributes: ['id'] }),
-      Athlete.findOne({ where: { email }, attributes: ['id'] }),
-      // Add Team and Manager if they have unique email constraints
-      // Team.findOne({ where: { email }, attributes: ['id'] }),
-      // Manager.findOne({ where: { email }, attributes: ['id'] }),
-    ]);
+    // Check User table for the email
+    const existingUser = await User.findOne({ 
+      where: { email }, 
+      attributes: ['id'] 
+    });
 
-    // Check if any query found a result
-    const exists = results.some(result => result.status === 'fulfilled' && result.value !== null);
-
-    return res.json({ exists });
+    return res.json({ exists: existingUser !== null });
 
   } catch (err) {
     // Log the error for debugging, but don't leak details to the client
@@ -152,23 +149,22 @@ if (process.env.NODE_ENV !== 'production') {
   router.get('/debug', (req, res) => {
     // Only available in non-production environments
     const cookies = req.cookies || {};
-    const sanitizedCookies = Object.keys(cookies).reduce((acc, key) => {
-      acc[key] = key.includes('token') ? `${cookies[key].substring(0, 10)}...` : cookies[key];
-      return acc;
-    }, {});
-
-    res.json({
-      cookies: sanitizedCookies,
-      headers: {
-        authorization: req.headers.authorization ? 'Present (sanitized)' : 'Not present',
-        origin: req.headers.origin,
-        host: req.headers.host,
-      },
-      env: {
-        nodeEnv: process.env.NODE_ENV || 'not set',
-        jwtSecret: process.env.JWT_SECRET ? 'Set (sanitized)' : 'Not set',
-        allowedOrigins: process.env.ALLOWED_ORIGINS || 'not set'
+    const token = cookies.auth_token || req.headers.authorization?.split(' ')[1] || null;
+    
+    let decodedToken = null;
+    if (token) {
+      try {
+        decodedToken = jwt.decode(token);
+      } catch (e) {
+        decodedToken = { error: 'Invalid token format' };
       }
+    }
+    
+    return res.json({
+      envMode: process.env.NODE_ENV,
+      hasToken: !!token,
+      decodedToken,
+      cookieSettings: getCookieOptions()
     });
   });
 }

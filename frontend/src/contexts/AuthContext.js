@@ -110,12 +110,10 @@ export const AuthProvider = ({ children }) => {
 
       // Check if login was successful (backend sets cookie, response has user data)
       if (loginResponse && loginResponse.success && loginResponse.user) {
-        // Step 2: Use the user data directly from the login response
-        // No need to call /me again if login response is trusted and sanitized
+        // Use the user data directly from the login response
         dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user });
         return loginResponse.user; // Return the user data
       } else {
-        // Login API call itself failed or didn't return expected data
         throw new Error(loginResponse?.message || 'Login failed');
       }
     } catch (error) {
@@ -128,11 +126,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register user function (replaces registerAthlete)
+  // Register user function for the unified user system
   const registerUser = async (userData) => {
     try {
       dispatch({ type: AUTH_LOADING });
-      // Call the generic register API endpoint
+      // Call the unified register API endpoint
       const registerResponse = await authService.registerUser(userData);
 
       if (registerResponse && registerResponse.success && registerResponse.user) {
@@ -147,8 +145,38 @@ export const AuthProvider = ({ children }) => {
         type: AUTH_ERROR,
         payload: error.message || 'Registration failed'
       });
-      throw error; // Re-throw the error to be caught by the component
+      throw error;
     }
+  };
+
+  // Check if user has a specific role
+  const hasRole = (role) => {
+    if (!state.user) return false;
+    
+    // Check main role
+    if (state.user.role === role) return true;
+    
+    // Check additional roles array if it exists
+    if (state.user.roles && Array.isArray(state.user.roles)) {
+      return state.user.roles.includes(role);
+    }
+    
+    return false;
+  };
+
+  // Check if user has any of the provided roles
+  const hasAnyRole = (roles) => {
+    if (!state.user || !roles || !Array.isArray(roles)) return false;
+    
+    // Check main role
+    if (roles.includes(state.user.role)) return true;
+    
+    // Check additional roles array if it exists
+    if (state.user.roles && Array.isArray(state.user.roles)) {
+      return roles.some(role => state.user.roles.includes(role));
+    }
+    
+    return false;
   };
 
   const value = {
@@ -156,7 +184,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     registerUser,  // Add new registerUser function
-    registerAthlete // Keep for backward compatibility if needed
+    hasRole,
+    hasAnyRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
