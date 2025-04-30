@@ -33,7 +33,7 @@ const NotFoundPage = () => {
             ) : (
               <>
                 <li><Link to="/login">Login</Link></li>
-                <li><Link to="/role-selection">Sign Up</Link></li>
+                <li><Link to="/register">Sign Up</Link></li>
               </>
             )}
           </ul>

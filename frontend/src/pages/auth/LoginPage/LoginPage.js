@@ -65,9 +65,10 @@ const LoginPage = () => {
   return (
     <div className="page-bg-light">
       <div className="login-page">
-        <Link to="/role-selection" className="login-signup-top-btn">
+        <Link to="/register" className="login-signup-top-btn">
           Sign up
         </Link>
+        
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
           <div className="login-container">
             <h1>Welcome Back</h1>

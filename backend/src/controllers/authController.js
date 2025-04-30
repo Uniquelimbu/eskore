@@ -59,7 +59,8 @@ exports.login = async (req, res) => {
 
   try {
     // Find user across relevant tables
-    // Prioritize User table (for admins) then Athlete, Manager, Team
+    // TODO: In the future, once all data is migrated to the User table,
+    // this check across multiple tables can be simplified to only check User table
     userInstance = await User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id', 'email', 'password', 'role'] });
     if (userInstance) {
       userType = 'user'; // Could be admin or regular user
@@ -163,80 +164,86 @@ exports.login = async (req, res) => {
   }
 };
 
-// Register a new athlete
-exports.registerAthlete = async (req, res) => {
+// Unified user registration
+exports.registerUser = async (req, res) => {
   let {
     firstName, lastName, middleName, email, password, dob,
-    height, position, country
+    country, height, position // Include height and position as optional fields
   } = req.body;
 
   // Normalize email
   const lowerCaseEmail = String(email || '').toLowerCase().trim();
 
-  // Robust: Check for email in all relevant tables (User, Athlete, Team, Manager)
-  const [existingUser, existingAthlete, existingTeam, existingManager] = await Promise.all([
+  // Check for existing email across all relevant tables
+  const [existingUser, existingAthlete] = await Promise.allSettled([
     User.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
     Athlete.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
-    // Add Team and Manager checks if they have email fields and uniqueness constraints
-    // Team.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
-    // Manager.findOne({ where: { email: lowerCaseEmail }, attributes: ['id'] }),
+    // Note: In the future, only User check will be needed once all data is migrated
   ]);
-  if (existingUser || existingAthlete /* || existingTeam || existingManager */) {
+
+  // Check if any query found a result
+  const exists = [existingUser, existingAthlete].some(
+    result => result.status === 'fulfilled' && result.value !== null
+  );
+
+  if (exists) {
     throw new ApiError('Email already in use', 409, 'EMAIL_IN_USE');
   }
 
   try {
-    // Create athlete record. Password will be hashed by the Athlete model's beforeCreate hook.
-    const athlete = await Athlete.create({
+    // Create user record with password hashing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const user = await User.create({
       firstName,
-      middleName: middleName || null, // Ensure null if empty
+      middleName: middleName || null,
       lastName,
       email: lowerCaseEmail,
-      passwordHash: password, // Pass plain password to be hashed by hook
+      password: hashedPassword,
       dob,
-      height,
+      country,
+      height,  // Add these fields from the request
       position,
-      country
+      role: 'user' // Default role
     });
 
     // Generate JWT token
-    const token = generateToken(athlete.id, 'athlete');
+    const token = generateToken(user.id, 'user');
 
     // Set HTTP-only cookie
     const cookieOptions = getCookieOptions();
     res.cookie('auth_token', token, cookieOptions);
 
-    // Sanitize the newly created athlete data
-    const safeAthleteData = sanitizeUserData(athlete, 'athlete');
+    // Sanitize the newly created user data
+    const safeUserData = sanitizeUserData(user, 'user');
 
-    if (!safeAthleteData) {
-        logger.error(`Registration failed: Could not sanitize new athlete data for id=${athlete.id}`);
-        throw new ApiError('Internal server error after registration', 500, 'AUTH_SANITIZE_ERROR');
+    if (!safeUserData) {
+      logger.error(`Registration failed: Could not sanitize new user data for id=${user.id}`);
+      throw new ApiError('Internal server error after registration', 500, 'AUTH_SANITIZE_ERROR');
     }
 
-    logger.info(`Athlete registered successfully: ${lowerCaseEmail}, ID: ${athlete.id}`);
+    logger.info(`User registered successfully: ${lowerCaseEmail}, ID: ${user.id}`);
 
     // Use sendSafeJson for the response
     return sendSafeJson(res, {
       success: true,
-      message: 'Athlete registered successfully',
-      // token: token, // Optionally include token
-      athlete: safeAthleteData
+      message: 'User registered successfully',
+      user: safeUserData
     }, 201); // Use 201 Created status
 
   } catch (error) {
-     if (error instanceof ApiError) {
-       logger.error(`Athlete registration error for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
-       throw error;
-     }
-     // Handle potential validation errors from Sequelize if not caught by express-validator
-     if (error.name === 'SequelizeValidationError') {
-        const messages = error.errors.map(e => e.message).join(', ');
-        logger.warn(`Athlete registration validation failed for ${lowerCaseEmail}: ${messages}`);
-        throw new ApiError(`Validation failed: ${messages}`, 400, 'VALIDATION_ERROR');
-     }
-     logger.error('Unexpected athlete registration error for', lowerCaseEmail, error);
-     throw new ApiError('Registration failed due to an internal error', 500, 'REGISTRATION_FAILURE');
+    if (error instanceof ApiError) {
+      logger.error(`User registration error for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
+      throw error;
+    }
+    // Handle potential validation errors from Sequelize
+    if (error.name === 'SequelizeValidationError') {
+      const messages = error.errors.map(e => e.message).join(', ');
+      logger.warn(`User registration validation failed for ${lowerCaseEmail}: ${messages}`);
+      throw new ApiError(`Validation failed: ${messages}`, 400, 'VALIDATION_ERROR');
+    }
+    logger.error('Unexpected user registration error for', lowerCaseEmail, error);
+    throw new ApiError('Registration failed due to an internal error', 500, 'REGISTRATION_FAILURE');
   }
 };
 

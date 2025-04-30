@@ -1,80 +1,71 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Loading from '../components/ui/Loading/Loading';
-import ErrorBoundary from '../components/ErrorBoundary';
 
-// Eagerly loaded components for critical routes
-import HomePage from '../pages/public/HomePage';
+// Public pages
+import HomePage from '../pages/public/HomePage/HomePage';
+import LoginPage from '../pages/auth/LoginPage/LoginPage';
+import UserRegistrationPage from '../pages/auth/registration/UserRegistrationPage';
+import NotFoundPage from '../pages/public/NotFoundPage/NotFoundPage';
 
-// Lazy loaded components for other routes
-const LoginPage = lazy(() => import('../pages/auth/LoginPage/LoginPage'));
-const RoleSelectionPage = lazy(() => import('../pages/auth/RoleSelectionPage'));
-const AthleteRegistrationPage = lazy(() => import('../pages/auth/registration/AthleteRegistrationPage'));
-const DashboardPage = lazy(() => import('../pages/athlete/DashboardPage'));
-const ProfilePage = lazy(() => import('../pages/athlete/ProfilePage'));
-const SearchPage = lazy(() => import('../pages/athlete/SearchPage')); // Add SearchPage import
-const NotFoundPage = lazy(() => import('../pages/public/NotFoundPage'));
+// Protected pages
+import Dashboard from '../pages/dashboard/Dashboard';
+import ProfilePage from '../pages/profile/ProfilePage';
+import SettingsPage from '../pages/settings/SettingsPage';
 
-// Wrapper for protected routes
+// Protected route component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-
+  
   if (loading) {
-    return <Loading />;
+    // You could render a loading spinner here
+    return <div>Loading...</div>;
   }
-
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
+  
   return children;
 };
 
 const AppRoutes = () => {
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<Loading />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/role-selection" element={<RoleSelectionPage />} />
-          <Route path="/register/athlete" element={<AthleteRegistrationPage />} />
-          {/* Add other public routes like /features, /pricing, etc. if needed */}
-
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <ProtectedRoute>
-                <SearchPage />
-              </ProtectedRoute>
-            }
-          />
-          {/* Add other protected routes like /practice, /leaderboards, etc. */}
-
-          {/* Catch-all 404 Route */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </ErrorBoundary>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<UserRegistrationPage />} />
+      
+      {/* Protected routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/settings" 
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* 404 route */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 };
 

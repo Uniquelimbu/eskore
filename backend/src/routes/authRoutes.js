@@ -19,29 +19,36 @@ const { sendSafeJson } = require('../utils/safeSerializer'); // Use safe seriali
 const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10; // used by bcrypt
 
-// Validation middleware for athlete registration
-const validCountries = ['Nepal', 'Canada', 'np', 'ca'];
-
-const validateAthleteRegistration = [
+// Validation middleware for user registration
+const validateUserRegistration = [
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
   body('email').isEmail().withMessage('Must be a valid email address'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('dob')
+    .optional()
     .custom((value) => {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Date of birth must be in YYYY-MM-DD format');
-      const date = new Date(value);
-      if (isNaN(date.getTime())) throw new Error('Date of birth is not a valid date');
-      const year = date.getFullYear();
-      if (year < 1900 || year > new Date().getFullYear() - 5) throw new Error('Date of birth year is out of range');
+      if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Date of birth must be in YYYY-MM-DD format');
+      if (value) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) throw new Error('Date of birth is not a valid date');
+        const year = date.getFullYear();
+        if (year < 1900 || year > new Date().getFullYear() - 5) throw new Error('Date of birth year is out of range');
+      }
       return true;
     }),
-  body('height').isNumeric().withMessage('Height must be a number'),
-  body('position').isIn(['FW', 'MD', 'DF', 'GK']).withMessage('Valid position is required'),
-  body('country').custom((value) => {
-    if (!['Nepal', 'Canada', 'United States', 'np', 'ca', 'us'].includes(value)) throw new Error('Country must be Nepal, Canada, United States, np, ca, or us');
-    return true;
-  }),
+  body('height')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Height must be a positive number'),
+  body('position')
+    .optional()
+    .isString()
+    .withMessage('Position must be a string'),
+  body('country')
+    .optional()
+    .isString()
+    .withMessage('Country must be a string'),
   // Add validation results middleware
   (req, res, next) => {
     const errors = validationResult(req);
@@ -61,9 +68,9 @@ const validateAthleteRegistration = [
 
 /**
  * POST /api/auth/register
- * Deprecated or for basic user roles if needed. Athlete registration uses /register/athlete.
+ * Unified registration endpoint for all users
  */
-// router.post('/register', catchAsync(async (req, res) => { ... })); // Keep or remove based on needs
+router.post('/register', validateUserRegistration, catchAsync(authController.registerUser));
 
 /**
  * POST /api/auth/login
@@ -71,13 +78,6 @@ const validateAthleteRegistration = [
  * Returns: { success: true, user: { ... }, redirectUrl: "..." }
  */
 router.post('/login', catchAsync(authController.login));
-
-/**
- * POST /api/auth/register/athlete
- * Registers a new athlete with additional fields
- * Returns: { success: true, message: "...", athlete: { ... } }
- */
-router.post('/register/athlete', validateAthleteRegistration, catchAsync(authController.registerAthlete));
 
 /**
  * GET /api/auth/me

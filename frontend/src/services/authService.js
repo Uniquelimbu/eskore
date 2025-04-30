@@ -52,12 +52,12 @@ const authService = {
     });
   },
 
-  // Register an athlete
-  registerAthlete: async (userData) => {
+  // Register a user (replaces registerAthlete)
+  registerUser: async (userData) => {
     return withRetry(async () => {
       try {
-        const response = await apiClient.post('/api/auth/register/athlete', userData);
-        if (response && response.success && response.athlete) {
+        const response = await apiClient.post('/api/auth/register', userData);
+        if (response && response.success && response.user) {
           return response;
         }
         throw new Error(response?.message || 'Registration failed: Invalid response from server');

@@ -128,18 +128,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register athlete function
-  const registerAthlete = async (userData) => {
+  // Register user function (replaces registerAthlete)
+  const registerUser = async (userData) => {
     try {
       dispatch({ type: AUTH_LOADING });
-      // Step 1: Call the register API endpoint
-      const registerResponse = await authService.registerAthlete(userData);
+      // Call the generic register API endpoint
+      const registerResponse = await authService.registerUser(userData);
 
-      if (registerResponse && registerResponse.success && registerResponse.athlete) {
-         // Step 2: Use the athlete data directly from the registration response
-         // Assuming the backend returns the sanitized athlete object
-         dispatch({ type: AUTH_SUCCESS, payload: registerResponse.athlete });
-         return registerResponse.athlete; // Return the registered athlete data
+      if (registerResponse && registerResponse.success && registerResponse.user) {
+         // Use the user data from registration response
+         dispatch({ type: AUTH_SUCCESS, payload: registerResponse.user });
+         return registerResponse.user; // Return the registered user data
       } else {
         throw new Error(registerResponse?.message || 'Registration failed');
       }
@@ -156,7 +155,8 @@ export const AuthProvider = ({ children }) => {
     ...state,
     login,
     logout,
-    registerAthlete
+    registerUser,  // Add new registerUser function
+    registerAthlete // Keep for backward compatibility if needed
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

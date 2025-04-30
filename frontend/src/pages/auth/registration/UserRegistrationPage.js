@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
 import ProgressIndicator from './components/ProgressIndicator';
-import './AthleteRegistrationPage.css';
-import { useAuth } from '../../../../contexts/AuthContext';
+import './UserRegistrationPage.css'; // Updated CSS filename
+import { useAuth } from '../../../contexts/AuthContext';
 
-const AthleteRegistrationPage = () => {
+const UserRegistrationPage = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     basicInfo: {
@@ -19,17 +19,17 @@ const AthleteRegistrationPage = () => {
     profileInfo: {
       country: '',
       dob: '',
-      // province removed
+      // Additional fields can be added here based on your requirements
     },
-    gameInfo: {
-      // No longer used, but keep for step logic
+    additionalInfo: {
+      // Optional additional info fields
     }
   });
   
   const [registrationError, setRegistrationError] = useState(null);
   const navigate = useNavigate();
-  // Make sure these are in the destructured props from useAuth
-  const { registerAthlete, loading, error, isAuthenticated } = useAuth();
+  // Updated to use registerUser instead of registerAthlete
+  const { registerUser, loading, error, isAuthenticated } = useAuth();
   
   // This useEffect will handle redirect on successful authentication
   useEffect(() => {
@@ -46,9 +46,9 @@ const AthleteRegistrationPage = () => {
       setFormData({ ...formData, profileInfo: stepData });
       setStep(3);
     } else if (step === 3) {
-      setFormData({ ...formData, gameInfo: stepData });
+      setFormData({ ...formData, additionalInfo: stepData });
       // Submit registration
-      handleSubmit({ ...formData, gameInfo: stepData });
+      handleSubmit({ ...formData, additionalInfo: stepData });
     }
   };
 
@@ -66,13 +66,13 @@ const AthleteRegistrationPage = () => {
         email: completeData.basicInfo.email,
         password: completeData.basicInfo.password,
         dob: completeData.profileInfo.dob,
-        height: completeData.profileInfo.height,
-        position: completeData.profileInfo.position,
+        // Keep relevant fields, remove athlete-specific ones
         country: completeData.profileInfo.country
+        // Add any other fields you want to keep
       };
       
-      // Just await the registration - don't try to navigate manually
-      await registerAthlete(registrationData);
+      // Use generic registration function
+      await registerUser(registrationData);
       // The useEffect will handle redirection once auth state updates
     } catch (err) {
       console.error('Registration failed:', err);
@@ -97,8 +97,8 @@ const AthleteRegistrationPage = () => {
 
   return (
     <div className="page-bg-light">
-      <div className="athlete-registration-page">
-        <h1>Create Your Athlete Account</h1>
+      <div className="user-registration-page">
+        <h1>Create Your Account</h1>
         <ProgressIndicator currentStep={step} totalSteps={3} />
         
         {displayError && <div className="error-banner">{displayError}</div>}
@@ -113,16 +113,16 @@ const AthleteRegistrationPage = () => {
         {step === 1 && (
           <button
             type="button"
-            className="back-to-role-selection-link"
-            onClick={handleBackToRoleSelection}
+            className="back-link"
+            onClick={() => navigate('/')}
           >
-            ← Back to Role Selection
+            ← Back to Home
           </button>
         )}
         {(step === 2 || step === 3) && (
           <button
             type="button"
-            className="back-to-role-selection-link"
+            className="back-link"
             onClick={handleBackToStep}
           >
             {step === 2 ? '← Back to Account' : '← Back to Profile'}
@@ -133,4 +133,4 @@ const AthleteRegistrationPage = () => {
   );
 };
 
-export default AthleteRegistrationPage;
+export default UserRegistrationPage;

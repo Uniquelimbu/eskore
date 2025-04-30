@@ -46,15 +46,15 @@ async function requireAuth(req, res, next) {
     const userId = decoded.userId;
     const role = decoded.role; // Role from the token
 
-    // Select attributes carefully to exclude sensitive data like password hashes early
-    const commonAttributes = ['id', 'email'];
-    const nameAttributes = ['firstName', 'lastName'];
-
+    // TODO: In the future, this can be simplified to only check the User table
+    // once all athlete/manager/team data is migrated
     switch (role) {
       case 'user':
       case 'admin':
       case 'athlete_admin':
-        userInstance = await User.findByPk(userId, { attributes: [...commonAttributes, 'role'] });
+        userInstance = await User.findByPk(userId, { 
+          attributes: [...commonAttributes, 'role', 'firstName', 'lastName', 'dob', 'height', 'position', 'country'] 
+        });
         break;
       case 'athlete':
         userInstance = await Athlete.findByPk(userId, { attributes: [...commonAttributes, ...nameAttributes, 'position', 'country'] });
