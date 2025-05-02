@@ -15,7 +15,8 @@
     <a href="#-api-documentation">API Docs</a> •
     <a href="#-database">Database</a> •
     <a href="#-authentication">Authentication</a> •
-    <a href="#-troubleshooting">Troubleshooting</a>
+    <a href="#-troubleshooting">Troubleshooting</a> •
+    <a href="#-contributing">Contributing</a>
   </p>
 </div>
 
@@ -113,7 +114,12 @@ JWT_EXPIRES_IN=1d
 
 # CORS (for frontend access)
 ALLOWED_ORIGINS=http://localhost:3000
+
+# Logging (optional)
+LOG_LEVEL=debug
 ```
+
+For production, additional environment variables may be needed. See the [Deployment](#-deployment) section for details.
 
 ## 🔐 Authentication
 
@@ -362,11 +368,17 @@ npm run db:reset:safe
 ```
 </details>
 
-> 📑 **Need more help?** See our detailed [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) guide for step-by-step solutions to common issues.
+> 📑 **Need more help?** See our detailed [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) guide for step-by-step solutions to common issues, or check our [GitHub Issues](https://github.com/eskore-team/eskore/issues) for existing solutions.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! Please read our [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on:
+- Development workflow
+- Pull request process
+- Coding standards
+- Testing requirements
+
+Steps to contribute:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -383,6 +395,6 @@ This project is licensed under the ISC License.
 ---
 
 <div align="center">
-  <p>© 2023 eSkore Team. All rights reserved.</p>
+  <p>© 2023-2024 eSkore Team. All rights reserved.</p>
   <p>Made with ❤️ for the eSports community</p>
 </div>

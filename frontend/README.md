@@ -18,7 +18,8 @@
     <a href="#-styling">Styling</a> •
     <a href="#-testing">Testing</a> •
     <a href="#-deployment">Deployment</a> •
-    <a href="#-troubleshooting">Troubleshooting</a>
+    <a href="#-troubleshooting">Troubleshooting</a> •
+    <a href="#-contributing">Contributing</a>
   </p>
 </div>
 
@@ -238,11 +239,11 @@ Helpful tools for debugging:
 - **React Error Boundary**: Wrap components to catch and display errors gracefully
 </details>
 
-> 📑 **Need more help?** Check the project's main [troubleshooting guide](../TROUBLESHOOTING.md) or open an issue on GitHub.
+> 📑 **Need more help?** Check the project's [backend troubleshooting guide](../backend/TROUBLESHOOTING.md) for infrastructure-related issues or open an issue on GitHub.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! Please follow our [contributing guidelines](../backend/CONTRIBUTING.md) and these steps:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -267,6 +268,6 @@ This project is licensed under the ISC License.
 ---
 
 <div align="center">
-  <p>© 2023 eSkore Team. All rights reserved.</p>
+  <p>© 2023-2024 eSkore Team. All rights reserved.</p>
   <p>Made with ❤️ for the eSports community</p>
 </div>
