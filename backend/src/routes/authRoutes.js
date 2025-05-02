@@ -4,9 +4,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/User');
-const Athlete = require('../models/Athlete');
+// Remove or comment out the non-existent model imports
+// const Athlete = require('../models/Athlete');
 const Team = require('../models/Team');
-const Manager = require('../models/Manager');
+// const Manager = require('../models/Manager');
 const { body, validationResult } = require('express-validator');
 const authController = require('../controllers/authController');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');

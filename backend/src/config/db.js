@@ -1,10 +1,11 @@
 // src/config/db.js
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
+const logger = require('../utils/logger');
 
 const DB_NAME = process.env.DB_NAME || 'eskore_db';
 const DB_USER = process.env.DB_USER || 'postgres';
-const DB_PASS = process.env.DB_PASS || 'password'; 
+const DB_PASS = process.env.DB_PASS || ''; // No hardcoded password
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = process.env.DB_PORT || 5432;
 
@@ -13,7 +14,7 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   port: DB_PORT,
   dialect: 'postgres',
   logging: process.env.NODE_ENV !== 'production' 
-    ? (msg) => console.log(`[DATABASE]: ${msg}`)
+    ? (msg) => logger.debug(`[DATABASE]: ${msg}`)
     : false,
   pool: {
     max: 5,
@@ -35,32 +36,28 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000; // 5 seconds
 
-const testConnection = async (retries = 0) => {
+const testConnection = async (attempt = 1) => {
   try {
-    console.log(`Testing database connection attempt ${retries + 1}/${MAX_RETRIES}...`);
+    console.log(`Testing database connection attempt ${attempt}/${MAX_RETRIES}...`);
     await sequelize.authenticate();
-    console.log('✅ Database connection established successfully.');
+    logger.info('Database connection established successfully.');
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    logger.error(`Database connection failed (attempt ${attempt}/${MAX_RETRIES}):`, error);
     
-    if (retries < MAX_RETRIES - 1) {
-      console.log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
+    if (attempt < MAX_RETRIES) {
+      logger.info(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      return testConnection(retries + 1);
-    } else {
-      console.error('Max retries reached. Unable to connect to database.');
-      // In production, you might want to exit the process or handle this case differently
-      if (process.env.NODE_ENV === 'production') {
-        process.exit(1);
-      }
-      return false;
+      return testConnection(attempt + 1);
     }
+    
+    logger.error('All connection attempts failed. Check your database configuration.');
+    return false;
   }
 };
 
-// Export promise that resolves when connection is ready
+// Ready promise to be used by server.js
 const dbReady = testConnection();
 
 module.exports = sequelize;
-module.exports.dbReady = dbReady; // Export promise to allow waiting for connection
+module.exports.dbReady = dbReady;

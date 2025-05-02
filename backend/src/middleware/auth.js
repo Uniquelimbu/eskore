@@ -129,14 +129,6 @@ function requireAdmin(req, res, next) {
 }
 
 /**
- * requireAthleteAdmin:
- * Middleware to check for admin or athlete_admin role
- */
-function requireAthleteAdmin(req, res, next) {
-  return requireRole(['admin', 'athlete_admin'])(req, res, next);
-}
-
-/**
  * requireOrganizer:
  * Middleware to check for organizer role (for tournament creation)
  */
@@ -155,7 +147,6 @@ function requireTeamManager(req, res, next) {
 module.exports = { 
   requireAuth, 
   requireAdmin, 
-  requireAthleteAdmin, 
   requireOrganizer,
   requireTeamManager,
   requireRole

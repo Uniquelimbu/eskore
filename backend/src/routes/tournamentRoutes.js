@@ -9,7 +9,71 @@ const Team = require('../models/Team');
 const UserTournament = require('../models/UserTournament');
 const TeamTournament = require('../models/TeamTournament');
 const { Op } = require('sequelize');
+const { body, param, validationResult } = require('express-validator');
+const db = require('../config/db');
 
+// Validation middleware
+const validateTournamentId = [
+  param('id').isInt().withMessage('Tournament ID must be an integer'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
+    }
+    next();
+  }
+];
+
+const validateParticipantBody = [
+  body('userId').isInt().withMessage('User ID must be an integer'),
+  body('role').isIn(['organizer', 'referee', 'participant']).optional().withMessage('Invalid role'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
+    }
+    next();
+  }
+];
+
+// IMPORTANT: More specific routes first
+/**
+ * GET /api/tournaments/user/:userId
+ * Get all tournaments a user is participating in
+ */
+router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  
+  // Users can only see their own tournaments unless they're an admin
+  if (parseInt(userId) !== req.user.id && req.user.role !== 'admin') {
+    throw new ApiError('Forbidden - You can only view your own tournaments', 403, 'FORBIDDEN');
+  }
+  
+  const userTournaments = await UserTournament.findAll({
+    where: { userId },
+    include: [
+      {
+        model: Tournament,
+        include: [
+          {
+            model: User,
+            as: 'creator',
+            attributes: ['id', 'firstName', 'lastName']
+          }
+        ]
+      }
+    ]
+  });
+  
+  const tournaments = userTournaments.map(ut => ({
+    ...ut.Tournament.toJSON(),
+    role: ut.role
+  }));
+  
+  return sendSafeJson(res, { tournaments });
+}));
+
+// Regular routes below
 /**
  * GET /api/tournaments
  * List all tournaments with optional filters
@@ -62,7 +126,7 @@ router.get('/', catchAsync(async (req, res) => {
  * GET /api/tournaments/:id
  * Get a single tournament by ID with details
  */
-router.get('/:id', catchAsync(async (req, res) => {
+router.get('/:id', validateTournamentId, catchAsync(async (req, res) => {
   const { id } = req.params;
   
   const tournament = await Tournament.findByPk(id, {
@@ -140,7 +204,7 @@ router.post('/', requireAuth, catchAsync(async (req, res) => {
  * Update a tournament
  * Requires admin role or creator/organizer of the tournament
  */
-router.put('/:id', requireAuth, catchAsync(async (req, res) => {
+router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
   const { name, description, startDate, endDate, status } = req.body;
   
@@ -187,26 +251,50 @@ router.put('/:id', requireAuth, catchAsync(async (req, res) => {
  * Delete a tournament
  * Requires admin role or creator of the tournament
  */
-router.delete('/:id', requireAuth, catchAsync(async (req, res) => {
+router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
+  const t = await db.transaction(); // Start a transaction
   
-  const tournament = await Tournament.findByPk(id);
-  
-  if (!tournament) {
-    throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
+  try {
+    const tournament = await Tournament.findByPk(id, { transaction: t });
+    
+    if (!tournament) {
+      await t.rollback();
+      throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    // Check if user has permission to delete (creator or admin)
+    if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+      await t.rollback();
+      throw new ApiError('Forbidden - Only tournament creators or admins can delete tournaments', 403, 'FORBIDDEN');
+    }
+    
+    // Delete related records first (maintain referential integrity)
+    await UserTournament.destroy({
+      where: { tournamentId: id },
+      transaction: t
+    });
+    
+    await TeamTournament.destroy({
+      where: { tournamentId: id },
+      transaction: t
+    });
+    
+    // Now delete the tournament
+    await tournament.destroy({ transaction: t });
+    
+    // Commit the transaction
+    await t.commit();
+    
+    return sendSafeJson(res, {
+      success: true,
+      message: 'Tournament deleted successfully'
+    });
+  } catch (error) {
+    // Rollback transaction on error
+    await t.rollback();
+    throw error;
   }
-  
-  // Check if user has permission to delete (creator or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
-    throw new ApiError('Forbidden - Only tournament creators or admins can delete tournaments', 403, 'FORBIDDEN');
-  }
-  
-  await tournament.destroy();
-  
-  return sendSafeJson(res, {
-    success: true,
-    message: 'Tournament deleted successfully'
-  });
 }));
 
 /**
@@ -214,18 +302,11 @@ router.delete('/:id', requireAuth, catchAsync(async (req, res) => {
  * Add a user participant to a tournament
  * Requires organizer role for the tournament or admin
  */
-router.post('/:id/participants', requireAuth, catchAsync(async (req, res) => {
+router.post('/:id/participants', validateTournamentId, validateParticipantBody, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
   const { userId, role = 'participant' } = req.body;
   
-  if (!userId) {
-    throw new ApiError('User ID is required', 400, 'VALIDATION_ERROR');
-  }
-  
-  if (!['organizer', 'referee', 'participant'].includes(role)) {
-    throw new ApiError('Invalid role', 400, 'VALIDATION_ERROR');
-  }
-  
+  // Check if the tournament exists first for better UX
   const tournament = await Tournament.findByPk(id);
   
   if (!tournament) {
@@ -233,7 +314,9 @@ router.post('/:id/participants', requireAuth, catchAsync(async (req, res) => {
   }
   
   // Check if user has permission to add participants (organizer or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+  const hasPermission = req.user.role === 'admin' || tournament.creatorId === req.user.id;
+  
+  if (!hasPermission) {
     const userTournament = await UserTournament.findOne({
       where: {
         userId: req.user.id,
@@ -253,17 +336,27 @@ router.post('/:id/participants', requireAuth, catchAsync(async (req, res) => {
     throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
   }
   
-  // Check if user is already in the tournament with the same role
+  // Check if user is already in the tournament with any role
   const existingParticipant = await UserTournament.findOne({
     where: {
       userId,
-      tournamentId: id,
-      role
+      tournamentId: id
     }
   });
   
   if (existingParticipant) {
-    throw new ApiError('User already has this role in the tournament', 409, 'ALREADY_EXISTS');
+    // Just update the role if it's different
+    if (existingParticipant.role !== role) {
+      existingParticipant.role = role;
+      await existingParticipant.save();
+      return sendSafeJson(res, {
+        success: true,
+        participant: existingParticipant,
+        message: 'Participant role updated successfully'
+      });
+    } else {
+      throw new ApiError('User already has this role in the tournament', 409, 'ALREADY_EXISTS');
+    }
   }
   
   // Add user to tournament
@@ -436,42 +529,6 @@ router.delete('/:id/teams/:teamId', requireAuth, catchAsync(async (req, res) => 
     success: true,
     message: 'Team removed from tournament successfully'
   });
-}));
-
-/**
- * GET /api/tournaments/user/:userId
- * Get all tournaments a user is participating in
- */
-router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
-  const { userId } = req.params;
-  
-  // Users can only see their own tournaments unless they're an admin
-  if (parseInt(userId) !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError('Forbidden - You can only view your own tournaments', 403, 'FORBIDDEN');
-  }
-  
-  const userTournaments = await UserTournament.findAll({
-    where: { userId },
-    include: [
-      {
-        model: Tournament,
-        include: [
-          {
-            model: User,
-            as: 'creator',
-            attributes: ['id', 'firstName', 'lastName']
-          }
-        ]
-      }
-    ]
-  });
-  
-  const tournaments = userTournaments.map(ut => ({
-    ...ut.Tournament.toJSON(),
-    role: ut.role
-  }));
-  
-  return sendSafeJson(res, { tournaments });
 }));
 
 module.exports = router;

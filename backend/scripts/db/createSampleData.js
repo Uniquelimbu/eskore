@@ -7,7 +7,7 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const sequelize = require('../../src/config/db');
 const User = require('../../src/models/User');
-const Athlete = require('../../src/models/Athlete');
+// const Athlete = require('../../src/models/Athlete'); // Remove or comment out
 const Team = require('../../src/models/Team');
 const League = require('../../src/models/League');
 const Match = require('../../src/models/Match');
@@ -35,22 +35,21 @@ async function createSampleData() {
       console.log('ℹ️ Admin user already exists');
     }
     
-    // Create test athlete
-    const athleteExists = await Athlete.findOne({ where: { email: 'athlete@example.com' } });
+    // Create test athlete user instead of using Athlete model
+    const athleteExists = await User.findOne({ where: { email: 'athlete@example.com' } });
     if (!athleteExists) {
       const athleteHash = await bcrypt.hash('athlete123', 10);
-      await Athlete.create({
+      await User.create({
         firstName: 'Test',
+        middleName: null, // Add middleName for consistency
         lastName: 'Athlete',
         email: 'athlete@example.com',
-        passwordHash: athleteHash,
+        password: athleteHash,
         dob: '2000-01-01',
         height: 180,
         position: 'FW',
         country: 'Nepal',
-        province: 'province1',
-        district: 'taplejung',
-        city: 'phungling'
+        role: 'user'
       });
       console.log('✅ Created test athlete: athlete@example.com / athlete123');
     } else {

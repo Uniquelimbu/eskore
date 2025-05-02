@@ -152,11 +152,15 @@ const data = await fetch('http://localhost:5000/api/protected-route', {
 
 The core data model includes:
 
-- **users** - Admin and system users
-- **athletes** - Player profiles with performance data
-- **teams** - Team information and management
-- **leagues** - Tournament/competition organization
-- **matches** - Game results and detailed statistics
+- **Users** - Unified table for all users (athletes, managers, admins) with role-based access. Includes profile data like name, DOB, height, position, country etc.
+- **Roles** - Defines user roles (e.g., admin, user, manager, organizer).
+- **UserRoles** - Junction table linking users to additional roles.
+- **Teams** - Team information and management.
+- **Leagues** - Tournament/competition organization.
+- **Matches** - Game results and detailed statistics.
+- **Tournaments** - Tournament details and management.
+- **UserTournament** / **TeamTournament** - Associations for tournament participation.
+- *(Add other relevant models)*
 
 ### Database Commands
 
@@ -167,10 +171,10 @@ npm run db:migrate
 # Undo latest migration
 npm run db:migrate:undo
 
-# Seed database with sample data
+# Seed database with sample data (creates admin, test user)
 npm run db:seed
 
-# Safe database reset (keeps DB, resets tables)
+# Safe database reset (keeps DB, resets tables & reseeds)
 npm run db:reset:safe
 ```
 
@@ -190,48 +194,61 @@ Access interactive API docs at `/api-docs` when the server is running:
 
 #### Authentication
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Authenticate and get JWT |
-| GET | `/api/auth/me` | Get current user profile |
-| POST | `/api/auth/logout` | Log out (clear cookie) |
+| Method | Endpoint             | Description                   |
+|--------|----------------------|-------------------------------|
+| POST   | `/api/auth/register` | Register a new user           |
+| POST   | `/api/auth/login`    | Authenticate and get JWT      |
+| GET    | `/api/auth/me`       | Get current user profile      |
+| POST   | `/api/auth/logout`   | Log out (clear cookie)        |
+| GET    | `/api/auth/check-email` | Check if an email exists    |
 
-#### Athletes
+#### Users (Includes Athlete Profiles)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/athletes` | List athletes (paginated) |
-| GET | `/api/athletes/:id` | Get athlete by ID |
-| POST | `/api/athletes` | Create athlete profile |
-| PATCH | `/api/athletes/:id` | Update athlete |
-| DELETE | `/api/athletes/:id` | Delete athlete |
+| Method | Endpoint         | Description                   | Access        |
+|--------|------------------|-------------------------------|---------------|
+| GET    | `/api/users`     | List users (paginated)        | Admin         |
+| GET    | `/api/users/:id` | Get user profile by ID        | Admin / Self  |
+| PATCH  | `/api/users/:id` | Update user profile           | Admin / Self  |
+| DELETE | `/api/users/:id` | Delete user (soft/hard)       | Admin         |
+| GET    | `/api/users/search` | Search users by criteria    | Authenticated |
 
 #### Teams
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/teams` | List teams (paginated) |
-| GET | `/api/teams/:id` | Get team details |
-| POST | `/api/teams` | Create team |
-| PATCH | `/api/teams/:id` | Update team |
-| DELETE | `/api/teams/:id` | Delete team |
+| Method | Endpoint         | Description                   |
+|--------|------------------|-------------------------------|
+| GET    | `/api/teams`     | List teams (paginated)        |
+| GET    | `/api/teams/:id` | Get team details              |
+| POST   | `/api/teams`     | Create team                   |
+| PATCH  | `/api/teams/:id` | Update team                   |
+| DELETE | `/api/teams/:id` | Delete team                   |
 
 #### Matches
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/matches` | List matches (filtered) |
-| GET | `/api/matches/:id` | Get match details |
-| POST | `/api/matches` | Create match |
-| PATCH | `/api/matches/:id` | Update match score/status |
+| Method | Endpoint           | Description                   |
+|--------|--------------------|-------------------------------|
+| GET    | `/api/matches`     | List matches (filtered)       |
+| GET    | `/api/matches/:id` | Get match details             |
+| POST   | `/api/matches`     | Create match                  |
+| PATCH  | `/api/matches/:id` | Update match score/status     |
 
 #### Leagues & Standings
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/leagues` | List all leagues |
-| GET | `/api/standings/:leagueId` | Get league standings |
+| Method | Endpoint                 | Description                   |
+|--------|--------------------------|-------------------------------|
+| GET    | `/api/leagues`           | List all leagues              |
+| GET    | `/api/standings/:leagueId` | Get league standings          |
+
+#### Tournaments
+
+| Method | Endpoint                     | Description                       |
+|--------|------------------------------|-----------------------------------|
+| GET    | `/api/tournaments`           | List tournaments                  |
+| GET    | `/api/tournaments/:id`       | Get tournament details            |
+| POST   | `/api/tournaments`           | Create tournament                 |
+| PATCH  | `/api/tournaments/:id`       | Update tournament                 |
+| DELETE | `/api/tournaments/:id`       | Delete tournament                 |
+| POST   | `/api/tournaments/:id/join`  | Join tournament (user/team)       |
+| POST   | `/api/tournaments/:id/leave` | Leave tournament (user/team)      |
 
 ### Response Format
 

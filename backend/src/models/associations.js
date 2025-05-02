@@ -4,9 +4,9 @@
 const User = require('./User');
 const Team = require('./Team');
 const League = require('./League');
-const Athlete = require('./Athlete'); // Legacy - will be migrated to User
+// const Athlete = require('./Athlete'); // Comment out this line
 const Match = require('./Match');
-const Manager = require('./Manager'); // Legacy - will be migrated to User
+// const Manager = require('./Manager'); // Comment out this line
 const Role = require('./Role');
 const UserRole = require('./UserRole');
 const UserTeam = require('./UserTeam');

@@ -7,10 +7,11 @@ const { sanitizeUserData } = require('../utils/userUtils');
 const { sendSafeJson } = require('../utils/safeSerializer');
 
 // Model imports
-const Athlete = require('../models/Athlete');
+// Remove or comment out the legacy model imports
+// const Athlete = require('../models/Athlete');
 const User = require('../models/User');
 const Team = require('../models/Team');
-const Manager = require('../models/Manager');
+// const Manager = require('../models/Manager');
 const Role = require('../models/Role');
 const UserRole = require('../models/UserRole');
 

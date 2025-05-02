@@ -40,7 +40,7 @@ function validateConfig() {
     const devDefaults = process.env.NODE_ENV !== 'production' ? {
       DB_NAME: process.env.DB_NAME || 'postgres',
       DB_USER: process.env.DB_USER || 'postgres',
-      DB_PASS: process.env.DB_PASS || 'Authadja$4728',
+      DB_PASS: process.env.DB_PASS || '', // Ensure no hardcoded password here
       DB_HOST: process.env.DB_HOST || 'localhost',
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000'
     } : {};
