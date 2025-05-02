@@ -232,6 +232,7 @@
 
 .consent-group {
   margin-bottom: 16px;
+  margin-top: 10px;
 }
 
 .consent-wrapper {
@@ -357,4 +358,382 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
   margin-left: auto;
   margin-right: auto;
   display: block;
+}
+
+/* Update the main container class */
+.user-registration-page {
+  max-width: 480px; /* Reduced width for a more compact look */
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px; /* Slightly more rounded corners */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.user-registration-page h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2d3748;
+  font-size: 1.8rem; /* Slightly smaller heading */
+}
+
+/* Make form elements more compact and consistent */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 0.9rem; /* Slightly smaller labels */
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px; /* More rounded inputs */
+  font-size: 0.95rem;
+  color: #4a5568;
+  transition: all 0.3s ease;
+  background-color: #fafafa; /* Slightly off-white for inputs */
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+  background-color: #ffffff; /* White background on focus */
+}
+
+/* Make buttons more consistent and cleaner */
+.next-button, .submit-button {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.next-button:hover, .submit-button:hover {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+}
+
+/* Add some responsive styling for mobile */
+@media (max-width: 520px) {
+  .user-registration-page {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 90%;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .submit-button {
+    width: 100%;
+  }
+}
+
+/* Form section styling */
+.form-section {
+  margin-bottom: 25px;
+  /* Remove padding-bottom */
+  padding-bottom: 0;
+  /* Ensure the border is removed */
+  border-bottom: none !important;
+}
+
+/* Ensure spacing between fields is still appropriate */
+.form-group {
+  margin-bottom: 20px; /* Consistent bottom margin for form groups */
+}
+
+/* Add a bit more space after the date of birth field */
+.form-section:nth-child(2) .form-group {
+  margin-bottom: 30px;
+}
+
+/* Add some extra breathing room before the terms section */
+.consent-group {
+  margin-top: 10px;
+}
+
+/* Keep the same spacing for the date of birth field */
+.form-section:nth-child(2) .form-group {
+  margin-bottom: 25px;
+}
+
+/* Add a bit more space before the terms section */
+.form-section:nth-child(3) {
+  margin-top: 10px;
+}
+
+.form-section h2 {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* Error messaging */
+.error {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  text-align: left;
+  display: block;
+  font-weight: 500;
+}
+
+/* Button styling */
+.form-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.submit-button {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  min-width: 150px;
+}
+
+.submit-button:hover {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #a0aec0;
+}
+
+/* Back Link */
+.back-link {
+  margin: 25px auto 0 auto;
+  display: block;
+  background: none;
+  color: #a0aec0;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-align: center;
+}
+
+.back-link:hover,
+.back-link:focus {
+  color: #4a5568;
+  text-decoration: none;
+}
+
+/* Consent items styling */
+.consent-group {
+  margin-bottom: 12px;
+}
+
+.consent-wrapper {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Checkbox styling */
+input[type="checkbox"].custom-checkbox {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: middle;
+  height: 16px;
+  width: 16px;
+  min-width: 16px;
+  color: #4a6cf7;
+  background-color: #fff;
+  border: 1.5px solid #cbd5e0;
+  border-radius: 3px;
+  margin-top: 3px;
+  margin-right: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="checkbox"].custom-checkbox:checked {
+  border-color: transparent;
+  background-color: currentColor;
+}
+
+input[type="checkbox"].custom-checkbox:checked::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.consent-text {
+  display: inline-block;
+  font-weight: 400;
+  color: #4a5568;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.consent-link {
+  color: #4a6cf7;
+  text-decoration: none;
+}
+
+.consent-link:hover {
+  text-decoration: underline;
+}
+
+/* Add/update styles for the form row layout */
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 0; /* Allow flex items to shrink below content size */
+}
+
+/* Update spacing for section headers */
+.form-section h2 {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 15px;
+  font-weight: 600;
+  border-bottom: 1px solid #f0f4f8;
+  padding-bottom: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+  }
+}
+
+/* Adjust form section spacing since titles were removed */
+.form-section {
+  margin-bottom: 25px;
+  padding-bottom: 0;
+  border-bottom: none !important;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+/* Add more space between groups when in the first section */
+.form-section:first-of-type .form-group {
+  margin-bottom: 20px;
+}
+
+/* Adjust spacing for the shorter form */
+.form-section:nth-child(2) {
+  padding-bottom: 0; /* Less padding for the middle section since it's shorter now */
+}
+
+/* Add a bit more space between date of birth and agreements section */
+.form-section:nth-child(2) .form-group {
+  margin-bottom: 25px;
+}
+
+/* Styling for the date input dropdowns */
+.date-inputs {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
+}
+
+.date-select {
+  padding: 10px 16px;
+  border: 1px solid #c2cbd9;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #2d3748;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  min-width: 0;
+}
+
+.date-select:focus {
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+  outline: none;
+}
+
+.month-select {
+  flex: 1.6;
+  min-width: 90px;
+}
+
+.day-select {
+  flex: 0.8;
+  min-width: 60px;
+}
+
+.year-select {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* Add hover state for better UX */
+.date-select:hover {
+  border-color: #a0aec0;
+}
+
+/* Style for the dropdown options */
+.date-select option {
+  padding: 8px;
+  font-size: 1rem;
 }

@@ -6,7 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import HomePage from '../pages/public/HomePage';
 import AboutPage from '../pages/public/AboutPage';
 import LoginPage from '../pages/auth/LoginPage';
-import RegistrationPage from '../pages/auth/RegistrationPage';
+// Update this import to use the UserRegistrationPage (3-step form)
+import RegistrationPage from '../pages/auth/registration/UserRegistrationPage';
 import NotFoundPage from '../pages/public/NotFoundPage';
 
 // User pages

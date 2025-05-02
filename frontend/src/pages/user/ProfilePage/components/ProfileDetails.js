@@ -1,66 +1,86 @@
 import React from 'react';
+import { getPositionName } from '../../../../utils/enumUtils';
 import { formatDate } from '../../../../utils/dateUtils';
-import { positionMapping } from '../../../../utils/soccerUtils';
+import './ProfileDetails.css';
 
 const ProfileDetails = ({ profileData }) => {
-  if (!profileData) return null;
+  if (!profileData) {
+    return <div className="profile-details-loading">Loading details...</div>;
+  }
 
-  // Format the position for display
-  const getPositionName = (positionCode) => {
-    return positionMapping[positionCode] || positionCode;
+  // Helper function to get parts of the date
+  const getDateParts = (dateString) => {
+    if (!dateString) return { month: '', day: '', year: '' };
+    try {
+      const date = new Date(dateString);
+      // Ensure date is valid before proceeding
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid Date");
+      }
+      const month = date.toLocaleDateString('en-US', { month: 'long' });
+      const day = date.getDate();
+      const year = date.getFullYear();
+      return { month, day, year };
+    } catch (error) {
+      console.error("Error parsing date for parts:", error);
+      return { month: 'Invalid', day: 'Date', year: '' };
+    }
   };
 
+  const { month: birthMonth, day: birthDay, year: birthYear } = getDateParts(profileData.dob);
+
   return (
-    <div className="profile-details">
-      <div className="profile-section">
-        <h3 className="profile-section-title">Personal Information</h3>
-        
-        <div className="profile-detail-grid">
-          <div className="profile-detail-item">
-            <span className="detail-label">Full Name</span>
-            <span className="detail-value">{`${profileData.firstName} ${profileData.lastName}`}</span>
-          </div>
-          
-          <div className="profile-detail-item">
-            <span className="detail-label">Email</span>
-            <span className="detail-value">{profileData.email}</span>
-          </div>
-          
-          {profileData.dob && (
-            <div className="profile-detail-item">
-              <span className="detail-label">Date of Birth</span>
-              <span className="detail-value">{formatDate(profileData.dob)}</span>
-            </div>
-          )}
-          
-          {profileData.height && (
-            <div className="profile-detail-item">
-              <span className="detail-label">Height</span>
-              <span className="detail-value">{`${profileData.height} cm`}</span>
-            </div>
-          )}
-          
-          {profileData.position && (
-            <div className="profile-detail-item">
-              <span className="detail-label">Position</span>
-              <span className="detail-value">{getPositionName(profileData.position)}</span>
-            </div>
-          )}
-          
-          {profileData.country && (
-            <div className="profile-detail-item">
-              <span className="detail-label">Country</span>
-              <span className="detail-value">{profileData.country}</span>
-            </div>
-          )}
-          
-          {profileData.team && (
-            <div className="profile-detail-item">
-              <span className="detail-label">Current Team</span>
-              <span className="detail-value">{profileData.team}</span>
-            </div>
-          )}
+    <div className="profile-details card-style">
+      <h2>Details</h2>
+      <div className="profile-details-grid">
+        <div className="profile-detail-item">
+          <span className="detail-label">Full Name</span>
+          <span className="detail-value">{`${profileData.firstName} ${profileData.lastName}`}</span>
         </div>
+        
+        <div className="profile-detail-item">
+          <span className="detail-label">Email</span>
+          <span className="detail-value">{profileData.email}</span>
+        </div>
+        
+        {profileData.dob && (
+          <div className="profile-detail-item">
+            <span className="detail-label">Birthday</span>
+            <span className="detail-value date-parts">
+              <span className="date-part month">{birthMonth}</span>
+              <span className="date-part day">{birthDay}</span>
+              <span className="date-part year">{birthYear}</span>
+            </span>
+          </div>
+        )}
+        
+        {profileData.height && (
+          <div className="profile-detail-item">
+            <span className="detail-label">Height</span>
+            <span className="detail-value">{`${profileData.height} cm`}</span>
+          </div>
+        )}
+        
+        {profileData.position && (
+          <div className="profile-detail-item">
+            <span className="detail-label">Position</span>
+            <span className="detail-value">{getPositionName(profileData.position)}</span>
+          </div>
+        )}
+        
+        {profileData.country && (
+          <div className="profile-detail-item">
+            <span className="detail-label">Country</span>
+            <span className="detail-value">{profileData.country}</span>
+          </div>
+        )}
+        
+        {profileData.team && (
+          <div className="profile-detail-item">
+            <span className="detail-label">Current Team</span>
+            <span className="detail-value">{profileData.team}</span>
+          </div>
+        )}
       </div>
       
       {profileData.bio && (

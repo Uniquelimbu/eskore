@@ -11,7 +11,7 @@ const GetStartedButton = () => {
     if (isAuthenticated) {
       navigate('/dashboard');
     } else {
-      navigate('/role-selection');
+      navigate('/register'); // This will take users to the 3-step registration
     }
   };
 

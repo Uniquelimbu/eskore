@@ -48,7 +48,25 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
 
       if (!stepData.position) newErrors.position = 'Position is required';
       if (!stepData.country) newErrors.country = 'Country is required';
-      if (!stepData.dob) newErrors.dob = 'Date of birth is required';
+      if (!stepData.dobMonth || !stepData.dobDay || !stepData.dobYear) {
+        newErrors.dob = 'Please select a complete date of birth';
+      } else {
+        const dateStr = `${stepData.dobYear}-${String(stepData.dobMonth).padStart(2, '0')}-${String(stepData.dobDay).padStart(2, '0')}`;
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          newErrors.dob = 'Please select a valid date';
+        } else {
+          if (date > new Date()) {
+            newErrors.dob = 'Date of birth cannot be in the future';
+          }
+          const minAge = 13;
+          const today = new Date();
+          const minAgeDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+          if (date > minAgeDate) {
+            newErrors.dob = `You must be at least ${minAge} years old`;
+          }
+        }
+      }
     } else if (step === 3) {
       if (!stepData.agreeTerms) newErrors.agreeTerms = 'You must agree to the Terms and Services';
     }
@@ -91,8 +109,38 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
     }
 
     if (validateStep()) {
-      onNextStep(stepData);
+      let formattedData = { ...stepData };
+      if (stepData.dobMonth && stepData.dobDay && stepData.dobYear) {
+        const month = String(stepData.dobMonth).padStart(2, '0');
+        const day = String(stepData.dobDay).padStart(2, '0');
+        formattedData.dob = `${stepData.dobYear}-${month}-${day}`;
+      }
+      delete formattedData.dobMonth;
+      delete formattedData.dobDay;
+      delete formattedData.dobYear;
+      onNextStep(formattedData);
     }
+  };
+
+  const generateMonthOptions = () => [
+    {name: 'Jan', value: 1}, {name: 'Feb', value: 2}, {name: 'Mar', value: 3},
+    {name: 'Apr', value: 4}, {name: 'May', value: 5}, {name: 'Jun', value: 6},
+    {name: 'Jul', value: 7}, {name: 'Aug', value: 8}, {name: 'Sep', value: 9},
+    {name: 'Oct', value: 10}, {name: 'Nov', value: 11}, {name: 'Dec', value: 12}
+  ].map(month => (
+    <option key={month.value} value={month.value}>{month.name}</option>
+  ));
+  
+  const generateDayOptions = () =>
+    Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+      <option key={day} value={day}>{day}</option>
+    ));
+  
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 100 }, (_, i) => currentYear - i).map(year => (
+      <option key={year} value={year}>{year}</option>
+    ));
   };
 
   const renderStepForm = () => {
@@ -219,13 +267,41 @@ const RegistrationForm = ({ step, formData, onNextStep, onPrevStep, isLoading })
               {errors.country && <div className="error">{errors.country}</div>}
             </div>
             <div className="form-group">
-              <label>Date of Birth</label>
-              <input
-                type="date"
-                name="dob"
-                value={stepData.dob || ''}
-                onChange={handleChange}
-              />
+              <label>Birthday</label>
+              <div className="date-inputs">
+                <select
+                  name="dobMonth"
+                  value={stepData.dobMonth || ''}
+                  onChange={handleChange}
+                  className="date-select month-select"
+                  aria-label="Month"
+                >
+                  <option value="" disabled hidden>Month</option>
+                  {generateMonthOptions()}
+                </select>
+                
+                <select
+                  name="dobDay"
+                  value={stepData.dobDay || ''}
+                  onChange={handleChange}
+                  className="date-select day-select"
+                  aria-label="Day"
+                >
+                  <option value="" disabled hidden>Day</option>
+                  {generateDayOptions()}
+                </select>
+                
+                <select
+                  name="dobYear"
+                  value={stepData.dobYear || ''}
+                  onChange={handleChange}
+                  className="date-select year-select"
+                  aria-label="Year"
+                >
+                  <option value="" disabled hidden>Year</option>
+                  {generateYearOptions()}
+                </select>
+              </div>
               {errors.dob && <div className="error">{errors.dob}</div>}
             </div>
           </>

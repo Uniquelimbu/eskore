@@ -1,0 +1,47 @@
+/* ...existing code... */
+
+.profile-detail-item {
+  display: flex;
+  flex-direction: column; /* Stack label and value */
+  gap: 4px; /* Space between label and value */
+  padding: 10px 0; /* Vertical padding */
+  border-bottom: 1px solid #2d3748; /* Separator */
+}
+
+.profile-detail-item:last-child {
+  border-bottom: none; /* Remove border from last item */
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: #a0aec0; /* Muted color for label */
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: #e2e8f0; /* Primary text color */
+  font-weight: 600;
+}
+
+/* Styling for separated date parts */
+.detail-value.date-parts {
+  display: flex;
+  gap: 10px; /* Space between month, day, year */
+}
+
+.date-part {
+  background-color: #283046; /* Slightly different background */
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #4a5568; /* Subtle border */
+  min-width: 50px; /* Minimum width for visual consistency */
+  text-align: center;
+}
+
+/* Optional: Adjust specific parts if needed */
+.date-part.month {
+  min-width: 80px;
+}
+
+/* ...existing code... */
