@@ -1,211 +1,263 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-const SingleStepForm = ({ formData, onSubmit, isLoading }) => {
-  const [localFormData, setLocalFormData] = useState(formData);
+const SingleStepForm = ({ initialFormData, onSubmit, loading, serverError }) => {
+  const [localFormData, setLocalFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
-  const [checkingEmail, setCheckingEmail] = useState(false);
 
+  // Update local state when initialFormData changes
+  useEffect(() => {
+    setLocalFormData(initialFormData);
+  }, [initialFormData]);
+
+  // Generate month options for the dropdown
+  const generateMonthOptions = () => {
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    return months.map((month, index) => (
+      <option key={month} value={(index + 1).toString().padStart(2, '0')}>
+        {month}
+      </option>
+    ));
+  };
+
+  // Generate day options (1-31)
+  const generateDayOptions = () => {
+    const days = Array.from({ length: 31 }, (_, i) => i + 1);
+    return days.map(day => (
+      <option key={day} value={day.toString().padStart(2, '0')}>
+        {day}
+      </option>
+    ));
+  };
+
+  // Generate year options (current year - 100 years to current year)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+    return years.map(year => (
+      <option key={year} value={year.toString()}>
+        {year}
+      </option>
+    ));
+  };
+
+  // Handle form field changes
   const handleChange = (e) => {
-    const { name, type, checked, value } = e.target;
-    setLocalFormData({ 
-      ...localFormData, 
-      [name]: type === 'checkbox' ? checked : value 
-    });
+    const { name, value, type, checked } = e.target;
     
+    // For checkboxes, use the checked property
+    if (type === 'checkbox') {
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      // For other inputs, use the value property
+      setLocalFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
+    // Clear the error for this field when it changes
     if (errors[name]) {
-      setErrors({ ...errors, [name]: null });
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
     }
   };
-
-  // Async email uniqueness check
-  const checkEmailExists = async (email) => {
-    try {
-      const res = await axios.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
-      return res.data.exists;
-    } catch (err) {
-      return false; // Assume not exists to avoid blocking registration
-    }
-  };
-
+  
+  // Validate form before submission
   const validateForm = () => {
     const newErrors = {};
     
-    // Name validation
+    // Required fields validation
     if (!localFormData.firstName) newErrors.firstName = 'First name is required';
-    else if (localFormData.firstName.length < 2) newErrors.firstName = 'First name must be at least 2 characters';
-
     if (!localFormData.lastName) newErrors.lastName = 'Last name is required';
-    else if (localFormData.lastName.length < 2) newErrors.lastName = 'Last name must be at least 2 characters';
-
-    // Email validation
-    if (!localFormData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(localFormData.email)) newErrors.email = 'Email is invalid';
+    if (!localFormData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(localFormData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
     
     // Password validation
-    if (!localFormData.password) newErrors.password = 'Password is required';
-    else if (localFormData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(localFormData.password))
-      newErrors.password = 'Password must include uppercase, lowercase, and numbers';
+    if (!localFormData.password) {
+      newErrors.password = 'Password is required';
+    } else if (localFormData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
     
-    if (!localFormData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    else if (localFormData.password !== localFormData.confirmPassword) 
+    // Confirm password validation
+    if (localFormData.password !== localFormData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
+    }
     
-    // Basic required fields
-    if (!localFormData.dob) newErrors.dob = 'Date of birth is required';
+    // Date of birth validation
+    if (!localFormData.dobYear || !localFormData.dobMonth || !localFormData.dobDay) {
+      newErrors.dob = 'Date of birth is required';
+    }
     
-    // Terms agreement
-    if (!localFormData.agreeTerms) newErrors.agreeTerms = 'You must agree to the Terms and Services';
+    // Terms consent validation
+    if (!localFormData.termsConsent) {
+      newErrors.termsConsent = 'You must agree to the terms and conditions';
+    }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  // Handle form submission
+  const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Check email uniqueness
-    setCheckingEmail(true);
-    const emailExists = await checkEmailExists(localFormData.email);
-    setCheckingEmail(false);
-    
-    if (emailExists) {
-      setErrors({ ...errors, email: 'An account with this email already exists. Please use a different email.' });
+    // Validate form
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       return;
     }
     
-    if (validateForm()) {
-      onSubmit(localFormData);
-    }
+    // Call parent component's onSubmit function
+    onSubmit(localFormData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="form-section">
-        {/* Removed "Account Information" title */}
-        
-        {/* First and Last Name side by side */}
-        <div className="form-row">
-          <div className="form-group">
-            <label>First Name</label>
-            <input 
-              type="text" 
-              name="firstName" 
-              placeholder="Enter your first name"
-              value={localFormData.firstName || ''} 
-              onChange={handleChange} 
-            />
-            {errors.firstName && <div className="error">{errors.firstName}</div>}
-          </div>
-          
-          <div className="form-group">
-            <label>Last Name</label>
-            <input 
-              type="text" 
-              name="lastName" 
-              placeholder="Enter your last name"
-              value={localFormData.lastName || ''} 
-              onChange={handleChange} 
-            />
-            {errors.lastName && <div className="error">{errors.lastName}</div>}
-          </div>
+      {serverError && (
+        <div className="error-banner">{serverError}</div>
+      )}
+      
+      <div className="form-row">
+        <div className="form-group">
+          <label>First Name</label>
+          <input 
+            type="text" 
+            name="firstName" 
+            placeholder="Enter your first name"
+            value={localFormData.firstName || ''} 
+            onChange={handleChange} 
+          />
+          {errors.firstName && <div className="error">{errors.firstName}</div>}
         </div>
         
         <div className="form-group">
-          <label>Email</label>
+          <label>Last Name</label>
           <input 
-            type="email" 
-            name="email" 
-            placeholder="Your email address"
-            value={localFormData.email || ''} 
+            type="text" 
+            name="lastName" 
+            placeholder="Enter your last name"
+            value={localFormData.lastName || ''} 
             onChange={handleChange} 
           />
-          {errors.email && <div className="error">{errors.email}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label>Password</label>
-          <input 
-            type="password" 
-            name="password" 
-            placeholder="At least 8 characters"
-            value={localFormData.password || ''} 
-            onChange={handleChange} 
-          />
-          {errors.password && <div className="error">{errors.password}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label>Confirm Password</label>
-          <input 
-            type="password" 
-            name="confirmPassword" 
-            placeholder="Re-enter your password"
-            value={localFormData.confirmPassword || ''} 
-            onChange={handleChange} 
-          />
-          {errors.confirmPassword && <div className="error">{errors.confirmPassword}</div>}
+          {errors.lastName && <div className="error">{errors.lastName}</div>}
         </div>
       </div>
       
-      <div className="form-section">
-        {/* Removed position and country fields */}
-        
-        <div className="form-group">
-          <label>Date of Birth</label>
+      {/* Birthday field - Positioned here above Email */}
+      <div className="form-group birthdate-group">
+        <label>Birthday</label>
+        <div className="date-inputs">
+          <select
+            name="dobMonth"
+            value={localFormData.dobMonth || ''}
+            onChange={handleChange}
+            className="date-select month-select"
+            aria-label="Month"
+          >
+            <option value="" disabled hidden>Month</option>
+            {generateMonthOptions()}
+          </select>
+          
+          <select
+            name="dobDay"
+            value={localFormData.dobDay || ''}
+            onChange={handleChange}
+            className="date-select day-select"
+            aria-label="Day"
+          >
+            <option value="" disabled hidden>Day</option>
+            {generateDayOptions()}
+          </select>
+          
+          <select
+            name="dobYear"
+            value={localFormData.dobYear || ''}
+            onChange={handleChange}
+            className="date-select year-select"
+            aria-label="Year"
+          >
+            <option value="" disabled hidden>Year</option>
+            {generateYearOptions()}
+          </select>
+        </div>
+        {errors.dob && <div className="error">{errors.dob}</div>}
+      </div>
+      
+      <div className="form-group">
+        <label>Email</label>
+        <input 
+          type="email" 
+          name="email" 
+          placeholder="Enter your email address"
+          value={localFormData.email || ''} 
+          onChange={handleChange} 
+        />
+        {errors.email && <div className="error">{errors.email}</div>}
+      </div>
+      
+      <div className="form-group">
+        <label>Password</label>
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="Create a password"
+          value={localFormData.password || ''} 
+          onChange={handleChange} 
+        />
+        {errors.password && <div className="error">{errors.password}</div>}
+      </div>
+      
+      <div className="form-group">
+        <label>Confirm Password</label>
+        <input 
+          type="password" 
+          name="confirmPassword" 
+          placeholder="Re-enter your password"
+          value={localFormData.confirmPassword || ''} 
+          onChange={handleChange} 
+        />
+        {errors.confirmPassword && <div className="error">{errors.confirmPassword}</div>}
+      </div>
+      
+      {/* Height, Position and Country fields removed */}
+      
+      <div className="consent-group">
+        <div className="consent-wrapper">
           <input
-            type="date"
-            name="dob"
-            value={localFormData.dob || ''}
+            type="checkbox"
+            id="termsConsent"
+            name="termsConsent"
+            className="custom-checkbox"
+            checked={localFormData.termsConsent || false}
             onChange={handleChange}
           />
-          {errors.dob && <div className="error">{errors.dob}</div>}
+          <label htmlFor="termsConsent" className="consent-text">
+            I agree to the <Link to="/terms" className="consent-link" target="_blank">Terms of Service</Link> and <Link to="/privacy" className="consent-link" target="_blank">Privacy Policy</Link>
+          </label>
         </div>
-      </div>
-      
-      <div className="form-section">
-        {/* Removed "Agreements" title */}
-        
-        <div className="form-group consent-group">
-          <div className="consent-wrapper">
-            <input
-              type="checkbox"
-              name="agreeTerms"
-              id="agreeTerms"
-              checked={!!localFormData.agreeTerms}
-              onChange={handleChange}
-              disabled={isLoading}
-              className="custom-checkbox"
-            />
-            <label htmlFor="agreeTerms" className="consent-text">
-              I have read and agree to the{' '}
-              <a 
-                href="/terms" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="consent-link"
-              >
-                eSkore Terms of Service
-              </a>{' '}
-              and Privacy Policy.
-            </label>
-          </div>
-          {errors.agreeTerms && <div className="error">{errors.agreeTerms}</div>}
-        </div>
+        {errors.termsConsent && <div className="error">{errors.termsConsent}</div>}
       </div>
       
       <div className="form-buttons">
-        <button
-          type="submit"
-          className="submit-button"
-          disabled={isLoading || checkingEmail}
+        <button 
+          type="submit" 
+          className="submit-button center-register-btn"
+          disabled={loading}
         >
-          {checkingEmail
-            ? 'Checking Email...'
-            : isLoading
-            ? 'Creating Account...'
-            : 'Register'}
+          {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </div>
     </form>

@@ -38,22 +38,7 @@ const validateUserRegistration = [
       }
       return true;
     }),
-  body('height')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Height must be a positive number'),
-  body('position')
-    .optional()
-    .isString()
-    .withMessage('Position must be a string'),
-  body('country')
-    .optional()
-    .isString()
-    .withMessage('Country must be a string'),
-  body('roles')
-    .optional()
-    .isArray()
-    .withMessage('Roles must be an array'),
+  // Removed validation for height, position, and country
   // Add validation results middleware
   (req, res, next) => {
     const errors = validationResult(req);

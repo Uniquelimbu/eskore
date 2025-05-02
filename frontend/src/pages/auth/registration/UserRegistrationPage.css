@@ -13,60 +13,32 @@
   color: #2d3748;
 }
 
+/* Remove all multi-step related CSS */
+
+/* DELETE these sections: */
 /* Progress Indicator Styles */
-.progress-container {
-  margin-bottom: 30px;
+.progress-container,
+.progress-bar,
+.progress-fill,
+.step-indicators,
+.step-indicator,
+.step-number,
+.step-label,
+.step-indicator.completed .step-number,
+.next-button,
+.back-button {
+  display: none; /* These are not needed with the single-page form approach */
 }
 
-.progress-bar {
-  height: 8px;
-  background-color: #e2e8f0;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  position: relative;
-  overflow: hidden;
-}
+/* CLEAN UP these sections that reference steps: */
+/* Remove references to steps in these selectors */
+/* These selectors referenced specific steps that no longer exist */
 
-.progress-fill {
-  position: absolute;
-  height: 100%;
-  background-color: #4a6cf7;
-  transition: width 0.3s ease;
-}
-
-.step-indicators {
-  display: flex;
-  justify-content: space-between;
-}
-
-.step-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #718096;
-  width: 33.333%;
-}
-
-.step-number {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 5px;
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.step-indicator.completed .step-number {
-  background-color: #4a6cf7;
-  color: white;
-}
-
-.step-label {
-  font-size: 0.8rem;
+/* DELETE unused buttons */
+.next-button,
+.back-button {
+  display: none; /* Add this to hide them temporarily */
+  /* Eventually remove these completely */
 }
 
 /* Form Styles */
@@ -686,6 +658,7 @@ input[type="checkbox"].custom-checkbox:checked::after {
   flex-direction: row;
   gap: 12px;
   width: 100%;
+  margin-top: 6px;
 }
 
 .date-select {
@@ -712,6 +685,10 @@ input[type="checkbox"].custom-checkbox:checked::after {
   outline: none;
 }
 
+.date-select:hover {
+  border-color: #a0aec0;
+}
+
 .month-select {
   flex: 1.6;
   min-width: 90px;
@@ -727,13 +704,77 @@ input[type="checkbox"].custom-checkbox:checked::after {
   min-width: 80px;
 }
 
-/* Add hover state for better UX */
-.date-select:hover {
-  border-color: #a0aec0;
+/* Hide native date inputs to ensure our custom implementation shows instead */
+input[type="date"], 
+.form-group input[type="date"] {
+  display: none;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Style for the dropdown options */
-.date-select option {
-  padding: 8px;
-  font-size: 1rem;
+/* Ensure the birthdate group has proper spacing */
+.birthdate-group {
+  margin-bottom: 25px;
+  margin-top: 12px;
+}
+
+/* Add page background matching login page */
+.page-bg-light {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  width: 100%;
+}
+
+.registration-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Style for login redirect button */
+.login-redirect {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.login-redirect-btn {
+  background: none;
+  border: none;
+  color: #4a6cf7;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.login-redirect-btn:hover,
+.login-redirect-btn:focus {
+  color: #3a5bd9;
+  text-decoration: underline;
+}
+
+/* Style for back to home button */
+.back-to-home-btn {
+  background: none;
+  border: none;
+  color: #a0aec0; /* Light gray color */
+  font-size: 0.95rem;
+  margin-top: 24px;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: color 0.2s;
+  font-weight: 500;
+  align-self: center;
+}
+
+.back-to-home-btn:hover,
+.back-to-home-btn:focus {
+  color: #4a5568; /* Darker gray on hover */
+  text-decoration: none;
+  outline: none;
 }

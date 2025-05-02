@@ -1,73 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import SingleStepForm from './components/SingleStepForm';
 import './UserRegistrationPage.css';
-import { useAuth } from '../../../contexts/AuthContext';
 
 const UserRegistrationPage = () => {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
+  
+  // Initial form state - removed height, position, and country
+  const initialFormData = {
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    dob: '',
-    agreeTerms: false,
-    allowLocation: false
-  });
-  
-  const [registrationError, setRegistrationError] = useState(null);
-  const navigate = useNavigate();
-  const { registerUser, loading, error, isAuthenticated } = useAuth();
+    dobMonth: '',
+    dobDay: '',
+    dobYear: '',
+    termsConsent: false
+  };
 
-  // This useEffect will handle redirect on successful authentication
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
+  // Handle form submission
   const handleSubmit = async (formData) => {
+    setLoading(true);
+    setServerError('');
+    
     try {
-      setRegistrationError(null);
+      // Format the date from separate fields
+      const formattedData = { ...formData };
       
-      // Prepare registration data for API - only sending essential info
-      const registrationData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        dob: formData.dob
-      };
+      if (formData.dobYear && formData.dobMonth && formData.dobDay) {
+        formattedData.dob = `${formData.dobYear}-${formData.dobMonth.padStart(2, '0')}-${formData.dobDay.padStart(2, '0')}`;
+      }
       
-      // Register user
-      await registerUser(registrationData);
-      // The useEffect will handle redirection once auth state updates
-    } catch (err) {
-      console.error('Registration failed:', err);
-      setRegistrationError(err.message || 'Registration failed. Please try again.');
+      // Remove fields not needed for API
+      delete formattedData.dobYear;
+      delete formattedData.dobMonth;
+      delete formattedData.dobDay;
+      delete formattedData.confirmPassword;
+      
+      // Send registration request
+      const response = await axios.post('/api/auth/register', formattedData);
+      
+      // Handle successful registration
+      if (response.data.success) {
+        navigate('/login?registered=true');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setServerError(
+        error.response?.data?.message || 
+        'An error occurred during registration. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
-  
-  // Use registration error or auth context error
-  const displayError = registrationError || error;
 
   return (
     <div className="page-bg-light">
-      <div className="user-registration-page">
-        <h1>Create Your Account</h1>
+      <div className="registration-page">
+        <div className="user-registration-page">
+          <h1>Create Your Account</h1>
+          <SingleStepForm 
+            initialFormData={initialFormData}
+            onSubmit={handleSubmit}
+            loading={loading}
+            serverError={serverError}
+          />
+          
+          <div className="login-redirect">
+            <button 
+              type="button" 
+              className="login-redirect-btn"
+              onClick={() => navigate('/login')}
+            >
+              Already have an account?
+            </button>
+          </div>
+        </div>
         
-        {displayError && <div className="error-banner">{displayError}</div>}
-        
-        <SingleStepForm 
-          formData={formData}
-          onSubmit={handleSubmit}
-          isLoading={loading}
-        />
-        
+        {/* Back to Home button outside the registration card */}
         <button
           type="button"
-          className="back-link"
+          className="back-to-home-btn"
           onClick={() => navigate('/')}
         >
           ← Back to Home
