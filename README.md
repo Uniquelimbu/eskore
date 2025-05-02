@@ -141,5 +141,5 @@ Having issues or want to provide feedback? Open an issue in this repository or c
 
 <div align="center">
   <p>© 2025 eSkore Team. All rights reserved.</p>
-  <p>Made with ❤️ for the esports community</p>
+  <p>Made with ❤️ for the Sports community</p>
 </div>
