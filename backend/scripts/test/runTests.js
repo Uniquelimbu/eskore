@@ -38,13 +38,25 @@ async function runScripts() {
         stdio: 'inherit'
       });
       
+      let hasExited = false;
+      
       child.on('close', (code) => {
-        resolve(code === 0);
+        hasExited = true;
+        resolve({ success: code === 0, code });
       });
+      
+      // Add timeout handling
+      setTimeout(() => {
+        if (!hasExited) {
+          console.error(`\n⏱️ Test ${script} timed out after 30 seconds!`);
+          child.kill();
+          resolve({ success: false, code: 'TIMEOUT' });
+        }
+      }, 30000); // 30 second timeout
     });
     
-    if (!result) {
-      console.error(`\n❌ Test ${script} failed!`);
+    if (!result.success) {
+      console.error(`\n❌ Test ${script} failed with code: ${result.code}!`);
       process.exit(1);
     }
     

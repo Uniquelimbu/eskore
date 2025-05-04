@@ -8,6 +8,7 @@ require('dotenv').config();
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const sequelize = require('../../src/config/db');
 
 async function safeReset() {
   try {
@@ -49,8 +50,31 @@ async function safeReset() {
     console.error('❌ Error during safe database reset:', error.message);
     if (error.stdout) console.log(error.stdout);
     if (error.stderr) console.error(error.stderr);
-    process.exit(1);
+    return false;
   }
+  return true;
 }
 
-safeReset();
+// Run the script with proper cleanup
+safeReset()
+  .then(success => {
+    try {
+      // Only try to close connection if we have access to sequelize methods
+      if (sequelize && typeof sequelize.close === 'function') {
+        sequelize.close()
+          .then(() => {
+            console.log('Database connection closed');
+            process.exit(success ? 0 : 1);
+          })
+          .catch(err => {
+            console.error('Error closing database connection:', err);
+            process.exit(1);
+          });
+      } else {
+        process.exit(success ? 0 : 1);
+      }
+    } catch (err) {
+      console.error('Error during cleanup:', err);
+      process.exit(1);
+    }
+  });

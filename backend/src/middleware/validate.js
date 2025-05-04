@@ -16,11 +16,13 @@ const validate = (validations) => {
       return next();
     }
 
-    // Format validation errors
+    // Improved error formatting - group by field but keep all errors
     const formattedErrors = {};
     errors.array().forEach(error => {
       if (!formattedErrors[error.path]) {
-        formattedErrors[error.path] = error.msg;
+        formattedErrors[error.path] = [error.msg];
+      } else {
+        formattedErrors[error.path].push(error.msg);
       }
     });
 

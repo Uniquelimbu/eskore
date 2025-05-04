@@ -1,5 +1,9 @@
 /**
- * Script to migrate data from separated models (Athlete, Manager) to unified User model
+ * [HISTORICAL REFERENCE ONLY - DO NOT USE]
+ * Script that was used to migrate data from separated models (Athlete, Manager) to unified User model
+ * 
+ * This script is kept for documentation purposes but is no longer needed for regular operations
+ * as the data migration has been completed. The models referenced are now deprecated.
  */
 require('dotenv').config();
 const bcrypt = require('bcrypt');

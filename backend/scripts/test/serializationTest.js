@@ -124,7 +124,16 @@ async function testSerialization() {
   console.log(`\n${colors.green}✅ Serialization test complete${colors.reset}`);
 }
 
-testSerialization().catch(error => {
-  console.error('❌ Test script error:', error);
-  process.exit(1);
-});
+testSerialization()
+  .then(() => {
+    // Allow event loop to finish any pending HTTP requests
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  })
+  .catch(error => {
+    console.error('❌ Test script error:', error);
+    setTimeout(() => {
+      process.exit(1);
+    }, 100);
+  });

@@ -18,7 +18,17 @@ const validateMatch = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
+      // Format errors consistently with the validate middleware
+      const formattedErrors = {};
+      errors.array().forEach(error => {
+        if (!formattedErrors[error.path]) {
+          formattedErrors[error.path] = [error.msg];
+        } else {
+          formattedErrors[error.path].push(error.msg);
+        }
+      });
+      
+      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR', formattedErrors);
     }
     next();
   }

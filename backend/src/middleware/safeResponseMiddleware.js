@@ -47,6 +47,20 @@ exports.safeJsonMiddleware = (req, res, next) => {
         if (value instanceof Date) {
           return value.toISOString();
         }
+        
+        // Handle additional non-serializable types
+        if (typeof value === 'symbol') {
+          return value.toString();
+        }
+        
+        if (typeof value === 'bigint') {
+          return value.toString();
+        }
+        
+        // Handle typed arrays and array buffers
+        if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
+          return '[Binary data]';
+        }
 
         // For strings, check if they're excessively long and truncate if needed
         if (typeof value === 'string' && value.length > 10000) {

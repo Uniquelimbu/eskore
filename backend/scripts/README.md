@@ -32,6 +32,11 @@ scripts/
   node scripts/db/createSampleData.js
   ```
 
+- `db/createTestUser.js` - Create or update just the test user account
+  ```bash
+  node scripts/db/createTestUser.js
+  ```
+
 ### Testing
 
 - `test/runTests.js` - Run multiple tests in sequence
@@ -83,6 +88,14 @@ scripts/
 
 - `utils/convertToUnifiedUserModel.js` - (If kept) Script to migrate legacy models to User model.
 - `utils/migrateAthleteData.js` - (If kept) Script specifically for migrating Athlete data.
+
+### Maintenance
+
+- `utils/cleanupLogs.js` - Delete all log files from the logs directory
+  ```bash
+  # Remove all log files (useful before zipping project or for privacy)
+  node scripts/utils/cleanupLogs.js
+  ```
 
 ## Contributing
 

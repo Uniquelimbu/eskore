@@ -1,7 +1,28 @@
 /**
  * Enhances Sequelize models with safer serialization
  */
-const { toSafeObject } = require('./serializationUtils');
+const { toSafeObject } = require('./safeSerializer');
+
+/**
+ * Creates a safe copy of model data with sensitive fields removed
+ * @param {Object} data - Original data from model
+ * @returns {Object} Cleaned data object
+ */
+function cleanModelData(data) {
+  // Create a deep clone to avoid modifying the original
+  const cleaned = JSON.parse(JSON.stringify(data));
+  
+  // Remove sensitive/internal fields
+  delete cleaned.passwordHash;
+  delete cleaned.password;
+  delete cleaned._previousDataValues;
+  delete cleaned._changed;
+  delete cleaned._options;
+  delete cleaned._attributes;
+  delete cleaned.uniqno;
+  
+  return cleaned;
+}
 
 /**
  * Enhances a Sequelize model with safer toJSON method
@@ -15,20 +36,11 @@ function enhanceModel(model) {
     // Get the original result
     const original = originalToJSON.call(this);
     
-    // Process it to be safely serializable - use toSafeObject for deep sanitization if needed
-    const safe = {
-      ...original,
-      // Remove any problematic fields
-      passwordHash: undefined,
-      password: undefined,
-      _previousDataValues: undefined,
-      _changed: undefined,
-      _options: undefined,
-      _attributes: undefined,
-      uniqno: undefined
-    };
+    // Clean sensitive data
+    const cleaned = cleanModelData(original);
     
-    return safe;
+    // Process with safe serializer for extra protection
+    return toSafeObject(cleaned);
   };
   
   return model;

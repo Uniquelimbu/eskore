@@ -9,7 +9,6 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const User = require('../../src/models/User');
-// const Athlete = require('../../src/models/Athlete'); // Keep commented or remove
 const Team = require('../../src/models/Team'); // Keep if needed for other potential future scripts
 
 const command = process.argv[2] || 'help';
@@ -20,7 +19,6 @@ async function createTestUser() {
     console.log('Creating or updating test user...');
     const password = 'testpass123';
     const passwordHash = await bcrypt.hash(password, 10);
-    // console.log('Generated password hash:', passwordHash); // Optional: keep for debugging if needed
 
     // Check if test user exists
     const existingUser = await User.findOne({
@@ -60,16 +58,6 @@ async function createTestUser() {
   }
 }
 
-// Link admin users to athlete profiles - DEPRECATED
-// async function createAdminAthleteRecords() {
-//   console.log('This function is deprecated. Athlete model is no longer used.');
-// }
-
-// Fix authentication data - DEPRECATED
-// async function fixAuthData() {
-//   console.log('This function is deprecated. Athlete model is no longer used.');
-// }
-
 // Display help
 function showHelp() {
   console.log(`
@@ -95,12 +83,6 @@ async function main() {
       case 'create-test':
         await createTestUser();
         break;
-      // case 'link-admin': // Remove deprecated command
-      //   await createAdminAthleteRecords();
-      //   break;
-      // case 'fix-auth': // Remove deprecated command
-      //   await fixAuthData();
-      //   break;
       case 'help':
       default:
         showHelp();
@@ -109,10 +91,6 @@ async function main() {
   } catch (error) {
     console.error('Error in user management script:', error);
     process.exit(1); // Exit with error code
-  } finally {
-    // Ensure process exits cleanly if needed, especially if DB connections are held open
-    // Consider removing if not strictly necessary or if using sequelize.close()
-    // process.exit(0);
   }
 }
 

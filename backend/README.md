@@ -365,6 +365,9 @@ node scripts/debugAuth.js
 
 # Reset database if needed
 npm run db:reset:safe
+
+# Validate database schema against models
+node scripts/db/validateSchema.js
 ```
 </details>
 

@@ -42,7 +42,8 @@ function validateConfig() {
       DB_USER: process.env.DB_USER || 'postgres',
       DB_PASS: process.env.DB_PASS || '', // Ensure no hardcoded password here
       DB_HOST: process.env.DB_HOST || 'localhost',
-      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000'
+      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
+      JWT_SECRET: process.env.JWT_SECRET || 'temporary-jwt-secret-for-development-only'
     } : {};
     
     // Combine environment with defaults for validation
@@ -56,7 +57,15 @@ function validateConfig() {
         process.exit(1);
       } else {
         console.warn('Continuing with default values in development mode');
+        return env;
       }
+    }
+    
+    // Block use of default JWT secret in production
+    if (process.env.NODE_ENV === 'production' && 
+        validatedEnv.JWT_SECRET === 'temporary-jwt-secret-for-development-only') {
+      logger.error('CRITICAL SECURITY ERROR: Default JWT_SECRET used in production');
+      process.exit(1);
     }
     
     return validatedEnv;

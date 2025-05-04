@@ -31,9 +31,15 @@ curl http://localhost:5000/api/auth/debug
 If login attempts fail with "Invalid credentials":
 
 **Solutions:**
-- Reset the test user with: `node scripts/createTestUser.js`
-- Check the database directly to ensure password hashes are correct
-- Verify bcrypt is working properly with: `node scripts/debugAuth.js`
+- Create/reset test users with: `node scripts/db/verifySetup.js`
+- Verify database setup with: `node scripts/db/validateSchema.js`
+- Check credentials carefully (the default test accounts are):
+  ```
+  Admin: admin@eskore.com / admin123
+  Test User: test@eskore.com / Password123
+  ```
+- Check server logs for specific errors related to authentication
+- For case-sensitive systems, ensure email capitalization matches
 
 ### 3. CORS Issues
 
@@ -78,6 +84,26 @@ If database migrations fail:
 **Solution:**
 - Use `npm run db:reset:safe` which avoids dropping the database
 - Close other connections to the database (e.g., pgAdmin, other applications)
+
+### 4. Column Does Not Exist Errors
+
+If you see errors like `column "columnName" does not exist`:
+
+**Solutions:**
+- Check if your database migrations have been properly applied: `npx sequelize-cli db:migrate:status`
+- Apply any pending migrations: `npx sequelize-cli db:migrate`
+- If needed, create a new migration to add the missing columns:
+  ```bash
+  # Create a new migration file
+  npx sequelize-cli migration:generate --name add-missing-columns
+  
+  # Edit the file to add the required columns, then run
+  npx sequelize-cli db:migrate
+  ```
+- For critical issues, run the provided fix migration:
+  ```bash
+  node scripts/db/applyColumnFixes.js
+  ```
 
 ## Environment Setup Issues
 

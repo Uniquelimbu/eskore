@@ -7,7 +7,6 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const sequelize = require('../../src/config/db');
 const User = require('../../src/models/User');
-// const Athlete = require('../../src/models/Athlete'); // Remove or comment out
 const Team = require('../../src/models/Team');
 const League = require('../../src/models/League');
 const Match = require('../../src/models/Match');
@@ -74,9 +73,26 @@ async function createSampleData() {
     
   } catch (error) {
     console.error('❌ Error creating sample data:', error);
-  } finally {
-    process.exit();
+    return false;
   }
+  return true;
 }
 
-createSampleData();
+// Run with proper cleanup
+createSampleData()
+  .then(success => {
+    try {
+      sequelize.close()
+        .then(() => {
+          console.log('Database connection closed');
+          process.exit(success ? 0 : 1);
+        })
+        .catch(err => {
+          console.error('Error closing database connection:', err);
+          process.exit(1);
+        });
+    } catch (err) {
+      console.error('Error during cleanup:', err);
+      process.exit(1);
+    }
+  });

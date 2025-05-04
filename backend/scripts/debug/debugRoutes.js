@@ -47,6 +47,8 @@ function inspectRoutes(router, basePath = '') {
 // Try to register routes safely
 console.log('🔍 Analyzing route paths for potential issues...');
 
+let success = true;
+
 // Test all routes for potential path-to-regexp errors
 try {
   tempApp.use('/api/auth', authRoutes);
@@ -60,8 +62,13 @@ try {
   const allRoutes = inspectRoutes(tempApp._router);
   console.log('\n📋 All detected routes:');
   allRoutes.forEach(route => console.log(`  ${route}`));
+  
   console.log(`\n✅ Found ${allRoutes.length} routes with no path parsing errors.`);
 } catch (error) {
   console.error('❌ Error in route registration:', error);
   console.error('\nThe above error suggests a problem with path-to-regexp parsing in your routes.');
+  success = false;
 }
+
+// Ensure the script exits with appropriate code
+process.exit(success ? 0 : 1);

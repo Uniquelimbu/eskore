@@ -1,20 +1,16 @@
-// src/routes/authRoutes.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/User');
-// Remove or comment out the non-existent model imports
-// const Athlete = require('../models/Athlete');
 const Team = require('../models/Team');
-// const Manager = require('../models/Manager');
 const { body, validationResult } = require('express-validator');
 const authController = require('../controllers/authController');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { requireAuth } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sanitizeUserData } = require('../utils/userUtils');
-const { sendSafeJson } = require('../utils/safeSerializer'); // Use safe serializer
+const { sendSafeJson } = require('../utils/safeSerializer');
 
 // For generating tokens
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -43,12 +39,22 @@ const validateUserRegistration = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return all validation errors for better frontend UX
+      // Return all validation errors for better frontend UX - with standardized format
+      const formattedErrors = {};
+      errors.array().forEach(error => {
+        if (!formattedErrors[error.path]) {
+          formattedErrors[error.path] = [error.msg]; 
+        } else {
+          formattedErrors[error.path].push(error.msg);
+        }
+      });
+      
       return res.status(400).json({
         success: false,
         error: {
           message: 'Validation failed',
-          fields: errors.mapped()
+          code: 'VALIDATION_ERROR',
+          details: formattedErrors
         }
       });
     }

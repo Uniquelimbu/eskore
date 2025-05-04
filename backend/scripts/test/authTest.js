@@ -21,16 +21,19 @@ async function testAuthentication() {
   // Basic JWT validation test
   console.log('\n1. Testing JWT generation and validation');
   
+  // Generate a random test secret if not provided in environment
+  const testSecret = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
+  
   const sampleToken = jwt.sign(
     { userId: 1, role: 'athlete' },
-    process.env.JWT_SECRET || 'your-default-secret',
+    testSecret,
     { expiresIn: '1h' }
   );
 
   console.log('Sample JWT Token:', sampleToken);
   
   try {
-    const decoded = jwt.verify(sampleToken, process.env.JWT_SECRET || 'your-default-secret');
+    const decoded = jwt.verify(sampleToken, testSecret);
     console.log('✅ Token Verification: Success');
     console.log('Decoded token:', decoded);
   } catch (error) {
@@ -98,7 +101,16 @@ async function testAuthentication() {
   console.log('\n✅ Authentication test complete!');
 }
 
-testAuthentication().catch(error => {
-  console.error('❌ Test script error:', error);
-  process.exit(1);
-});
+testAuthentication()
+  .then(() => {
+    // Allow event loop to finish any pending HTTP requests
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  })
+  .catch(error => {
+    console.error('❌ Test script error:', error);
+    setTimeout(() => {
+      process.exit(1);
+    }, 100);
+  });

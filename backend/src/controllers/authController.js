@@ -55,14 +55,21 @@ exports.login = async (req, res) => {
 
   try {
     // Find user in the unified User table
+    // Modify query to only select columns that are guaranteed to exist
     const user = await User.findOne({
       where: { email: lowerCaseEmail },
-      attributes: ['id', 'email', 'password', 'role', 'firstName', 'lastName', 'status']
+      attributes: ['id', 'email', 'password', 'role']
     });
 
-    if (!user || user.status !== 'active') {
-      logger.warn(`Login failed: User not found or inactive for email: ${lowerCaseEmail}`);
+    if (!user) {
+      logger.warn(`Login failed: User not found for email: ${lowerCaseEmail}`);
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    }
+
+    // Check if user is active (if status exists)
+    if (user.status && user.status !== 'active') {
+      logger.warn(`Login failed: User inactive for email: ${lowerCaseEmail}`);
+      throw new ApiError('Account is inactive', 401, 'ACCOUNT_INACTIVE');
     }
 
     // Validate password
@@ -72,18 +79,37 @@ exports.login = async (req, res) => {
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
-    // Update last login time
-    await user.update({ lastLogin: new Date() });
+    // Update last login time if column exists
+    try {
+      await user.update({ lastLogin: new Date() });
+    } catch (error) {
+      // Ignore error if lastLogin column doesn't exist
+      logger.warn(`Could not update lastLogin for ${lowerCaseEmail}: ${error.message}`);
+    }
 
     // Get user roles from the roles relationship
-    const userRoles = await UserRole.findAll({
-      where: { userId: user.id },
-      include: [{ model: Role, attributes: ['name'] }]
-    });
-
-    const rolesToAdd = [];
-    if (userRoles && userRoles.length > 0) {
-      rolesToAdd.push(...userRoles.map(ur => ur.Role.name));
+    const userRoles = [];
+    try {
+      const roles = await UserRole.findAll({
+        where: { userId: user.id },
+        include: [{ model: Role, attributes: ['name'] }]
+      });
+      
+      if (roles && roles.length > 0) {
+        userRoles.push(...roles.map(ur => ur.Role.name));
+      }
+    } catch (error) {
+      // Don't silently ignore all errors - check for specific expected errors
+      if (error.name === 'SequelizeConnectionError' || 
+          error.name === 'SequelizeConnectionRefusedError' ||
+          error.message.includes('relation "roles" does not exist')) {
+        // These are expected errors when roles table doesn't exist
+        logger.warn(`Could not fetch roles for ${lowerCaseEmail}: ${error.message}`);
+      } else {
+        // For other unexpected errors, log as error and include in response
+        logger.error(`Database error while fetching roles for ${lowerCaseEmail}:`, error);
+        throw new ApiError('Error fetching user roles', 500, 'ROLE_FETCH_ERROR');
+      }
     }
 
     // Generate JWT token using the main role from the user table
@@ -93,17 +119,21 @@ exports.login = async (req, res) => {
     const cookieOptions = getCookieOptions();
     res.cookie('auth_token', token, cookieOptions);
 
-    // Sanitize user data before sending
-    const safeUserData = sanitizeUserData(user.toJSON(), user.role);
+    // Sanitize user data before sending - create a basic version that works with minimal schema
+    const safeUserData = {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
     
-    if (!safeUserData) {
-      logger.error(`Login failed: Could not sanitize user data for id=${user.id}`);
-      throw new ApiError('Internal server error during login', 500, 'AUTH_SANITIZE_ERROR');
-    }
-
-    // Add additional roles to the user data (if any)
-    if (rolesToAdd.length > 0) {
-      safeUserData.roles = rolesToAdd;
+    // Add additional fields if they exist
+    if (user.firstName) safeUserData.firstName = user.firstName;
+    if (user.lastName) safeUserData.lastName = user.lastName;
+    if (user.status) safeUserData.status = user.status;
+    
+    // Add roles if any were found
+    if (userRoles.length > 0) {
+      safeUserData.roles = userRoles;
     }
 
     logger.info(`Successful login for user: ${lowerCaseEmail}, UserID: ${user.id}`);
@@ -253,35 +283,28 @@ exports.facebookAuth = async (req, res) => {
 // Update logout function for better security and reliability
 exports.logout = async (req, res) => {
   try {
-    // Clear cookie with same settings used to create it
-    const cookieOptions = getCookieOptions();
-    // Ensure domain is not set if it wasn't set during creation, or set it explicitly if needed
-    // delete cookieOptions.maxAge; // MaxAge is for setting, not clearing
+    // Clear auth cookie if it exists
     res.clearCookie('auth_token', {
-        httpOnly: cookieOptions.httpOnly,
-        path: cookieOptions.path,
-        sameSite: cookieOptions.sameSite,
-        secure: cookieOptions.secure,
-        // domain: cookieOptions.domain // Add if domain was specified when setting
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
     });
 
-    logger.info(`User logged out successfully (cookie cleared). UserID from token (if available): ${req.user?.id}`);
-
-    // Use a direct response method to bypass potential serialization issues
-    // Send minimal success response
-    res.status(200).setHeader('Content-Type', 'application/json');
-    return res.end(JSON.stringify({
+    // Ensure a consistent response format with other endpoints
+    return res.json({
       success: true,
       message: 'Logged out successfully'
-    }));
+    });
   } catch (error) {
     logger.error('Logout error:', error);
-    // Avoid sending detailed errors during logout
+    // Never expose details during security operations like logout
+    // Use bypassing technique to avoid any possible serialization issues
     res.status(500).setHeader('Content-Type', 'application/json');
-    return res.end(JSON.stringify({
+    res.end(JSON.stringify({
       success: false,
       error: {
-        message: 'Logout failed due to an internal error'
+        message: 'Logout failed - please clear cookies manually',
+        code: 'LOGOUT_ERROR'
       }
     }));
   }

@@ -43,21 +43,53 @@ const testConnection = async (attempt = 1) => {
     logger.info('Database connection established successfully.');
     return true;
   } catch (error) {
-    logger.error(`Database connection failed (attempt ${attempt}/${MAX_RETRIES}):`, error);
+    // Categorize error types for better handling
+    const isCredentialsError = error.name === 'SequelizeAccessDeniedError' || 
+                               error.message.includes('authentication failed');
+    const isNetworkError = error.name === 'SequelizeConnectionRefusedError' || 
+                           error.name === 'SequelizeHostNotFoundError' ||
+                           error.message.includes('Connection refused');
     
-    if (attempt < MAX_RETRIES) {
-      logger.info(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      return testConnection(attempt + 1);
+    // Log based on error category
+    if (isCredentialsError) {
+      logger.error(`Database authentication failed (attempt ${attempt}/${MAX_RETRIES}):`, error);
+      // Don't retry auth errors since they will likely fail again
+      throw new Error('Database authentication failed. Check your credentials in .env file.');
+    } else if (isNetworkError) {
+      logger.error(`Database connection failed (attempt ${attempt}/${MAX_RETRIES}):`, error);
+      // Only retry network-related errors
+      if (attempt < MAX_RETRIES) {
+        const delay = RETRY_DELAY * Math.pow(1.5, attempt - 1); // Exponential backoff
+        logger.info(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return testConnection(attempt + 1);
+      }
+    } else {
+      // Other errors
+      logger.error(`Database error (attempt ${attempt}/${MAX_RETRIES}):`, error);
     }
     
-    logger.error('All connection attempts failed. Check your database configuration.');
-    return false;
+    if (attempt >= MAX_RETRIES) {
+      logger.error('All connection attempts failed. Check your database configuration.');
+      throw new Error('Failed to connect to database after multiple attempts');
+    }
+    
+    // If we get here with a non-network error and still have retries, try again
+    if (attempt < MAX_RETRIES) {
+      const delay = RETRY_DELAY * Math.pow(1.5, attempt - 1);
+      logger.info(`Retrying in ${delay / 1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return testConnection(attempt + 1);
+    }
   }
 };
 
 // Ready promise to be used by server.js
-const dbReady = testConnection();
+const dbReady = testConnection().catch(err => {
+  // Return false to maintain backward compatibility with code checking for boolean
+  logger.error('Database connection promise rejected:', err.message);
+  return false;
+});
 
 module.exports = sequelize;
 module.exports.dbReady = dbReady;

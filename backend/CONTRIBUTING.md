@@ -26,7 +26,7 @@ This project adheres to the Contributor Covenant code of conduct. By participati
    ```
 3. **Add the upstream repository**
    ```bash
-   git remote add upstream https://github.com/original-owner/eskore.git
+   git remote add upstream https://github.com/eskore-team/eskore.git
    ```
 4. **Install dependencies**
    ```bash
@@ -43,6 +43,12 @@ This project adheres to the Contributor Covenant code of conduct. By participati
    - Copy `.env.example` to `.env` and configure it for your local setup
    - Set up the database: `npm run db:migrate && npm run db:seed`
    - Start the development server: `npm run dev`
+   
+   If you encounter issues with the main server, you can use the bootstrap utility:
+   ```bash
+   node bootstrap.js
+   ```
+   This runs a minimal server to verify your environment setup and connectivity.
 
 2. **Make your changes**:
    - Write code that follows the project's coding standards
@@ -114,7 +120,9 @@ Types include:
 - All new features should include tests
 - Changes to existing features should update relevant tests
 - Run the test suite before submitting a PR: `npm test`
-- Aim for high test coverage
+- We use Jest for unit testing and Supertest for API testing
+- Aim for at least 80% test coverage on new code
+- Run specific test files with: `npm test -- path/to/test.js`
 
 ## Documentation
 

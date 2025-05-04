@@ -44,10 +44,15 @@ const gracefulShutdown = async (signal) => {
     logger.info('HTTP server closed.');
   });
   
-  // Close database connections, etc.
   try {
     logger.info('Closing database connections...');
-    // Implement cleanup logic
+    
+    // Close database connections
+    const db = require('./src/config/db');
+    if (db && typeof db.close === 'function') {
+      await db.close();
+      logger.info('Database connections closed');
+    }
     
     logger.info('Graceful shutdown completed.');
     process.exit(0);

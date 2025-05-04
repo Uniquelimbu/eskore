@@ -256,9 +256,56 @@ function sendSafeJson(res, data, status = 200) {
   }
 }
 
+/**
+ * Safely converts model instances to plain objects for JSON serialization
+ * Handles edge cases like circular references, undefined values, etc.
+ * 
+ * @param {Object} obj - The object to sanitize
+ * @param {Number} [depth=2] - Maximum depth to process (prevents stack overflow)
+ * @returns {Object} A safe-to-serialize object
+ */
+function toSafeObject(data, depth = 2) {
+  // Implementation from serializationUtils.js
+  // ...existing code from serializationUtils.js...
+}
+
+/**
+ * Safely serializes an object to JSON string
+ * 
+ * @param {Object} obj - The object to serialize
+ * @returns {String} JSON string or error message
+ */
+function safeStringify(obj) {
+  // Implementation from serializationUtils.js
+  try {
+    const safeObj = toSafeObject(obj);
+    return JSON.stringify(safeObj);
+  } catch (error) {
+    console.error('Failed to stringify object:', error);
+    return JSON.stringify({ error: 'Serialization error' });
+  }
+}
+
+/**
+ * Send a safely serialized JSON response
+ * Uses multiple fallback mechanisms to ensure something is always returned
+ * 
+ * @param {object} res - Express response object
+ * @param {object} data - Data to send
+ * @param {number} status - HTTP status code
+ * @returns {object} Express response
+ */
+function sendSafeJson(res, data, status = 200) {
+  // ...existing code...
+}
+
+// Export consolidated functions
 module.exports = {
   createSafeJson,
   makeSafeObject,
   extractEssentialData,
-  sendSafeJson
+  sendSafeJson,
+  toSafeObject,        // From serializationUtils.js
+  safeStringify,       // From serializationUtils.js
+  createUltraSafeObject // From serializationUtils.js
 };

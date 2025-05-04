@@ -7,7 +7,7 @@ const { errorHandler } = require('./middleware/errorHandler');
 const { requestLogger, responseHandler } = require('./middleware/requestMiddleware');
 const logger = require('./utils/logger');
 const compression = require('compression');
-const cookieParser = require('cookie-parser'); // Ensure this is required
+const cookieParser = require('cookie-parser');
 const { safeJsonMiddleware } = require('./middleware/safeResponseMiddleware');
 const tokenRefreshMiddleware = require('./middleware/tokenRefresh');
 
@@ -29,17 +29,52 @@ app.use(helmet({
   }
 }));
 
-// Essential Middleware
-app.use(cookieParser()); // <-- Make sure this is used early, before routes
-app.use(express.json({ limit: '10kb' })); // Body parser for JSON
-app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Body parser for URL-encoded data
-app.use(compression()); // Compress responses
+// Add a dedicated health check endpoint BEFORE any middleware that might cause problems
+// This ensures the health check is always available, even if other middleware fails
+app.get('/api/health', (req, res) => {
+  // Direct response with minimal processing
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200);
+  
+  // Pre-stringify the response to avoid any JSON serialization issues
+  const responseText = '{"status":"ok","timestamp":"' + 
+    new Date().toISOString() + 
+    '","server":"eSkore API","uptime":' + 
+    process.uptime() + '}';
+  
+  // Write directly to the response
+  res.end(responseText);
+});
+
+// Add a special rate limit just for the health check endpoint
+const healthCheckLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // limit each IP to 20 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(429).end('{"error":{"message":"Too many health checks","code":"HEALTH_RATE_LIMIT"}}');
+  }
+});
+
+app.use('/api/health', healthCheckLimiter);
+
+// Essential Middleware - ORDER MATTERS!
+app.use(cookieParser()); // Parse cookies early
+app.use(compression()); // Compress all responses
+app.use(express.json({ limit: '1mb' })); // Body parser with reasonable limit
+app.use(express.urlencoded({ extended: true, limit: '1mb' })); // URL-encoded parser
 
 // Logging middleware
-app.use(morgan('combined', { stream: logger.stream })); // Request logging
-app.use(requestLogger);
+app.use(requestLogger); // Add request ID and context first
+app.use(morgan('combined', { stream: logger.stream })); // Then log the full request
 
-// CORS Middleware (ensure credentials allowed)
+// Response handling middleware
+app.use(safeJsonMiddleware); // Safe JSON handling
+app.use(responseHandler); // Standardize response format
+
+// CORS Middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
@@ -96,46 +131,6 @@ const authLimiter = rateLimit({
   message: { error: { message: 'Too many authentication attempts', code: 'AUTH_RATE_LIMIT' } }
 });
 
-// Add a dedicated health check endpoint BEFORE any middleware that might cause problems
-// This must be defined before the JSON handling or compression middleware
-app.get('/api/health', (req, res) => {
-  // Direct response with minimal processing
-  res.setHeader('Content-Type', 'application/json');
-  res.status(200);
-  
-  // Pre-stringify the response to avoid any JSON serialization issues
-  const responseText = '{"status":"ok","timestamp":"' + 
-    new Date().toISOString() + 
-    '","server":"eSkore API","uptime":' + 
-    process.uptime() + '}';
-  
-  // Write directly to the response
-  res.end(responseText);
-});
-
-// Add a special rate limit just for the health check endpoint
-const healthCheckLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 20, // limit each IP to 20 requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(429).end('{"error":{"message":"Too many health checks","code":"HEALTH_RATE_LIMIT"}}');
-  }
-});
-
-app.use('/api/health', healthCheckLimiter);
-
-// Optimized middleware order for performance
-app.use(compression()); // Compress all responses
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
-app.use(requestLogger); // Add request ID and logging
-app.use(safeJsonMiddleware); // Safe JSON handling
-app.use(responseHandler); // Standardize response format
-app.use(morgan('combined', { stream: logger.stream })); // Request logging
-
 // Add a bypass middleware for critical endpoints
 app.use('/api/auth/logout', (req, res, next) => {
   // Special handling - bypass all serialization middleware
@@ -146,12 +141,11 @@ app.use('/api/auth/logout', (req, res, next) => {
 });
 
 // Apply token refresh middleware only to routes that need authentication
-// This improves performance by not running token checks on public routes
-app.use('/api/auth/me', tokenRefreshMiddleware); // For auth check endpoints
-app.use('/api/teams', tokenRefreshMiddleware); // For protected team data
-app.use('/api/matches', tokenRefreshMiddleware); // For protected match data
-app.use('/api/leagues', tokenRefreshMiddleware); // For protected league data
-// Skip token refresh for /api/auth/login and /api/auth/register to avoid unnecessary processing
+app.use('/api/auth/me', tokenRefreshMiddleware); 
+app.use('/api/teams', tokenRefreshMiddleware);
+app.use('/api/matches', tokenRefreshMiddleware);
+app.use('/api/leagues', tokenRefreshMiddleware);
+// Skip token refresh for /api/auth/login and /api/auth/register
 
 // Apply rate limiters
 app.use('/api/auth/', authLimiter);
@@ -166,7 +160,7 @@ app.set('jwt', {
   }
 });
 
-// Health check route - simplified to avoid serialization issues
+// Root route
 app.get('/', (req, res) => {
   res.status(200).send({
     message: 'eskore.com API Running', 
@@ -182,7 +176,6 @@ const teamRoutes = require('./routes/teamRoutes');
 const matchRoutes = require('./routes/matchRoutes');
 const standingsRoutes = require('./routes/standingsRoutes');
 const leagueRoutes = require('./routes/leagueRoutes');
-const locationRoutes = require('./routes/locationRoutes');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -190,7 +183,6 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/standings', standingsRoutes);
 app.use('/api/leagues', leagueRoutes);
-app.use('/api/locations', locationRoutes); // This is now always safe (empty router)
 
 // 404 handler for undefined routes
 app.use((req, res) => {

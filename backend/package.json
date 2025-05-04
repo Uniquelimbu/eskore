@@ -24,7 +24,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepare-release": "npm run lint && npm test",
-    "postinstall": "npm audit fix",
+    "postinstall": "npm audit",
     "create-test-user": "node scripts/utils/userManagement.js create-test",
     "fix-auth-data": "node scripts/utils/userManagement.js fix-auth",
     "link-admin-athletes": "node scripts/utils/userManagement.js link-admin",
@@ -32,8 +32,7 @@
     "create:sample-data": "node scripts/db/createSampleData.js",
     "test:auth": "node scripts/test/authTest.js",
     "test:serialization": "node scripts/test/serializationTest.js",
-    "run:tests": "node scripts/test/runTests.js all",
-    "prestart:check": "node scripts/debug/preStartCheck.js"
+    "run:tests": "node scripts/test/runTests.js all"
   },
   "keywords": [
     "sports",
@@ -42,7 +41,7 @@
     "tracking",
     "tournaments"
   ],
-  "author": "",
+  "author": "eSkore Team <team@eskore.com>",
   "license": "ISC",
   "description": "Backend for eSkore application",
   "dependencies": {
@@ -63,7 +62,6 @@
     "path-to-regexp": "6.2.1",
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
-    "router": "1.3.8",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
@@ -79,7 +77,7 @@
     "supertest": "^6.3.3"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "resolutions": {
     "path-to-regexp": "6.2.1"
