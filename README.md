@@ -118,10 +118,10 @@ If you encounter issues during setup or development:
 
 ## 🗺️ Roadmap
 
-- Q1 2024: Complete core features and MVP launch
-- Q2 2024: Mobile app development
-- Q3 2024: Advanced analytics and machine learning integration
-- Q4 2024: Team and league management expansion
+- Q1 2025: Complete core features and MVP launch
+- Q2 2025: Mobile app development
+- Q3 2025: Advanced analytics and machine learning integration
+- Q4 2025: Team and league management expansion
 
 ## 🤝 Contributing
 
@@ -140,6 +140,6 @@ Having issues or want to provide feedback? Open an issue in this repository or c
 ---
 
 <div align="center">
-  <p>© 2023-2024 eSkore Team. All rights reserved.</p>
-  <p>Made with ❤️ for the esports community</p>
+  <p>© 2025 eSkore Team. All rights reserved.</p>
+  <p>Made with ❤️ for the Sports community</p>
 </div>
