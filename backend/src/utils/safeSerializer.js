@@ -2,6 +2,12 @@
  * Advanced, battle-tested serialization utilities for safely handling any type of data
  */
 const logger = require('./logger');
+const { 
+  safeStringify: baseStringify, 
+  replacer,
+  sanitizeObject,
+  truncateString
+} = require('./serializationUtils');
 
 /**
  * Creates a safe JSON string from any object, handling problematic types
@@ -265,8 +271,59 @@ function sendSafeJson(res, data, status = 200) {
  * @returns {Object} A safe-to-serialize object
  */
 function toSafeObject(data, depth = 2) {
-  // Implementation from serializationUtils.js
-  // ...existing code from serializationUtils.js...
+  // Implementation for toSafeObject
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+  
+  // Handle special types
+  if (data instanceof Date) return data.toISOString();
+  if (data instanceof Error) {
+    return {
+      message: data.message,
+      name: data.name,
+      stack: process.env.NODE_ENV === 'development' ? data.stack : undefined
+    };
+  }
+  
+  // Remove sensitive data
+  const sanitized = sanitizeObject(data);
+  
+  // Use makeSafeObject for deep processing
+  return makeSafeObject(sanitized, new Set(), 0, depth);
+}
+
+/**
+ * Creates an ultra-safe version of an object with only essential data
+ * Used as a fallback when normal serialization fails
+ * 
+ * @param {Object} obj - The object to process
+ * @returns {Object} Ultra-safe version with only primitive values
+ */
+function createUltraSafeObject(obj) {
+  // Provides an even more conservative approach than extractEssentialData
+  try {
+    // Start with the essential data extraction
+    const essential = extractEssentialData(obj);
+    
+    // Further sanitize by ensuring all values are primitives
+    const result = {};
+    
+    // Only copy primitive values or simple objects with primitive values
+    Object.keys(essential).forEach(key => {
+      const value = essential[key];
+      if (value === null || typeof value !== 'object') {
+        result[key] = value;
+      } else if (typeof value === 'object') {
+        result[key] = JSON.stringify(value).substring(0, 100);
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    logger.error('Failed to create ultra-safe object:', error);
+    return { success: false, error: 'Serialization error' };
+  }
 }
 
 /**
@@ -276,7 +333,6 @@ function toSafeObject(data, depth = 2) {
  * @returns {String} JSON string or error message
  */
 function safeStringify(obj) {
-  // Implementation from serializationUtils.js
   try {
     const safeObj = toSafeObject(obj);
     return JSON.stringify(safeObj);
@@ -286,26 +342,13 @@ function safeStringify(obj) {
   }
 }
 
-/**
- * Send a safely serialized JSON response
- * Uses multiple fallback mechanisms to ensure something is always returned
- * 
- * @param {object} res - Express response object
- * @param {object} data - Data to send
- * @param {number} status - HTTP status code
- * @returns {object} Express response
- */
-function sendSafeJson(res, data, status = 200) {
-  // ...existing code...
-}
-
 // Export consolidated functions
 module.exports = {
   createSafeJson,
   makeSafeObject,
   extractEssentialData,
   sendSafeJson,
-  toSafeObject,        // From serializationUtils.js
-  safeStringify,       // From serializationUtils.js
-  createUltraSafeObject // From serializationUtils.js
+  toSafeObject,
+  safeStringify,
+  createUltraSafeObject
 };
