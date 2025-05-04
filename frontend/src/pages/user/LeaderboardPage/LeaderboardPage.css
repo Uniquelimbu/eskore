@@ -1,0 +1,130 @@
+.leaderboard-page-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1a202c;
+}
+
+.leaderboard-page-content {
+  flex-grow: 1;
+  padding: 30px;
+  margin-left: 260px;
+  max-width: calc(100% - 260px);
+  color: #e2e8f0;
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.leaderboard-header h1 {
+  color: #e2e8f0;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.leaderboard-filters {
+  display: flex;
+  gap: 16px;
+}
+
+.leaderboard-type-select {
+  padding: 8px 16px;
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.leaderboard-table-container {
+  background-color: #232b3a;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th {
+  text-align: left;
+  padding: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #a0aec0;
+  border-bottom: 1px solid #2d3748;
+}
+
+.leaderboard-table td {
+  padding: 16px;
+  border-bottom: 1px solid #2d3748;
+}
+
+.leaderboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rank-column {
+  width: 70px;
+  text-align: center;
+}
+
+.player-column {
+  width: auto;
+}
+
+.stat-column {
+  width: 120px;
+  text-align: center;
+  font-weight: 600;
+  color: #4a6cf7;
+}
+
+.matches-column {
+  width: 120px;
+  text-align: center;
+}
+
+.region-column {
+  width: 150px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-name {
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-page-content {
+    margin-left: 90px;
+    max-width: calc(100% - 90px);
+    padding: 20px;
+  }
+  
+  .leaderboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .region-column {
+    display: none;
+  }
+}

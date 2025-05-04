@@ -25,4 +25,8 @@ Role.init({
   timestamps: true
 });
 
+Role.associate = function(models) {
+  Role.hasMany(models.UserRole, { foreignKey: 'roleId', as: 'userRoles' });
+};
+
 module.exports = Role;

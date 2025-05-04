@@ -38,6 +38,10 @@ const authService = {
       try {
         const response = await apiClient.post('/api/auth/login', credentials);
         if (response && response.success && response.user) {
+          // Add redirectUrl to response if not present
+          if (!response.redirectUrl) {
+            response.redirectUrl = '/dashboard';
+          }
           return response;
         }
         throw new Error(response?.message || 'Login failed: Invalid response from server');

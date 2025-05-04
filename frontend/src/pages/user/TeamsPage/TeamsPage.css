@@ -1,0 +1,176 @@
+.teams-page-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1a202c;
+}
+
+.teams-page-content {
+  flex-grow: 1;
+  padding: 30px;
+  margin-left: 260px;
+  max-width: calc(100% - 260px);
+  color: #e2e8f0;
+}
+
+.teams-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.teams-header h1 {
+  color: #e2e8f0;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.teams-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.search-bar {
+  position: relative;
+}
+
+.search-bar input {
+  padding: 10px 16px 10px 40px;
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 250px;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #a0aec0;
+}
+
+.create-team-btn {
+  padding: 10px 16px;
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.create-team-btn:hover {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+}
+
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.team-card {
+  background-color: #232b3a;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.team-logo {
+  height: 160px;
+  background-color: #1a202c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.team-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.team-info {
+  padding: 20px;
+}
+
+.team-name {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+  color: #e2e8f0;
+}
+
+.team-details {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  color: #a0aec0;
+}
+
+.team-members {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #a0aec0;
+}
+
+.no-teams {
+  background-color: #232b3a;
+  border-radius: 10px;
+  padding: 40px;
+  text-align: center;
+  color: #a0aec0;
+}
+
+@media (max-width: 768px) {
+  .teams-page-content {
+    margin-left: 90px;
+    max-width: calc(100% - 90px);
+    padding: 20px;
+  }
+  
+  .teams-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .teams-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-bar {
+    width: 100%;
+  }
+  
+  .search-bar input {
+    width: 100%;
+  }
+}

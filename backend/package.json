@@ -59,7 +59,7 @@
     "joi": "^17.9.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "path-to-regexp": "6.2.1",
+    "path-to-regexp": "^6.3.0",
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",

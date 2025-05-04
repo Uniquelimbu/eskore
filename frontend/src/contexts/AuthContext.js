@@ -112,7 +112,9 @@ export const AuthProvider = ({ children }) => {
       if (loginResponse && loginResponse.success && loginResponse.user) {
         // Use the user data directly from the login response
         dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user });
-        return loginResponse.user; // Return the user data
+        
+        // Ensure we redirect to the dashboard page
+        return { success: true, redirectUrl: '/dashboard' };
       } else {
         throw new Error(loginResponse?.message || 'Login failed');
       }

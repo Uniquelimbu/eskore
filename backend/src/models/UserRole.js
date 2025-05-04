@@ -38,4 +38,9 @@ UserRole.init({
   ]
 });
 
+UserRole.associate = function(models) {
+  UserRole.belongsTo(models.Role, { foreignKey: 'roleId' });
+  UserRole.belongsTo(models.User, { foreignKey: 'userId' });
+};
+
 module.exports = UserRole;
