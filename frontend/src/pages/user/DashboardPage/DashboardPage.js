@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import RecentActivity from './components/RecentActivity';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -43,14 +44,14 @@ const DashboardPage = () => {
             <p>Track your performance, view upcoming matches, and manage your soccer career all in one place.</p>
             
             <div className="dashboard-quicklinks">
-              <a href="/profile" className="quicklink-button">
+              <Link to="/profile" className="quicklink-button">
                 <span className="quicklink-icon">👤</span>
                 <span className="quicklink-label">Update Profile</span>
-              </a>
-              <a href="/leaderboards" className="quicklink-button">
+              </Link>
+              <Link to="/leaderboards" className="quicklink-button">
                 <span className="quicklink-icon">🏆</span>
                 <span className="quicklink-label">Standings</span>
-              </a>
+              </Link>
               {/* Additional quicklinks if needed */}
             </div>
           </div>

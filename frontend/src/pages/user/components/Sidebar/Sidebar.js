@@ -24,8 +24,9 @@ const Sidebar = () => {
     setIsOptionsOpen(!isOptionsOpen);
   };
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    // Don't use 'await' here - call logout and navigate immediately
+    logout();
     navigate('/login');
   };
 
@@ -86,6 +87,12 @@ const Sidebar = () => {
             <NavLink to="/leaderboards">
               <span role="img" aria-label="Standings" className="sidebar-nav-icon">🏆</span>
               <span className="sidebar-nav-label">Standings</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/teams">
+              <span role="img" aria-label="Team" className="sidebar-nav-icon">👥</span>
+              <span className="sidebar-nav-label">Team</span>
             </NavLink>
           </li>
           <li>

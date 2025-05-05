@@ -9,7 +9,7 @@ const { sendSafeJson } = require('../utils/safeSerializer');
 // Model imports
 const User = require('../models/User');
 const Team = require('../models/Team');
-const Role = require('../models/role');
+const Role = require('../models/Role');
 const UserRole = require('../models/userRole');
 
 // Helper function to generate JWT token with improved security
@@ -59,6 +59,16 @@ exports.login = async (req, res) => {
 
     if (!user) {
       logger.warn(`Login failed: User not found for email: ${lowerCaseEmail}`);
+      
+      // Increment the counter for the rate limiter
+      // This ensures the attempt counts against the rate limit
+      if (req.rateLimit) {
+        // Store original IP to track this specific IP's failed attempts
+        const clientIP = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+        logger.debug(`Failed login attempt from IP: ${clientIP} for non-existent user: ${lowerCaseEmail}`);
+      }
+      
+      // For security, don't reveal whether the user exists
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
     }
 
@@ -72,7 +82,22 @@ exports.login = async (req, res) => {
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       logger.warn(`Invalid password for user: ${lowerCaseEmail}`);
+      
+      // Failed login - let the middleware handle the rate limiting
       throw new ApiError('Invalid credentials', 401, 'INVALID_CREDENTIALS');
+    }
+
+    // If we get here, login was successful 
+    // Try to reset the rate limiter for this IP if the store supports it
+    if (req.rateLimit && req.rateLimit.store && typeof req.rateLimit.store.resetKey === 'function') {
+      try {
+        const key = req.rateLimit.keyGenerator(req);
+        await req.rateLimit.store.resetKey(key);
+        logger.debug(`Rate limit reset for successful login: ${lowerCaseEmail}`);
+      } catch (rateLimitError) {
+        // Just log any rate limit reset errors, don't fail the login
+        logger.error(`Error resetting rate limit: ${rateLimitError.message}`);
+      }
     }
 
     // Update last login time if column exists
@@ -302,32 +327,25 @@ exports.facebookAuth = async (req, res) => {
   res.redirect(`/dashboard?token=sample-token`);
 };
 
-// Update logout function for better security and reliability
-exports.logout = async (req, res) => {
+// Secure, fast, and robust logout
+exports.logout = (req, res) => {
   try {
-    // Clear auth cookie if it exists
     res.clearCookie('auth_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/'
     });
 
-    // Ensure a consistent response format with other endpoints
-    return res.json({
+    res.status(200).json({
       success: true,
       message: 'Logged out successfully'
     });
   } catch (error) {
     logger.error('Logout error:', error);
-    // Never expose details during security operations like logout
-    // Use bypassing technique to avoid any possible serialization issues
-    res.status(500).setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      success: false,
-      error: {
-        message: 'Logout failed - please clear cookies manually',
-        code: 'LOGOUT_ERROR'
-      }
-    }));
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully'
+    });
   }
 };

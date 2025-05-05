@@ -50,8 +50,29 @@ body {
 
 /* Reset default focus styles for dark background */
 :focus {
+  outline: none;
+}
+
+/* Only show focus styles when using keyboard navigation */
+:focus-visible {
   outline: 2px solid #63b3ed; /* Lighter blue */
   outline-offset: 2px;
+}
+
+/* Custom focus styling for buttons and interactive elements */
+button:focus, 
+a:focus, 
+input:focus, 
+select:focus, 
+textarea:focus {
+  outline: none;
+}
+
+.sidebar-logo-link.sidebar-logo-refresh:focus,
+.sidebar-logo-link.sidebar-logo-refresh:active,
+.home-header__logo.no-outline:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 button, input, select, textarea {

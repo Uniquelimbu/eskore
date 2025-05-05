@@ -13,51 +13,41 @@
 }
 
 .teams-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  text-align: center;
 }
 
 .teams-header h1 {
   color: #e2e8f0;
-  font-size: 2rem;
-  margin: 0;
+  font-size: 2.2rem;
+  margin: 0 0 12px 0;
+}
+
+.teams-subtitle {
+  color: #a0aec0;
+  font-size: 1.1rem;
 }
 
 .teams-actions {
   display: flex;
   gap: 16px;
-  align-items: center;
 }
 
-.search-bar {
-  position: relative;
-}
-
-.search-bar input {
-  padding: 10px 16px 10px 40px;
+.teams-back-btn {
+  padding: 10px 16px;
   background-color: #2d3748;
   color: #e2e8f0;
-  border: 1px solid #4a5568;
+  border: none;
   border-radius: 6px;
-  font-size: 0.95rem;
-  width: 250px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
 }
 
-.search-bar input:focus {
-  outline: none;
-  border-color: #4a6cf7;
-  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
-  color: #a0aec0;
+.teams-back-btn:hover {
+  background-color: #4a5568;
+  transform: translateY(-2px);
 }
 
 .create-team-btn {
@@ -67,7 +57,8 @@
   border: none;
   border-radius: 6px;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
   transition: all 0.2s;
 }
 
@@ -89,8 +80,6 @@
   text-decoration: none;
   color: inherit;
   transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
 }
 
 .team-card:hover {
@@ -98,53 +87,94 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.team-logo {
+.team-image {
   height: 160px;
   background-color: #1a202c;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
 }
 
-.team-logo img {
+.team-image img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  padding: 20px;
 }
 
 .team-info {
   padding: 20px;
 }
 
-.team-name {
-  margin: 0 0 10px 0;
-  font-size: 1.2rem;
+.team-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
   color: #e2e8f0;
 }
 
-.team-details {
+.team-meta {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
   color: #a0aec0;
+  font-size: 0.9rem;
 }
 
-.team-members {
+.team-options {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: #a0aec0;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 20px 0;
 }
 
-.no-teams {
+.team-option-card {
   background-color: #232b3a;
-  border-radius: 10px;
-  padding: 40px;
+  border-radius: 12px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 400px;
   text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.team-option-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.option-icon {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.team-option-card h2 {
+  font-size: 1.8rem;
+  color: #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.team-option-card p {
   color: #a0aec0;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.option-button {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.option-button:hover {
+  background-color: #3a5bd9;
 }
 
 @media (max-width: 768px) {
@@ -160,17 +190,36 @@
     gap: 16px;
   }
   
+  .teams-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .teams-subtitle {
+    font-size: 1rem;
+  }
+  
   .teams-actions {
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
   }
   
-  .search-bar {
+  .teams-back-btn, .create-team-btn {
     width: 100%;
+    text-align: center;
   }
   
-  .search-bar input {
-    width: 100%;
+  .team-options {
+    gap: 20px;
+  }
+  
+  .team-option-card {
+    padding: 30px 20px;
+  }
+  
+  .option-icon {
+    font-size: 3rem;
+  }
+  
+  .team-option-card h2 {
+    font-size: 1.6rem;
   }
 }

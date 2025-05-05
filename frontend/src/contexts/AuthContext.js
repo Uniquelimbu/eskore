@@ -59,20 +59,17 @@ const AuthContext = createContext(initialState);
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Logout function (defined early to be used in checkAuth error handling)
-  const logout = async () => {
-    try {
-      dispatch({ type: AUTH_LOADING });
-      await authService.logout(); // Call API logout
-    } catch (error) {
+  // Updated logout function for immediate response
+  const logout = () => {
+    // Clear auth state immediately
+    dispatch({ type: AUTH_LOGOUT });
+    
+    // Send the API call in the background, don't wait for it
+    authService.logout().catch(error => {
       console.error('Logout API error:', error);
-      // Still proceed with local logout even if API fails
-    } finally {
-      // Ensure local state is always cleared on logout attempt
-      dispatch({ type: AUTH_LOGOUT });
-    }
+      // Error already handled by returning { success: true } in authService
+    });
   };
-
 
   // Effect to check authentication on mount
   useEffect(() => {

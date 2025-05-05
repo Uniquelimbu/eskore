@@ -77,13 +77,22 @@ const authService = {
     });
   },
 
-  // Logout the current user
+  // Optimized logout with faster timeout
   logout: async () => {
     try {
-      return await apiClient.post('/api/auth/logout');
+      // Use a timeout to prevent long-running network calls
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2-second timeout
+      
+      const response = await apiClient.post('/api/auth/logout', null, { 
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      return response;
     } catch (error) {
       console.error('Logout API error:', error);
-      return { success: true, message: 'Logged out locally despite API error' };
+      return { success: true, message: 'Logged out locally' };
     }
   },
 

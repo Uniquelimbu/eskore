@@ -11,6 +11,8 @@ const { requireAuth } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sanitizeUserData } = require('../utils/userUtils');
 const { sendSafeJson } = require('../utils/safeSerializer');
+// Import directly from the rateLimiters module
+const { failedLoginLimiter } = require('../utils/rateLimiters');
 
 // For generating tokens
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -73,7 +75,7 @@ router.post('/register', validateUserRegistration, catchAsync(authController.reg
  * Body: { "email": "...", "password": "..." }
  * Returns: { success: true, user: { ... }, redirectUrl: "..." }
  */
-router.post('/login', catchAsync(authController.login));
+router.post('/login', failedLoginLimiter, catchAsync(authController.login));
 
 /**
  * GET /api/auth/me

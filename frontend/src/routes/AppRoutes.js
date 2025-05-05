@@ -14,9 +14,9 @@ import ProfilePage from '../pages/user/ProfilePage';
 import SearchPage from '../pages/user/SearchPage';
 import LeaderboardPage from '../pages/user/LeaderboardPage';
 import TeamsPage from '../pages/user/TeamsPage';
-import TeamDetailsPage from '../pages/user/TeamDetailsPage';
 import TournamentPage from '../pages/user/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage';
+import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
@@ -57,9 +57,9 @@ const AppRoutes = () => {
           <TeamsPage />
         </ProtectedRoute>
       } />
-      <Route path="/teams/:id" element={
+      <Route path="/teams/create" element={
         <ProtectedRoute>
-          <TeamDetailsPage />
+          <CreateTeam />
         </ProtectedRoute>
       } />
 

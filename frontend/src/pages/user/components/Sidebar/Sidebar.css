@@ -122,16 +122,16 @@
   color: #ffffff; /* Match text color */
 }
 
-/* Optional: Style for focus state (accessibility) */
+/* Replace the focus-visible styling */
 .sidebar-nav a:focus-visible,
 .sidebar-more-button:focus-visible {
-  outline: 2px solid #4299e1; /* Blue outline on focus */
-  outline-offset: 2px;
+  outline: none;
+  background: #2d3748; /* Slightly lighter background instead of outline */
 }
 
-/* Optional: Style for active link focus state */
+/* Style for active link focus state */
 .sidebar-nav a.active:focus-visible {
-  outline-color: #ffffff; /* White outline on active focused link */
+  background: #313b4f; /* Changed background for active focused link */
 }
 
 .sidebar-nav-icon {

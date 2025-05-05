@@ -1,0 +1,407 @@
+.create-team-form-container {
+  background-color: #232b3a;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 20px;
+}
+
+.create-team-header {
+  margin-bottom: 20px;
+}
+
+.create-team-header h1 {
+  color: #e2e8f0;
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.create-team-subtitle {
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+/* Stepper styling */
+.stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  justify-content: space-between;
+  position: relative;
+  min-height: 36px;
+  /* Add horizontal padding so lines don't touch the edge */
+  padding: 0 12px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+  /* Add horizontal margin so lines don't touch the numbers */
+  margin: 0 12px;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #2d3748;
+  color: #a0aec0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  /* Add box-shadow for separation if desired */
+}
+
+.step.active .step-number {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.step.completed .step-number {
+  background-color: #48bb78;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-label {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+/* Stepper line: only between steps, not under numbers */
+.step-line {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  background-color: #2d3748;
+  margin: 0;
+  transform: translateY(-50%);
+  z-index: 0;
+  /* Further increase spacing between numbers and lines */
+  width: calc(100% - 180px); /* Increased from 120px to 180px for more visible separation */
+  left: 90px; /* Increased from 60px to 90px */
+  right: 90px; /* Increased from 60px to 90px */
+}
+
+/* Form styling */
+.create-team-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  color: #e2e8f0;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2d3748;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.form-group.half {
+  flex: 0.5;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.optional {
+  font-weight: normal;
+  color: #a0aec0;
+  font-size: 0.9em;
+}
+
+.create-team-form .form-group input,
+.create-team-form .form-group select {
+  padding: 12px 16px;
+  background-color: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+/* Prevent background and text color from changing on focus */
+.create-team-form .form-group input:focus,
+.create-team-form .form-group select:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  /* Remove background and color changes on focus */
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+}
+
+/* Prevent autofill from changing background/text color (for Chrome/Edge/Safari) */
+.create-team-form .form-group input:-webkit-autofill,
+.create-team-form .form-group input:-webkit-autofill:focus,
+.create-team-form .form-group input:-webkit-autofill:hover,
+.create-team-form .form-group input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1a202c inset !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+  caret-color: #e2e8f0 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.input-error {
+  border-color: #f56565 !important;
+}
+
+.error-message {
+  color: #f56565;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.form-hint {
+  font-size: 0.85rem;
+  color: #a0aec0;
+}
+
+/* Color picker styling */
+.color-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-picker {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+.color-code {
+  color: #e2e8f0;
+  font-family: monospace;
+  background-color: #2d3748;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Logo upload styling */
+.logo-upload-container {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.logo-upload-area {
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #4a5568;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.logo-upload-area:hover {
+  border-color: #4a6cf7;
+}
+
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  color: #a0aec0;
+}
+
+.upload-text {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.logo-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.logo-instructions {
+  flex: 1;
+}
+
+.logo-instructions h4 {
+  color: #e2e8f0;
+  margin-bottom: 10px;
+}
+
+.logo-instructions ul {
+  color: #a0aec0;
+  padding-left: 20px;
+}
+
+.logo-instructions li {
+  margin-bottom: 5px;
+}
+
+/* Team preview styling */
+.team-preview-container {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  background-color: #1a202c;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.team-info-preview, .team-kit-preview {
+  flex: 1;
+}
+
+.team-info-preview h4, .team-kit-preview h4 {
+  color: #e2e8f0;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2d3748;
+}
+
+.team-info-preview p {
+  color: #a0aec0;
+  margin-bottom: 5px;
+}
+
+.kit-canvas {
+  background-color: #2d3748;
+  border-radius: 8px;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.form-actions .spacer {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-prev-step, .btn-next-step, .btn-create-team {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  min-width: 100px; /* Ensuring consistent button width */
+}
+
+.btn-prev-step {
+  background-color: #2d3748; /* Grey color for Back button */
+  color: #e2e8f0;
+}
+
+.btn-prev-step:hover {
+  background-color: #4a5568;
+}
+
+.btn-next-step {
+  background-color: #4a6cf7; /* Primary blue for Next button */
+  color: white;
+}
+
+.btn-next-step:hover {
+  background-color: #3a5bd9; /* Darker blue on hover */
+}
+
+.btn-create-team {
+  background-color: #48bb78; /* Green for Create Team button */
+  color: white;
+}
+
+.btn-create-team:hover {
+  background-color: #38a169; /* Darker green on hover */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .logo-upload-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .team-preview-container {
+    flex-direction: column;
+  }
+  
+  .stepper {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .step-line {
+    width: 2px;
+    height: 20px;
+    margin: 0;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-prev-step, .btn-next-step, .btn-create-team {
+    width: 100%;
+  }
+}
