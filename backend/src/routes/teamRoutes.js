@@ -120,6 +120,62 @@ router.get('/:id', catchAsync(async (req, res) => {
 }));
 
 /**
+ * GET /api/teams/:id/members
+ * Fetches all members of a specific team
+ * Requires authenticated user
+ */
+router.get('/:id/members', requireAuth, catchAsync(async (req, res) => {
+  const { id: teamId } = req.params;
+  logger.info(`TEAMROUTES.JS (GET /:id/members): Fetching members for team ID ${teamId}`);
+
+  const teamExists = await Team.findByPk(teamId);
+  if (!teamExists) {
+    // Log this specific case for clarity, though the frontend might show a generic error
+    logger.warn(`TEAMROUTES.JS (GET /:id/members): Team with ID ${teamId} not found when trying to fetch members.`);
+    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+  }
+
+  // Fetch UserTeam entries which link Users to this Team, including the role
+  const userTeamEntries = await UserTeam.findAll({
+    where: { teamId },
+    include: [{
+      model: User,
+      attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl'] // Specify user attributes
+    }],
+    attributes: ['role'] // Specify attributes from UserTeam model (role)
+  });
+
+  // Format the members list as expected by the frontend
+  const formattedMembers = userTeamEntries.map(utEntry => {
+    if (!utEntry.User) {
+      // This case should ideally not happen with a successful include if the data is consistent
+      logger.warn(`TEAMROUTES.JS (GET /:id/members): UserTeam entry found without a corresponding User. UserTeam ID: ${utEntry.id}, UserID: ${utEntry.userId}, TeamID: ${utEntry.teamId}`);
+      return null;
+    }
+    const userJson = utEntry.User.toJSON();
+    return {
+      id: userJson.id,
+      firstName: userJson.firstName,
+      lastName: userJson.lastName,
+      email: userJson.email,
+      avatar: userJson.profileImageUrl, // Map profileImageUrl to avatar for frontend consistency
+      role: utEntry.role,
+      // position and jerseyNumber are not currently in User or UserTeam models.
+      // Frontend Squad.js uses placeholders if these are null/undefined.
+      position: utEntry.position || null, // If position was added to UserTeam
+      jerseyNumber: utEntry.jerseyNumber || null // If jerseyNumber was added to UserTeam
+    };
+  }).filter(member => member !== null); // Filter out any nulls from inconsistent data
+
+  logger.info(`TEAMROUTES.JS (GET /:id/members): Successfully fetched ${formattedMembers.length} members for team ID ${teamId}.`);
+  return sendSafeJson(res, {
+    success: true,
+    count: formattedMembers.length,
+    members: formattedMembers
+  });
+}));
+
+/**
  * POST /api/teams
  * Creates a new team
  * Requires authenticated user

@@ -8,6 +8,30 @@ const path = require('path');
 const logger = require('./utils/logger'); // Restored
 logger.info('APP.JS: Application starting...'); // Restored
 
+// Define custom Morgan token for request body
+// This should be defined before morgan is used with the ':body' token
+morgan.token('body', (req, res) => {
+  if (req.body && Object.keys(req.body).length > 0) {
+    // WARNING: This will log the request body.
+    // Ensure sensitive data (e.g., passwords) is redacted in production.
+    try {
+      const bodyToLog = { ...req.body }; // Clone to avoid modifying original
+      if (bodyToLog.password) {
+        bodyToLog.password = '[REDACTED]';
+      }
+      // Add other sensitive fields to redact as necessary
+      // e.g., if (bodyToLog.email) bodyToLog.email = '[REDACTED]';
+      return JSON.stringify(bodyToLog);
+    } catch (e) {
+      // Use logger if available, otherwise console
+      const log = (logger && logger.warn) ? logger.warn : console.warn;
+      log('APP.JS: Morgan token "body" - Error stringifying/redacting req.body', { error: e.message });
+      return 'ErrorInBodySerialization';
+    }
+  }
+  return '-'; // Placeholder for no body or empty body
+});
+
 const { globalErrorHandler, ApiError } = require('./middleware/errorHandler'); // Restored
 const corsErrorHandler = require('./middleware/corsErrorHandler'); // Added for specific CORS error handling
 
