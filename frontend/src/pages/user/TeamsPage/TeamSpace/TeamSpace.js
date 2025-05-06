@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Sidebar from '../components/Sidebar/Sidebar';
-import PageLayout from '../../../components/layout/PageLayout';
-import { useAuth } from '../../../contexts/AuthContext';
+import Sidebar from '../../components/Sidebar/Sidebar';
+import PageLayout from '../../../../components/layout/PageLayout';
+import { useAuth } from '../../../../contexts/AuthContext';
 import Overview from './tabs/Overview';
 import Squad from './tabs/Squad';
 import Formation from './tabs/Formation';

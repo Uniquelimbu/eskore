@@ -10,7 +10,7 @@ import TournamentDetailsPage from '../pages/user/TournamentDetailsPage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import CreateTeam from '../pages/user/TeamsPage/CreateTeam';
 import TeamDashboard from '../pages/user/TeamDashboard';
-import TeamSpace from '../pages/user/TeamSpace';
+import TeamSpace from '../pages/user/TeamsPage/TeamSpace';
 
 // Define all private routes that require authentication
 export const privateRoutes = [
