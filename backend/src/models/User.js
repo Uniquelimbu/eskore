@@ -1,7 +1,8 @@
 // src/models/User.js
-const { Model, DataTypes } = require('sequelize');
+const { Model, DataTypes, Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const sequelize = require('../config/db');
+const logger = require('../utils/logger');
 
 class User extends Model {
   // Method to validate password
@@ -107,9 +108,26 @@ User.init({
     allowNull: true
   },
   status: {
-    type: DataTypes.ENUM('active', 'inactive', 'suspended'),
-    defaultValue: 'active'
-  }
+    type: DataTypes.STRING,
+    defaultValue: 'active' // e.g., active, pending_verification, suspended
+  },
+  // New Profile Fields
+  profileImageUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  bio: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  socialLinks: { // Store as JSON: e.g., { twitter: 'url', facebook: 'url' }
+    type: DataTypes.JSONB, // Or DataTypes.JSON if JSONB is not supported
+    allowNull: true,
+  },
+  gameSpecificStats: { // Store as JSON: e.g., { valorant: { rank: 'Diamond', mainAgent: 'Jett' } }
+    type: DataTypes.JSONB, // Or DataTypes.JSON
+    allowNull: true,
+  },
 }, {
   sequelize,
   modelName: 'User',

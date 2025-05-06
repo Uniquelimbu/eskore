@@ -23,7 +23,7 @@ const generateToken = (userId, role) => {
       // Add a unique token ID to help with token revocation if needed
       jti: require('crypto').randomBytes(16).toString('hex')
     },
-    process.env.JWT_SECRET || 'your-default-secret',
+    process.env.JWT_SECRET, // Fallback removed, rely on validated process.env.JWT_SECRET
     { expiresIn: '7d' }  // 7 days expiration
   );
 };
@@ -155,7 +155,7 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(
       tokenPayload,
-      process.env.JWT_SECRET || 'your-default-secret',
+      process.env.JWT_SECRET, // Fallback removed, rely on validated process.env.JWT_SECRET
       { expiresIn: '7d' }
     );
     

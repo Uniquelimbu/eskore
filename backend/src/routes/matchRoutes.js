@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Match = require('../models/Match');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth'); // Changed from requireAdmin
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { computeStandingsForLeague } = require('../helpers/computeStandings');
 const { body, validationResult } = require('express-validator');
@@ -35,7 +35,7 @@ const validateMatch = [
 ];
 
 // CREATE a match
-router.post('/', requireAdmin, validateMatch, catchAsync(async (req, res) => {
+router.post('/', requireAuth, validateMatch, catchAsync(async (req, res) => { // Changed from requireAdmin
   const { homeTeamId, awayTeamId, homeScore, awayScore, status, date, leagueId } = req.body;
 
   const newMatch = await Match.create({
@@ -60,7 +60,7 @@ router.post('/', requireAdmin, validateMatch, catchAsync(async (req, res) => {
 }));
 
 // UPDATE match
-router.patch('/:id', requireAdmin, catchAsync(async (req, res) => {
+router.patch('/:id', requireAuth, catchAsync(async (req, res) => {
   const matchId = req.params.id;
   const match = await Match.findByPk(matchId);
   

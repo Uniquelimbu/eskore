@@ -3,9 +3,8 @@ const Team = require('../models/Team');
 const Match = require('../models/Match');
 
 /**
- * Compute standings table for a specific league
+ * Compute standings table
  * 
- * @param {number} leagueId - The ID of the league to compute standings for
  * @returns {Promise<Array>} Array of team standings objects with the following properties:
  *   @property {number} teamId - The team's ID
  *   @property {string} name - The team's name
@@ -18,9 +17,9 @@ const Match = require('../models/Match');
  *   @property {number} points - Total points (3 for win, 1 for draw)
  *   @property {number} goalDifference - Goal difference (goalsFor - goalsAgainst)
  */
-async function computeStandingsForLeague(leagueId) {
-  // 1. Get all teams in the league
-  const teams = await Team.findAll({ where: { leagueId } });
+async function computeStandings() {
+  // 1. Get all teams
+  const teams = await Team.findAll();
   if (!teams.length) {
     return [];
   }
@@ -48,7 +47,6 @@ async function computeStandingsForLeague(leagueId) {
   // For this demo, let's do both.
   const relevantMatches = await Match.findAll({
     where: {
-      leagueId,
       status: ['in-progress', 'finished']
     }
   });
@@ -103,4 +101,4 @@ async function computeStandingsForLeague(leagueId) {
   return standings;
 }
 
-module.exports = { computeStandingsForLeague };
+module.exports = { computeStandings };

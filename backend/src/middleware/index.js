@@ -4,7 +4,7 @@
 const { errorHandler, ApiError, catchAsync } = require('./errorHandler');
 const { requestLogger, responseHandler } = require('./requestMiddleware');
 const { safeJsonMiddleware } = require('./safeResponseMiddleware');
-const { requireAuth, requireAdmin } = require('./auth');
+const { requireAuth } = require('./auth');
 const corsErrorHandler = require('./corsErrorHandler');
 
 module.exports = {
@@ -20,7 +20,6 @@ module.exports = {
   
   // Authentication
   requireAuth,
-  requireAdmin,
   
   // Response safety
   safeJsonMiddleware

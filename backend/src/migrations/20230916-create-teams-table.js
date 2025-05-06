@@ -16,15 +16,30 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      leagueId: {
+      email: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        unique: true
+      },
+      passwordHash: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      abbreviation: {
+        type: Sequelize.STRING(3),
+        allowNull: true
+      },
+      foundedYear: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'leagues',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        allowNull: true
+      },
+      city: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      nickname: {
+        type: Sequelize.STRING,
+        allowNull: true
       },
       createdAt: {
         type: Sequelize.DATE,

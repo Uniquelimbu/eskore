@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
 import './CreateTeam.css';
@@ -12,57 +13,15 @@ const CreateTeam = () => {
   const [formData, setFormData] = useState({
     clubName: '',
     nickname: '', 
-    shortName: '',
     abbreviation: '',
-    primaryColor: '#4a6cf7', // Default blue
-    secondaryColor: '#ffffff', // Default white
     foundedYear: new Date().getFullYear().toString(),
-    homeStadium: '',
-    leagueId: '1', // Default to first league
+    city: '',
     teamLogo: null
   });
 
   const [errors, setErrors] = useState({});
-  const [leagues, setLeagues] = useState([
-    { id: 1, name: 'Premier League' },
-    { id: 2, name: 'La Liga' },
-    { id: 3, name: 'Bundesliga' },
-    { id: 4, name: 'Serie A' },
-    { id: 5, name: 'Ligue 1' }
-  ]);
-
-  // Team kit preview canvas ref
-  const kitCanvasRef = useRef(null);
-
-  // Draw team kit preview when colors change
-  useEffect(() => {
-    if (kitCanvasRef.current) {
-      const canvas = kitCanvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw jersey
-      ctx.fillStyle = formData.primaryColor;
-      ctx.fillRect(50, 20, 100, 160);
-      
-      // Draw collar
-      ctx.fillStyle = formData.secondaryColor;
-      ctx.fillRect(85, 20, 30, 10);
-      
-      // Draw sleeve lines
-      ctx.fillStyle = formData.secondaryColor;
-      ctx.fillRect(50, 40, 20, 5);
-      ctx.fillRect(130, 40, 20, 5);
-      
-      // Draw team number
-      ctx.font = "30px Arial";
-      ctx.fillStyle = formData.secondaryColor;
-      ctx.textAlign = "center";
-      ctx.fillText(formData.abbreviation || "TM", 100, 100);
-    }
-  }, [formData.primaryColor, formData.secondaryColor, formData.abbreviation]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,10 +67,6 @@ const CreateTeam = () => {
       newErrors.clubName = 'Club name must be between 3 and 30 characters';
     }
     
-    if (!formData.shortName.trim()) {
-      newErrors.shortName = 'Short name is required';
-    }
-    
     if (!formData.abbreviation.trim()) {
       newErrors.abbreviation = 'Abbreviation is required';
     } else if (formData.abbreviation.length > 3) {
@@ -131,8 +86,8 @@ const CreateTeam = () => {
       newErrors.foundedYear = `Year must be between 1850 and ${new Date().getFullYear()}`;
     }
     
-    if (!formData.leagueId) {
-      newErrors.leagueId = 'Please select a league';
+    if (!formData.city) {
+      newErrors.city = 'City is required';
     }
     
     setErrors(newErrors);
@@ -153,17 +108,84 @@ const CreateTeam = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const logErrorDetails = (error, context) => {
+    console.error(`Error during ${context}:`, error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error Response Data:', error.response.data);
+      console.error('Error Response Status:', error.response.status);
+      console.error('Error Response Headers:', error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      console.error('Error Request Data:', error.request);
+      console.error('No response received for the request.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error Message:', error.message);
+    }
+    console.error('Error Config:', error.config);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Perform final validation
+    // Validate both steps
     if (validateStep1() && validateStep2()) {
-      // Here we would typically make an API call to create the team
-      console.log('Form submitted:', formData);
+      setIsSubmitting(true);
+      setSubmitError(null);
       
-      // Show success message and redirect to teams page
-      alert('Team created successfully!');
-      navigate('/teams');
+      const teamPayload = {
+        name: formData.clubName, // Backend expects 'name'
+        abbreviation: formData.abbreviation,
+        foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
+        city: formData.city,
+        nickname: formData.nickname
+      };
+
+      console.log("Attempting to create team with payload:", teamPayload);
+
+      try {
+        // First, create team without logo
+        const teamResponse = await axios.post('/api/teams', teamPayload, {
+          withCredentials: true
+        });
+        
+        console.log("Team creation API response:", teamResponse);
+        const teamId = teamResponse.data.team.id;
+        
+        // If there's a logo, upload it in a separate request
+        if (formData.teamLogo) {
+          console.log("Attempting to upload logo for team ID:", teamId);
+          const logoData = new FormData();
+          logoData.append('logo', formData.teamLogo);
+          
+          const logoResponse = await axios.patch(`/api/teams/${teamId}/logo`, logoData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            withCredentials: true
+          });
+          console.log("Logo upload API response:", logoResponse);
+        }
+        
+        // Navigate to team space instead of dashboard
+        navigate(`/teams/${teamId}/space/overview`);
+      } catch (error) {
+        logErrorDetails(error, formData.teamLogo ? 'team creation or logo upload' : 'team creation');
+        const errorMessage = 
+          error.response?.data?.message || 
+          error.response?.data?.error?.message || // Check for nested error message
+          (error.response?.data?.errors && typeof error.response.data.errors === 'object' 
+            ? Object.values(error.response.data.errors).flat().join(' ') 
+            : null) ||
+          error.message || // Fallback to generic Axios error message
+          'An error occurred while creating the team. Please try again.';
+        setSubmitError(errorMessage);
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -203,38 +225,21 @@ const CreateTeam = () => {
                 <small className="form-hint">Common name fans use (e.g. The Purple knights)</small>
               </div>
               
-              <div className="form-row">
-                <div className="form-group half">
-                  <label htmlFor="shortName">Short Name*</label>
-                  <input
-                    type="text"
-                    id="shortName"
-                    name="shortName"
-                    value={formData.shortName}
-                    onChange={handleChange}
-                    className={errors.shortName ? 'input-error' : ''}
-                    placeholder="Enter short name"
-                  />
-                  {errors.shortName && <div className="error-message">{errors.shortName}</div>}
-                  <small className="form-hint">Commonly used name (e.g. Eskore FC)</small>
-                </div>
-                
-                <div className="form-group half">
-                  <label htmlFor="abbreviation">Abbreviation*</label>
-                  <input
-                    type="text"
-                    id="abbreviation"
-                    name="abbreviation"
-                    value={formData.abbreviation}
-                    onChange={handleChange}
-                    className={errors.abbreviation ? 'input-error' : ''}
-                    placeholder="e.g. MUN"
-                    maxLength={3}
-                    style={{textTransform: 'uppercase'}}
-                  />
-                  {errors.abbreviation && <div className="error-message">{errors.abbreviation}</div>}
-                  <small className="form-hint">3-letter code (e.g. EFC)</small>
-                </div>
+              <div className="form-group">
+                <label htmlFor="abbreviation">Abbreviation*</label>
+                <input
+                  type="text"
+                  id="abbreviation"
+                  name="abbreviation"
+                  value={formData.abbreviation}
+                  onChange={handleChange}
+                  className={errors.abbreviation ? 'input-error' : ''}
+                  placeholder="e.g. MUN"
+                  maxLength={3}
+                  style={{textTransform: 'uppercase'}}
+                />
+                {errors.abbreviation && <div className="error-message">{errors.abbreviation}</div>}
+                <small className="form-hint">3-letter code (e.g. EFC)</small>
               </div>
             </div>
           </div>
@@ -264,74 +269,20 @@ const CreateTeam = () => {
                 </div>
                 
                 <div className="form-group half">
-                  <label htmlFor="leagueId">League*</label>
-                  <select
-                    id="leagueId"
-                    name="leagueId"
-                    value={formData.leagueId}
+                  <label htmlFor="city">City*</label>
+                  <input
+                    type="text"
+                    id="city"
+                    name="city"
+                    value={formData.city}
                     onChange={handleChange}
-                    className={errors.leagueId ? 'input-error' : ''}
-                  >
-                    <option value="" disabled>Select a league</option>
-                    {leagues.map(league => (
-                      <option key={league.id} value={league.id}>{league.name}</option>
-                    ))}
-                  </select>
-                  {errors.leagueId && <div className="error-message">{errors.leagueId}</div>}
+                    className={errors.city ? 'input-error' : ''}
+                    placeholder="e.g. Manchester"
+                  />
+                  {errors.city && <div className="error-message">{errors.city}</div>}
                 </div>
               </div>
               
-              <div className="form-group">
-                <label htmlFor="homeStadium">Home Stadium <span className="optional">(optional)</span></label>
-                <input
-                  type="text"
-                  id="homeStadium"
-                  name="homeStadium"
-                  value={formData.homeStadium}
-                  onChange={handleChange}
-                  placeholder="Enter stadium name"
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group half">
-                  <label htmlFor="primaryColor">Primary Color*</label>
-                  <div className="color-picker-container">
-                    <input
-                      type="color"
-                      id="primaryColor"
-                      name="primaryColor"
-                      value={formData.primaryColor}
-                      onChange={handleChange}
-                      className="color-picker"
-                    />
-                    <span className="color-code">{formData.primaryColor}</span>
-                  </div>
-                </div>
-                
-                <div className="form-group half">
-                  <label htmlFor="secondaryColor">Secondary Color*</label>
-                  <div className="color-picker-container">
-                    <input
-                      type="color"
-                      id="secondaryColor"
-                      name="secondaryColor"
-                      value={formData.secondaryColor}
-                      onChange={handleChange}
-                      className="color-picker"
-                    />
-                    <span className="color-code">{formData.secondaryColor}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      
-      case 3:
-        return (
-          <div className="step-content">
-            <div className="form-section">
               <h3 className="section-title">Team Logo</h3>
               
               <div className="logo-upload-container">
@@ -365,19 +316,34 @@ const CreateTeam = () => {
                   </ul>
                 </div>
               </div>
+            </div>
+          </div>
+        );
+      
+      case 3:
+        return (
+          <div className="step-content">
+            <div className="form-section">
+              <h3 className="section-title">Review Team Information</h3>
               
-              <h3 className="section-title">Team Preview</h3>
               <div className="team-preview-container">
                 <div className="team-info-preview">
                   <h4>{formData.clubName || 'Club Name'}</h4>
                   <p>Est. {formData.foundedYear || new Date().getFullYear()}</p>
-                  <p>{formData.shortName || 'Short Name'} ({formData.abbreviation || 'ABR'})</p>
-                  <p>{leagues.find(l => l.id.toString() === formData.leagueId.toString())?.name || 'League'}</p>
+                  <p>{formData.abbreviation || 'ABR'}</p>
+                  <p>{formData.city || 'City'}</p>
+                  {formData.nickname && <p>"{formData.nickname}"</p>}
                 </div>
                 
-                <div className="team-kit-preview">
-                  <h4>Team Colors</h4>
-                  <canvas ref={kitCanvasRef} width="200" height="200" className="kit-canvas"></canvas>
+                <div className="logo-preview-container">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Team logo" className="logo-preview-large" />
+                  ) : (
+                    <div className="logo-placeholder large">
+                      <span className="upload-icon">📷</span>
+                      <span className="upload-text">No logo uploaded</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -404,20 +370,26 @@ const CreateTeam = () => {
               <div className="step-number">1</div>
               <div className="step-label">Team Identity</div>
             </div>
-            <div className="step-line"></div>
+            <div className="step-line step-line-1"></div>
             <div className={`step ${activeStep >= 2 ? 'active' : ''} ${activeStep > 2 ? 'completed' : ''}`}>
               <div className="step-number">2</div>
               <div className="step-label">Team Details</div>
             </div>
-            <div className="step-line"></div>
+            <div className="step-line step-line-2"></div>
             <div className={`step ${activeStep >= 3 ? 'active' : ''}`}>
               <div className="step-number">3</div>
-              <div className="step-label">Logo & Preview</div>
+              <div className="step-label">Review</div>
             </div>
           </div>
           
           <form className="create-team-form" onSubmit={handleSubmit}>
             {renderStepContent()}
+            
+            {submitError && (
+              <div className="submission-error">
+                {submitError}
+              </div>
+            )}
             
             <div className="form-actions">
               {activeStep === 1 && (
@@ -467,6 +439,7 @@ const CreateTeam = () => {
                       type="button"
                       className="btn-prev-step"
                       onClick={handlePreviousStep}
+                      disabled={isSubmitting}
                     >
                       Back
                     </button>
@@ -474,8 +447,9 @@ const CreateTeam = () => {
                   <button
                     type="submit"
                     className="btn-create-team"
+                    disabled={isSubmitting}
                   >
-                    Create Team
+                    {isSubmitting ? 'Creating...' : 'Create Team'}
                   </button>
                 </>
               )}

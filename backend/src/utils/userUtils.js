@@ -4,69 +4,102 @@
 const logger = require('./logger');
 
 /**
- * Creates a sanitized user object safe for sending to the client.
- * Removes sensitive fields like passwords and ensures consistent structure.
- *
- * @param {Object} user - User object (plain JSON, e.g., from userInstance.toJSON())
- * @param {String} userType - Type of user (role from token: 'user', 'admin', 'athlete_admin', etc.)
- * @returns {Object|null} Sanitized user object or null if input is invalid
+ * Sanitizes user data, removing sensitive information.
+ * @param {object} user - The user object (toJSON() recommended).
+ * @param {string} requestingUserRole - The role of the user making the request (e.g., 'admin', 'user', 'manager').
+ * @param {boolean} isPublicProfile - Whether this is for a public profile view (more restrictive).
+ * @returns {object|null} Sanitized user data or null if input is invalid.
  */
-function sanitizeUserData(user, userType) {
-  if (!user || typeof user !== 'object' || !user.id) {
-    logger.warn('sanitizeUserData called with invalid input:', user);
-    return null; // Return null for invalid input
+function sanitizeUserData(user, requestingUserRole = 'user', isPublicProfile = false) {
+  if (!user || typeof user !== 'object') {
+    logger.warn('[sanitizeUserData] Attempted to sanitize invalid user data:', user);
+    return null;
   }
 
-  try {
-    // Base user data - always include id, email, role
-    const userData = {
-      id: parseInt(user.id, 10), // Ensure ID is number
-      email: String(user.email || '').substring(0, 255),
-      role: String(userType || 'user').substring(0, 50) // Use role from token/input
-    };
+  const {
+    password, // Always remove
+    passwordHash, // Always remove
+    resetPasswordToken, // Always remove
+    resetPasswordExpires, // Always remove
+    verificationToken, // Always remove
+    // Potentially other sensitive fields internal to the system
+    ...userData
+  } = user;
 
-    // Always include these fields if they exist
-    if (user.firstName) userData.firstName = String(user.firstName).substring(0, 100);
-    if (user.lastName) userData.lastName = String(user.lastName).substring(0, 100);
-    if (user.middleName) userData.middleName = String(user.middleName).substring(0, 100);
-    if (user.dob) userData.dob = user.dob;
-    if (user.country) userData.country = String(user.country).substring(0, 100);
-    if (user.status) userData.status = String(user.status).substring(0, 20);
-    if (user.lastLogin) userData.lastLogin = user.lastLogin;
-    
-    // Add specific fields based on role
-    if (['athlete', 'admin', 'athlete_admin', 'user'].includes(userType)) {
-      if (user.height) userData.height = parseFloat(user.height);
-      if (user.position) userData.position = String(user.position).substring(0, 10);
+
+  // Fields always allowed if they exist (core identity)
+  const publicSafeData = {
+    id: userData.id,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    middleName: userData.middleName, // Often public
+    username: userData.username, // If you use usernames and they are public
+    profileImageUrl: userData.profileImageUrl,
+    bio: userData.bio,
+    country: userData.country,
+    position: userData.position, // e.g., for athletes
+    // socialLinks and gameSpecificStats are complex objects, include them as is
+    // if they are intended to be public or semi-public.
+    socialLinks: userData.socialLinks,
+    gameSpecificStats: userData.gameSpecificStats,
+    createdAt: userData.createdAt, // Generally safe
+    // Include 'role' (primary role) and 'Roles' (array of role objects/names)
+    // if they are meant to be public or visible to certain users.
+    // This might depend on `isPublicProfile` and `requestingUserRole`.
+  };
+  
+  if (isPublicProfile) {
+    // For public profiles, only return a very restricted set of fields.
+    // Email is often hidden on public profiles unless explicitly shared.
+    // dob, height might be sensitive.
+    // status, lastLogin are usually not public.
+    // Remove fields not suitable for public view from publicSafeData if necessary.
+    // e.g. delete publicSafeData.email;
+    // For now, assume the fields in publicSafeData are acceptable for public view.
+    // If user.Roles exists, map to names for public view
+    if (userData.Roles && Array.isArray(userData.Roles)) {
+        publicSafeData.roles = userData.Roles.map(r => r.name || r);
+    } else if (userData.role) { // Fallback to primary role if Roles array isn't populated
+        publicSafeData.role = userData.role;
     }
-    
-    if (['manager', 'admin'].includes(userType)) {
-      if (user.teamId) userData.teamId = parseInt(user.teamId, 10);
-    }
-    
-    // If Roles array is included from a relationship query
-    if (user.Roles && Array.isArray(user.Roles)) {
-      userData.roles = user.Roles.map(role => role.name);
-    }
-
-    // Explicitly remove any password-related fields that might have slipped through
-    delete userData.password;
-    delete userData.passwordHash;
-    
-    // Remove other potentially sensitive or internal fields
-    delete userData.createdAt;
-    delete userData.updatedAt;
-
-    return userData;
-
-  } catch (error) {
-    logger.error(`Error sanitizing user data for user ID ${user.id}:`, error);
-    // Return minimal safe user object as fallback in case of unexpected error
-    return {
-      id: parseInt(user.id, 10) || 0,
-      role: String(userType || 'unknown').substring(0, 50)
-    };
+    return publicSafeData;
   }
+
+  // For authenticated views (not public)
+  const authenticatedSafeData = {
+    ...publicSafeData, // Start with public fields
+    email: userData.email,
+    dob: userData.dob, // Date of Birth
+    height: userData.height,
+    // 'role' is the primary role string, 'Roles' is the array of associated role objects/names
+    role: userData.role, // Primary role string
+    status: userData.status,
+    lastLogin: userData.lastLogin,
+    updatedAt: userData.updatedAt,
+    // Add other fields visible to self or specific roles
+  };
+
+  if (userData.Roles && Array.isArray(userData.Roles)) {
+    authenticatedSafeData.roles = userData.Roles.map(r => r.name || r); // Send role names
+  }
+
+
+  // Admin gets all non-sensitive fields from userData directly
+  if (requestingUserRole === 'admin') {
+    // Admins get everything that wasn't explicitly removed (password, tokens)
+    // This means `userData` (which has password/tokens spread out) is mostly fine.
+    // We ensure `roles` is an array of names if `Roles` was populated.
+    const adminData = { ...userData }; // userData already has password/tokens removed
+    if (userData.Roles && Array.isArray(userData.Roles)) {
+        adminData.roles = userData.Roles.map(r => r.name || r);
+    }
+    return adminData;
+  }
+  
+  // For non-admin, non-public views (e.g., user viewing their own profile)
+  return authenticatedSafeData;
 }
 
-module.exports = { sanitizeUserData };
+module.exports = {
+  sanitizeUserData
+};

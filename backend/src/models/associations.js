@@ -6,7 +6,7 @@ const Team = require('./Team');
 const League = require('./League');
 const Match = require('./Match');
 const Role = require('./Role');
-const UserRole = require('./UserRole');
+const UserRole = require('./userRole');
 const UserTeam = require('./UserTeam');
 const Tournament = require('./Tournament');
 const UserTournament = require('./UserTournament');
@@ -14,8 +14,6 @@ const TeamTournament = require('./TeamTournament');
 
 function setupAssociations() {
   // Existing associations
-  Team.belongsTo(League, { foreignKey: 'leagueId' });
-  League.hasMany(Team, { foreignKey: 'leagueId' });
   Match.belongsTo(League, { foreignKey: 'leagueId' });
   League.hasMany(Match, { foreignKey: 'leagueId' });
   Match.belongsTo(Team, { as: 'homeTeam', foreignKey: 'homeTeamId' });

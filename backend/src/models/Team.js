@@ -24,10 +24,6 @@ Team.init({
     type: DataTypes.STRING,
     allowNull: true
   },
-  leagueId: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
   email: {
     type: DataTypes.STRING,
     allowNull: true, // Teams might not always have emails
@@ -39,6 +35,22 @@ Team.init({
   passwordHash: {
     type: DataTypes.STRING,
     allowNull: true, // Allow null for OAuth or non-login teams
+  },
+  abbreviation: {
+    type: DataTypes.STRING(3),
+    allowNull: true
+  },
+  foundedYear: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  city: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  nickname: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   sequelize,

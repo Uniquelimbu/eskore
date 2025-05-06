@@ -45,15 +45,20 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Remove the columns added
-    return Promise.all([
-      queryInterface.removeColumn('users', 'firstName'),
-      queryInterface.removeColumn('users', 'middleName'),
-      queryInterface.removeColumn('users', 'lastName'),
-      queryInterface.removeColumn('users', 'dob'),
-      queryInterface.removeColumn('users', 'country'),
-      queryInterface.removeColumn('users', 'height'),
-      queryInterface.removeColumn('users', 'position')
+    const table = await queryInterface.describeTable('users');
+    const removeIfExists = async (col) => {
+      if (table[col]) {
+        await queryInterface.removeColumn('users', col);
+      }
+    };
+    await Promise.all([
+      removeIfExists('firstName'),
+      removeIfExists('middleName'),
+      removeIfExists('lastName'),
+      removeIfExists('dob'),
+      removeIfExists('country'),
+      removeIfExists('height'),
+      removeIfExists('position')
     ]);
   }
 };

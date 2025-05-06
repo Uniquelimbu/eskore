@@ -6,7 +6,7 @@ const { dbReady } = require('./src/config/db');
 const socketIo = require('socket.io');
 const validateConfig = require('./src/config/config.validator');
 const SocketManager = require('./src/sockets/socketManager');
-const setupSwagger = require('./src/docs/swagger');
+const setupSwagger = require('./src/docs/swagger'); // Restored
 const initializeModels = require('./src/models/init');
 
 // Validate environment configuration
@@ -33,7 +33,7 @@ app.locals.io = io;
 app.locals.socketManager = socketManager;
 
 // Set up Swagger API docs
-setupSwagger(app);
+setupSwagger(app); // Restored
 
 // Handle graceful shutdown
 const gracefulShutdown = async (signal) => {

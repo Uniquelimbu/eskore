@@ -14,84 +14,67 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
  * Decodes token, finds user in the unified User table, attaches sanitized user to req.user.
  */
 async function requireAuth(req, res, next) {
+  logger.info(`AUTH.JS (requireAuth): ENTERING for ${req.method} ${req.originalUrl}`);
+  
+  const authHeader = req.headers.authorization;
+  // Also check cookies if you pass tokens via cookies
+  const tokenFromCookie = req.cookies?.token; 
   let token;
 
-  // 1. Extract token from Authorization header or cookie
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookies && req.cookies.auth_token) {
-    token = req.cookies.auth_token;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+    logger.info('AUTH.JS (requireAuth): Token found in Authorization header.');
+  } else if (tokenFromCookie) {
+    token = tokenFromCookie;
+    logger.info('AUTH.JS (requireAuth): Token found in cookies.');
+  } else {
+    logger.warn('AUTH.JS (requireAuth): No token found in Authorization header or cookies.');
+    return next(new ApiError('Authentication token is required. Please log in.', 401, 'UNAUTHORIZED'));
   }
 
-  if (!token) {
-    // No token found, user is not authenticated
-    return next(new ApiError('Authentication required', 401, 'NO_TOKEN'));
-  }
+  logger.info(`AUTH.JS (requireAuth): Token extracted: ${token ? token.substring(0, 20) + '...' : 'N/A'}`);
 
   try {
-    // 2. Verify and decode token
     const decoded = jwt.verify(token, JWT_SECRET);
-    logger.debug(`Token decoded: userId=${decoded.userId}, role=${decoded.role}`);
+    logger.info(`AUTH.JS (requireAuth): Token decoded successfully. Payload: ${JSON.stringify(decoded)}`);
 
-    if (!decoded.userId || !decoded.role) {
-      // Token is invalid or doesn't contain required fields
-      throw new ApiError('Invalid token payload', 401, 'INVALID_TOKEN');
-    }
-
-    // 3. Fetch user from User table
-    const userInstance = await User.findByPk(decoded.userId, {
-      attributes: [
-        'id', 'email', 'firstName', 'lastName', 'role', 'status', 
-        'dob', 'country', 'height', 'position'
-      ],
+    const user = await User.findByPk(decoded.userId, {
       include: [{
         model: Role,
-        through: { attributes: [] }, // Don't include junction table
-        attributes: ['name']
+        attributes: ['name'], // Only need role names
+        through: { attributes: [] } // Don't need attributes from the join table UserRole
       }]
     });
 
-    if (!userInstance || userInstance.status !== 'active') {
-      logger.warn(`Authentication failed: User not found or inactive for id=${decoded.userId}`);
-      // Clear potentially invalid cookie
-      res.clearCookie('auth_token', { path: '/' });
-      throw new ApiError('User not found or inactive', 401, 'USER_NOT_FOUND');
+    if (!user) {
+      logger.warn(`AUTH.JS (requireAuth): User not found in DB for decoded userId: ${decoded.userId}.`);
+      return next(new ApiError('User associated with this token not found. Access denied.', 401, 'UNAUTHORIZED'));
     }
 
-    // 4. Attach sanitized user data to req.user
-    const userData = userInstance.toJSON();
-    req.user = sanitizeUserData(userData, decoded.role);
-
-    // Double-check sanitization result
-    if (!req.user) {
-      logger.error(`Authentication failed: Could not sanitize user data for id=${decoded.userId}`);
-      throw new ApiError('Internal server error during authentication', 500, 'AUTH_SANITIZE_ERROR');
-    }
-
-    // Add roles array to user object from the included Role relationship
-    if (userData.Roles && userData.Roles.length > 0) {
-      req.user.roles = userData.Roles.map(role => role.name);
-    } else {
-      req.user.roles = [decoded.role]; // Fallback to the main role
-    }
-
-    logger.debug(`User authenticated: id=${req.user.id}, role=${req.user.role}, roles=${req.user.roles.join(',')}`);
-    next(); // Proceed to the next middleware or route handler
-
+    const userRoles = user.Roles ? user.Roles.map(role => role.name) : [];
+    
+    req.user = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      roles: userRoles,
+      // Determine a primary role. Use the first role from the Roles association, then user.role, then 'user'.
+      role: userRoles.length > 0 ? userRoles[0] : (user.role || 'user')
+    };
+    
+    logger.info(`AUTH.JS (requireAuth): User ${req.user.email} (ID: ${req.user.id}) authenticated with primary role: ${req.user.role} and all roles: [${userRoles.join(', ')}]. Calling next().`);
+    next();
   } catch (error) {
-    // Handle JWT errors specifically
-    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
-      logger.warn(`Authentication failed: Invalid or expired token: ${error.message}`);
-      res.clearCookie('auth_token', { path: '/' }); // Clear bad token cookie
-      return next(new ApiError('Invalid or expired token', 401, 'INVALID_TOKEN'));
+    logger.error(`AUTH.JS (requireAuth): JWT verification or user fetch error: ${error.name} - ${error.message}`, error.stack);
+    if (error.name === 'TokenExpiredError') {
+      return next(new ApiError('Your session has expired. Please log in again.', 401, 'TOKEN_EXPIRED'));
     }
-    // Handle known ApiErrors
-    if (error instanceof ApiError) {
-      return next(error);
+    if (error.name === 'JsonWebTokenError') {
+      return next(new ApiError('Invalid authentication token. Please log in again.', 401, 'INVALID_TOKEN'));
     }
-    // Handle unexpected errors
-    logger.error(`Unexpected authentication error: ${error.message}`, error);
-    return next(new ApiError('Authentication failed due to an internal error', 500, 'AUTH_ERROR'));
+    // For other errors during the process
+    return next(new ApiError('Authentication failed due to a server error.', 500, 'AUTH_SERVER_ERROR'));
   }
 }
 
@@ -102,30 +85,25 @@ async function requireAuth(req, res, next) {
  */
 function requireRole(roles) {
   return (req, res, next) => {
-    requireAuth(req, res, (err) => {
-      if (err) return next(err);
-      
-      const rolesToCheck = Array.isArray(roles) ? roles : [roles];
-      
-      // Check if user has any of the required roles
-      const hasRole = req.user.roles.some(role => rolesToCheck.includes(role));
-      
-      if (hasRole) {
-        return next();
-      }
-      
-      logger.warn(`Role access denied for user ${req.user.id}. Required roles: ${rolesToCheck.join(',')}. User roles: ${req.user.roles.join(',')}`);
-      return next(new ApiError(`Forbidden - Requires one of these roles: ${rolesToCheck.join(', ')}`, 403, 'FORBIDDEN'));
-    });
-  };
-}
+    logger.info(`AUTH.JS (requireRole): ENTERING for ${req.method} ${req.originalUrl}. Required roles: [${roles.join(', ')}]`);
 
-/**
- * requireAdmin:
- * Middleware to check for admin role
- */
-function requireAdmin(req, res, next) {
-  return requireRole('admin')(req, res, next);
+    if (!req.user || !req.user.roles || !Array.isArray(req.user.roles)) {
+      logger.warn('AUTH.JS (requireRole): User object or user.roles array not found on request. This indicates an issue with requireAuth or how it sets req.user.');
+      return next(new ApiError('Authentication information is missing or incomplete.', 401, 'UNAUTHORIZED'));
+    }
+
+    logger.info(`AUTH.JS (requireRole): User roles: [${req.user.roles.join(', ')}]. Checking against required: [${roles.join(', ')}]`);
+
+    const hasRequiredRole = roles.some(role => req.user.roles.includes(role));
+
+    if (!hasRequiredRole) {
+      logger.warn(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.id}) does NOT have any of the required roles: [${roles.join(', ')}]. Access denied.`);
+      return next(new ApiError('Forbidden: You do not have the necessary permissions for this action.', 403, 'FORBIDDEN'));
+    }
+    
+    logger.info(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.id}) HAS a required role. Access granted. Calling next().`);
+    next();
+  };
 }
 
 /**
@@ -133,7 +111,7 @@ function requireAdmin(req, res, next) {
  * Middleware to check for organizer role (for tournament creation)
  */
 function requireOrganizer(req, res, next) {
-  return requireRole(['admin', 'organizer'])(req, res, next);
+  return requireRole(['organizer'])(req, res, next);
 }
 
 /**
@@ -141,12 +119,11 @@ function requireOrganizer(req, res, next) {
  * Middleware to check for team manager role
  */
 function requireTeamManager(req, res, next) {
-  return requireRole(['admin', 'manager'])(req, res, next);
+  return requireRole(['manager'])(req, res, next);
 }
 
 module.exports = { 
   requireAuth, 
-  requireAdmin, 
   requireOrganizer,
   requireTeamManager,
   requireRole

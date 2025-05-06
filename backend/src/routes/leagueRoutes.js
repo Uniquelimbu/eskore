@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const League = require('../models/League');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth'); // Changed from requireAdmin
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { body, validationResult } = require('express-validator');
 
@@ -46,9 +46,9 @@ router.get('/:id', catchAsync(async (req, res) => {
 
 /**
  * POST /api/leagues
- * Create a new league (admin only)
+ * Create a new league
  */
-router.post('/', requireAdmin, validateLeague, catchAsync(async (req, res) => {
+router.post('/', requireAuth, validateLeague, catchAsync(async (req, res) => { // Changed from requireAdmin
   const { name, startDate, endDate } = req.body;
   const newLeague = await League.create({ name, startDate, endDate });
   res.status(201).json(newLeague);
@@ -56,9 +56,9 @@ router.post('/', requireAdmin, validateLeague, catchAsync(async (req, res) => {
 
 /**
  * PATCH /api/leagues/:id
- * Update an existing league (admin only)
+ * Update an existing league
  */
-router.patch('/:id', requireAdmin, catchAsync(async (req, res) => {
+router.patch('/:id', requireAuth, catchAsync(async (req, res) => { // Changed from requireAdmin
   const { id } = req.params;
   const { name, startDate, endDate } = req.body;
 

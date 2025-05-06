@@ -1,39 +1,51 @@
 import apiClient from './apiClient';
 
 const dashboardService = {
-  // Get the athlete's stats summary
+  // Get the current user's stats summary
   getStatsSummary: async (timeframe = 'all-time') => {
     try {
-      return await apiClient.get(`/api/athletes/stats?timeframe=${timeframe}`);
+      // Uses the authenticated user's context on the backend
+      const response = await apiClient.get(`/api/users/stats?timeframe=${timeframe}`);
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('Error fetching stats summary:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
 
-  // Get recent activity for the dashboard
+  // Get recent activity for the current user's dashboard
   getRecentActivity: async (limit = 10) => {
     try {
-      return await apiClient.get(`/api/athletes/activity?limit=${limit}`);
+      // Uses the authenticated user's context on the backend
+      const response = await apiClient.get(`/api/users/activity?limit=${limit}`);
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('Error fetching recent activity:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
 
-  // Get upcoming matches for the athlete
+  // Get upcoming matches for the current user
   getUpcomingMatches: async () => {
     try {
-      return await apiClient.get('/api/athletes/matches/upcoming');
+      // Uses the authenticated user's context on the backend
+      const response = await apiClient.get('/api/users/matches/upcoming');
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('Error fetching upcoming matches:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
 
-  // Get game performance data
+  // Get game performance data for the current user
   getGamePerformance: async (gameId) => {
     try {
-      return await apiClient.get(`/api/athletes/games/${gameId}/performance`);
+      // Uses the authenticated user's context on the backend
+      const response = await apiClient.get(`/api/users/games/${gameId}/performance`);
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error('Error fetching game performance:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
   

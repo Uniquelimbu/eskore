@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireOrganizer, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireOrganizer } = require('../middleware/auth'); // requireAdmin removed
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { sendSafeJson } = require('../utils/safeSerializer');
 const Tournament = require('../models/Tournament');
@@ -44,8 +44,8 @@ const validateParticipantBody = [
 router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
   const { userId } = req.params;
   
-  // Users can only see their own tournaments unless they're an admin
-  if (parseInt(userId) !== req.user.id && req.user.role !== 'admin') {
+  // Users can only see their own tournaments
+  if (parseInt(userId) !== req.user.id) { // Admin check removed
     throw new ApiError('Forbidden - You can only view your own tournaments', 403, 'FORBIDDEN');
   }
   
@@ -202,7 +202,7 @@ router.post('/', requireAuth, catchAsync(async (req, res) => {
 /**
  * PUT /api/tournaments/:id
  * Update a tournament
- * Requires admin role or creator/organizer of the tournament
+ * Requires creator/organizer of the tournament
  */
 router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -214,8 +214,8 @@ router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res
     throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission to update (creator, organizer, or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+  // Check if user has permission to update (creator, organizer)
+  if (tournament.creatorId !== req.user.id) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
         userId: req.user.id,
@@ -249,7 +249,7 @@ router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res
 /**
  * DELETE /api/tournaments/:id
  * Delete a tournament
- * Requires admin role or creator of the tournament
+ * Requires creator of the tournament
  */
 router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -263,10 +263,10 @@ router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, 
       throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
     }
     
-    // Check if user has permission to delete (creator or admin)
-    if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+    // Check if user has permission to delete (creator)
+    if (tournament.creatorId !== req.user.id) { // Admin check removed
       await t.rollback();
-      throw new ApiError('Forbidden - Only tournament creators or admins can delete tournaments', 403, 'FORBIDDEN');
+      throw new ApiError('Forbidden - Only tournament creators can delete tournaments', 403, 'FORBIDDEN');
     }
     
     // Delete related records first (maintain referential integrity)
@@ -300,7 +300,7 @@ router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, 
 /**
  * POST /api/tournaments/:id/participants
  * Add a user participant to a tournament
- * Requires organizer role for the tournament or admin
+ * Requires organizer role for the tournament
  */
 router.post('/:id/participants', validateTournamentId, validateParticipantBody, requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -313,8 +313,8 @@ router.post('/:id/participants', validateTournamentId, validateParticipantBody, 
     throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission to add participants (organizer or admin)
-  const hasPermission = req.user.role === 'admin' || tournament.creatorId === req.user.id;
+  // Check if user has permission to add participants (creator or organizer)
+  let hasPermission = tournament.creatorId === req.user.id; // Admin check removed
   
   if (!hasPermission) {
     const userTournament = await UserTournament.findOne({
@@ -375,7 +375,7 @@ router.post('/:id/participants', validateTournamentId, validateParticipantBody, 
 /**
  * POST /api/tournaments/:id/teams
  * Add a team to a tournament
- * Requires organizer role for the tournament or admin
+ * Requires organizer role for the tournament
  */
 router.post('/:id/teams', requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -391,8 +391,8 @@ router.post('/:id/teams', requireAuth, catchAsync(async (req, res) => {
     throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission to add teams (organizer or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+  // Check if user has permission to add teams (creator or organizer)
+  if (tournament.creatorId !== req.user.id) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
         userId: req.user.id,
@@ -440,7 +440,7 @@ router.post('/:id/teams', requireAuth, catchAsync(async (req, res) => {
 /**
  * DELETE /api/tournaments/:id/participants/:userId
  * Remove a user participant from a tournament
- * Requires organizer role for the tournament or admin
+ * Requires organizer role for the tournament
  */
 router.delete('/:id/participants/:userId', requireAuth, catchAsync(async (req, res) => {
   const { id, userId } = req.params;
@@ -452,7 +452,7 @@ router.delete('/:id/participants/:userId', requireAuth, catchAsync(async (req, r
   }
   
   // Check if user has permission to remove participants (organizer or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+  if (tournament.creatorId !== req.user.id) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
         userId: req.user.id,
@@ -487,7 +487,7 @@ router.delete('/:id/participants/:userId', requireAuth, catchAsync(async (req, r
 /**
  * DELETE /api/tournaments/:id/teams/:teamId
  * Remove a team from a tournament
- * Requires organizer role for the tournament or admin
+ * Requires organizer role for the tournament
  */
 router.delete('/:id/teams/:teamId', requireAuth, catchAsync(async (req, res) => {
   const { id, teamId } = req.params;
@@ -498,8 +498,8 @@ router.delete('/:id/teams/:teamId', requireAuth, catchAsync(async (req, res) => 
     throw new ApiError('Tournament not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission to remove teams (organizer or admin)
-  if (req.user.role !== 'admin' && tournament.creatorId !== req.user.id) {
+  // Check if user has permission to remove teams (creator or organizer)
+  if (tournament.creatorId !== req.user.id) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
         userId: req.user.id,

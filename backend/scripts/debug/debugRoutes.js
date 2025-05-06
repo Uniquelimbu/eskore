@@ -15,7 +15,7 @@ const teamRoutes = require('../../src/routes/teamRoutes');
 const matchRoutes = require('../../src/routes/matchRoutes');
 const leagueRoutes = require('../../src/routes/leagueRoutes');
 const standingsRoutes = require('../../src/routes/standingsRoutes');
-const locationRoutes = require('../../src/routes/locationRoutes');
+// const locationRoutes = require('../../src/routes/locationRoutes');
 
 // Function to safely evaluate routes
 function inspectRoutes(router, basePath = '') {
@@ -56,7 +56,7 @@ try {
   tempApp.use('/api/matches', matchRoutes);
   tempApp.use('/api/leagues', leagueRoutes);
   tempApp.use('/api/standings', standingsRoutes);
-  tempApp.use('/api/locations', locationRoutes);
+  // tempApp.use('/api/locations', locationRoutes);
 
   // Inspect and print all routes
   const allRoutes = inspectRoutes(tempApp._router);

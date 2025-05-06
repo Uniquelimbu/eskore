@@ -1,8 +1,14 @@
-// src/models/League.js
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const League = sequelize.define('League', {
+class League extends Model {}
+
+League.init({
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false
@@ -16,6 +22,8 @@ const League = sequelize.define('League', {
     allowNull: true
   }
 }, {
+  sequelize,
+  modelName: 'League',
   tableName: 'leagues',
   timestamps: true
 });

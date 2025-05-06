@@ -75,7 +75,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
 
-      {/* Admin routes - using ProtectedRoute for now since roles are not important */}
+      {/* System Dashboard - renamed from Admin Dashboard */}
       <Route path="/admin/dashboard" element={
         <ProtectedRoute>
           <AdminDashboard />
