@@ -2,40 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const Match = require('../models/Match');
-const { requireAuth } = require('../middleware/auth'); // Changed from requireAdmin
+const { requireAuth } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { computeStandingsForLeague } = require('../helpers/computeStandings');
-const { body, validationResult } = require('express-validator');
-
-// Validation middleware
-const validateMatch = [
-  body('homeTeamId').isInt().withMessage('Valid home team ID is required'),
-  body('awayTeamId').isInt().withMessage('Valid away team ID is required'),
-  body('leagueId').isInt().withMessage('Valid league ID is required'),
-  body('homeScore').optional().isInt({ min: 0 }).withMessage('Home score must be a non-negative integer'),
-  body('awayScore').optional().isInt({ min: 0 }).withMessage('Away score must be a non-negative integer'),
-  body('status').optional().isIn(['scheduled', 'in-progress', 'finished', 'canceled']).withMessage('Invalid match status'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // Format errors consistently with the validate middleware
-      const formattedErrors = {};
-      errors.array().forEach(error => {
-        if (!formattedErrors[error.path]) {
-          formattedErrors[error.path] = [error.msg];
-        } else {
-          formattedErrors[error.path].push(error.msg);
-        }
-      });
-      
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR', formattedErrors);
-    }
-    next();
-  }
-];
+const { validate, schemas } = require('../validation');
 
 // CREATE a match
-router.post('/', requireAuth, validateMatch, catchAsync(async (req, res) => { // Changed from requireAdmin
+router.post('/', requireAuth, validate(schemas.match.matchSchema), catchAsync(async (req, res) => {
   const { homeTeamId, awayTeamId, homeScore, awayScore, status, date, leagueId } = req.body;
 
   const newMatch = await Match.create({
@@ -60,7 +33,13 @@ router.post('/', requireAuth, validateMatch, catchAsync(async (req, res) => { //
 }));
 
 // UPDATE match
-router.patch('/:id', requireAuth, catchAsync(async (req, res) => {
+router.patch('/:id', 
+  requireAuth, 
+  validate([
+    ...schemas.match.matchIdParam, // Use the correct match ID param schema
+    ...schemas.match.matchResultSchema
+  ]), 
+  catchAsync(async (req, res) => {
   const matchId = req.params.id;
   const match = await Match.findByPk(matchId);
   
@@ -102,7 +81,9 @@ router.get('/', catchAsync(async (req, res) => {
 }));
 
 // GET a single match
-router.get('/:id', catchAsync(async (req, res) => {
+router.get('/:id', 
+  validate(schemas.match.matchIdParam), // Use the match ID param schema
+  catchAsync(async (req, res) => {
   const { id } = req.params;
   
   const match = await Match.findByPk(id, {
@@ -114,6 +95,28 @@ router.get('/:id', catchAsync(async (req, res) => {
   }
 
   return res.json(match);
+}));
+
+// DELETE match
+router.delete('/:id', 
+  requireAuth, 
+  validate(schemas.match.matchIdParam), // Use the match ID param schema
+  catchAsync(async (req, res) => {
+  const matchId = req.params.id;
+  const match = await Match.findByPk(matchId);
+
+  if (!match) {
+    throw new ApiError('Match not found', 404, 'RESOURCE_NOT_FOUND');
+  }
+
+  await match.destroy();
+
+  // Use socketManager for real-time updates
+  if (req.app.locals.socketManager) {
+    req.app.locals.socketManager.broadcastMatchUpdate(match);
+  }
+
+  return res.status(204).send();
 }));
 
 module.exports = router;

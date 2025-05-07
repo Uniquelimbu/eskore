@@ -1,11 +1,12 @@
 const express = require('express');
 const { requireAuth, requireTeamManager } = require('../middleware/auth'); // requireAdmin removed
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
+const { validate, schemas } = require('../validation');
 const router = express.Router();
 const Team = require('../models/Team');
 const UserTeam = require('../models/UserTeam');
 const User = require('../models/User');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const { sendSafeJson } = require('../utils/safeSerializer');
 const logger = require('../utils/logger'); // Assuming you have a logger utility
@@ -61,32 +62,7 @@ router.use((req, res, next) => {
   next();
 });
 
-// Validation middleware (only require name)
-const validateTeam = [
-  body('name').trim().notEmpty().withMessage('Team name is required').isLength({ min: 2, max: 100 }).withMessage('Team name must be between 2 and 100 characters'),
-  body('abbreviation').optional({ checkFalsy: true }).trim().isLength({ min: 2, max: 4 }).withMessage('Abbreviation must be 2-4 chars').toUpperCase(),
-  body('foundedYear').optional({ checkFalsy: true }).isInt({ min: 1800, max: new Date().getFullYear() }).withMessage('Please enter a valid founded year'),
-  body('city').optional({ checkFalsy: true }).trim().isString().isLength({ max: 100 }).withMessage('City must be a string and max 100 chars'),
-  body('nickname').optional({ checkFalsy: true }).trim().isString().isLength({ max: 100 }).withMessage('Nickname must be a string and max 100 chars'),
-  (req, res, next) => {
-    logger.info(`TEAMROUTES.JS (validateTeam middleware): Validating request for ${req.method} ${req.path}`);
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      logger.warn(`TEAMROUTES.JS (validateTeam middleware): Validation failed: ${JSON.stringify(errors.array())}`);
-      const formattedErrors = errors.array().reduce((acc, err) => {
-        const key = err.path || err.param || err.msg.toLowerCase().replace(/\s+/g, '_');
-        acc[key] = err.msg;
-        return acc;
-      }, {});
-      // Do not send response here, throw an ApiError to be handled by global error handler or catchAsync
-      return next(new ApiError('Validation failed. Please check your input.', 400, 'VALIDATION_ERROR', formattedErrors));
-    }
-    logger.info(`TEAMROUTES.JS (validateTeam middleware): Validation successful for ${req.method} ${req.path}.`);
-    next();
-  }
-];
-
-// ... (GET /api/teams route) ...
+// GET /api/teams
 router.get('/', catchAsync(async (req, res) => {
   logger.info('TEAMROUTES.JS (GET /): Fetching all teams.');
   const teams = await Team.findAll();
@@ -97,9 +73,8 @@ router.get('/', catchAsync(async (req, res) => {
   });
 }));
 
-
-// ... (GET /api/teams/:id route) ...
-router.get('/:id', catchAsync(async (req, res) => {
+// GET /api/teams/:id
+router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   logger.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
   const { id } = req.params;
   const team = await Team.findByPk(id, {
@@ -124,7 +99,7 @@ router.get('/:id', catchAsync(async (req, res) => {
  * Fetches all members of a specific team
  * Requires authenticated user
  */
-router.get('/:id/members', requireAuth, catchAsync(async (req, res) => {
+router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   const { id: teamId } = req.params;
   logger.info(`TEAMROUTES.JS (GET /:id/members): Fetching members for team ID ${teamId}`);
 
@@ -182,7 +157,7 @@ router.get('/:id/members', requireAuth, catchAsync(async (req, res) => {
  */
 router.post('/', 
   requireAuth, // Apply requireAuth middleware first
-  validateTeam, // Then apply validation middleware
+  validate(schemas.team.teamSchema), // Then apply validation middleware
   catchAsync(async (req, res, next) => { // Added next for explicit error passing if needed
     logger.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user?.email}, Body: ${JSON.stringify(req.body)}`);
     const { name, abbreviation, foundedYear, city, nickname } = req.body;
@@ -229,8 +204,14 @@ router.post('/',
   })
 );
 
-// ... (PATCH /api/teams/:id route) ...
-router.patch('/:id', requireAuth, validateTeam, catchAsync(async (req, res) => { // Added validateTeam here too if general update uses same fields
+// PATCH /api/teams/:id
+router.patch('/:id', 
+  requireAuth, 
+  validate([
+    ...schemas.team.teamIdParam,
+    ...schemas.team.teamSchema
+  ]), 
+  catchAsync(async (req, res) => { // Added validateTeam here too if general update uses same fields
   logger.info(`TEAMROUTES.JS (PATCH /:id): Updating team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
   const { id } = req.params;
   // Destructure all updatable fields from validateTeam
@@ -292,6 +273,7 @@ const handleMulterError = (err, req, res, next) => {
 
 router.patch('/:id/logo', 
   requireAuth, 
+  validate(schemas.team.teamIdParam),
   upload.single('logo'), // Multer middleware for single file upload
   handleMulterError, // Custom Multer error handler
   catchAsync(async (req, res, next) => {
@@ -340,7 +322,10 @@ router.patch('/:id/logo',
  * Removes a team from the database
  * Requires team ownership
  */
-router.delete('/:id', requireAuth, catchAsync(async (req, res) => { // Changed from requireAdmin
+router.delete('/:id', 
+  requireAuth, 
+  validate(schemas.team.teamIdParam),
+  catchAsync(async (req, res) => { // Changed from requireAdmin
   logger.info(`TEAMROUTES.JS (DELETE /:id): Deleting team ID ${req.params.id} by user ${req.user?.email}`);
   const { id } = req.params;
   
@@ -378,7 +363,13 @@ router.delete('/:id', requireAuth, catchAsync(async (req, res) => { // Changed f
  * Add a user to a team
  * Requires team ownership or manager role
  */
-router.post('/:id/members', requireAuth, catchAsync(async (req, res) => {
+router.post('/:id/members', 
+  requireAuth, 
+  validate([
+    ...schemas.team.teamIdParam,
+    ...schemas.team.teamMemberSchema
+  ]), 
+  catchAsync(async (req, res) => {
   logger.info(`TEAMROUTES.JS (POST /:id/members): Adding member to team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
   const { id } = req.params;
   const { userId, role = 'athlete' } = req.body;
@@ -453,7 +444,13 @@ router.post('/:id/members', requireAuth, catchAsync(async (req, res) => {
  * Remove a user from a team
  * Requires team ownership
  */
-router.delete('/:id/members/:userId', requireAuth, catchAsync(async (req, res) => {
+router.delete('/:id/members/:userId', 
+  requireAuth, 
+  validate([
+    ...schemas.team.teamIdParam,
+    param('userId').isInt().withMessage('User ID must be an integer').toInt()
+  ]),
+  catchAsync(async (req, res) => {
   logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Removing member ${req.params.userId} from team ${req.params.id} by user ${req.user?.email}.`);
   const { id, userId } = req.params;
   
@@ -503,7 +500,12 @@ router.delete('/:id/members/:userId', requireAuth, catchAsync(async (req, res) =
  * GET /api/teams/user/:userId
  * Get all teams a user is a member of
  */
-router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
+router.get('/user/:userId', 
+  requireAuth, 
+  validate([
+    param('userId').isInt().withMessage('User ID must be an integer').toInt()
+  ]),
+  catchAsync(async (req, res) => {
   logger.info(`TEAMROUTES.JS (GET /user/:userId): Fetching teams for user ID ${req.params.userId}, requested by user ${req.user?.email}.`);
   const { userId } = req.params;
   

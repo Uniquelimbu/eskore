@@ -2,23 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const League = require('../models/League');
-const { requireAuth } = require('../middleware/auth'); // Changed from requireAdmin
+const { requireAuth } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
-const { body, validationResult } = require('express-validator');
-
-// Validation middleware
-const validateLeague = [
-  body('name').trim().notEmpty().withMessage('League name is required'),
-  body('startDate').optional().isDate().withMessage('Start date must be a valid date'),
-  body('endDate').optional().isDate().withMessage('End date must be a valid date'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
-    }
-    next();
-  }
-];
+const { validate, schemas } = require('../validation');
 
 /**
  * GET /api/leagues
@@ -33,7 +19,7 @@ router.get('/', catchAsync(async (req, res) => {
  * GET /api/leagues/:id
  * Get a single league by ID
  */
-router.get('/:id', catchAsync(async (req, res) => {
+router.get('/:id', validate(schemas.league.leagueIdParam), catchAsync(async (req, res) => {
   const { id } = req.params;
   const league = await League.findByPk(id);
   
@@ -48,31 +34,62 @@ router.get('/:id', catchAsync(async (req, res) => {
  * POST /api/leagues
  * Create a new league
  */
-router.post('/', requireAuth, validateLeague, catchAsync(async (req, res) => { // Changed from requireAdmin
-  const { name, startDate, endDate } = req.body;
-  const newLeague = await League.create({ name, startDate, endDate });
-  res.status(201).json(newLeague);
-}));
+router.post('/', 
+  requireAuth, 
+  validate(schemas.league.leagueSchema), 
+  catchAsync(async (req, res) => {
+    const { name, startDate, endDate } = req.body;
+    const newLeague = await League.create({ name, startDate, endDate });
+    res.status(201).json(newLeague);
+  })
+);
 
 /**
  * PATCH /api/leagues/:id
  * Update an existing league
  */
-router.patch('/:id', requireAuth, catchAsync(async (req, res) => { // Changed from requireAdmin
-  const { id } = req.params;
-  const { name, startDate, endDate } = req.body;
+router.patch('/:id', 
+  requireAuth, 
+  validate([
+    ...schemas.league.leagueIdParam,
+    ...schemas.league.leagueSchema
+  ]), 
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { name, startDate, endDate } = req.body;
 
-  const league = await League.findByPk(id);
-  if (!league) {
-    throw new ApiError('League not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-  
-  if (name !== undefined) league.name = name;
-  if (startDate !== undefined) league.startDate = startDate;
-  if (endDate !== undefined) league.endDate = endDate;
+    const league = await League.findByPk(id);
+    if (!league) {
+      throw new ApiError('League not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    if (name !== undefined) league.name = name;
+    if (startDate !== undefined) league.startDate = startDate;
+    if (endDate !== undefined) league.endDate = endDate;
 
-  await league.save();
-  res.json(league);
-}));
+    await league.save();
+    res.json(league);
+  })
+);
+
+/**
+ * DELETE /api/leagues/:id
+ * Delete a league
+ */
+router.delete('/:id', 
+  requireAuth, 
+  validate(schemas.league.leagueIdParam), 
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const league = await League.findByPk(id);
+    if (!league) {
+      throw new ApiError('League not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+
+    await league.destroy();
+    res.status(204).end();
+  })
+);
 
 module.exports = router;

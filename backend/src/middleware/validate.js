@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const { ApiError } = require('./errorHandler');
+const logger = require('../utils/logger');
 
 /**
  * Higher-order middleware to validate requests using express-validator
@@ -8,25 +9,34 @@ const { ApiError } = require('./errorHandler');
  */
 const validate = (validations) => {
   return async (req, res, next) => {
-    // Execute all validations
-    await Promise.all(validations.map(validation => validation.run(req)));
+    try {
+      // Execute all validations
+      await Promise.all(validations.map(validation => validation.run(req)));
 
-    const errors = validationResult(req);
-    if (errors.isEmpty()) {
-      return next();
-    }
-
-    // Improved error formatting - group by field but keep all errors
-    const formattedErrors = {};
-    errors.array().forEach(error => {
-      if (!formattedErrors[error.path]) {
-        formattedErrors[error.path] = [error.msg];
-      } else {
-        formattedErrors[error.path].push(error.msg);
+      const errors = validationResult(req);
+      if (errors.isEmpty()) {
+        return next();
       }
-    });
 
-    throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR', formattedErrors);
+      // Improved error formatting - group by field with detailed messages
+      const formattedErrors = {};
+      errors.array().forEach(error => {
+        if (!formattedErrors[error.path]) {
+          formattedErrors[error.path] = [error.msg];
+        } else if (!formattedErrors[error.path].includes(error.msg)) {
+          formattedErrors[error.path].push(error.msg);
+        }
+      });
+
+      logger.debug(`Validation failed for ${req.method} ${req.originalUrl}`, formattedErrors);
+      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR', formattedErrors);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      logger.error(`Unexpected validation error: ${error.message}`, error);
+      throw new ApiError('Validation processing failed', 500, 'VALIDATION_SYSTEM_ERROR');
+    }
   };
 };
 

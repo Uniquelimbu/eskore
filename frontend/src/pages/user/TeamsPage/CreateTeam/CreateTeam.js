@@ -69,8 +69,8 @@ const CreateTeam = () => {
     
     if (!formData.abbreviation.trim()) {
       newErrors.abbreviation = 'Abbreviation is required';
-    } else if (formData.abbreviation.length > 3) {
-      newErrors.abbreviation = 'Abbreviation should be maximum 3 characters';
+    } else if (formData.abbreviation.length < 2 || formData.abbreviation.length > 4) {
+      newErrors.abbreviation = 'Abbreviation should be 2-4 characters';
     }
     
     setErrors(newErrors);
@@ -235,11 +235,11 @@ const CreateTeam = () => {
                   onChange={handleChange}
                   className={errors.abbreviation ? 'input-error' : ''}
                   placeholder="e.g. MUN"
-                  maxLength={3}
+                  maxLength={4}
                   style={{textTransform: 'uppercase'}}
                 />
                 {errors.abbreviation && <div className="error-message">{errors.abbreviation}</div>}
-                <small className="form-hint">3-letter code (e.g. EFC)</small>
+                <small className="form-hint">2-4 letter code (e.g. MUN, EFC)</small>
               </div>
             </div>
           </div>

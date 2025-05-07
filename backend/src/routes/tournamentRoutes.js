@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireOrganizer } = require('../middleware/auth'); // requireAdmin removed
+const { requireAuth, requireOrganizer } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { sendSafeJson } = require('../utils/safeSerializer');
 const Tournament = require('../models/Tournament');
@@ -9,32 +9,9 @@ const Team = require('../models/Team');
 const UserTournament = require('../models/UserTournament');
 const TeamTournament = require('../models/TeamTournament');
 const { Op } = require('sequelize');
-const { body, param, validationResult } = require('express-validator');
+const { validate, schemas } = require('../validation');
+const { body, param } = require('express-validator'); // Add this import
 const db = require('../config/db');
-
-// Validation middleware
-const validateTournamentId = [
-  param('id').isInt().withMessage('Tournament ID must be an integer'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
-    }
-    next();
-  }
-];
-
-const validateParticipantBody = [
-  body('userId').isInt().withMessage('User ID must be an integer'),
-  body('role').isIn(['organizer', 'referee', 'participant']).optional().withMessage('Invalid role'),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR');
-    }
-    next();
-  }
-];
 
 // IMPORTANT: More specific routes first
 /**
@@ -126,7 +103,7 @@ router.get('/', catchAsync(async (req, res) => {
  * GET /api/tournaments/:id
  * Get a single tournament by ID with details
  */
-router.get('/:id', validateTournamentId, catchAsync(async (req, res) => {
+router.get('/:id', validate(schemas.tournament.tournamentIdParam), catchAsync(async (req, res) => {
   const { id } = req.params;
   
   const tournament = await Tournament.findByPk(id, {
@@ -170,7 +147,7 @@ router.get('/:id', validateTournamentId, catchAsync(async (req, res) => {
  * Create a new tournament
  * Requires authenticated user
  */
-router.post('/', requireAuth, catchAsync(async (req, res) => {
+router.post('/', requireAuth, validate(schemas.tournament.createTournament), catchAsync(async (req, res) => {
   const { name, description, startDate, endDate, status = 'draft' } = req.body;
   
   if (!name) {
@@ -204,7 +181,7 @@ router.post('/', requireAuth, catchAsync(async (req, res) => {
  * Update a tournament
  * Requires creator/organizer of the tournament
  */
-router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
+router.put('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, validate(schemas.tournament.createTournament), catchAsync(async (req, res) => {
   const { id } = req.params;
   const { name, description, startDate, endDate, status } = req.body;
   
@@ -251,7 +228,7 @@ router.put('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res
  * Delete a tournament
  * Requires creator of the tournament
  */
-router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, res) => {
+router.delete('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
   const t = await db.transaction(); // Start a transaction
   
@@ -302,7 +279,11 @@ router.delete('/:id', validateTournamentId, requireAuth, catchAsync(async (req, 
  * Add a user participant to a tournament
  * Requires organizer role for the tournament
  */
-router.post('/:id/participants', validateTournamentId, validateParticipantBody, requireAuth, catchAsync(async (req, res) => {
+router.post('/:id/participants', 
+  validate(schemas.tournament.tournamentIdParam), 
+  validate(schemas.tournament.participantBody), 
+  requireAuth, 
+  catchAsync(async (req, res) => {
   const { id } = req.params;
   const { userId, role = 'participant' } = req.body;
   
@@ -377,7 +358,10 @@ router.post('/:id/participants', validateTournamentId, validateParticipantBody, 
  * Add a team to a tournament
  * Requires organizer role for the tournament
  */
-router.post('/:id/teams', requireAuth, catchAsync(async (req, res) => {
+router.post('/:id/teams', requireAuth, validate([
+  ...schemas.tournament.tournamentIdParam,
+  body('teamId').isInt().withMessage('Team ID is required').toInt()
+]), catchAsync(async (req, res) => {
   const { id } = req.params;
   const { teamId } = req.body;
   
@@ -442,7 +426,10 @@ router.post('/:id/teams', requireAuth, catchAsync(async (req, res) => {
  * Remove a user participant from a tournament
  * Requires organizer role for the tournament
  */
-router.delete('/:id/participants/:userId', requireAuth, catchAsync(async (req, res) => {
+router.delete('/:id/participants/:userId', requireAuth, validate([
+  ...schemas.tournament.tournamentIdParam,
+  param('userId').isInt().withMessage('User ID must be an integer').toInt()
+]), catchAsync(async (req, res) => {
   const { id, userId } = req.params;
   
   const tournament = await Tournament.findByPk(id);
@@ -489,7 +476,10 @@ router.delete('/:id/participants/:userId', requireAuth, catchAsync(async (req, r
  * Remove a team from a tournament
  * Requires organizer role for the tournament
  */
-router.delete('/:id/teams/:teamId', requireAuth, catchAsync(async (req, res) => {
+router.delete('/:id/teams/:teamId', requireAuth, validate([
+  ...schemas.tournament.tournamentIdParam,
+  param('teamId').isInt().withMessage('Team ID must be an integer').toInt()
+]), catchAsync(async (req, res) => {
   const { id, teamId } = req.params;
   
   const tournament = await Tournament.findByPk(id);
