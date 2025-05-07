@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../frontend/public/images/logos/eskore-logo.png" alt="eSkore API" width="120">
+  <img src="https://github.com/eSkore-App/eskore-frontend/blob/main/public/images/logos/eskore-logo.png?raw=true" alt="eSkore API" width="120">
   <h1>eSkore Backend API</h1>
   <p>Enterprise-grade REST API for esports performance tracking and analytics</p>
   
