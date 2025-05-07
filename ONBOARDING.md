@@ -1,84 +1,103 @@
-# eSkore: Complete Setup Guide
+<div align="center">
+  <img src="frontend/public/images/logos/eskore-logo.png" alt="eSkore Logo" width="200">
+  <h1>eSkore Developer Onboarding Guide</h1>
+  <p>Complete step-by-step setup for the eSkore platform</p>
+</div>
 
-This guide will walk you through setting up the entire eSkore application on your computer, from scratch. We've designed these instructions to be easy to follow even if you have little technical experience.
+## 📋 Table of Contents
 
-## Table of Contents
+1. [Prerequisites Installation](#-prerequisites-installation)
+   - [Node.js Installation](#nodejs-installation)
+   - [PostgreSQL Installation](#postgresql-installation)
+   - [Git Installation](#git-installation)
+2. [Project Setup](#-project-setup)
+   - [Getting the Code](#getting-the-code)
+   - [Repository Structure](#repository-structure)
+3. [Backend Configuration](#-backend-configuration)
+   - [Environment Setup](#environment-setup)
+   - [Database Initialization](#database-initialization)
+   - [Starting the API Server](#starting-the-api-server)
+4. [Frontend Configuration](#-frontend-configuration)
+   - [Environment Variables](#environment-variables)
+   - [Starting the Application](#starting-the-application)
+5. [Development Workflow](#-development-workflow)
+   - [Code Structure](#code-structure)
+   - [Contribution Process](#contribution-process)
+6. [Troubleshooting](#-troubleshooting)
+   - [Common Issues](#common-issues)
+   - [Getting Help](#getting-help)
 
-1. [Prerequisites Installation](#1-prerequisites-installation)
-   - [Installing Node.js](#installing-nodejs)
-   - [Installing PostgreSQL](#installing-postgresql)
-   - [Installing Git](#installing-git)
-2. [Getting the Code](#2-getting-the-code)
-3. [Setting Up the Backend](#3-setting-up-the-backend)
-   - [Environment Configuration](#environment-configuration)
-   - [Database Setup](#database-setup)
-   - [Installing Dependencies](#installing-backend-dependencies)
-   - [Running Migrations](#running-migrations)
-   - [Starting the Server](#starting-the-backend-server)
-4. [Setting Up the Frontend](#4-setting-up-the-frontend)
-   - [Environment Configuration](#frontend-environment-configuration)
-   - [Installing Dependencies](#installing-frontend-dependencies)
-   - [Starting the Application](#starting-the-frontend-application)
-5. [Verifying Your Setup](#5-verifying-your-setup)
-6. [Common Issues and Solutions](#6-common-issues-and-solutions)
-7. [Next Steps](#7-next-steps)
+## 🛠️ Prerequisites Installation
 
-## 1. Prerequisites Installation
+The following tools are required to run the eSkore platform locally.
 
-Before you can run eSkore, you need to install some software that the application depends on.
+### Node.js Installation
 
-### Installing Node.js
+Node.js is the JavaScript runtime that powers both our frontend and backend.
 
-Node.js is the runtime environment that powers our application.
+<details>
+<summary><strong>Windows Installation</strong></summary>
 
-#### GUI Method:
+#### Option 1: Direct Download
+1. Visit [nodejs.org](https://nodejs.org/)
+2. Download the LTS version (16.x or newer)
+3. Run the installer and follow the prompts
+4. Verify installation by opening Command Prompt and typing:
+   ```bash
+   node -v
+   npm -v
+   ```
 
-1. **Download Node.js**:
-   - Go to [https://nodejs.org/](https://nodejs.org/)
-   - Download the "LTS" (Long Term Support) version (16.x or newer)
-   
-2. **Install Node.js**:
-   - Windows: Run the downloaded installer and follow the prompts
-     - Accept the license agreement
-     - Keep the default installation location
-     - Click "Next" until installation begins
-     - Click "Finish" when complete
-   
-   - macOS: Open the downloaded .pkg file and follow the installation wizard
-   
-   - Linux: Follow the specific instructions for your distribution on the Node.js website
-
-#### Terminal Method:
-
-**Windows (using Chocolatey):**
+#### Option 2: Using Chocolatey
 ```bash
-# First install Chocolatey if you don't have it
-# Open PowerShell as Administrator and run:
+# Install Chocolatey first if not already installed (run in Admin PowerShell)
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Then install Node.js
+# Install Node.js LTS
 choco install nodejs-lts -y
 ```
+</details>
 
-**macOS (using Homebrew):**
+<details>
+<summary><strong>macOS Installation</strong></summary>
+
+#### Option 1: Direct Download
+1. Visit [nodejs.org](https://nodejs.org/)
+2. Download the LTS version (16.x or newer)
+3. Run the installer and follow the prompts
+4. Verify installation by opening Terminal and typing:
+   ```bash
+   node -v
+   npm -v
+   ```
+
+#### Option 2: Using Homebrew
 ```bash
-# First install Homebrew if you don't have it
+# Install Homebrew if not already installed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Then install Node.js
+# Install Node.js
 brew install node
 ```
+</details>
 
-**Linux (Ubuntu/Debian):**
+<details>
+<summary><strong>Linux Installation</strong></summary>
+
+#### Ubuntu/Debian
 ```bash
 # Add NodeSource repository
 curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 
 # Install Node.js
 sudo apt-get install -y nodejs
+
+# Verify installation
+node -v
+npm -v
 ```
 
-**Linux (Fedora/RHEL/CentOS):**
+#### Fedora/RHEL/CentOS
 ```bash
 # Add NodeSource repository
 curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
@@ -86,51 +105,55 @@ curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
 # Install Node.js
 sudo yum install -y nodejs
 ```
+</details>
 
-3. **Verify Installation**:
-   - Open a terminal/command prompt
-   - Type `node -v` and press Enter
-   - You should see the version number (e.g., `v16.15.0`)
-   - Type `npm -v` and press Enter (npm is Node's package manager)
-   - You should see another version number (e.g., `8.5.5`)
+### PostgreSQL Installation
 
-### Installing PostgreSQL
+PostgreSQL is our database system for storing application data.
 
-PostgreSQL is the database system that stores all the application data.
+<details>
+<summary><strong>Windows Installation</strong></summary>
 
-#### GUI Method:
+#### Option 1: Direct Download
+1. Visit [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
+2. Download the installer for PostgreSQL 14 or newer
+3. Run the installer and follow the prompts
+   - Set a password for the postgres user and keep it secure
+   - Keep the default port (5432)
+4. Verify installation by opening Command Prompt and typing:
+   ```bash
+   psql -V
+   ```
 
-1. **Download PostgreSQL**:
-   - Go to [https://www.postgresql.org/download/](https://www.postgresql.org/download/)
-   - Select your operating system
-   - Download the installer for PostgreSQL 12 or newer
-
-2. **Install PostgreSQL**:
-   - Windows/macOS: Run the downloaded installer
-     - Keep the default components selected
-     - Choose a password for the database superuser (postgres) and **write it down**
-     - Keep the default port (5432)
-     - Proceed with the installation
-   
-   - Linux: Follow the specific instructions for your distribution
-
-#### Terminal Method:
-
-**Windows (using Chocolatey):**
+#### Option 2: Using Chocolatey
 ```bash
-# Open PowerShell as Administrator
+# Install PostgreSQL
 choco install postgresql -y
 ```
+</details>
 
-**macOS (using Homebrew):**
+<details>
+<summary><strong>macOS Installation</strong></summary>
+
+#### Using Homebrew
 ```bash
+# Install PostgreSQL
 brew install postgresql@14
-brew services start postgresql@14
-```
 
-**Linux (Ubuntu/Debian):**
+# Start PostgreSQL service
+brew services start postgresql@14
+
+# Verify installation
+psql --version
+```
+</details>
+
+<details>
+<summary><strong>Linux Installation</strong></summary>
+
+#### Ubuntu/Debian
 ```bash
-# Add PostgreSQL repo
+# Add PostgreSQL repository
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
@@ -139,435 +162,314 @@ sudo apt-get update
 
 # Install PostgreSQL
 sudo apt-get -y install postgresql-14
+
+# Verify installation
+psql --version
 ```
 
-**After installation via terminal, set a password:**
+#### After installation, set a password
 ```bash
 # For Linux/macOS
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'your_password';"
 
-# For Windows (use command prompt)
+# For Windows
 psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'your_password';"
 ```
+</details>
 
-3. **Verify Installation**:
-   - The installer typically includes pgAdmin, a graphical tool for managing PostgreSQL
-   - Open pgAdmin (search for it in your applications/start menu)
-   - Connect to the server by entering the password you created
-   - If you can connect, PostgreSQL is installed correctly
-   
-   **Terminal Verification:**
+### Git Installation
+
+Git is required to download and manage the source code.
+
+<details>
+<summary><strong>Windows Installation</strong></summary>
+
+#### Option 1: Direct Download
+1. Visit [git-scm.com/download/win](https://git-scm.com/download/win)
+2. Download and run the installer
+3. Use the default options for most prompts
+4. For "Adjusting your PATH environment," select "Git from the command line and also from 3rd-party software"
+5. For line endings, choose "Checkout as-is, commit as-is"
+6. Verify installation:
    ```bash
-   # For Linux/macOS
-   psql --version
-   sudo -u postgres psql -c "SELECT version();"
-   
-   # For Windows
-   psql --version
-   psql -U postgres -c "SELECT version();"
+   git --version
    ```
 
-### Installing Git
-
-Git is used to download and manage the application code.
-
-#### GUI Method:
-
-1. **Download Git**:
-   - Go to [https://git-scm.com/downloads](https://git-scm.com/downloads)
-   - Select your operating system and download the installer
-
-2. **Install Git**:
-   - Windows: Run the downloaded installer
-     - Accept the license agreement
-     - Keep the default installation options
-     - Choose "Use Git from the Windows Command Prompt" when prompted
-     - Choose "Checkout as-is, commit as-is" for line ending conversions
-     - Complete the installation
-   
-   - macOS: Open the downloaded .dmg file and follow the installation wizard
-   
-   - Linux: Follow the specific instructions for your distribution
-
-#### Terminal Method:
-
-**Windows (using Chocolatey):**
+#### Option 2: Using Chocolatey
 ```bash
 choco install git -y
 ```
+</details>
 
-**macOS (using Homebrew):**
+<details>
+<summary><strong>macOS Installation</strong></summary>
+
+#### Option 1: Direct Download
+1. Visit [git-scm.com/download/mac](https://git-scm.com/download/mac)
+2. Download and install
+
+#### Option 2: Using Homebrew
 ```bash
 brew install git
 ```
 
-**Linux (Ubuntu/Debian):**
+#### Option 3: Xcode Command Line Tools
+```bash
+xcode-select --install
+```
+</details>
+
+<details>
+<summary><strong>Linux Installation</strong></summary>
+
+#### Ubuntu/Debian
 ```bash
 sudo apt-get update
 sudo apt-get install git -y
 ```
 
-**Linux (Fedora/RHEL/CentOS):**
+#### Fedora/RHEL/CentOS
 ```bash
 sudo yum install git -y
 ```
+</details>
 
-3. **Verify Installation**:
-   - Open a terminal/command prompt
-   - Type `git --version` and press Enter
-   - You should see the Git version number (e.g., `git version 2.35.1`)
+## 📦 Project Setup
 
-## 2. Getting the Code
+### Getting the Code
 
-Now that you have all the prerequisites installed, you can download the eSkore code.
+1. **Create a project directory**
+   ```bash
+   # Create a directory for your projects
+   mkdir -p ~/Projects
+   cd ~/Projects
+   ```
 
-1. **Create a Directory for the Project**:
-   - Windows:
-     - Open File Explorer
-     - Navigate to a location where you want to store the project (e.g., Documents)
-     - Right-click and select "New > Folder"
-     - Name the folder "Projects"
+2. **Clone the repository**
+   ```bash
+   # Clone the repository
+   git clone https://github.com/your-org/eskore.git
+   cd eskore
+   ```
+
+3. **Install all dependencies at once**
+   ```bash
+   # Install both frontend and backend dependencies
+   npm run setup
+   ```
+
+### Repository Structure
+
+The eSkore repository is organized as follows:
+
+```
+eskore/
+├── frontend/          # React application
+├── backend/           # Express API server
+├── docs/              # Documentation files
+└── scripts/           # Development utility scripts
+```
+
+## 🖥️ Backend Configuration
+
+### Environment Setup
+
+1. **Create environment configuration**
+   ```bash
+   # Navigate to the backend directory
+   cd backend
    
-   - macOS/Linux:
-     - Open a terminal
-     - Navigate to your home directory by typing `cd ~`
-     - Create a Projects directory by typing `mkdir Projects`
+   # Copy the example environment file
+   cp .env.example .env
+   ```
 
-2. **Open Terminal/Command Prompt in that Directory**:
-   - Windows:
-     - Navigate to the Projects folder in File Explorer
-     - Hold Shift and right-click in the empty space
-     - Select "Open command window here" or "Open PowerShell window here"
+2. **Edit the `.env` file** with your database credentials and other settings:
+   ```properties
+   # Server settings
+   PORT=5000
+   NODE_ENV=development
    
-   - macOS:
-     - Open Terminal
-     - Type `cd ~/Projects` and press Enter
+   # Database settings
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=eskore_db
+   DB_USER=postgres
+   DB_PASS=your_postgres_password
    
-   - Linux:
-     - Open Terminal
-     - Type `cd ~/Projects` and press Enter
-
-3. **Clone the Repository**:
-   - In the terminal/command prompt, type:
-     ```bash
-     git clone https://github.com/eskore-team/eskore.git
-     ```
-   - Press Enter and wait for the download to complete
-   - You should see messages showing the download progress
-   - When it's done, you'll have a new folder called "eskore"
-
-4. **Navigate to the Project Directory**:
-   - Type `cd eskore` and press Enter
-   - You are now in the main project directory
-
-## 3. Setting Up the Backend
-
-The backend is the server part of the application that handles data storage and business logic.
-
-### Environment Configuration
-
-1. **Navigate to the Backend Directory**:
-   - From the main project directory, type:
-     ```bash
-     cd backend
-     ```
-
-2. **Create Environment File**:
-   - We need to create a file with configuration settings
-   - Windows:
-     ```bash
-     copy .env.example .env
-     ```
-   - macOS/Linux:
-     ```bash
-     cp .env.example .env
-     ```
-
-3. **Edit the Environment File**:
-   - Open the .env file in a text editor:
-     - Windows: `notepad .env`
-     - macOS: `open -e .env`
-     - Linux: `nano .env` or `gedit .env`
+   # JWT settings
+   JWT_SECRET=create_a_secure_random_string_here
+   JWT_EXPIRES_IN=24h
    
-   - Update the following settings:
-     ```
-     # Database
-     DB_NAME=eskore_db
-     DB_USER=postgres
-     DB_PASS=your_postgres_password
-     DB_HOST=localhost
-     DB_PORT=5432
-     
-     # Authentication
-     JWT_SECRET=create_a_random_string_here_for_security
-     ```
+   # CORS settings
+   CORS_ORIGIN=http://localhost:3000
+   ```
+
+### Database Initialization
+
+1. **Create the database**
+   ```bash
+   # For Windows (in Command Prompt)
+   createdb -U postgres eskore_db
    
-   - Replace `your_postgres_password` with the password you set during PostgreSQL installation
-   - For `JWT_SECRET`, create a random string (e.g., `eskore_secret_key_123`)
-   - Save the file and close the editor
+   # For macOS/Linux
+   sudo -u postgres createdb eskore_db
+   ```
 
-### Database Setup
-
-#### GUI Method:
-
-1. **Create a New Database**:
-   - Open pgAdmin (the PostgreSQL administration tool)
-   - Connect to your PostgreSQL server (enter your password if prompted)
-   - Right-click on "Databases" in the left sidebar
-   - Select "Create > Database"
-   - Enter "eskore_db" as the name
-   - Click "Save"
-
-#### Terminal Method:
-
-1. **Create a New Database**:
-   - Windows:
-     ```bash
-     psql -U postgres -c "CREATE DATABASE eskore_db;"
-     ```
-   - macOS/Linux:
-     ```bash
-     sudo -u postgres psql -c "CREATE DATABASE eskore_db;"
-     ```
-
-### Installing Backend Dependencies
-
-1. **Install the Required Packages**:
-   - In the terminal/command prompt (still in the backend directory), type:
-     ```bash
-     npm install
-     ```
-   - This will download and install all the necessary libraries
-   - The process might take a few minutes
-   - You'll see a progress indicator and some log messages
-
-### Running Migrations
-
-Migrations set up the database tables that the application needs.
-
-1. **Run the Database Migrations**:
-   - In the terminal (still in the backend directory), type:
-     ```bash
-     npm run db:migrate
-     ```
-   - You should see messages indicating that the tables are being created
-
-2. **Seed the Database with Initial Data**:
-   - Type:
-     ```bash
-     npm run db:seed
-     ```
-   - This adds some example data to get you started
-
-### Starting the Backend Server
-
-1. **Start the Development Server**:
-   - In the terminal (still in the backend directory), type:
-     ```bash
-     npm run dev
-     ```
-   - You should see a message like: "Server running on port 5000 in development mode"
-   - Keep this terminal window open and the server running
-
-## 4. Setting Up the Frontend
-
-The frontend is the user interface part of the application that runs in your web browser.
-
-### Frontend Environment Configuration
-
-1. **Open a New Terminal/Command Prompt**:
-   - Don't close the one running the backend server!
-   - Open a new terminal window
-
-2. **Navigate to the Frontend Directory**:
-   - If you're starting from the main project directory:
-     ```bash
-     cd frontend
-     ```
-   - If you need to navigate from somewhere else:
-     - Windows:
-       ```bash
-       cd C:\Users\YourUsername\Projects\eskore\frontend
-       ```
-       (Replace YourUsername with your actual Windows username)
-     
-     - macOS/Linux:
-       ```bash
-       cd ~/Projects/eskore/frontend
-       ```
-
-3. **Create Environment File**:
-   - Windows:
-     ```bash
-     copy .env.example .env.local
-     ```
-   - macOS/Linux:
-     ```bash
-     cp .env.example .env.local
-     ```
-
-4. **Edit the Environment File**:
-   - Open the .env.local file in a text editor:
-     - Windows: `notepad .env.local`
-     - macOS: `open -e .env.local`
-     - Linux: `nano .env.local`
+2. **Run database migrations**
+   ```bash
+   # Create database tables
+   npm run db:migrate
    
-   - Make sure it contains:
-     ```
-     REACT_APP_API_URL=http://localhost:5000/api
-     REACT_APP_ENABLE_MOCK_API=false
-     ```
-   - Save the file and close the editor
+   # Seed the database with initial data
+   npm run db:seed
+   ```
 
-### Installing Frontend Dependencies
+### Starting the API Server
 
-1. **Install the Required Packages**:
-   - In the terminal (in the frontend directory), type:
-     ```bash
-     npm install
-     ```
-   - This will download and install all the necessary libraries
-   - The process might take a few minutes
+1. **Start the development server**
+   ```bash
+   # Start with hot reloading
+   npm run dev
+   ```
 
-### Starting the Frontend Application
+2. **Verify the server is running** by accessing:
+   - API: http://localhost:5000/api/health
+   - API Documentation: http://localhost:5000/api-docs
 
-1. **Start the Development Server**:
-   - In the terminal (in the frontend directory), type:
-     ```bash
-     npm start
-     ```
-   - This will start the frontend application
-   - A browser window should automatically open with the eSkore application
-   - If it doesn't open automatically, visit [http://localhost:3000](http://localhost:3000) in your browser
+## 🎨 Frontend Configuration
 
-## 5. Verifying Your Setup
+### Environment Variables
 
-Let's make sure everything is working correctly:
+1. **Create environment configuration**
+   ```bash
+   # Navigate to the frontend directory
+   cd frontend
+   
+   # Copy the example environment file
+   cp .env.example .env.local
+   ```
 
-1. **Check the Frontend**:
-   - You should see the eSkore homepage in your browser
-   - If you see any error messages or a blank page, check the terminal for error messages
+2. **Edit the `.env.local` file** with API settings:
+   ```properties
+   REACT_APP_API_URL=http://localhost:5000/api
+   REACT_APP_API_TIMEOUT=30000
+   REACT_APP_ENABLE_ANALYTICS=false
+   ```
 
-2. **Try Logging In**:
-   - Use these test credentials:
-     - Email: `admin@eskore.com`
-     - Password: `admin123`
-   - You should be able to log in and see the dashboard
+### Starting the Application
 
-3. **Explore the Application**:
-   - Navigate through the different sections
-   - Try creating a new user account
-   - Explore the features to make sure everything is working
+1. **Start the development server**
+   ```bash
+   # Start with hot reloading
+   npm start
+   ```
 
-4. **Verify API Connection**:
-   - Open your browser's developer tools (F12 or right-click → Inspect)
-   - Go to the Network tab
-   - Perform an action like logging in
-   - You should see API requests to localhost:5000 completing successfully
+2. **Access the application** at http://localhost:3000
+   - Login with the default test account:
+     - Email: `test@eskore.com`
+     - Password: `Password123`
 
-## 6. Common Issues and Solutions
+## 🔄 Development Workflow
 
-Here are solutions to the most common setup problems:
+### Code Structure
 
-### Backend Issues
+#### Backend Structure
 
-- **"Port already in use" error**:
-  - Another application is using port 5000
-  - Change the PORT in the backend .env file to 5001 or another free port
-  - Restart the backend server
-  - Terminal command to find the process using the port:
-    ```bash
-    # Windows
-    netstat -ano | findstr :5000
-    
-    # macOS/Linux
-    lsof -i :5000
-    ```
+```
+backend/
+├── src/
+│   ├── controllers/   # Request handlers
+│   ├── middleware/    # Express middleware
+│   ├── models/        # Sequelize models
+│   ├── routes/        # API routes
+│   ├── services/      # Business logic
+│   └── utils/         # Helper functions
+├── tests/             # Test files
+└── migrations/        # Database migrations
+```
 
-- **Database connection errors**:
-  - Make sure PostgreSQL is running:
-    ```bash
-    # Windows
-    sc query postgresql
-    
-    # macOS
-    brew services list | grep postgresql
-    
-    # Linux
-    sudo systemctl status postgresql
-    ```
-  - Check that the database name, username, and password in .env are correct
-  - Make sure you created the "eskore_db" database
-  - Try connecting manually to verify credentials:
-    ```bash
-    # Windows
-    psql -U postgres -d eskore_db
-    
-    # macOS/Linux
-    sudo -u postgres psql -d eskore_db
-    ```
+#### Frontend Structure
 
-- **Module not found errors**:
-  - Run `npm install` again in the backend directory
-  - Make sure you're in the correct directory when running commands
-  - Try removing node_modules and reinstalling:
-    ```bash
-    rm -rf node_modules
-    npm install
-    ```
+```
+frontend/
+├── public/            # Static assets
+└── src/
+    ├── components/    # Reusable UI components
+    ├── contexts/      # React contexts
+    ├── hooks/         # Custom React hooks
+    ├── pages/         # Page components
+    ├── services/      # API service layers
+    └── utils/         # Helper functions
+```
 
-### Frontend Issues
+### Contribution Process
 
-- **"Failed to fetch" or API connection errors**:
-  - Make sure the backend server is running
-  - Check that REACT_APP_API_URL in .env.local points to the correct backend URL
-  - If you changed the backend port, update this URL accordingly
-  - Check for CORS issues in the console and ensure your backend allows connections from the frontend origin
+1. **Create a new branch** for your feature or bugfix
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-- **White screen or rendering issues**:
-  - Check browser console for errors (F12 or Ctrl+Shift+J in most browsers)
-  - Make sure you ran `npm install` in the frontend directory
-  - Try clearing your browser cache:
-    ```bash
-    # Windows (Chrome) - Run in Command Prompt
-    chrome --clear-cache
-    
-    # macOS (Chrome)
-    open -a "Google Chrome" --args --clear-cache
-    ```
-  - Or try an incognito window in your browser
+2. **Make your changes** with appropriate tests
 
-- **npm start doesn't open a browser automatically**:
-  - Manually open [http://localhost:3000](http://localhost:3000) in your browser
-  - Check if there are any terminal error messages during startup
+3. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: Add new feature"
+   ```
 
-## 7. Next Steps
+4. **Push your branch**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-Congratulations! You've successfully set up the eSkore application on your computer. Here are some next steps:
+5. **Create a pull request** on GitHub
 
-- **Explore the Test Data**:
-  - Log in with the admin account to see all features
-  - Create your own test users and explore different roles
+See the [CONTRIBUTING.md](backend/CONTRIBUTING.md) file for detailed contribution guidelines.
 
-- **Learn More About the Project**:
-  - Read the README.md files in the main, frontend, and backend directories
-  - Check out the API documentation at [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
+## 🔧 Troubleshooting
 
-- **Make Changes and Experiment**:
-  - Try making small changes to see how the application works
-  - The frontend code is in the `frontend/src` directory
-  - The backend code is in the `backend/src` directory
+### Common Issues
 
-- **Join the Community**:
-  - Check the GitHub repository for updates
-  - Report any issues you find
-  - Contribute to the project if you're interested
+<details>
+<summary><strong>Database Connection Issues</strong></summary>
 
-- **Running in Production**:
-  - For production deployment, refer to the deployment sections in both backend and frontend README files
-  - Consider using Docker for containerization
-  - Set up proper HTTPS encryption for security
+#### Error: "ECONNREFUSED connecting to PostgreSQL"
+- Verify PostgreSQL is running
+- Check database credentials in .env
+- Ensure the database exists: `createdb eskore_db`
+</details>
+
+<details>
+<summary><strong>Node.js or npm Errors</strong></summary>
+
+#### Error: "Module not found"
+- Run `npm install` to install missing dependencies
+- Check Node.js version compatibility
+
+#### Error: "Command not found: npm"
+- Reinstall Node.js and ensure npm is properly installed
+</details>
+
+<details>
+<summary><strong>Frontend Connection Issues</strong></summary>
+
+#### Error: "Failed to fetch" or CORS errors
+- Ensure backend API is running
+- Check CORS settings in backend
+- Verify API URL in frontend .env file
+</details>
+
+### Getting Help
+
+If you encounter issues not covered in this guide:
+
+1. Check the [Troubleshooting Guide](backend/TROUBLESHOOTING.md)
+2. Join our [Discord community](https://discord.gg/eskore)
+3. Search or open an issue on [GitHub](https://github.com/your-org/eskore/issues)
 
 ---
 
-If you encounter any issues not covered in this guide, check the [Troubleshooting Guide](backend/TROUBLESHOOTING.md) or reach out to the @UniqueLimbu for help.
+<div align="center">
+  <p>Welcome to the eSkore team! We're excited to have you on board.</p>
+  <p>© 2025 eSkore Team. All rights reserved.</p>
+</div>

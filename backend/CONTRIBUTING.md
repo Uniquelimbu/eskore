@@ -1,136 +1,251 @@
-# Contributing to eSkore Backend
+<div align="center">
+  <img src="../frontend/public/images/logos/eskore-logo.png" alt="eSkore Logo" width="120">
+  <h1>Contributing to eSkore</h1>
+  <p>Guidelines for contributing to the eSkore platform</p>
+</div>
 
-Thank you for your interest in contributing to the eSkore API! This document provides guidelines and instructions for contributing to the project.
+## 📋 Overview
 
-## Table of Contents
+Thank you for your interest in contributing to eSkore! We're excited to welcome you to our community. This document provides guidelines and workflows to make the contribution process smooth and effective for everyone involved.
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Pull Request Process](#pull-request-process)
-- [Coding Standards](#coding-standards)
-- [Testing](#testing)
-- [Documentation](#documentation)
+## 📑 Table of Contents
 
-## Code of Conduct
+- [Code of Conduct](#-code-of-conduct)
+- [Getting Started](#-getting-started)
+- [Development Environment](#-development-environment)
+- [Development Workflow](#-development-workflow)
+- [Pull Request Process](#-pull-request-process)
+- [Coding Standards](#-coding-standards)
+- [Testing Requirements](#-testing-requirements)
+- [Documentation Guidelines](#-documentation-guidelines)
+- [Community](#-community)
 
-This project adheres to the Contributor Covenant code of conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+## 🤝 Code of Conduct
 
-## Getting Started
+Our project adheres to a Code of Conduct that establishes expected behavior in our community. We expect all contributors to uphold this code. Please read [the full text](../CODE_OF_CONDUCT.md) to understand what actions will and will not be tolerated.
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally
+## 🚀 Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have:
+- Node.js (v16.0.0 or later)
+- PostgreSQL (v14.0 or later)
+- Git
+
+### Fork and Clone
+
+1. **Fork the repository** by clicking the Fork button on GitHub
+2. **Clone your fork** to your local machine
    ```bash
    git clone https://github.com/YOUR-USERNAME/eskore.git
    cd eskore/backend
    ```
-3. **Add the upstream repository**
+3. **Add the upstream repository** to keep your fork synchronized
    ```bash
    git remote add upstream https://github.com/eskore-team/eskore.git
    ```
-4. **Install dependencies**
+4. **Sync your fork** regularly
+   ```bash
+   git fetch upstream
+   git merge upstream/main main
+   ```
+
+## 💻 Development Environment
+
+### Setting Up
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
-5. **Create a branch** for your feature or bugfix
+
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your local configuration
+   ```
+
+3. **Set up the database**
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+4. **Verify your setup**
+   ```bash
+   npm run verify
+   # This ensures your environment is properly configured
+   ```
+
+### Running the Development Server
+
+```bash
+# Start the server with hot reloading
+npm run dev
+
+# Alternative: Start with additional debugging
+DEBUG=eskore:* npm run dev
+```
+
+## 🔄 Development Workflow
+
+1. **Create a new branch** for your feature or bugfix
    ```bash
    git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/issue-you-are-fixing
    ```
 
-## Development Workflow
-
-1. **Set up your development environment**:
-   - Copy `.env.example` to `.env` and configure it for your local setup
-   - Set up the database: `npm run db:migrate && npm run db:seed`
-   - Start the development server: `npm run dev`
-   
-   If you encounter issues with the main server, you can use the bootstrap utility:
-   ```bash
-   node bootstrap.js
-   ```
-   This runs a minimal server to verify your environment setup and connectivity.
-
-2. **Make your changes**:
-   - Write code that follows the project's coding standards
+2. **Make your changes**
+   - Write code that follows our [coding standards](#-coding-standards)
    - Add or update tests for your changes
-   - Add or update documentation as needed
+   - Ensure all tests pass locally
 
-3. **Test your changes**:
-   - Run tests: `npm test`
-   - Run linting: `npm run lint`
-   - Ensure your code works with the frontend (if applicable)
-
-4. **Commit your changes**:
-   - Use clear and meaningful commit messages
-   - Reference issue numbers in commit messages when applicable
-   - Example: `git commit -m "Fix authentication timeout issue #42"`
-
-5. **Stay updated with upstream**:
+3. **Commit your changes** with clear, descriptive commit messages
    ```bash
-   git fetch upstream
-   git rebase upstream/main
+   git add .
+   git commit -m "feat(component): Add new feature"
    ```
 
-## Pull Request Process
-
-1. **Push to your fork**:
+4. **Push to your fork**
    ```bash
    git push origin feature/your-feature-name
    ```
 
-2. **Open a pull request** from your branch to the main repository
+5. **Create a pull request** from your branch to the main repository's `main` branch
 
-3. **Describe your changes** in the PR:
-   - Explain what changes you've made and why
-   - Reference any related issues
-   - Include screenshots or logs if relevant
+## 📥 Pull Request Process
 
-4. **Address review feedback** if requested by maintainers
+1. **Use our pull request template** to provide all necessary information
+2. **Link related issues** using GitHub keywords (e.g., "Closes #123")
+3. **Ensure CI passes** - all tests, linting, and build processes must succeed
+4. **Request a review** from one or more maintainers
+5. **Address review feedback** promptly and thoroughly
+6. **Wait for approval** before merging (maintainers will merge approved PRs)
 
-5. **Wait for approval** before merging
+### Pull Request Checklist
 
-## Coding Standards
+- [ ] Code follows established patterns and style guidelines
+- [ ] Unit tests added/updated for new or modified functionality
+- [ ] Documentation updated to reflect changes
+- [ ] CI pipeline passes all checks
+- [ ] No merge conflicts with the base branch
+- [ ] Commit messages follow [conventional format](#commit-message-format)
 
-The project uses ESLint to enforce coding standards. Please ensure your code:
+## 📝 Coding Standards
 
-- Passes the linting checks: `npm run lint`
-- Follows the established patterns in the codebase
-- Uses meaningful variable and function names
-- Includes comments for complex logic
+We use ESLint and Prettier to enforce coding standards. Before submitting a PR, ensure:
+
+```bash
+# Run linting
+npm run lint
+
+# Run linting with automatic fixing
+npm run lint:fix
+```
+
+### JavaScript Style Guidelines
+
+- Use ES6+ features appropriately
+- Prefer `const` over `let` where variables aren't reassigned
+- Use async/await for asynchronous operations
+- Use descriptive variable and function names
+- Keep functions small and focused on a single responsibility
+- Add JSDoc comments for functions and complex code blocks
 
 ### Commit Message Format
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
 ```
 type(scope): Brief description
 
 Longer description if needed
+[optional body]
+
+[optional footer(s)]
 ```
 
 Types include:
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
-- `style`: Formatting, missing semicolons, etc.
+- `style`: Formatting, missing semicolons, etc. (no code change)
 - `refactor`: Code restructuring
-- `test`: Adding or refactoring tests
-- `chore`: Updating build tasks, etc.
+- `test`: Adding or updating tests
+- `chore`: Updating build tasks, package manager configs, etc.
+- `perf`: Performance improvements
 
-## Testing
+Example:
+```
+feat(auth): Add password reset functionality
 
-- All new features should include tests
-- Changes to existing features should update relevant tests
-- Run the test suite before submitting a PR: `npm test`
-- We use Jest for unit testing and Supertest for API testing
-- Aim for at least 80% test coverage on new code
-- Run specific test files with: `npm test -- path/to/test.js`
+Implement password reset flow including:
+- Reset request with email verification
+- Token generation and validation
+- Password update with new validation rules
 
-## Documentation
+Closes #45
+```
 
-- Update API documentation for any endpoint changes
-- If adding new endpoints, include them in the API docs
-- Document complex logic or algorithms
-- Update the README.md if necessary
+## 🧪 Testing Requirements
+
+We strive for high test coverage and quality. All contributions should:
+
+- **Maintain or improve** the current test coverage
+- **Include unit tests** for new functionality
+- **Update existing tests** when modifying functionality
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run specific tests
+npm test -- tests/unit/auth.test.js
+```
+
+### Testing Best Practices
+
+- **Unit tests**: Test individual functions and components
+- **Integration tests**: Test API endpoints and database operations
+- **Mock external services**: Use Jest mocks for external APIs
+- **Test edge cases**: Include tests for error conditions and edge cases
+- **Aim for >80% coverage**: New code should achieve at least 80% test coverage
+
+## 📚 Documentation Guidelines
+
+Clear documentation is crucial for our project. Please follow these guidelines:
+
+- **Update API docs** for any endpoint changes
+- **Add JSDoc comments** for public functions and classes
+- **Keep README files updated** with new features or changes
+- **Include examples** for API endpoints and complex functionality
+
+### API Documentation Standards
+
+- Include request/response examples
+- Document all parameters and their types
+- Specify authentication requirements
+- Note any rate limiting or special considerations
+
+## 👥 Community
+
+- **Join our Discord server** for real-time discussion
+- **Participate in discussions** on GitHub issues
+- **Help review pull requests** from other contributors
+- **Answer questions** from new contributors and users
+
+## ✨ Recognition
+
+All contributors will be recognized in our [CONTRIBUTORS.md](../CONTRIBUTORS.md) file. We appreciate your efforts to improve eSkore!
 
 ---
 
-Thank you for contributing to eSkore!
+<div align="center">
+  <p>Thank you for contributing to eSkore!</p>
+  <p>© 2025 eSkore Team. All rights reserved.</p>
+</div>

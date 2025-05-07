@@ -1,106 +1,144 @@
-# eSkore Backend Scripts
+<div align="center">
+  <h1>eSkore Backend Utility Scripts</h1>
+  <p>Comprehensive collection of development, testing, and database management tools</p>
+</div>
 
-This directory contains utility scripts for development, testing, and database management.
-Scripts are organized by function to make them easier to find and use.
+## 📋 Overview
 
-## Directory Structure
+This directory contains specialized utility scripts designed to streamline development workflows, database management, testing procedures, and debugging operations for the eSkore backend. These tools are organized by function to ensure easy discovery and efficient usage throughout the development lifecycle.
+
+## 🏗️ Directory Structure
 
 ```
 scripts/
-├── db/           # Database management scripts (reset, migrate, seed)
-├── test/         # Testing utilities (run tests, specific test scripts)
-├── debug/        # Debugging tools (pre-start checks, route listing)
-└── utils/        # General utilities (user management, migration helpers)
+├── db/           # Database management (migrations, seeding, reset operations)
+├── test/         # Testing utilities (automated tests, verification tools)
+├── debug/        # Debugging and diagnostics (route analysis, system checks)
+└── utils/        # General utilities (user management, maintenance tools)
 ```
 
-## Usage Guide
+## 💾 Database Management Scripts
 
-### Database Management
+| Script | Description | Usage |
+|--------|-------------|-------|
+| **resetDbSafe.js** | Reset database tables without dropping the database | `node scripts/db/resetDbSafe.js` |
+| **createMigration.js** | Generate properly timestamped migration file | `node scripts/db/createMigration.js "add-new-feature"` |
+| **createSampleData.js** | Populate database with essential test data | `node scripts/db/createSampleData.js` |
+| **createTestUser.js** | Create/update test user account | `node scripts/db/createTestUser.js` |
 
-- `db/resetDbSafe.js` - Reset database without dropping it (primary reset tool)
-  ```bash
-  node scripts/db/resetDbSafe.js
-  ```
+### Example: Database Reset Operation
 
-- `db/createMigration.js` - Create a new migration file with proper timestamp
-  ```bash
-  node scripts/db/createMigration.js "your-migration-name"
-  ```
+```bash
+# Reset database tables while preserving the database itself
+node scripts/db/resetDbSafe.js
 
-- `db/createSampleData.js` - Populate the database with sample data (admin, test user)
-  ```bash
-  node scripts/db/createSampleData.js
-  ```
+# Optional: With environment specification
+NODE_ENV=development node scripts/db/resetDbSafe.js
+```
 
-- `db/createTestUser.js` - Create or update just the test user account
-  ```bash
-  node scripts/db/createTestUser.js
-  ```
+## 🧪 Testing Scripts
 
-### Testing
+| Script | Description | Usage |
+|--------|-------------|-------|
+| **runTests.js** | Orchestrate multiple test suites in sequence | `node scripts/test/runTests.js [suite]` |
+| **authTest.js** | Validate authentication flow end-to-end | `node scripts/test/authTest.js` |
+| **serializationTest.js** | Verify JSON serialization security | `node scripts/test/serializationTest.js` |
 
-- `test/runTests.js` - Run multiple tests in sequence
-  ```bash
-  # Run all tests defined in the script
-  node scripts/test/runTests.js all
+### Example: Running Specific Test Suites
 
-  # Run just authentication tests
-  node scripts/test/runTests.js auth
+```bash
+# Run all test suites
+node scripts/test/runTests.js all
 
-  # Run just serialization tests
-  node scripts/test/runTests.js serialization
-  ```
+# Run only authentication tests
+node scripts/test/runTests.js auth
 
-- `test/authTest.js` - Test authentication flow and user login
-  ```bash
-  node scripts/test/authTest.js
-  ```
+# Run only serialization tests
+node scripts/test/runTests.js serialization
+```
 
-- `test/serializationTest.js` - Test JSON serialization safety
-  ```bash
-  node scripts/test/serializationTest.js
-  ```
+## 🔍 Debugging Tools
 
-### Debugging
+| Script | Description | Usage |
+|--------|-------------|-------|
+| **preStartCheck.js** | Verify environment before server start | `node scripts/debug/preStartCheck.js` |
+| **debugRoutes.js** | Display all registered API routes | `node scripts/debug/debugRoutes.js` |
 
-- `debug/preStartCheck.js` - Run checks before starting the server (DB connection, JWT secret)
-  ```bash
-  node scripts/debug/preStartCheck.js
-  ```
+### Example: Pre-Launch System Check
 
-- `debug/debugRoutes.js` - Display all registered API routes
-  ```bash
-  node scripts/debug/debugRoutes.js
-  ```
+```bash
+# Verify database connection, environment variables, and JWT configuration
+node scripts/debug/preStartCheck.js
 
-### User Management
+# Output route table for API documentation or debugging
+node scripts/debug/debugRoutes.js
+```
 
-- `utils/userManagement.js` - Create or update users
-  ```bash
-  # Create/update the standard test user
-  node scripts/utils/userManagement.js create-test
+## 🛠️ Utility Tools
 
-  # Show help for user management script
-  node scripts/utils/userManagement.js help
-  ```
+| Script | Description | Usage |
+|--------|-------------|-------|
+| **userManagement.js** | User account creation and management | `node scripts/utils/userManagement.js [command]` |
+| **cleanupLogs.js** | Remove log files from logs directory | `node scripts/utils/cleanupLogs.js` |
+| **convertToUnifiedUserModel.js** | Legacy data migration utility | `node scripts/utils/convertToUnifiedUserModel.js` |
+| **migrateAthleteData.js** | Athlete-specific data migration | `node scripts/utils/migrateAthleteData.js` |
 
-### Migration Utilities (Use with caution after initial migration)
+### Example: User Management Operations
 
-- `utils/convertToUnifiedUserModel.js` - (If kept) Script to migrate legacy models to User model.
-- `utils/migrateAthleteData.js` - (If kept) Script specifically for migrating Athlete data.
+```bash
+# Create or update standard test user
+node scripts/utils/userManagement.js create-test
 
-### Maintenance
+# View available commands
+node scripts/utils/userManagement.js help
+```
 
-- `utils/cleanupLogs.js` - Delete all log files from the logs directory
-  ```bash
-  # Remove all log files (useful before zipping project or for privacy)
-  node scripts/utils/cleanupLogs.js
-  ```
+## 🔄 CI/CD Scripts
 
-## Contributing
+| Script | Description | Usage |
+|--------|-------------|-------|
+| **verifyBuild.js** | Validate build integrity for deployment | `node scripts/ci/verifyBuild.js` |
+| **prepareRelease.js** | Prepare codebase for release | `node scripts/ci/prepareRelease.js [version]` |
 
-When adding a new script:
-1. Place it in the appropriate subdirectory (`db`, `test`, `debug`, `utils`).
-2. Document its purpose and usage in this README.
-3. Include proper logging and error handling.
-4. Add a comment block at the top explaining its purpose and usage.
+## 📋 Contributing New Scripts
+
+When creating new utility scripts:
+
+1. **Placement**: Add script to the appropriate subdirectory based on its function
+2. **Documentation**: Update this README with script name, purpose, and usage examples
+3. **Structure**: Follow established patterns for argument handling and output formatting
+4. **Error Handling**: Implement robust error handling with descriptive messages
+5. **Header Comment**: Include a detailed header comment block explaining:
+   ```javascript
+   /**
+    * Script Name: scriptName.js
+    * 
+    * Purpose: What the script does and when to use it
+    * 
+    * Usage:
+    *   node scripts/category/scriptName.js [arguments]
+    * 
+    * Options:
+    *   --option1      Description of option 1
+    *   --option2=val  Description of option 2 with value
+    * 
+    * Examples:
+    *   node scripts/category/scriptName.js --example=value
+    * 
+    * @author Your Name
+    */
+   ```
+
+## ⚙️ Best Practices
+
+- **Environment Variables**: Scripts should respect the `NODE_ENV` environment variable
+- **Exit Codes**: Use appropriate exit codes (0 for success, non-zero for failure)
+- **Logging**: Implement consistent logging with clear success/error indicators
+- **Confirmation**: Request confirmation for destructive operations
+- **Documentation**: Keep this README updated when adding or modifying scripts
+
+---
+
+<div align="center">
+  <p>© 2025 eSkore Team. All rights reserved.</p>
+</div>

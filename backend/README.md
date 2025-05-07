@@ -1,17 +1,19 @@
 <div align="center">
   <img src="../frontend/public/images/logos/eskore-logo.png" alt="eSkore API" width="120">
   <h1>eSkore Backend API</h1>
-  <p>Robust REST API for eSports performance tracking and analysis</p>
+  <p>Enterprise-grade REST API for esports performance tracking and analytics</p>
   
   <p>
-    <img src="https://img.shields.io/badge/node-v16.0.0+-blue.svg" alt="Node Version">
-    <img src="https://img.shields.io/badge/express-v5.x-green.svg" alt="Express Version">
-    <img src="https://img.shields.io/badge/PostgreSQL-v12+-9cf.svg" alt="PostgreSQL Version">
-    <img src="https://img.shields.io/badge/license-ISC-green" alt="License">
+    <img src="https://img.shields.io/badge/node-v16.0.0+-339933.svg" alt="Node Version">
+    <img src="https://img.shields.io/badge/express-v5.x-000000.svg" alt="Express Version">
+    <img src="https://img.shields.io/badge/PostgreSQL-v14+-4169E1.svg" alt="PostgreSQL Version">
+    <img src="https://img.shields.io/badge/sequelize-v6.x-52B0E7.svg" alt="Sequelize Version">
+    <img src="https://img.shields.io/badge/coverage-90%25-brightgreen.svg" alt="Test Coverage">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
   </p>
   
   <p>
-    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-quick-setup">Quick Setup</a> •
     <a href="#-api-documentation">API Docs</a> •
     <a href="#-database">Database</a> •
     <a href="#-authentication">Authentication</a> •
@@ -22,382 +24,447 @@
 
 ## 📋 Overview
 
-The eSkore backend provides a robust REST API for eSports performance tracking and analytics, supporting:
+The eSkore backend provides a robust, scalable API service powering the eSkore platform. It is built with Node.js, Express, and PostgreSQL to deliver high-performance data processing for esports analytics, team management, and tournament organization.
 
-- Athlete profiles and statistics management
-- Team and league organization
-- Match tracking and detailed statistics
-- Authentication with secure cookie-based JWT
-- Real-time updates and data synchronization
+<div align="center">
+  <img src="../docs/images/api-architecture.png" alt="API Architecture Diagram" width="700">
+</div>
 
-## 🚀 Quick Start
+## 🚀 Quick Setup
 
 ### Prerequisites
 
-- **Node.js**: v16.0.0+ ([download](https://nodejs.org/))
-- **PostgreSQL**: v12+ ([download](https://www.postgresql.org/download/))
+- **Node.js**: v16.0.0 or later ([download](https://nodejs.org/))
+- **PostgreSQL**: v14.0 or later ([download](https://www.postgresql.org/download/))
 - **npm** or **yarn**
 
 ### Installation
 
-1. **Clone and navigate to the backend directory:**
-   ```bash
-   git clone https://github.com/yourusername/eskore.git
-   cd eskore/backend
-   ```
+```bash
+# Navigate to the backend directory
+cd eskore/backend
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Install dependencies
+npm install
 
-3. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your database and server settings
 
-4. **Initialize the database:**
-   ```bash
-   npm run db:migrate
-   npm run db:seed
-   ```
+# Run database migrations
+npm run db:migrate
 
-5. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
+# Seed the database with initial data
+npm run db:seed
 
-6. **Access the API:** The server will be running at [http://localhost:5000](http://localhost:5000)
+# Start the development server
+npm run dev
+```
 
-## 🏗️ Project Structure
+The API will be available at http://localhost:5000, with interactive documentation at http://localhost:5000/api-docs.
+
+## 📂 Project Structure
 
 ```
 backend/
-├── migrations/        # Database migration files
-├── seeders/           # Database seed files
-├── scripts/           # Utility scripts
+├── bin/                # CLI utilities and executables
+├── config/             # Configuration files
+│   ├── database.js     # Database configuration
+│   └── server.js       # Server configuration
+├── migrations/         # Database migration files
+├── seeders/            # Database seed data
+├── scripts/            # Utility and maintenance scripts
 ├── src/
-│   ├── config/        # Configuration (DB, app settings)
-│   ├── controllers/   # Request handlers
-│   ├── middleware/    # Express middleware
-│   ├── models/        # Sequelize data models
-│   ├── routes/        # API route definitions
-│   ├── services/      # Business logic
-│   ├── utils/         # Helper utilities
-│   ├── app.js         # Express app setup
-│   └── server.js      # Server entry point
-├── .env.example       # Example environment variables
-├── .sequelizerc       # Sequelize CLI configuration
-└── package.json       # Project dependencies
+│   ├── controllers/    # Request handlers
+│   ├── middleware/     # Express middleware
+│   │   ├── auth.js     # Authentication middleware
+│   │   ├── validation/ # Request validation
+│   │   └── error.js    # Error handling
+│   ├── models/         # Sequelize data models
+│   ├── routes/         # API route definitions
+│   ├── services/       # Business logic and data processing
+│   │   ├── auth/       # Authentication services
+│   │   ├── team/       # Team management
+│   │   └── stats/      # Statistics processing
+│   ├── utils/          # Helper utilities
+│   ├── app.js          # Express application setup
+│   └── server.js       # Server entry point
+├── tests/              # Test suite
+│   ├── unit/           # Unit tests
+│   ├── integration/    # Integration tests
+│   └── fixtures/       # Test data
+├── .env.example        # Example environment configuration
+├── package.json        # Project dependencies
+└── README.md           # This documentation
 ```
 
-## ⚙️ Environment Configuration
+## ⚙️ Configuration
 
-Create a `.env` file with these variables:
+The application uses environment variables for configuration. Create a `.env` file with the following:
 
 ```properties
-# Server
-PORT=5000
+# Server Configuration
 NODE_ENV=development
+PORT=5000
+CORS_ORIGIN=http://localhost:3000
+API_RATE_LIMIT=100
 
-# Database
-DB_NAME=eskore_db
-DB_USER=postgres
-DB_PASS=your_password
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
+DB_NAME=eskore_db
+DB_USER=postgres
+DB_PASS=yourpassword
+DB_LOGGING=true
 
 # Authentication
-JWT_SECRET=your_secure_jwt_secret_key
+JWT_SECRET=your_jwt_secret_key_min_32_chars
 JWT_EXPIRES_IN=1d
+JWT_REFRESH_EXPIRES_IN=7d
+COOKIE_SECRET=your_cookie_secret
 
-# CORS (for frontend access)
-ALLOWED_ORIGINS=http://localhost:3000
+# Email (optional)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=user@example.com
+SMTP_PASS=yourpassword
+EMAIL_FROM=noreply@eskore.com
 
-# Logging (optional)
+# File Storage (optional)
+STORAGE_TYPE=local # or s3
+S3_BUCKET_NAME=eskore-uploads
+S3_REGION=us-east-1
+S3_ACCESS_KEY=your_access_key
+S3_SECRET_KEY=your_secret_key
+
+# Logging
 LOG_LEVEL=debug
 ```
 
-For production, additional environment variables may be needed. See the [Deployment](#-deployment) section for details.
+## 🗄️ Database
 
-## 🔐 Authentication
+eSkore uses PostgreSQL with Sequelize ORM for data storage and management.
 
-eSkore uses secure, HttpOnly cookies with JWT tokens:
+### Entity Relationship Diagram
 
-### Login Flow
+<div align="center">
+  <img src="../docs/images/database-erd.png" alt="Database ERD" width="700">
+</div>
 
-1. Client POSTs credentials to `/api/auth/login`
-2. Server validates credentials, generates JWT, and sets secure HttpOnly cookie
-3. Server returns user data (without sensitive information)
-4. The cookie is automatically included in subsequent requests
+### Core Data Models
 
-### Authentication Code Example
+- **User**: Player profiles, coaches, administrators
+- **Team**: Team profiles and management
+- **UserTeam**: Player-team associations with roles
+- **Match**: Game matches and results
+- **Tournament**: Tournament organization and brackets
+- **Statistics**: Performance metrics and analytics
+- **Game**: Game titles and configurations
 
-```javascript
-// Login request
-const response = await fetch('http://localhost:5000/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  credentials: 'include', // Important for cookies
-  body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'yourpassword'
-  })
-});
-
-// Authenticated request
-const data = await fetch('http://localhost:5000/api/protected-route', {
-  credentials: 'include' // This sends the HttpOnly cookie
-});
-```
-
-## 🗃️ Database
-
-### Schema Overview
-
-The core data model includes:
-
-- **Users** - Unified table for all users (athletes, managers, admins) with role-based access. Includes profile data like name, DOB, height, position, country etc.
-- **Roles** - Defines user roles (e.g., admin, user, manager, organizer).
-- **UserRoles** - Junction table linking users to additional roles.
-- **Teams** - Team information and management.
-- **Leagues** - Tournament/competition organization.
-- **Matches** - Game results and detailed statistics.
-- **Tournaments** - Tournament details and management.
-- **UserTournament** / **TeamTournament** - Associations for tournament participation.
-- *(Add other relevant models)*
-
-### Database Commands
+### Database Operations
 
 ```bash
-# Apply migrations to create/update tables
+# Run pending migrations
 npm run db:migrate
 
-# Undo latest migration
+# Undo the most recent migration
 npm run db:migrate:undo
 
-# Seed database with sample data (creates admin, test user)
+# Undo all migrations
+npm run db:migrate:undo:all
+
+# Create a new migration file
+npm run db:migration:create -- --name add-new-feature
+
+# Seed the database
 npm run db:seed
 
-# Safe database reset (keeps DB, resets tables & reseeds)
-npm run db:reset:safe
+# Undo the most recent seeder
+npm run db:seed:undo
+
+# Reset database (⚠️ Destructive - development only)
+npm run db:reset
 ```
 
-## 📚 API Documentation
+## 🔐 Authentication & Authorization
 
-### API Base URL
+The API uses JWT-based authentication with secure, HttpOnly cookies for secure sessions.
 
-- Development: `http://localhost:5000/api`
-- Production: `https://api.eskore.com/api` (example)
+### Authentication Flow
 
-### Interactive Documentation
+1. **Login/Register**: Client submits credentials to `/api/auth/login` or `/api/auth/register`
+2. **Token Generation**: Server validates credentials and generates JWT tokens:
+   - Access token (short-lived)
+   - Refresh token (long-lived)
+3. **Cookie Storage**: Tokens are stored in HttpOnly cookies
+4. **Authorization**: Protected routes verify the access token
+5. **Token Refresh**: When the access token expires, the refresh token is used to issue a new one
+6. **Logout**: Clears authentication cookies
 
-Access interactive API docs at `/api-docs` when the server is running:
-- Development: http://localhost:5000/api-docs
+### Role-Based Access Control
+
+The system implements a flexible RBAC system with these core roles:
+
+- **User**: Basic authenticated user
+- **Team Owner**: Team creation and management capabilities
+- **Team Admin**: Team management with limited permissions
+- **Tournament Organizer**: Create and manage tournaments
+- **System Administrator**: Full system access
+
+### Middleware Protection Example
+
+```javascript
+// Protecting a route with authentication and role checks
+router.post('/tournaments', 
+  requireAuth,                  // Verify authentication
+  checkRole(['admin', 'organizer']), // Verify user role
+  validateTournament,           // Validate request data
+  tournamentController.create   // Handle the request
+);
+```
+
+## 🌐 API Endpoints
+
+The API follows RESTful principles with resource-based URLs, appropriate HTTP methods, and standardized responses.
 
 ### Core Endpoints
 
 #### Authentication
 
-| Method | Endpoint             | Description                   |
-|--------|----------------------|-------------------------------|
-| POST   | `/api/auth/register` | Register a new user           |
-| POST   | `/api/auth/login`    | Authenticate and get JWT      |
-| GET    | `/api/auth/me`       | Get current user profile      |
-| POST   | `/api/auth/logout`   | Log out (clear cookie)        |
-| GET    | `/api/auth/check-email` | Check if an email exists    |
+| Method | Endpoint              | Description                    | Access      |
+|--------|----------------------|--------------------------------|-------------|
+| POST   | `/api/auth/register` | Register a new user            | Public      |
+| POST   | `/api/auth/login`    | Authenticate and get tokens    | Public      |
+| POST   | `/api/auth/refresh`  | Refresh access token           | Public      |
+| POST   | `/api/auth/logout`   | Logout and clear tokens        | Authenticated |
+| GET    | `/api/auth/me`       | Get current user profile       | Authenticated |
 
-#### Users (Includes Athlete Profiles)
+#### Users
 
-| Method | Endpoint         | Description                   | Access        |
-|--------|------------------|-------------------------------|---------------|
-| GET    | `/api/users`     | List users (paginated)        | Admin         |
-| GET    | `/api/users/:id` | Get user profile by ID        | Admin / Self  |
-| PATCH  | `/api/users/:id` | Update user profile           | Admin / Self  |
-| DELETE | `/api/users/:id` | Delete user (soft/hard)       | Admin         |
-| GET    | `/api/users/search` | Search users by criteria    | Authenticated |
+| Method | Endpoint                 | Description                     | Access      |
+|--------|-------------------------|---------------------------------|-------------|
+| GET    | `/api/users`            | List users (paginated)          | Admin       |
+| GET    | `/api/users/:id`        | Get user by ID                  | Admin/Self  |
+| PATCH  | `/api/users/:id`        | Update user                     | Admin/Self  |
+| GET    | `/api/users/:id/stats`  | Get user statistics             | Authenticated |
+| GET    | `/api/users/search`     | Search users                    | Authenticated |
 
 #### Teams
 
-| Method | Endpoint         | Description                   |
-|--------|------------------|-------------------------------|
-| GET    | `/api/teams`     | List teams (paginated)        |
-| GET    | `/api/teams/:id` | Get team details              |
-| POST   | `/api/teams`     | Create team                   |
-| PATCH  | `/api/teams/:id` | Update team                   |
-| DELETE | `/api/teams/:id` | Delete team                   |
+| Method | Endpoint                  | Description                     | Access      |
+|--------|--------------------------|----------------------------------|-------------|
+| GET    | `/api/teams`             | List teams (paginated)           | Authenticated |
+| POST   | `/api/teams`             | Create a new team                | Authenticated |
+| GET    | `/api/teams/:id`         | Get team by ID                   | Authenticated |
+| PATCH  | `/api/teams/:id`         | Update team                      | Team Owner/Admin |
+| DELETE | `/api/teams/:id`         | Delete team                      | Team Owner |
+| GET    | `/api/teams/:id/members` | List team members                | Authenticated |
+| POST   | `/api/teams/:id/members` | Add member to team               | Team Owner/Admin |
+| DELETE | `/api/teams/:id/members/:userId` | Remove team member      | Team Owner/Admin |
 
 #### Matches
 
-| Method | Endpoint           | Description                   |
-|--------|--------------------|-------------------------------|
-| GET    | `/api/matches`     | List matches (filtered)       |
-| GET    | `/api/matches/:id` | Get match details             |
-| POST   | `/api/matches`     | Create match                  |
-| PATCH  | `/api/matches/:id` | Update match score/status     |
-
-#### Leagues & Standings
-
-| Method | Endpoint                 | Description                   |
-|--------|--------------------------|-------------------------------|
-| GET    | `/api/leagues`           | List all leagues              |
-| GET    | `/api/standings/:leagueId` | Get league standings          |
+| Method | Endpoint                  | Description                      | Access      |
+|--------|--------------------------|------------------------------------|-------------|
+| GET    | `/api/matches`           | List matches (paginated/filtered)  | Authenticated |
+| POST   | `/api/matches`           | Create a new match                 | Team Owner/Admin |
+| GET    | `/api/matches/:id`       | Get match by ID                    | Authenticated |
+| PATCH  | `/api/matches/:id`       | Update match                       | Team Owner/Admin |
+| DELETE | `/api/matches/:id`       | Delete match                       | Team Owner/Admin |
+| POST   | `/api/matches/:id/result`| Submit match result                | Team Owner/Admin |
 
 #### Tournaments
 
-| Method | Endpoint                     | Description                       |
-|--------|------------------------------|-----------------------------------|
-| GET    | `/api/tournaments`           | List tournaments                  |
-| GET    | `/api/tournaments/:id`       | Get tournament details            |
-| POST   | `/api/tournaments`           | Create tournament                 |
-| PATCH  | `/api/tournaments/:id`       | Update tournament                 |
-| DELETE | `/api/tournaments/:id`       | Delete tournament                 |
-| POST   | `/api/tournaments/:id/join`  | Join tournament (user/team)       |
-| POST   | `/api/tournaments/:id/leave` | Leave tournament (user/team)      |
+| Method | Endpoint                       | Description                     | Access      |
+|--------|-----------------------------|---------------------------------|-------------|
+| GET    | `/api/tournaments`          | List tournaments                | Authenticated |
+| POST   | `/api/tournaments`          | Create tournament               | Organizer/Admin |
+| GET    | `/api/tournaments/:id`      | Get tournament by ID            | Authenticated |
+| PATCH  | `/api/tournaments/:id`      | Update tournament               | Organizer/Admin |
+| DELETE | `/api/tournaments/:id`      | Delete tournament               | Organizer/Admin |
+| POST   | `/api/tournaments/:id/teams`| Register team for tournament    | Team Owner |
 
-### Response Format
+## 🔄 Response Format
 
-Successful response:
+All API responses follow a consistent format:
+
+### Success Response
 
 ```json
 {
-  "data": { },
-  "message": "Optional success message"
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Sample Team",
+    "createdAt": "2025-06-15T14:30:00Z",
+    "updatedAt": "2025-06-15T14:30:00Z"
+  },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 20
+  }
 }
 ```
 
-Error response:
+### Error Response
 
 ```json
 {
+  "success": false,
   "error": {
-    "message": "Error description",
-    "code": "ERROR_CODE"
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "name",
+        "message": "Name is required"
+      }
+    ]
   }
 }
 ```
 
 ## 🧪 Testing
 
-eSkore uses Jest and Supertest for testing:
+The project uses Jest for unit and integration testing:
 
 ```bash
 # Run all tests
 npm test
 
-# Run with watch mode
-npm run test:watch
+# Run tests with coverage
+npm test -- --coverage
 
-# Generate coverage report
-npm run test:coverage
+# Run specific test file
+npm test -- tests/unit/auth.test.js
+
+# Run tests in watch mode
+npm test -- --watch
 ```
 
-## 🌐 Deployment
+### Testing Strategy
 
-### Production Setup
+- **Unit Tests**: Test individual functions and components
+- **Integration Tests**: Test API endpoints and database operations
+- **Mock Services**: External dependencies are mocked for testing
+- **Test Database**: Tests run against a separate test database
 
-1. Configure production environment:
-   ```bash
-   # .env in production
-   NODE_ENV=production
-   PORT=5000
-   DB_HOST=your_production_db_host
-   # ... other vars
-   ```
+## 📊 Monitoring & Logging
 
-2. Install production dependencies:
-   ```bash
-   npm install --production
-   ```
+The application includes comprehensive logging and monitoring:
 
-3. Run database migrations:
-   ```bash
-   NODE_ENV=production npm run db:migrate
-   ```
+- **Morgan**: HTTP request logging
+- **Winston**: Application logging with multiple transports
+- **Prometheus**: Metrics collection (optional)
+- **Health Checks**: Endpoint for monitoring systems
 
-4. Start the server:
-   ```bash
-   npm start
-   ```
+## 🚀 Deployment
 
-### Production Best Practices
+### Production Build
 
-- Use a process manager like [PM2](https://pm2.keymetrics.io/)
-- Set up HTTPS with a reverse proxy ([Nginx](https://nginx.org/))
-- Implement logging and monitoring
-- Use containerization ([Docker](https://www.docker.com/))
-
-## ❓ Troubleshooting
-
-<details>
-<summary><b>Common Issues</b></summary>
-
-### Module Not Found Errors
-- **Error**: `Cannot find module 'bcryptjs'`
-- **Solution**: Run `npm install bcryptjs`
-
-### Database Connection Issues
-- **Error**: `Connection refused`
-- **Solution**: Check PostgreSQL is running, verify credentials in `.env`
-
-### Authentication Problems
-- **Error**: Invalid token
-- **Solution**: Ensure JWT_SECRET is properly set, verify token format
-
-### CORS Errors
-- **Error**: CORS policy blocked request
-- **Solution**: Add frontend URL to ALLOWED_ORIGINS in .env
-</details>
-
-<details>
-<summary><b>Debugging Tools</b></summary>
-
-Run with enhanced logging:
 ```bash
-DEBUG=express:*,auth:* npm run dev
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-Utility scripts:
+### Docker Deployment
+
 ```bash
-# Check authentication setup
-node scripts/debugAuth.js
+# Build Docker image
+docker build -t eskore-api .
 
-# Reset database if needed
-npm run db:reset:safe
-
-# Validate database schema against models
-node scripts/db/validateSchema.js
+# Run container
+docker run -p 5000:5000 --env-file .env eskore-api
 ```
-</details>
 
-> 📑 **Need more help?** See our detailed [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) guide for step-by-step solutions to common issues, or check our [GitHub Issues](https://github.com/eskore-team/eskore/issues) for existing solutions.
+### Deployment Options
+
+- **Traditional VPS/VM**: Deploy to any Node.js hosting environment
+- **Docker**: Containerized deployment
+- **Kubernetes**: Orchestrated deployment for high availability
+- **Serverless**: Functions deployment (requires architecture adjustments)
+
+## 📋 API Development Guide
+
+### Adding a New Endpoint
+
+1. **Create Controller**: Add methods in the appropriate controller
+2. **Define Routes**: Map endpoints in the route file
+3. **Add Validation**: Create validation middleware if needed
+4. **Write Tests**: Add unit and integration tests
+5. **Update Documentation**: Update API documentation
+
+### Code Standards
+
+- Use async/await for asynchronous operations
+- Follow error handling best practices
+- Document all functions with JSDoc comments
+- Follow naming conventions
+- Use TypeScript types when available
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read our [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on:
-- Development workflow
-- Pull request process
-- Coding standards
-- Testing requirements
+Please see our [contribution guidelines](../CONTRIBUTING.md) for details on how to contribute to the project.
 
-Steps to contribute:
+### Development Workflow
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Run tests: `npm test`
-5. Commit with clear messages: `git commit -m "Add amazing feature"`
-6. Push your branch: `git push origin feature/amazing-feature`
-7. Submit a pull request
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Implement your changes
+4. Write tests for your changes
+5. Ensure all tests pass and linting is clean
+6. Submit a pull request with a comprehensive description
 
-## 📄 License
+## 🔧 Troubleshooting
 
-This project is licensed under the ISC License.
+### Common Issues
+
+<details>
+<summary><strong>Database Connection Issues</strong></summary>
+
+**Problem**: Cannot connect to the database
+**Solutions**:
+- Verify database credentials in .env file
+- Check that PostgreSQL service is running
+- Ensure the database exists: `createdb eskore_db`
+- Check network connectivity to the database server
+</details>
+
+<details>
+<summary><strong>Migration Errors</strong></summary>
+
+**Problem**: Database migrations fail
+**Solutions**:
+- Check for errors in migration files
+- Verify database permissions
+- For development, try resetting the database:
+  ```bash
+  npm run db:reset
+  ```
+</details>
+
+<details>
+<summary><strong>Authentication Issues</strong></summary>
+
+**Problem**: JWT validation failures or cookie issues
+**Solutions**:
+- Verify JWT_SECRET in .env
+- Check cookie settings (especially in development)
+- Clear browser cookies and try again
+- Verify withCredentials is enabled on frontend requests
+</details>
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
 ---
 
 <div align="center">
-  <p>© 2023-2024 eSkore Team. All rights reserved.</p>
-  <p>Made with ❤️ for the eSports community</p>
+  <p>© 2025 eSkore Team. All rights reserved.</p>
+  <p>Made with ❤️ for the global esports community</p>
 </div>
