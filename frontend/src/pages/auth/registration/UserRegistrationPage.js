@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../../services/apiClient';
 import SingleStepForm from './components/SingleStepForm';
 import './UserRegistrationPage.css';
 
@@ -42,10 +42,10 @@ const UserRegistrationPage = () => {
       delete formattedData.confirmPassword;
       
       // Send registration request
-      const response = await axios.post('/api/auth/register', formattedData);
+      const response = await apiClient.post('/api/auth/register', formattedData);
       
       // Handle successful registration
-      if (response.data.success) {
+      if (response.success) {
         navigate('/login?registered=true');
       }
     } catch (error) {

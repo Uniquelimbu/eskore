@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
 import './CreateTeam.css';
@@ -149,12 +149,10 @@ const CreateTeam = () => {
 
       try {
         // First, create team without logo
-        const teamResponse = await axios.post('/api/teams', teamPayload, {
-          withCredentials: true
-        });
+        const teamResponse = await apiClient.post('/api/teams', teamPayload);
         
         console.log("Team creation API response:", teamResponse);
-        const teamId = teamResponse.data.team.id;
+        const teamId = teamResponse.team.id;
         
         // If there's a logo, upload it in a separate request
         if (formData.teamLogo) {
@@ -162,17 +160,25 @@ const CreateTeam = () => {
           const logoData = new FormData();
           logoData.append('logo', formData.teamLogo);
           
-          const logoResponse = await axios.patch(`/api/teams/${teamId}/logo`, logoData, {
+          const logoResponse = await apiClient.patch(`/api/teams/${teamId}/logo`, logoData, {
             headers: {
               'Content-Type': 'multipart/form-data'
-            },
-            withCredentials: true
+            }
           });
           console.log("Logo upload API response:", logoResponse);
         }
         
-        // Navigate to team space instead of dashboard
-        navigate(`/teams/${teamId}/space/overview`);
+        // First check team response structure
+        console.log("Team response for navigation:", teamResponse);
+
+        // Navigate to the overview tab of the team space
+        if (teamId) {
+          navigate(`/teams/${teamId}/space/overview`);
+        } else {
+          console.error("Team ID is missing in the response");
+          setSubmitError("Team was created but navigation failed. Please go to Teams page.");
+          setIsSubmitting(false);
+        }
       } catch (error) {
         logErrorDetails(error, formData.teamLogo ? 'team creation or logo upload' : 'team creation');
         const errorMessage = 

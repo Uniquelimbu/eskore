@@ -163,6 +163,19 @@ router.post('/',
     const { name, abbreviation, foundedYear, city, nickname } = req.body;
     let newTeam; 
 
+    // Check if the user already owns a team
+    const existingTeam = await UserTeam.findOne({
+      where: {
+        userId: req.user.id,
+        role: 'owner'
+      }
+    });
+
+    if (existingTeam) {
+      logger.warn(`TEAMROUTES.JS (POST /): User ${req.user.id} (${req.user.email}) attempted to create a second team.`);
+      throw new ApiError('You already own a team. Leave your current team before creating a new one.', 403, 'FORBIDDEN_MULTIPLE_TEAMS');
+    }
+
     // No try-catch here, let catchAsync handle it.
     // Errors thrown (including ApiError from validation or manual throws) will be caught by catchAsync.
 

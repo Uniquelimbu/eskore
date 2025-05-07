@@ -17,6 +17,7 @@ import TeamsPage from '../pages/user/TeamsPage';
 import TournamentPage from '../pages/user/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage';
 import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
+import TeamSpace from '../pages/user/TeamsPage/TeamSpace';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
@@ -60,6 +61,11 @@ const AppRoutes = () => {
       <Route path="/teams/create" element={
         <ProtectedRoute>
           <CreateTeam />
+        </ProtectedRoute>
+      } />
+      <Route path="/teams/:teamId/space/*" element={
+        <ProtectedRoute>
+          <TeamSpace />
         </ProtectedRoute>
       } />
 

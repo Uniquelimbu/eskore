@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -26,26 +26,58 @@ const TeamSpace = () => {
     const fetchTeamData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/teams/${teamId}`, {
-          withCredentials: true
-        });
+        console.log(`Fetching team data for ID: ${teamId}`);
         
-        setTeam(response.data);
+        const response = await apiClient.get(`/api/teams/${teamId}`);
+        
+        // Debug team response structure
+        console.log('Team data response:', response);
+        
+        if (!response || typeof response !== 'object') {
+          console.error('Invalid team response format:', response);
+          setError('Invalid team data received');
+          setLoading(false);
+          return;
+        }
+        
+        // apiClient already returns the data part of the response
+        setTeam(response);
         
         // Determine user's role in the team
-        const userMembership = response.data.Users?.find(u => u.id === user.id);
-        setUserRole(userMembership?.UserTeam?.role || null);
+        if (Array.isArray(response.Users)) {
+          const userMembership = response.Users.find(u => u.id === user?.id);
+          console.log('User membership found:', userMembership);
+          setUserRole(userMembership?.UserTeam?.role || null);
+        } else {
+          console.warn('No Users array in team response');
+        }
         
         // Get all team members
-        const membersResponse = await axios.get(`/api/teams/${teamId}/members`, {
-          withCredentials: true
-        });
+        console.log(`Fetching members for team ID: ${teamId}`);
+        const membersResponse = await apiClient.get(`/api/teams/${teamId}/members`);
+        console.log('Members response:', membersResponse);
         
-        setMembers(membersResponse.data.members || []);
+        // Update members array from response
+        if (membersResponse && membersResponse.members) {
+          setMembers(membersResponse.members);
+        } else {
+          console.warn('No members array in response:', membersResponse);
+          setMembers([]);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching team data:', err);
-        setError('Failed to load team information. Please try again.');
+        // Provide more detailed error message based on the error
+        let errorMessage = 'Failed to load team information. Please try again.';
+        if (err.status === 404) {
+          errorMessage = `Team with ID ${teamId} not found`;
+        } else if (err.status === 401) {
+          errorMessage = 'You are not authorized to view this team';
+        } else if (err.message) {
+          errorMessage = `Error: ${err.message}`;
+        }
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

@@ -1,11 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import PageLayout from '../../../components/layout/PageLayout';
+import apiClient from '../../../services/apiClient';
+import { useAuth } from '../../../contexts/AuthContext';
 import './TeamsPage.css';
 
 const TeamsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const checkUserTeam = async () => {
+      try {
+        setLoading(true);
+        // Get all teams for the current user
+        const response = await apiClient.get(`/api/teams/user/${user.id}`);
+        
+        if (response && response.teams && response.teams.length > 0) {
+          // Check if the user owns any team
+          const ownedTeam = response.teams.find(team => team.role === 'owner');
+          
+          if (ownedTeam) {
+            // Redirect to the owned team's space
+            navigate(`/teams/${ownedTeam.id}/space/overview`);
+            return;
+          }
+        }
+        
+        // If we get here, the user doesn't own a team
+        setLoading(false);
+      } catch (error) {
+        console.error('Error checking user teams:', error);
+        setError('Failed to load team information');
+        setLoading(false);
+      }
+    };
+
+    if (user && user.id) {
+      checkUserTeam();
+    } else {
+      setLoading(false);
+    }
+  }, [user, navigate]);
 
   const handleOptionClick = (option) => {
     if (option === 'join') {
@@ -16,6 +55,33 @@ const TeamsPage = () => {
       navigate('/teams/create');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="teams-page-layout">
+        <Sidebar />
+        <PageLayout className="teams-page-content" maxWidth="1200px" withPadding={true}>
+          <div className="loading-spinner-container">
+            <div className="loading-spinner"></div>
+            <p>Loading team information...</p>
+          </div>
+        </PageLayout>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="teams-page-layout">
+        <Sidebar />
+        <PageLayout className="teams-page-content" maxWidth="1200px" withPadding={true}>
+          <div className="error-message">
+            {error}
+          </div>
+        </PageLayout>
+      </div>
+    );
+  }
 
   return (
     <div className="teams-page-layout">

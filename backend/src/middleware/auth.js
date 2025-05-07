@@ -18,7 +18,7 @@ async function requireAuth(req, res, next) {
   
   const authHeader = req.headers.authorization;
   // Also check cookies if you pass tokens via cookies
-  const tokenFromCookie = req.cookies?.token; 
+  const tokenFromCookie = req.cookies?.auth_token; 
   let token;
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
