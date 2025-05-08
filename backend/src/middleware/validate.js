@@ -32,10 +32,20 @@ const validate = (validations) => {
       throw new ApiError('Validation failed', 400, 'VALIDATION_ERROR', formattedErrors);
     } catch (error) {
       if (error instanceof ApiError) {
-        throw error;
+        return next(error); // Pass ApiError to the error handler middleware
       }
-      logger.error(`Unexpected validation error: ${error.message}`, error);
-      throw new ApiError('Validation processing failed', 500, 'VALIDATION_SYSTEM_ERROR');
+      
+      // Log unexpected errors with more details
+      logger.error(`Unexpected validation error: ${error.message}`, {
+        error: error.stack,
+        path: req.path,
+        method: req.method,
+        body: JSON.stringify(req.body),
+        user: req.user ? req.user.id : 'unauthenticated'
+      });
+      
+      // Pass the error to the error handler middleware
+      next(new ApiError('Validation processing failed', 500, 'VALIDATION_SYSTEM_ERROR'));
     }
   };
 };

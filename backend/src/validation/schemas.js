@@ -175,41 +175,47 @@ const tournament = {
   ]
 };
 
+// Define a single source of truth for team field validation rules
+const teamRules = [
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Team name is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Team name must be between 2 and 100 characters'),
+  body('abbreviation')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ min: 2, max: 4 })
+    .withMessage('Abbreviation must be 2-4 characters')
+    .toUpperCase(),
+  body('foundedYear')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 1800, max: new Date().getFullYear() })
+    .withMessage(`Please enter a valid founded year between 1800 and ${new Date().getFullYear()}`)
+    .toInt(),
+  body('city')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isString()
+    .withMessage('City must be a string')
+    .isLength({ max: 100 })
+    .withMessage('City name must be less than 100 characters'),
+  body('nickname')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isString()
+    .withMessage('Nickname must be a string')
+    .isLength({ max: 100 })
+    .withMessage('Nickname must be less than 100 characters')
+];
+
 // Team schemas
 const team = {
-  teamSchema: [
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Team name is required')
-      .isLength({ min: 2, max: 100 })
-      .withMessage('Team name must be between 2 and 100 characters'),
-    body('abbreviation')
-      .optional({ checkFalsy: true })
-      .trim()
-      .isLength({ min: 2, max: 4 })
-      .withMessage('Abbreviation must be 2-4 characters')
-      .toUpperCase(),
-    body('foundedYear')
-      .optional({ checkFalsy: true })
-      .isInt({ min: 1800, max: new Date().getFullYear() })
-      .withMessage(`Please enter a valid founded year between 1800 and ${new Date().getFullYear()}`)
-      .toInt(),
-    body('city')
-      .optional({ checkFalsy: true })
-      .trim()
-      .isString()
-      .withMessage('City must be a string')
-      .isLength({ max: 100 })
-      .withMessage('City name must be less than 100 characters'),
-    body('nickname')
-      .optional({ checkFalsy: true })
-      .trim()
-      .isString()
-      .withMessage('Nickname must be a string')
-      .isLength({ max: 100 })
-      .withMessage('Nickname must be less than 100 characters')
-  ],
+  // Used for general team updates
+  teamSchema: teamRules,
+  // Used specifically when creating a team; keep same rules to avoid divergence
+  createTeam: teamRules,
   
   teamMemberSchema: [
     body('userId')

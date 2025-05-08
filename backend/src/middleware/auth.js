@@ -16,25 +16,25 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
 async function requireAuth(req, res, next) {
   logger.info(`AUTH.JS (requireAuth): ENTERING for ${req.method} ${req.originalUrl}`);
   
-  const authHeader = req.headers.authorization;
-  // Also check cookies if you pass tokens via cookies
-  const tokenFromCookie = req.cookies?.auth_token; 
-  let token;
-
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.split(' ')[1];
-    logger.info('AUTH.JS (requireAuth): Token found in Authorization header.');
-  } else if (tokenFromCookie) {
-    token = tokenFromCookie;
-    logger.info('AUTH.JS (requireAuth): Token found in cookies.');
-  } else {
-    logger.warn('AUTH.JS (requireAuth): No token found in Authorization header or cookies.');
-    return next(new ApiError('Authentication token is required. Please log in.', 401, 'UNAUTHORIZED'));
-  }
-
-  logger.info(`AUTH.JS (requireAuth): Token extracted: ${token ? token.substring(0, 20) + '...' : 'N/A'}`);
-
   try {
+    const authHeader = req.headers.authorization;
+    // Also check cookies if you pass tokens via cookies
+    const tokenFromCookie = req.cookies?.auth_token; 
+    let token;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+      logger.info('AUTH.JS (requireAuth): Token found in Authorization header.');
+    } else if (tokenFromCookie) {
+      token = tokenFromCookie;
+      logger.info('AUTH.JS (requireAuth): Token found in cookies.');
+    } else {
+      logger.warn('AUTH.JS (requireAuth): No token found in Authorization header or cookies.');
+      return next(new ApiError('Authentication token is required. Please log in.', 401, 'UNAUTHORIZED'));
+    }
+
+    logger.info(`AUTH.JS (requireAuth): Token extracted: ${token ? token.substring(0, 20) + '...' : 'N/A'}`);
+
     const decoded = jwt.verify(token, JWT_SECRET);
     logger.info(`AUTH.JS (requireAuth): Token decoded successfully. Payload: ${JSON.stringify(decoded)}`);
 
@@ -64,7 +64,7 @@ async function requireAuth(req, res, next) {
     };
     
     logger.info(`AUTH.JS (requireAuth): User ${req.user.email} (ID: ${req.user.id}) authenticated with primary role: ${req.user.role} and all roles: [${userRoles.join(', ')}]. Calling next().`);
-    next();
+    return next();
   } catch (error) {
     logger.error(`AUTH.JS (requireAuth): JWT verification or user fetch error: ${error.name} - ${error.message}`, error.stack);
     if (error.name === 'TokenExpiredError') {

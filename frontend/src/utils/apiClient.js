@@ -27,7 +27,9 @@ const request = async (endpoint, options = {}) => {
       ...options.headers
     };
 
+    // Always include credentials so cookies like auth_token are sent with cross-origin requests
     const response = await fetch(url, {
+      credentials: 'include', // <— crucial for JWT cookie auth
       ...options,
       headers
     });
