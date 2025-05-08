@@ -9,7 +9,8 @@ const User = require('../models/User');
 const { body, param, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const { sendSafeJson } = require('../utils/safeSerializer');
-const logger = require('../utils/logger'); // Assuming you have a logger utility
+const log = require('../utils/log');
+const { ROLES, MAX_FILE_SIZE_MB } = require('../config/constants');
 const sequelize = require('../config/db'); // Add Missing Import for Sequelize
 
 // --- Multer setup for logo uploads ---
@@ -25,47 +26,47 @@ if (!fs.existsSync(uploadDir)) {
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    logger.info(`TEAMROUTES.JS (Multer): Destination check for file: ${file.originalname}`);
+    log.info(`TEAMROUTES.JS (Multer): Destination check for file: ${file.originalname}`);
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const extension = path.extname(file.originalname);
     const filename = file.fieldname + '-' + uniqueSuffix + extension;
-    logger.info(`TEAMROUTES.JS (Multer): Generating filename: ${filename}`);
+    log.info(`TEAMROUTES.JS (Multer): Generating filename: ${filename}`);
     cb(null, filename);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  logger.info(`TEAMROUTES.JS (Multer): File filter check for mimetype: ${file.mimetype}`);
+  log.info(`TEAMROUTES.JS (Multer): File filter check for mimetype: ${file.mimetype}`);
   if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/gif') {
     cb(null, true);
   } else {
-    logger.warn(`TEAMROUTES.JS (Multer): Invalid file type: ${file.mimetype}`);
+    log.warn(`TEAMROUTES.JS (Multer): Invalid file type: ${file.mimetype}`);
     cb(new ApiError('Invalid file type. Only JPEG, PNG, GIF allowed.', 400, 'INVALID_FILE_TYPE'), false);
   }
 };
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: MAX_FILE_SIZE_MB * 1024 * 1024 },
   fileFilter: fileFilter
 });
 // --- End Multer Setup ---
 
-logger.info('TEAMROUTES.JS: File loaded, router instance created. Multer configured.');
+log.info('TEAMROUTES.JS: File loaded, router instance created. Multer configured.');
 
 // Middleware for all routes in this router, to log entry
 router.use((req, res, next) => {
-  logger.info(`TEAMROUTES.JS (router.use): Request received for ${req.method} ${req.path} (Original URL: ${req.originalUrl})`);
+  log.info(`TEAMROUTES.JS (router.use): Request received for ${req.method} ${req.path} (Original URL: ${req.originalUrl})`);
   // logger.info(`TEAMROUTES.JS (router.use): Body: ${JSON.stringify(req.body)}`); // Already logged by Morgan with more context
   next();
 });
 
 // GET /api/teams
 router.get('/', catchAsync(async (req, res) => {
-  logger.info('TEAMROUTES.JS (GET /): Fetching all teams.');
+  log.info('TEAMROUTES.JS (GET /): Fetching all teams.');
   const teams = await Team.findAll();
   return sendSafeJson(res, {
     success: true,
@@ -76,7 +77,7 @@ router.get('/', catchAsync(async (req, res) => {
 
 // GET /api/teams/:id
 router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
+  log.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
   const { id } = req.params;
   const team = await Team.findByPk(id, {
     include: [
@@ -102,12 +103,12 @@ router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, re
  */
 router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   const { id: teamId } = req.params;
-  logger.info(`TEAMROUTES.JS (GET /:id/members): Fetching members for team ID ${teamId}`);
+  log.info(`TEAMROUTES.JS (GET /:id/members): Fetching members for team ID ${teamId}`);
 
   const teamExists = await Team.findByPk(teamId);
   if (!teamExists) {
     // Log this specific case for clarity, though the frontend might show a generic error
-    logger.warn(`TEAMROUTES.JS (GET /:id/members): Team with ID ${teamId} not found when trying to fetch members.`);
+    log.warn(`TEAMROUTES.JS (GET /:id/members): Team with ID ${teamId} not found when trying to fetch members.`);
     throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
   }
 
@@ -125,7 +126,7 @@ router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catc
   const formattedMembers = userTeamEntries.map(utEntry => {
     if (!utEntry.User) {
       // This case should ideally not happen with a successful include if the data is consistent
-      logger.warn(`TEAMROUTES.JS (GET /:id/members): UserTeam entry found without a corresponding User. UserTeam ID: ${utEntry.id}, UserID: ${utEntry.userId}, TeamID: ${utEntry.teamId}`);
+      log.warn(`TEAMROUTES.JS (GET /:id/members): UserTeam entry found without a corresponding User. UserTeam ID: ${utEntry.id}, UserID: ${utEntry.userId}, TeamID: ${utEntry.teamId}`);
       return null;
     }
     const userJson = utEntry.User.toJSON();
@@ -143,7 +144,7 @@ router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catc
     };
   }).filter(member => member !== null); // Filter out any nulls from inconsistent data
 
-  logger.info(`TEAMROUTES.JS (GET /:id/members): Successfully fetched ${formattedMembers.length} members for team ID ${teamId}.`);
+  log.info(`TEAMROUTES.JS (GET /:id/members): Successfully fetched ${formattedMembers.length} members for team ID ${teamId}.`);
   return sendSafeJson(res, {
     success: true,
     count: formattedMembers.length,
@@ -159,7 +160,7 @@ router.post('/',
   requireAuth, 
   validate(schemas.team.createTeam), 
   catchAsync(async (req, res) => {
-    logger.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user?.email}, Body: ${JSON.stringify(req.body)}`);
+    log.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user?.email}, Body: ${JSON.stringify(req.body)}`);
     const { name, abbreviation, foundedYear, city, nickname } = req.body;
     let newTeam; 
 
@@ -172,14 +173,14 @@ router.post('/',
     });
 
     if (existingTeam) {
-      logger.warn(`TEAMROUTES.JS (POST /): User ${req.user.id} (${req.user.email}) attempted to create a second team.`);
+      log.warn(`TEAMROUTES.JS (POST /): User ${req.user.id} (${req.user.email}) attempted to create a second team.`);
       throw new ApiError('You already own a team. Leave your current team before creating a new one.', 403, 'FORBIDDEN_MULTIPLE_TEAMS');
     }
 
     // No try-catch here, let catchAsync handle it.
     // Errors thrown (including ApiError from validation or manual throws) will be caught by catchAsync.
 
-    logger.info(`TEAMROUTES.JS (POST /): Attempting Team.create with data: ${JSON.stringify({ name, abbreviation, foundedYear, city, nickname })}`);
+    log.info(`TEAMROUTES.JS (POST /): Attempting Team.create with data: ${JSON.stringify({ name, abbreviation, foundedYear, city, nickname })}`);
     newTeam = await Team.create({
       name,
       abbreviation: abbreviation || null,
@@ -188,26 +189,26 @@ router.post('/',
       nickname: nickname || null
       // email and passwordHash are not part of this form, should be null or handled separately if team can login
     });
-    logger.info(`TEAMROUTES.JS (POST /): Team.create successful. New team ID: ${newTeam.id}`);
+    log.info(`TEAMROUTES.JS (POST /): Team.create successful. New team ID: ${newTeam.id}`);
 
     if (!req.user || !req.user.id) {
-      logger.error('TEAMROUTES.JS (POST /): CRITICAL - User ID not found in req.user for team ownership assignment. This should have been caught by requireAuth.');
+      log.error('TEAMROUTES.JS (POST /): CRITICAL - User ID not found in req.user for team ownership assignment. This should have been caught by requireAuth.');
       // Clean up the created team if user assignment fails
       if (newTeam && newTeam.id) {
         await Team.destroy({ where: { id: newTeam.id } });
-        logger.warn(`TEAMROUTES.JS (POST /): Cleaned up orphaned team ${newTeam.id} due to missing user ID for owner assignment.`);
+        log.warn(`TEAMROUTES.JS (POST /): Cleaned up orphaned team ${newTeam.id} due to missing user ID for owner assignment.`);
       }
       // Throw an error that catchAsync will handle
       throw new ApiError('Authenticated user ID is missing. Cannot assign team ownership.', 500, 'INTERNAL_SERVER_ERROR_AUTH_MISSING');
     }
 
-    logger.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.id}, teamId: ${newTeam.id}, role: 'manager'`);
+    log.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.id}, teamId: ${newTeam.id}, role: 'manager'`);
     await UserTeam.create({
       userId: req.user.id,
       teamId: newTeam.id,
       role: 'manager' // Always set as manager for creator
     });
-    logger.info(`TEAMROUTES.JS (POST /): UserTeam.create successful. Team and ownership link created.`);
+    log.info(`TEAMROUTES.JS (POST /): UserTeam.create successful. Team and ownership link created.`);
 
     return sendSafeJson(res, {
       success: true,
@@ -228,7 +229,7 @@ router.post('/:id/members',
     ...schemas.team.teamMemberSchema
   ]), 
   catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (POST /:id/members): Adding member to team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
+  log.info(`TEAMROUTES.JS (POST /:id/members): Adding member to team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
   const { id } = req.params;
   const { userId, role = 'athlete' } = req.body;
   
@@ -247,7 +248,7 @@ router.post('/:id/members',
     throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission (team owner or team manager)
+  // Check if user has permission (team manager or assistant manager)
   const userTeamPermission = await UserTeam.findOne({
     where: {
       userId: req.user.id,
@@ -257,7 +258,7 @@ router.post('/:id/members',
   });
   
   if (!userTeamPermission) {
-    throw new ApiError('Forbidden - You must be a team owner or manager to add members', 403, 'FORBIDDEN');
+    throw new ApiError('Forbidden - You must be a team manager or assistant manager to add members', 403, 'FORBIDDEN');
   }
   
   if (userTeamPermission.role === 'assistant_manager' && ['manager', 'assistant_manager'].includes(role)) {
@@ -308,7 +309,7 @@ router.delete('/:id/members/:userId',
     param('userId').isInt().withMessage('User ID must be an integer').toInt()
   ]),
   catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Removing member ${req.params.userId} from team ${req.params.id} by user ${req.user?.email}.`);
+  log.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Removing member ${req.params.userId} from team ${req.params.id} by user ${req.user?.email}.`);
   const { id, userId } = req.params;
   
   // Check if team exists
@@ -317,20 +318,20 @@ router.delete('/:id/members/:userId',
     throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user has permission (team owner)
-  const userTeamOwner = await UserTeam.findOne({
+  // Check if user has permission (team manager)
+  const userTeamManager = await UserTeam.findOne({
     where: {
       userId: req.user.id,
       teamId: id,
-      role: 'manager'
+      role: { [Op.in]: ['manager', 'assistant_manager'] }
     }
   });
   
-  if (!userTeamOwner) {
+  if (!userTeamManager) {
     // Allow managers to remove athletes or coaches they added? Or only owners?
     // Current logic: only owners can remove any member.
     // If self-removal is allowed, that's a different check (e.g. if req.user.id === parseInt(userId))
-    throw new ApiError('Forbidden - You must be a team owner to remove members', 403, 'FORBIDDEN');
+    throw new ApiError('Forbidden - You must be a team manager to remove members', 403, 'FORBIDDEN');
   }
   
   // Prevent owner from removing themselves if they are the sole owner? (Consider this logic)
@@ -367,21 +368,25 @@ router.delete('/:id/members/:userId',
     
     // Remove the member
     await memberToRemove.destroy({ transaction: t });
-    
-    // If there's exactly one member left after this removal, promote them to manager
-    if (memberCount - 1 === 1) {
+
+    const remainingCount = memberCount - 1;
+
+    if (remainingCount === 0) {
+      // No members left ‑> delete the team entirely (and any residual memberships/tournaments just in case)
+      const TeamTournament = require('../models/TeamTournament');
+      await TeamTournament.destroy({ where: { teamId: id }, transaction: t });
+      await Team.destroy({ where: { id }, transaction: t });
+      log.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Team ${id} had no remaining members and was deleted.`);
+    } else if (remainingCount === 1) {
+      // Exactly one member left ‑> ensure they are manager
       const lastMember = await UserTeam.findOne({
-        where: { 
-          teamId: id,
-          userId: { [Op.ne]: userId }
-        },
+        where: { teamId: id },
         transaction: t
       });
-      
-      if (lastMember) {
+      if (lastMember && lastMember.role !== 'manager') {
         lastMember.role = 'manager';
         await lastMember.save({ transaction: t });
-        logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Auto-promoted last member to manager: ${lastMember.userId}`);
+        log.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Auto-promoted last member (user ${lastMember.userId}) to manager.`);
       }
     }
     
@@ -400,7 +405,7 @@ router.delete('/:id/members/:userId',
 /**
  * PATCH /api/teams/:id
  * Updates a team
- * Requires team ownership or manager role
+ * Requires team manager or assistant manager role
  */
 router.patch('/:id', 
   requireAuth, 
@@ -409,7 +414,7 @@ router.patch('/:id',
     ...schemas.team.teamSchema
   ]), 
   catchAsync(async (req, res) => { // Added validateTeam here too if general update uses same fields
-  logger.info(`TEAMROUTES.JS (PATCH /:id): Updating team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
+  log.info(`TEAMROUTES.JS (PATCH /:id): Updating team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
   const { id } = req.params;
   // Destructure all updatable fields from validateTeam
   const { name, abbreviation, foundedYear, city, nickname } = req.body;
@@ -419,7 +424,7 @@ router.patch('/:id',
     throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
   }
   
-  // Check if user is team owner or manager
+  // Check if user is team manager or assistant manager
   const userTeam = await UserTeam.findOne({
     where: {
       userId: req.user.id,
@@ -429,7 +434,7 @@ router.patch('/:id',
   });
   
   if (!userTeam) {
-    throw new ApiError('Forbidden - You must be a team owner or manager to update it', 403, 'FORBIDDEN_TEAM_UPDATE');
+    throw new ApiError('Forbidden - You must be a team manager or assistant manager to update it', 403, 'FORBIDDEN_TEAM_UPDATE');
   }
   
   // Update only provided fields
@@ -450,18 +455,18 @@ router.patch('/:id',
 /**
  * PATCH /api/teams/:id/logo
  * Updates a team's logo
- * Requires team ownership or manager role
+ * Requires team manager or assistant manager role
  */
 // Multer error handler middleware
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    logger.error(`TEAMROUTES.JS (Multer Error Handler): Multer error: ${err.message}`, err);
+    log.error(`TEAMROUTES.JS (Multer Error Handler): Multer error: ${err.message}`, err);
     if (err.code === 'LIMIT_FILE_SIZE') {
       return next(new ApiError('File too large. Maximum size is 5MB.', 400, 'FILE_TOO_LARGE'));
     }
     return next(new ApiError(`File upload error: ${err.message}`, 400, 'MULTER_ERROR'));
   } else if (err) { // Handle errors from fileFilter (ApiError instances) or other unexpected errors
-    logger.error(`TEAMROUTES.JS (Multer Error Handler): Non-Multer error during upload: ${err.message}`, err);
+    log.error(`TEAMROUTES.JS (Multer Error Handler): Non-Multer error during upload: ${err.message}`, err);
     if (err instanceof ApiError) return next(err); // Forward ApiErrors
     return next(new ApiError('Could not process file upload.', 500, 'UPLOAD_PROCESSING_ERROR'));
   }
@@ -474,7 +479,7 @@ router.patch('/:id/logo',
   upload.single('logo'), // Multer middleware for single file upload
   handleMulterError, // Custom Multer error handler
   catchAsync(async (req, res, next) => {
-    logger.info(`TEAMROUTES.JS (PATCH /:id/logo): Updating logo for team ID ${req.params.id} by user ${req.user?.email}`);
+    log.info(`TEAMROUTES.JS (PATCH /:id/logo): Updating logo for team ID ${req.params.id} by user ${req.user?.email}`);
     const { id } = req.params;
   
     const team = await Team.findByPk(id);
@@ -482,7 +487,7 @@ router.patch('/:id/logo',
       throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
     }
     
-    // Check if user is team owner or manager
+    // Check if user is team manager or assistant manager
     const userTeam = await UserTeam.findOne({
       where: {
         userId: req.user.id,
@@ -492,18 +497,18 @@ router.patch('/:id/logo',
     });
     
     if (!userTeam) {
-      throw new ApiError('Forbidden - You must be a team owner or manager to update it', 403, 'FORBIDDEN');
+      throw new ApiError('Forbidden - You must be a team manager or assistant manager to update it', 403, 'FORBIDDEN');
     }
     
     // Process the uploaded file
     if (!req.file) {
-      logger.warn(`TEAMROUTES.JS (PATCH /:id/logo): No logo file uploaded for team ID ${id}.`);
+      log.warn(`TEAMROUTES.JS (PATCH /:id/logo): No logo file uploaded for team ID ${id}.`);
       throw new ApiError('No logo file uploaded. Please select a file.', 400, 'VALIDATION_ERROR_NO_FILE');
     }
     
     // Save the logo URL (relative path, ensure /uploads is served statically)
     const logoUrl = `/uploads/team-logos/${req.file.filename}`;
-    logger.info(`TEAMROUTES.JS (PATCH /:id/logo): New logo URL for team ${id}: ${logoUrl}`);
+    log.info(`TEAMROUTES.JS (PATCH /:id/logo): New logo URL for team ${id}: ${logoUrl}`);
     team.logoUrl = logoUrl;
     await team.save();
     
@@ -522,7 +527,7 @@ router.delete('/:id',
   requireAuth,
   validate(schemas.team.teamIdParam),
   catchAsync(async (req, res) => {
-    logger.info(`TEAMROUTES.JS (DELETE /:id): Deleting team ID ${req.params.id} by user ${req.user?.email}`);
+    log.info(`TEAMROUTES.JS (DELETE /:id): Deleting team ID ${req.params.id} by user ${req.user?.email}`);
     const { id } = req.params;
     
     // Start a transaction for atomicity
@@ -540,7 +545,7 @@ router.delete('/:id',
         where: {
           userId: req.user.id,
           teamId: id,
-          role: 'manager'
+          role: { [Op.in]: ['manager', 'assistant_manager'] }
         },
         transaction: t
       });
@@ -556,7 +561,7 @@ router.delete('/:id',
         transaction: t
       });
       
-      logger.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} has ${memberCount} members, requester role is ${userTeam.role}`);
+      log.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} has ${memberCount} members, requester role is ${userTeam.role}`);
       
       // Only allow deletion if this is the only member
       if (memberCount > 1) {
@@ -571,7 +576,7 @@ router.delete('/:id',
         transaction: t 
       });
       
-      logger.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedMemberships} team memberships`);
+      log.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedMemberships} team memberships`);
       
       // 2. Tournament registrations if they exist
       try {
@@ -580,9 +585,9 @@ router.delete('/:id',
           where: { teamId: id },
           transaction: t 
         });
-        logger.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedTournaments} tournament registrations`);
+        log.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedTournaments} tournament registrations`);
       } catch (err) {
-        logger.warn(`TEAMROUTES.JS (DELETE /:id): Error deleting tournament registrations: ${err.message}`);
+        log.warn(`TEAMROUTES.JS (DELETE /:id): Error deleting tournament registrations: ${err.message}`);
         // Continue with deletion even if this fails
       }
       
@@ -595,7 +600,7 @@ router.delete('/:id',
       // Commit transaction
       await t.commit();
       
-      logger.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} successfully deleted by user ${req.user.id}`);
+      log.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} successfully deleted by user ${req.user.id}`);
       
       return sendSafeJson(res, {
         success: true,
@@ -603,7 +608,7 @@ router.delete('/:id',
       });
     } catch (error) {
       await t.rollback();
-      logger.error(`TEAMROUTES.JS (DELETE /:id): Error deleting team ${id}: ${error.message}`);
+      log.error(`TEAMROUTES.JS (DELETE /:id): Error deleting team ${id}: ${error.message}`);
       throw error;
     }
   })
@@ -620,7 +625,7 @@ router.post('/:id/transfer-manager',
     body('newManagerId').isInt().withMessage('New manager ID must be an integer')
   ]),
   catchAsync(async (req, res) => {
-    logger.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Transferring manager role in team ${req.params.id}, from user ${req.user?.id} to user ${req.body.newManagerId}`);
+    log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Transferring manager role in team ${req.params.id}, from user ${req.user?.id} to user ${req.body.newManagerId}`);
     const { id } = req.params;
     const { newManagerId } = req.body;
     
@@ -674,7 +679,7 @@ router.post('/:id/transfer-manager',
       // Commit transaction
       await t.commit();
       
-      logger.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Manager role transferred from ${req.user.id} to ${newManagerId} for team ${id}`);
+      log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Manager role transferred from ${req.user.id} to ${newManagerId} for team ${id}`);
       
       return sendSafeJson(res, {
         success: true,
@@ -697,7 +702,7 @@ router.get('/user/:userId',
     param('userId').isInt().withMessage('User ID must be an integer').toInt()
   ]),
   catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (GET /user/:userId): Fetching teams for user ID ${req.params.userId}, requested by user ${req.user?.email}.`);
+  log.info(`TEAMROUTES.JS (GET /user/:userId): Fetching teams for user ID ${req.params.userId}, requested by user ${req.user?.email}.`);
   const { userId } = req.params;
   
   // Users can only see their own teams
@@ -734,7 +739,7 @@ router.post('/:id/promote-last-member',
   requireAuth, 
   validate(schemas.team.teamIdParam),
   catchAsync(async (req, res) => {
-    logger.info(`TEAMROUTES.JS (POST /:id/promote-last-member): Promoting last member for team ID ${req.params.id}, User: ${req.user?.email}`);
+    log.info(`TEAMROUTES.JS (POST /:id/promote-last-member): Promoting last member for team ID ${req.params.id}, User: ${req.user?.email}`);
     const { id } = req.params;
      
     // Start a transaction for atomicity
@@ -781,7 +786,7 @@ router.post('/:id/promote-last-member',
       // Commit transaction
       await t.commit();
       
-      logger.info(`TEAMROUTES.JS (POST /:id/promote-last-member): User ${req.user.id} promoted to manager for team ${id}`);
+      log.info(`TEAMROUTES.JS (POST /:id/promote-last-member): User ${req.user.id} promoted to manager for team ${id}`);
       
       return sendSafeJson(res, {
         success: true,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify'; // Add toast import
 import { useAuth } from '../../../../contexts/AuthContext';
-import apiClient from '../../../../utils/apiClient';
+import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import Overview from './tabs/Overview';

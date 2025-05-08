@@ -1,16 +1,52 @@
 const { body, param, query } = require('express-validator');
 
+// --------------------------------------------------
+// Re-usable validation rule helpers
+// --------------------------------------------------
+
+// Email rule generator (default field: "email")
+const emailRule = (field = 'email') =>
+  body(field)
+    .trim()
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail();
+
+// Password rule generator – can enforce required + min length
+// usage: passwordRule({ required: true, min: 8 })
+const passwordRule = ({ field = 'password', required = false, min = 6 } = {}) => {
+  let chain = body(field);
+  if (required) {
+    chain = chain.notEmpty().withMessage('Password is required');
+  }
+  return chain
+    .isLength({ min })
+    .withMessage(`Password must be at least ${min} characters long`);
+};
+
+// Match score / status reusable rules (homeScore, awayScore, status)
+const matchScoreStatusRules = [
+  body('homeScore')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Home score must be a non-negative integer')
+    .toInt(),
+  body('awayScore')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Away score must be a non-negative integer')
+    .toInt(),
+  body('status')
+    .optional()
+    .isIn(['scheduled', 'live', 'completed', 'cancelled', 'postponed'])
+    .withMessage('Status must be valid')
+];
+
 // Auth schemas 
 const auth = {
   registerUserSchema: [
-    body('email')
-      .trim()
-      .isEmail()
-      .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long'),
+    emailRule(),
+    passwordRule({ required: true, min: 6 }),
     body('firstName')
       .trim()
       .notEmpty()
@@ -26,20 +62,12 @@ const auth = {
   ],
   
   loginSchema: [
-    body('email')
-      .trim()
-      .isEmail()
-      .withMessage('Please enter a valid email address'),
-    body('password')
-      .notEmpty()
-      .withMessage('Password is required')
+    emailRule(),
+    body('password').notEmpty().withMessage('Password is required')
   ],
   
   passwordResetRequestSchema: [
-    body('email')
-      .trim()
-      .isEmail()
-      .withMessage('Please enter a valid email address')
+    emailRule()
   ],
   
   passwordResetSchema: [
@@ -223,8 +251,8 @@ const team = {
       .withMessage('User ID must be an integer')
       .toInt(),
     body('role')
-      .isIn(['owner', 'manager', 'athlete', 'coach'])
-      .withMessage('Role must be one of: owner, manager, athlete, coach')
+      .isIn(['manager', 'assistant_manager', 'athlete', 'coach'])
+      .withMessage('Role must be one of: manager, assistant_manager, athlete, coach')
   ],
   
   teamIdParam: [
@@ -267,7 +295,7 @@ const league = {
   ]
 };
 
-// Match schemas
+// Match schemas (deduplicated)
 const match = {
   matchSchema: [
     body('homeTeamId')
@@ -280,42 +308,15 @@ const match = {
       .toInt()
       .custom((value, { req }) => value !== req.body.homeTeamId)
       .withMessage('Home team and away team must be different'),
-    body('homeScore')
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage('Home score must be a non-negative integer')
-      .toInt(),
-    body('awayScore')
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage('Away score must be a non-negative integer')
-      .toInt(),
     body('date')
       .optional()
       .isISO8601()
       .withMessage('Date must be a valid date in ISO format'),
-    body('status')
-      .optional()
-      .isIn(['scheduled', 'live', 'completed', 'cancelled', 'postponed'])
-      .withMessage('Status must be valid')
+    ...matchScoreStatusRules
   ],
   
-  matchResultSchema: [
-    body('homeScore')
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage('Home score must be a non-negative integer')
-      .toInt(),
-    body('awayScore')
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage('Away score must be a non-negative integer')
-      .toInt(),
-    body('status')
-      .optional()
-      .isIn(['scheduled', 'live', 'completed', 'cancelled', 'postponed'])
-      .withMessage('Status must be valid')
-  ],
+  // Used when only updating a match result
+  matchResultSchema: matchScoreStatusRules,
   
   // Add the missing ID param validation
   matchIdParam: [

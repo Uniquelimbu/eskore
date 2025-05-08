@@ -26,7 +26,7 @@ UserTeam.init({
     }
   },
   role: {
-    type: DataTypes.ENUM('manager', 'assistant_manager', 'coach', 'athlete', 'owner'),
+    type: DataTypes.ENUM('manager', 'assistant_manager', 'coach', 'athlete'),
     allowNull: false,
     defaultValue: 'athlete'
   },
