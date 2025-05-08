@@ -10,6 +10,11 @@
   color: white;
 }
 
+.role-badge.assistant_manager {
+  background-color: #3182ce;
+  color: white;
+}
+
 .role-badge.coach {
   background-color: #38b2ac;
   color: white;
@@ -587,7 +592,7 @@
 }
 
 .chat-sidebar {
-  width: 280px;
+  width: 240px; /* Changed from 280px to make it narrower than the main sidebar */
   background-color: #232b3a;
   padding: 16px;
   border-right: 1px solid #2d3748;

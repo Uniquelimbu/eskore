@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import apiClient from '../../../../services/apiClient';
-import Sidebar from '../../components/Sidebar/Sidebar';
-import PageLayout from '../../../../components/layout/PageLayout';
+import { useParams, useNavigate, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { toast } from 'react-toastify'; // Add toast import
 import { useAuth } from '../../../../contexts/AuthContext';
+import apiClient from '../../../../utils/apiClient';
+import Sidebar from '../../components/Sidebar/Sidebar';
+import PageLayout from '../../../../components/PageLayout/PageLayout';
 import Overview from './tabs/Overview';
 import Squad from './tabs/Squad';
 import Formation from './tabs/Formation';
@@ -20,6 +21,11 @@ const TeamSpace = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTransferManagerModal, setShowTransferManagerModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [selectedNewManager, setSelectedNewManager] = useState(null);
   
   // Fetch team data
   useEffect(() => {
@@ -86,17 +92,104 @@ const TeamSpace = () => {
     if (teamId) {
       fetchTeamData();
     }
-  }, [teamId, user.id]);
+  }, [teamId, user?.id]);
   
-  const isManager = userRole === 'owner' || userRole === 'manager';
+  const isManager = userRole === 'manager';
+  const otherMembers = members.filter(m => m.id !== user?.id);
   
-  // Function to invite new members
   const handleInviteMember = () => {
-    // Open invitation modal
-    // This would be implemented as a modal component
     navigate(`/teams/${teamId}/invite`);
   };
   
+  const handleDeleteTeam = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await apiClient.delete(`/api/teams/${teamId}`);
+      
+      if (response.success) {
+        toast.success('Team deleted successfully');
+        navigate('/teams');
+      }
+    } catch (err) {
+      console.error('Error deleting team:', err);
+      let errorMessage = 'Failed to delete team. Please try again.';
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+  
+  const toggleDeleteConfirm = () => {
+    // Show warning if there are other members
+    if (members.length > 1 && isManager) {
+      toast.warning('You must remove all other members before deleting the team');
+      return;
+    }
+    
+    setShowDeleteConfirm(prev => !prev);
+  };
+
+  const handleLeaveTeam = async () => {
+    if (isManager && members.length > 1) {
+      // Manager with other members - must transfer ownership first
+      setShowTransferManagerModal(true);
+    } else {
+      // Regular member or sole manager can leave directly
+      try {
+        const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+        if (response.success) {
+          toast.success('You have left the team');
+          navigate('/teams');
+        }
+      } catch (err) {
+        console.error('Error leaving team:', err);
+        toast.error(err.response?.data?.message || 'Failed to leave team');
+      }
+    }
+  };
+  
+  const handleTransferManager = async () => {
+    if (!selectedNewManager) {
+      toast.error('Please select a team member to transfer manager role to');
+      return;
+    }
+    
+    try {
+      setIsTransferring(true);
+      const response = await apiClient.post(`/api/teams/${teamId}/transfer-manager`, {
+        newManagerId: selectedNewManager
+      });
+      
+      if (response.success) {
+        toast.success('Manager role transferred successfully');
+        setShowTransferManagerModal(false);
+        
+        // Refresh team data to update roles
+        const updatedTeamData = await apiClient.get(`/api/teams/${teamId}`);
+        setTeam(updatedTeamData);
+        
+        // Find user's new role in the updated data
+        if (Array.isArray(updatedTeamData.Users)) {
+          const userMembership = updatedTeamData.Users.find(u => u.id === user?.id);
+          if (userMembership && userMembership.UserTeam) {
+            setUserRole(userMembership.UserTeam.role);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error transferring manager role:', err);
+      toast.error(err.response?.data?.message || 'Failed to transfer manager role');
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="team-space-layout">
@@ -167,7 +260,7 @@ const TeamSpace = () => {
           </div>
 
           <div className="team-actions">
-            {isManager && (
+            {isManager ? (
               <>
                 <button className="action-button primary" onClick={handleInviteMember}>
                   <i className="fas fa-user-plus"></i> Invite Players
@@ -175,7 +268,28 @@ const TeamSpace = () => {
                 <button className="action-button secondary">
                   <i className="fas fa-cog"></i> Team Settings
                 </button>
+                <button 
+                  className="action-button danger"
+                  onClick={toggleDeleteConfirm}
+                  disabled={isDeleting || members.length > 1}
+                  title={members.length > 1 ? "Remove all members first" : "Delete team"}
+                >
+                  <i className="fas fa-trash-alt"></i> Delete Team
+                </button>
+                <button 
+                  className="action-button warning"
+                  onClick={handleLeaveTeam}
+                >
+                  <i className="fas fa-sign-out-alt"></i> Leave Team
+                </button>
               </>
+            ) : (
+              <button 
+                className="action-button warning"
+                onClick={handleLeaveTeam}
+              >
+                <i className="fas fa-sign-out-alt"></i> Leave Team
+              </button>
             )}
             <div className="notification-bell">
               <i className="fas fa-bell"></i>
@@ -227,6 +341,79 @@ const TeamSpace = () => {
             <Route path="/" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
           </Routes>
         </div>
+
+        {/* Confirmation dialog for deletion */}
+        {showDeleteConfirm && (
+          <div className="delete-confirmation-overlay">
+            <div className="delete-confirmation-dialog">
+              <h3>Delete Team?</h3>
+              <p>Are you sure you want to delete <strong>{team.name}</strong>? This action cannot be undone.</p>
+              <div className="confirmation-buttons">
+                <button 
+                  className="cancel-button"
+                  onClick={toggleDeleteConfirm}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="delete-button"
+                  onClick={handleDeleteTeam}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? <><i className="fas fa-spinner fa-spin"></i> Deleting...</> : 'Delete Team'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Transfer manager role modal */}
+        {showTransferManagerModal && (
+          <div className="modal-overlay">
+            <div className="modal-dialog">
+              <h3>Transfer Manager Role</h3>
+              <p>As the team manager, you must transfer your role before leaving the team.</p>
+              <p>Select a new manager:</p>
+              
+              <div className="member-select-container">
+                {otherMembers.length > 0 ? (
+                  <select 
+                    className="member-select"
+                    value={selectedNewManager || ''}
+                    onChange={(e) => setSelectedNewManager(e.target.value)}
+                  >
+                    <option value="">Select a team member</option>
+                    {otherMembers.map(member => (
+                      <option key={member.id} value={member.id}>
+                        {member.firstName} {member.lastName}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="error-message">No other members available to transfer role to.</p>
+                )}
+              </div>
+              
+              <div className="modal-buttons">
+                <button 
+                  className="cancel-button"
+                  onClick={() => setShowTransferManagerModal(false)}
+                  disabled={isTransferring}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="primary-button"
+                  onClick={handleTransferManager}
+                  disabled={isTransferring || !selectedNewManager}
+                >
+                  {isTransferring ? <><i className="fas fa-spinner fa-spin"></i> Transferring...</> : 'Transfer & Leave'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </PageLayout>
     </div>
   );

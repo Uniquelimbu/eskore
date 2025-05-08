@@ -166,6 +166,28 @@
   transform: translateY(-2px);
 }
 
+/* Add danger button style */
+.action-button.danger {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.action-button.danger:hover {
+  background-color: #c53030;
+  transform: translateY(-2px);
+}
+
+/* Add warning button style for the become manager button */
+.action-button.warning {
+  background-color: #ed8936;
+  color: white;
+}
+
+.action-button.warning:hover {
+  background-color: #dd6b20;
+  transform: translateY(-2px);
+}
+
 .notification-bell {
   position: relative;
   width: 40px;
@@ -259,6 +281,151 @@
   padding: 16px;
   border-radius: 4px;
   margin: 20px 0;
+}
+
+/* Add confirmation dialog styles */
+.delete-confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-dialog {
+  background-color: #1a202c;
+  border-radius: 8px;
+  padding: 24px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.delete-confirmation-dialog h3 {
+  color: #e53e3e;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.delete-confirmation-dialog p {
+  margin-bottom: 24px;
+  color: #e2e8f0;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid #4a5568;
+  background-color: transparent;
+  color: #e2e8f0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: #e53e3e;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  background-color: #252c3b;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.modal-dialog h3 {
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.modal-dialog p {
+  color: #c5c8d2;
+  margin-bottom: 16px;
+}
+
+.member-select-container {
+  margin-bottom: 24px;
+}
+
+.member-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: #2e3548;
+  color: white;
+  border: 1px solid #4a5568;
+  font-size: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.primary-button {
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary-button:hover {
+  background-color: #2b6cb0;
+}
+
+.primary-button:disabled {
+  background-color: #4a5568;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #fc8181;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
 /* Responsive adjustments */

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import './LoginPage.css';
@@ -14,7 +14,7 @@ const LoginPage = () => {
   const { login, loading, error, isAuthenticated } = useAuth();
   
   // If already authenticated, redirect to dashboard
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
@@ -44,16 +44,26 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submitted");
+    
     if (validateForm()) {
+      console.log("Form validation passed, attempting login with:", credentials.email);
       try {
+        // Add explicit try/catch with better logging
+        console.log("Calling login function with credentials");
         const result = await login(credentials.email, credentials.password);
-        if (result) {
+        console.log("Login result:", result);
+        
+        if (result && result.success) {
+          console.log("Login successful, navigating to dashboard");
           navigate('/dashboard');
         }
       } catch (err) {
-        // Error is handled by context and shown in UI
-        // Optionally, you can log or show a toast here
+        console.error('Login error details:', err);
+        // Error is handled by context
       }
+    } else {
+      console.warn("Form validation failed. Errors:", formErrors);
     }
   };
 
@@ -74,6 +84,8 @@ const LoginPage = () => {
             <h1>Welcome Back</h1>
             <p className="subtitle">Sign in to continue to eSkore</p>
             {error && <div className="error-banner">{error}</div>}
+            
+            {/* FIX: Using onSubmit only, not mixing with onClick on button */}
             <form onSubmit={handleSubmit} noValidate>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
@@ -115,6 +127,8 @@ const LoginPage = () => {
               >
                 Forgot password?
               </button>
+              
+              {/* FIX: Simplified button with better accessibility */}
               <button 
                 type="submit" 
                 className="login-button" 

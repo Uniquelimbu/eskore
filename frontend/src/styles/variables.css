@@ -2,7 +2,7 @@
   /* Layout */
   --header-height: 76px;
   --container-max-width: 1400px;
-  --sidebar-width: 250px;
+  --sidebar-width: 260px; /* Updated to match actual sidebar width */
   
   /* Colors */
   --color-primary: #4a6cf7;
@@ -86,6 +86,12 @@
   :root {
     --header-height: 70px;
     --sidebar-width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 90px; /* Added mobile sidebar width */
   }
 }
 

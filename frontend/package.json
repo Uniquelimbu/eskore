@@ -12,8 +12,9 @@
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.22.3",
-    "web-vitals": "^2.1.4",
-    "react-transition-group": "^4.4.5"
+    "react-toastify": "^11.0.5",
+    "react-transition-group": "^4.4.5",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",

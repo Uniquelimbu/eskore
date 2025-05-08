@@ -8,8 +8,8 @@
   flex-grow: 1;
   /* Use PageLayout's padding, remove from here */
   /* padding: 30px; */
-  margin-left: 260px; /* Adjust based on sidebar width */
-  max-width: calc(100% - 260px);
+  margin-left: var(--sidebar-width, 260px); /* Use CSS variable */
+  max-width: calc(100% - var(--sidebar-width, 260px)); /* Use CSS variable */
   color: #e2e8f0;
 }
 
@@ -215,7 +215,6 @@
   text-align: center;
 }
 
-
 /* Responsive Adjustments */
 @media (max-width: 1200px) {
   .profile-body-grid {
@@ -225,8 +224,8 @@
 
 @media (max-width: 992px) { /* Adjust breakpoint if needed */
   .profile-page-content {
-    margin-left: 90px; /* Adjust for smaller sidebar */
-    max-width: calc(100% - 90px);
+    margin-left: var(--sidebar-width, 90px); /* Use CSS variable */
+    max-width: calc(100% - var(--sidebar-width, 90px));
   }
 }
 

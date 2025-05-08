@@ -7,8 +7,8 @@
 .teams-page-content {
   flex-grow: 1;
   padding: 30px;
-  margin-left: 260px;
-  max-width: calc(100% - 260px);
+  margin-left: var(--sidebar-width, 260px);
+  max-width: calc(100% - var(--sidebar-width, 260px));
   color: #e2e8f0;
 }
 

@@ -11,7 +11,7 @@ const AUTH_LOADING = 'AUTH_LOADING';
 // Initial state
 const initialState = {
   user: null,
-  loading: true, // Start loading initially to check auth status
+  loading: false, // Change this to false initially
   error: null,
   isAuthenticated: false
 };
@@ -74,54 +74,58 @@ export const AuthProvider = ({ children }) => {
   // Effect to check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
-      // No need to dispatch loading here, initial state is loading: true
       try {
+        dispatch({ type: AUTH_LOADING });
         const currentUser = await authService.getCurrentUser();
 
         if (currentUser && typeof currentUser === 'object') {
-          // User is authenticated
           dispatch({ type: AUTH_SUCCESS, payload: currentUser });
         } else {
-          // No user data returned (likely 401 handled by authService returning null)
-          // Or getCurrentUser returned null/undefined explicitly
-          dispatch({ type: AUTH_INIT }); // Initialize without user, loading becomes false
+          dispatch({ type: AUTH_INIT });
         }
       } catch (error) {
-        // Handle errors during initial check (e.g., network error)
         console.error('Initial auth check error:', error.message || error);
-        // Initialize state without user, mark loading as false
         dispatch({ type: AUTH_INIT });
       }
     };
 
     checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount
+  }, []);
 
   // Login function
   const login = async (email, password) => {
+    console.log("AuthContext: login called with email:", email);
+    dispatch({ type: AUTH_LOADING }); // Set loading to true
     try {
-      dispatch({ type: AUTH_LOADING });
-      // Step 1: Call the login API endpoint
-      const loginResponse = await authService.login({ email, password });
+      // Add a client-side timeout to prevent hanging requests
+      console.log("AuthContext: calling auth service login");
+      const loginPromise = authService.login({ email, password });
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login request timed out')), 10000)
+      );
+      
+      // Race between actual login and timeout
+      const loginResponse = await Promise.race([loginPromise, timeoutPromise]);
+      console.log("AuthContext: received login response:", loginResponse);
 
-      // Check if login was successful (backend sets cookie, response has user data)
       if (loginResponse && loginResponse.success && loginResponse.user) {
-        // Use the user data directly from the login response
-        dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user });
-        
-        // Ensure we redirect to the dashboard page
-        return { success: true, redirectUrl: '/dashboard' };
+        console.log("AuthContext: login successful, updating state");
+        dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user }); // Resets loading to false
+        return { success: true, redirectUrl: loginResponse.redirectUrl || '/dashboard' };
       } else {
-        throw new Error(loginResponse?.message || 'Login failed');
+        // This case should ideally not be reached if authService.login always throws on non-success
+        const errorMessage = loginResponse?.message || 'Login failed: Unexpected response';
+        console.error("AuthContext: Unexpected response format:", loginResponse);
+        dispatch({ type: AUTH_ERROR, payload: errorMessage });
+        throw new Error(errorMessage); // Ensure an error is thrown here
       }
     } catch (error) {
-      // Handle errors from login API call
+      console.error("AuthContext: Login error:", error.message || error);
       dispatch({
         type: AUTH_ERROR,
         payload: error.message || 'Login failed'
       });
-      throw error; // Re-throw for the component to handle if needed
+      throw error;
     }
   };
 

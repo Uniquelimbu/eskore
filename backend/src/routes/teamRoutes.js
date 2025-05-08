@@ -10,6 +10,7 @@ const { body, param, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const { sendSafeJson } = require('../utils/safeSerializer');
 const logger = require('../utils/logger'); // Assuming you have a logger utility
+const sequelize = require('../config/db'); // Add Missing Import for Sequelize
 
 // --- Multer setup for logo uploads ---
 // ... (existing multer setup) ...
@@ -153,12 +154,11 @@ router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catc
 /**
  * POST /api/teams
  * Creates a new team
- * Requires authenticated user
  */
 router.post('/', 
-  requireAuth, // Apply requireAuth middleware first
-  validate(schemas.team.teamSchema), // Then apply validation middleware
-  catchAsync(async (req, res, next) => { // Added next for explicit error passing if needed
+  requireAuth, 
+  validate(schemas.team.createTeam), 
+  catchAsync(async (req, res) => {
     logger.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user?.email}, Body: ${JSON.stringify(req.body)}`);
     const { name, abbreviation, foundedYear, city, nickname } = req.body;
     let newTeam; 
@@ -167,7 +167,7 @@ router.post('/',
     const existingTeam = await UserTeam.findOne({
       where: {
         userId: req.user.id,
-        role: 'owner'
+        role: 'manager'
       }
     });
 
@@ -201,11 +201,11 @@ router.post('/',
       throw new ApiError('Authenticated user ID is missing. Cannot assign team ownership.', 500, 'INTERNAL_SERVER_ERROR_AUTH_MISSING');
     }
 
-    logger.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.id}, teamId: ${newTeam.id}, role: 'owner'`);
+    logger.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.id}, teamId: ${newTeam.id}, role: 'manager'`);
     await UserTeam.create({
       userId: req.user.id,
       teamId: newTeam.id,
-      role: 'owner' // Default role for team creator
+      role: 'manager' // Always set as manager for creator
     });
     logger.info(`TEAMROUTES.JS (POST /): UserTeam.create successful. Team and ownership link created.`);
 
@@ -217,7 +217,191 @@ router.post('/',
   })
 );
 
-// PATCH /api/teams/:id
+/**
+ * POST /api/teams/:id/members
+ * Adds a member to a team
+ */
+router.post('/:id/members', 
+  requireAuth, 
+  validate([
+    ...schemas.team.teamIdParam,
+    ...schemas.team.teamMemberSchema
+  ]), 
+  catchAsync(async (req, res) => {
+  logger.info(`TEAMROUTES.JS (POST /:id/members): Adding member to team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
+  const { id } = req.params;
+  const { userId, role = 'athlete' } = req.body;
+  
+  // Validate parameters
+  if (!userId) {
+    throw new ApiError('User ID is required', 400, 'VALIDATION_ERROR');
+  }
+  
+  if (!['manager', 'assistant_manager', 'athlete', 'coach'].includes(role)) {
+    throw new ApiError('Invalid role', 400, 'VALIDATION_ERROR');
+  }
+  
+  // Check if team exists
+  const team = await Team.findByPk(id);
+  if (!team) {
+    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+  }
+  
+  // Check if user has permission (team owner or team manager)
+  const userTeamPermission = await UserTeam.findOne({
+    where: {
+      userId: req.user.id,
+      teamId: id,
+      role: { [Op.in]: ['manager', 'assistant_manager'] }
+    }
+  });
+  
+  if (!userTeamPermission) {
+    throw new ApiError('Forbidden - You must be a team owner or manager to add members', 403, 'FORBIDDEN');
+  }
+  
+  if (userTeamPermission.role === 'assistant_manager' && ['manager', 'assistant_manager'].includes(role)) {
+    throw new ApiError('Forbidden - Assistant managers can only add athletes and coaches', 403, 'FORBIDDEN');
+  }
+  
+  // Check if user exists
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
+  }
+  
+  // Check if user is already in the team with the same role
+  const existingMembership = await UserTeam.findOne({
+    where: {
+      userId,
+      teamId: id,
+      role
+    }
+  });
+  
+  if (existingMembership) {
+    throw new ApiError('User already has this role in the team', 409, 'ALREADY_EXISTS');
+  }
+  
+  // Add user to the team
+  const userTeam = await UserTeam.create({
+    userId,
+    teamId: id,
+    role: role || 'athlete'
+  });
+  
+  return sendSafeJson(res, {
+    success: true,
+    message: 'User added to the team successfully',
+    membership: userTeam
+  }, 201);
+}));
+
+/**
+ * DELETE /api/teams/:id/members/:userId
+ * Removes a member from a team
+ */
+router.delete('/:id/members/:userId', 
+  requireAuth, 
+  validate([
+    ...schemas.team.teamIdParam,
+    param('userId').isInt().withMessage('User ID must be an integer').toInt()
+  ]),
+  catchAsync(async (req, res) => {
+  logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Removing member ${req.params.userId} from team ${req.params.id} by user ${req.user?.email}.`);
+  const { id, userId } = req.params;
+  
+  // Check if team exists
+  const team = await Team.findByPk(id);
+  if (!team) {
+    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+  }
+  
+  // Check if user has permission (team owner)
+  const userTeamOwner = await UserTeam.findOne({
+    where: {
+      userId: req.user.id,
+      teamId: id,
+      role: 'manager'
+    }
+  });
+  
+  if (!userTeamOwner) {
+    // Allow managers to remove athletes or coaches they added? Or only owners?
+    // Current logic: only owners can remove any member.
+    // If self-removal is allowed, that's a different check (e.g. if req.user.id === parseInt(userId))
+    throw new ApiError('Forbidden - You must be a team owner to remove members', 403, 'FORBIDDEN');
+  }
+  
+  // Prevent owner from removing themselves if they are the sole owner? (Consider this logic)
+
+  // Start a transaction
+  const t = await sequelize.transaction();
+    
+  try {
+    // Check if the user to be removed is the manager
+    const memberToRemove = await UserTeam.findOne({
+      where: {
+        teamId: id,
+        userId: userId
+      },
+      transaction: t
+    });
+    
+    if (!memberToRemove) {
+      await t.rollback();
+      throw new ApiError('Member not found in this team', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    // Count total team members
+    const memberCount = await UserTeam.count({
+      where: { teamId: id },
+      transaction: t
+    });
+    
+    // Prevent removing a manager if they're not the only member
+    if (memberToRemove.role === 'manager' && memberCount > 1) {
+      await t.rollback();
+      throw new ApiError('Please transfer manager role before leaving the team', 403, 'FORBIDDEN_MANAGER_LEAVE');
+    }
+    
+    // Remove the member
+    await memberToRemove.destroy({ transaction: t });
+    
+    // If there's exactly one member left after this removal, promote them to manager
+    if (memberCount - 1 === 1) {
+      const lastMember = await UserTeam.findOne({
+        where: { 
+          teamId: id,
+          userId: { [Op.ne]: userId }
+        },
+        transaction: t
+      });
+      
+      if (lastMember) {
+        lastMember.role = 'manager';
+        await lastMember.save({ transaction: t });
+        logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Auto-promoted last member to manager: ${lastMember.userId}`);
+      }
+    }
+    
+    await t.commit();
+    
+    return sendSafeJson(res, {
+      success: true,
+      message: 'Team member removed successfully'
+    });
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
+}));
+
+/**
+ * PATCH /api/teams/:id
+ * Updates a team
+ * Requires team ownership or manager role
+ */
 router.patch('/:id', 
   requireAuth, 
   validate([
@@ -240,7 +424,7 @@ router.patch('/:id',
     where: {
       userId: req.user.id,
       teamId: id,
-      role: { [Op.in]: ['owner', 'manager'] } // Allow managers to update too
+      role: { [Op.in]: ['manager', 'assistant_manager'] } // Updated roles
     }
   });
   
@@ -303,7 +487,7 @@ router.patch('/:id/logo',
       where: {
         userId: req.user.id,
         teamId: id,
-        role: { [Op.in]: ['owner', 'manager'] }
+        role: { [Op.in]: ['manager', 'assistant_manager'] }
       }
     });
     
@@ -332,182 +516,176 @@ router.patch('/:id/logo',
 
 /**
  * DELETE /api/teams/:id
- * Removes a team from the database
- * Requires team ownership
+ * Deletes a team
  */
-router.delete('/:id', 
-  requireAuth, 
+router.delete('/:id',
+  requireAuth,
   validate(schemas.team.teamIdParam),
-  catchAsync(async (req, res) => { // Changed from requireAdmin
-  logger.info(`TEAMROUTES.JS (DELETE /:id): Deleting team ID ${req.params.id} by user ${req.user?.email}`);
-  const { id } = req.params;
-  
-  const team = await Team.findByPk(id);
-  if (!team) {
-    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-
-  // Check if user is team owner
-  const userTeam = await UserTeam.findOne({
-    where: {
-      userId: req.user.id,
-      teamId: id,
-      role: 'owner'
-    }
-  });
-
-  if (!userTeam) {
-    throw new ApiError('Forbidden - You must be the team owner to delete it', 403, 'FORBIDDEN_TEAM_DELETE');
-  }
-  
-  // Add logic to delete UserTeam entries, and other related data if necessary (e.g., in a transaction)
-  await UserTeam.destroy({ where: { teamId: id } });
-  // Consider other dependencies like TeamTournament etc.
-
-  await team.destroy();
-  return sendSafeJson(res, {
-    success: true,
-    message: 'Team deleted successfully'
-  });
-}));
-
-/**
- * POST /api/teams/:id/members
- * Add a user to a team
- * Requires team ownership or manager role
- */
-router.post('/:id/members', 
-  requireAuth, 
-  validate([
-    ...schemas.team.teamIdParam,
-    ...schemas.team.teamMemberSchema
-  ]), 
   catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (POST /:id/members): Adding member to team ID ${req.params.id} by user ${req.user?.email}. Body: ${JSON.stringify(req.body)}`);
-  const { id } = req.params;
-  const { userId, role = 'athlete' } = req.body;
-  
-  // Validate parameters
-  if (!userId) {
-    throw new ApiError('User ID is required', 400, 'VALIDATION_ERROR');
-  }
-  
-  if (!['owner', 'manager', 'athlete', 'coach'].includes(role)) {
-    throw new ApiError('Invalid role', 400, 'VALIDATION_ERROR');
-  }
-  
-  // Check if team exists
-  const team = await Team.findByPk(id);
-  if (!team) {
-    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-  
-  // Check if user has permission (team owner or team manager)
-  const userTeamPermission = await UserTeam.findOne({
-    where: {
-      userId: req.user.id,
-      teamId: id,
-      role: { [Op.in]: ['owner', 'manager'] }
+    logger.info(`TEAMROUTES.JS (DELETE /:id): Deleting team ID ${req.params.id} by user ${req.user?.email}`);
+    const { id } = req.params;
+    
+    // Start a transaction for atomicity
+    const t = await sequelize.transaction();
+    
+    try {
+      const team = await Team.findByPk(id, { transaction: t });
+      if (!team) {
+        await t.rollback();
+        throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+
+      // Check if user is on this team as a manager
+      const userTeam = await UserTeam.findOne({
+        where: {
+          userId: req.user.id,
+          teamId: id,
+          role: 'manager'
+        },
+        transaction: t
+      });
+
+      if (!userTeam) {
+        await t.rollback();
+        throw new ApiError('Only team managers can delete teams', 403, 'FORBIDDEN');
+      }
+      
+      // Count team members
+      const memberCount = await UserTeam.count({
+        where: { teamId: id },
+        transaction: t
+      });
+      
+      logger.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} has ${memberCount} members, requester role is ${userTeam.role}`);
+      
+      // Only allow deletion if this is the only member
+      if (memberCount > 1) {
+        await t.rollback();
+        throw new ApiError('Teams with multiple members cannot be deleted. Remove all other members first.', 403, 'FORBIDDEN_TEAM_DELETE');
+      }
+      
+      // Delete all associated data
+      // 1. Team memberships
+      const deletedMemberships = await UserTeam.destroy({ 
+        where: { teamId: id },
+        transaction: t 
+      });
+      
+      logger.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedMemberships} team memberships`);
+      
+      // 2. Tournament registrations if they exist
+      try {
+        const TeamTournament = require('../models/TeamTournament');
+        const deletedTournaments = await TeamTournament.destroy({ 
+          where: { teamId: id },
+          transaction: t 
+        });
+        logger.info(`TEAMROUTES.JS (DELETE /:id): Deleted ${deletedTournaments} tournament registrations`);
+      } catch (err) {
+        logger.warn(`TEAMROUTES.JS (DELETE /:id): Error deleting tournament registrations: ${err.message}`);
+        // Continue with deletion even if this fails
+      }
+      
+      // 3. Other team related data
+      // ... existing cleanup code ...
+      
+      // Finally delete the team
+      await team.destroy({ transaction: t });
+      
+      // Commit transaction
+      await t.commit();
+      
+      logger.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} successfully deleted by user ${req.user.id}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        message: 'Team deleted successfully'
+      });
+    } catch (error) {
+      await t.rollback();
+      logger.error(`TEAMROUTES.JS (DELETE /:id): Error deleting team ${id}: ${error.message}`);
+      throw error;
     }
-  });
-  
-  if (!userTeamPermission) {
-    throw new ApiError('Forbidden - You must be a team owner or manager to add members', 403, 'FORBIDDEN');
-  }
-  
-  // Team managers can only add athletes and coaches, not owners or other managers
-  if (userTeamPermission.role === 'manager' && ['owner', 'manager'].includes(role)) {
-    throw new ApiError('Forbidden - Team managers can only add athletes and coaches', 403, 'FORBIDDEN');
-  }
-  
-  // Check if user exists
-  const user = await User.findByPk(userId);
-  if (!user) {
-    throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
-  }
-  
-  // Check if user is already in the team with the same role
-  const existingMembership = await UserTeam.findOne({
-    where: {
-      userId,
-      teamId: id,
-      role
-    }
-  });
-  
-  if (existingMembership) {
-    throw new ApiError('User already has this role in the team', 409, 'ALREADY_EXISTS');
-  }
-  
-  // Add user to team
-  const userTeam = await UserTeam.create({
-    userId,
-    teamId: id,
-    role
-  });
-  
-  return sendSafeJson(res, {
-    success: true,
-    membership: userTeam
-  }, 201);
-}));
+  })
+);
 
 /**
- * DELETE /api/teams/:id/members/:userId
- * Remove a user from a team
- * Requires team ownership
+ * POST /api/teams/:id/transfer-manager
+ * Transfers manager role to another team member
  */
-router.delete('/:id/members/:userId', 
-  requireAuth, 
+router.post('/:id/transfer-manager',
+  requireAuth,
   validate([
     ...schemas.team.teamIdParam,
-    param('userId').isInt().withMessage('User ID must be an integer').toInt()
+    body('newManagerId').isInt().withMessage('New manager ID must be an integer')
   ]),
   catchAsync(async (req, res) => {
-  logger.info(`TEAMROUTES.JS (DELETE /:id/members/:userId): Removing member ${req.params.userId} from team ${req.params.id} by user ${req.user?.email}.`);
-  const { id, userId } = req.params;
-  
-  // Check if team exists
-  const team = await Team.findByPk(id);
-  if (!team) {
-    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-  
-  // Check if user has permission (team owner)
-  const userTeamOwner = await UserTeam.findOne({
-    where: {
-      userId: req.user.id,
-      teamId: id,
-      role: 'owner'
+    logger.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Transferring manager role in team ${req.params.id}, from user ${req.user?.id} to user ${req.body.newManagerId}`);
+    const { id } = req.params;
+    const { newManagerId } = req.body;
+    
+    // Start a transaction for atomicity
+    const t = await sequelize.transaction();
+    
+    try {
+      // Check if team exists
+      const team = await Team.findByPk(id, { transaction: t });
+      if (!team) {
+        await t.rollback();
+        throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // Check if current user is the manager
+      const currentManager = await UserTeam.findOne({
+        where: {
+          teamId: id,
+          userId: req.user.id,
+          role: 'manager'
+        },
+        transaction: t
+      });
+      
+      if (!currentManager) {
+        await t.rollback();
+        throw new ApiError('Only the current manager can transfer manager role', 403, 'FORBIDDEN');
+      }
+      
+      // Check if new manager is on the team
+      const newManager = await UserTeam.findOne({
+        where: {
+          teamId: id,
+          userId: newManagerId
+        },
+        transaction: t
+      });
+      
+      if (!newManager) {
+        await t.rollback();
+        throw new ApiError('The specified user is not a member of this team', 404, 'USER_NOT_FOUND');
+      }
+      
+      // Update roles
+      currentManager.role = 'athlete'; // Demote current manager
+      await currentManager.save({ transaction: t });
+      
+      newManager.role = 'manager'; // Promote new manager
+      await newManager.save({ transaction: t });
+      
+      // Commit transaction
+      await t.commit();
+      
+      logger.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Manager role transferred from ${req.user.id} to ${newManagerId} for team ${id}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        message: 'Manager role transferred successfully'
+      });
+    } catch (error) {
+      await t.rollback();
+      throw error;
     }
-  });
-  
-  if (!userTeamOwner) {
-    // Allow managers to remove athletes or coaches they added? Or only owners?
-    // Current logic: only owners can remove any member.
-    // If self-removal is allowed, that's a different check (e.g. if req.user.id === parseInt(userId))
-    throw new ApiError('Forbidden - You must be a team owner to remove members', 403, 'FORBIDDEN');
-  }
-  
-  // Prevent owner from removing themselves if they are the sole owner? (Consider this logic)
-
-  // Delete the membership
-  const deleted = await UserTeam.destroy({
-    where: {
-      userId,
-      teamId: id
-    }
-  });
-  
-  if (deleted === 0) {
-    throw new ApiError('User is not a member of this team', 404, 'NOT_FOUND');
-  }
-  
-  return sendSafeJson(res, {
-    success: true,
-    message: 'Team member removed successfully'
-  });
-}));
+  })
+);
 
 /**
  * GET /api/teams/user/:userId
@@ -537,7 +715,7 @@ router.get('/user/:userId',
       }
     ]
   });
-    
+  
   // Map the teams with their roles
   const teams = userTeams.map(ut => ({
     ...ut.Team.toJSON(),
@@ -546,5 +724,75 @@ router.get('/user/:userId',
     
   return sendSafeJson(res, { teams });
 }));
+
+/**
+ * POST /api/teams/:id/promote-last-member
+ * Promote the last remaining member to manager
+ * Only works if there's exactly one member in the team and that's the requester
+ */
+router.post('/:id/promote-last-member', 
+  requireAuth, 
+  validate(schemas.team.teamIdParam),
+  catchAsync(async (req, res) => {
+    logger.info(`TEAMROUTES.JS (POST /:id/promote-last-member): Promoting last member for team ID ${req.params.id}, User: ${req.user?.email}`);
+    const { id } = req.params;
+     
+    // Start a transaction for atomicity
+    const t = await sequelize.transaction();
+    
+    try {
+      // Check if team exists
+      const team = await Team.findByPk(id, { transaction: t });
+      if (!team) {
+        await t.rollback();
+        throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // Count team members
+      const memberCount = await UserTeam.count({
+        where: { teamId: id },
+        transaction: t
+      });
+      
+      // Check if user is a member of this team
+      const userTeam = await UserTeam.findOne({
+        where: {
+          userId: req.user.id,
+          teamId: id
+        },
+        transaction: t
+      });
+      
+      if (!userTeam) {
+        await t.rollback();
+        throw new ApiError('You are not a member of this team', 403, 'FORBIDDEN');
+      }
+      
+      // Verify this is the only member
+      if (memberCount !== 1) {
+        await t.rollback();
+        throw new ApiError('This operation is only allowed when you are the sole team member', 403, 'FORBIDDEN_MULTIPLE_MEMBERS');
+      }
+      
+      // Update user's role to manager
+      userTeam.role = 'manager';
+      await userTeam.save({ transaction: t });
+      
+      // Commit transaction
+      await t.commit();
+      
+      logger.info(`TEAMROUTES.JS (POST /:id/promote-last-member): User ${req.user.id} promoted to manager for team ${id}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        message: 'You are now the team manager',
+        membership: userTeam
+      });
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  })
+);
 
 module.exports = router;

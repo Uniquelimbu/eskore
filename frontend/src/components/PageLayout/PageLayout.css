@@ -1,0 +1,14 @@
+.page-layout {
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-layout.with-padding {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .page-layout.with-padding {
+    padding: 16px;
+  }
+}

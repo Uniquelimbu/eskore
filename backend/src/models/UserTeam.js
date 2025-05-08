@@ -26,7 +26,7 @@ UserTeam.init({
     }
   },
   role: {
-    type: DataTypes.ENUM('owner', 'manager', 'athlete', 'coach'),
+    type: DataTypes.ENUM('manager', 'assistant_manager', 'coach', 'athlete', 'owner'),
     allowNull: false,
     defaultValue: 'athlete'
   },
@@ -42,13 +42,12 @@ UserTeam.init({
   sequelize,
   modelName: 'UserTeam',
   tableName: 'user_teams',
-  timestamps: true,
-  indexes: [
-    {
-      unique: true,
-      fields: ['userId', 'teamId', 'role']
-    }
-  ]
+  timestamps: true
 });
+
+UserTeam.associate = function(models) {
+  UserTeam.belongsTo(models.User, { foreignKey: 'userId' });
+  UserTeam.belongsTo(models.Team, { foreignKey: 'teamId' });
+};
 
 module.exports = UserTeam;

@@ -34,18 +34,32 @@ const withRetry = async (fn, maxRetries = 2, delay = 1000) => {
 const authService = {
   // Login with email and password
   login: async (credentials) => {
+    console.log("Auth service: login called with:", credentials.email);
     return withRetry(async () => {
       try {
+        console.log("Auth service: sending login request to API");
         const response = await apiClient.post('/api/auth/login', credentials);
+        console.log("Auth service: received login response:", response);
+        
+        // Validate response structure
+        if (!response) {
+          console.error("Auth service: Empty response received");
+          throw new Error('Empty response received from server');
+        }
+        
         if (response && response.success && response.user) {
+          console.log("Auth service: Login successful");
           // Add redirectUrl to response if not present
           if (!response.redirectUrl) {
             response.redirectUrl = '/dashboard';
           }
           return response;
         }
+        
+        console.error("Auth service: Invalid response format:", response);
         throw new Error(response?.message || 'Login failed: Invalid response from server');
       } catch (error) {
+        console.error("Auth service: Login error:", error);
         if (error.status === 401 || error.code === 'INVALID_CREDENTIALS') {
           throw new Error("Invalid email or password.");
         } else if (error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED') {
@@ -96,16 +110,25 @@ const authService = {
     }
   },
 
-  // Get the current user's profile
+  // Improved getCurrentUser with better error categorization
   getCurrentUser: async () => {
     try {
       const response = await apiClient.get('/api/auth/me');
       return response;
     } catch (error) {
-      if (error.status === 401 || error.code === 'NO_TOKEN' || error.code === 'INVALID_TOKEN') {
+      // Categorize errors better
+      if (error.status === 401 || 
+          error.code === 'NO_TOKEN' || 
+          error.code === 'INVALID_TOKEN' ||
+          error.message?.includes('token')) {
+        console.log('Auth token invalid or expired, returning null');
         return null;
       }
-      throw error instanceof Error ? error : new Error(error.message || 'Get current user failed');
+      
+      // Network or server errors should be logged but still return null
+      // to prevent app from getting stuck in loading state
+      console.error('Error getting current user:', error);
+      return null;
     }
   },
 

@@ -52,20 +52,24 @@ const dashboardService = {
   // Get leaderboard data 
   getLeaderboard: async (gameId, metric = 'winRate', limit = 10) => {
     try {
-      return await apiClient.get(`/api/leaderboard`, {
+      const response = await apiClient.get(`/api/leaderboard`, {
         params: { gameId, metric, limit }
       });
+      return response;
     } catch (error) {
-      throw error;
+      console.error('Error fetching leaderboard:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
   
   // Get athlete profile
   getAthleteProfile: async (athleteId) => {
     try {
-      return await apiClient.get(`/api/athletes/${athleteId}/profile`);
+      const response = await apiClient.get(`/api/athletes/${athleteId}/profile`);
+      return response;
     } catch (error) {
-      throw error;
+      console.error('Error fetching athlete profile:', error.response?.data || error.message);
+      throw error.response?.data || error;
     }
   },
   

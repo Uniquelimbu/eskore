@@ -7,8 +7,8 @@
 .dashboard-main-content {
   flex-grow: 1;
   padding: 30px;
-  margin-left: 260px;
-  max-width: calc(100% - 260px);
+  margin-left: var(--sidebar-width, 260px); /* Use CSS variable */
+  max-width: calc(100% - var(--sidebar-width, 260px)); /* Use CSS variable */
   font-family: 'Inter', sans-serif;
   background-color: #1a202c; /* Match sidebar */
   color: #e2e8f0; /* Light text for dark bg */
@@ -247,8 +247,8 @@
 
 @media (max-width: 768px) {
   .dashboard-main-content {
-    margin-left: 100px;
-    max-width: calc(100% - 100px);
+    margin-left: var(--sidebar-width, 90px); /* Use CSS variable */
+    max-width: calc(100% - var(--sidebar-width, 90px));
     padding: 20px;
   }
   .dashboard-content-grid {

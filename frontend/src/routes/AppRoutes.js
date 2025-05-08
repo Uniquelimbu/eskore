@@ -1,95 +1,39 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-
-// Public Pages
-import HomePage from '../pages/public/HomePage';
-import LoginPage from '../pages/auth/LoginPage';
-import UserRegistrationPage from '../pages/auth/registration/UserRegistrationPage';
-import NotFoundPage from '../pages/public/NotFoundPage';
-
-// User Pages
-import DashboardPage from '../pages/user/DashboardPage';
-import ProfilePage from '../pages/user/ProfilePage';
-import SearchPage from '../pages/user/SearchPage';
-import LeaderboardPage from '../pages/user/LeaderboardPage';
-import TeamsPage from '../pages/user/TeamsPage';
-import TournamentPage from '../pages/user/TournamentPage';
-import TournamentDetailsPage from '../pages/user/TournamentDetailsPage';
-import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
-import TeamSpace from '../pages/user/TeamsPage/TeamSpace';
-
-// Admin Pages
-import AdminDashboard from '../pages/admin/Dashboard';
+import routes from './routes';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<UserRegistrationPage />} />
+      {routes.publicRoutes.map((route) => (
+        <Route 
+          key={route.path}
+          path={route.path}
+          element={route.element}
+          exact={route.exact}
+        />
+      ))}
 
-      {/* User Routes (Protected) */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <ProfilePage />
-        </ProtectedRoute>
-      } />
-      <Route path="/search" element={
-        <ProtectedRoute>
-          <SearchPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/leaderboards" element={
-        <ProtectedRoute>
-          <LeaderboardPage />
-        </ProtectedRoute>
-      } />
+      {/* Protected Routes */}
+      {routes.privateRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={<ProtectedRoute>{route.element}</ProtectedRoute>}
+          exact={route.exact}
+        />
+      ))}
 
-      {/* Team routes */}
-      <Route path="/teams" element={
-        <ProtectedRoute>
-          <TeamsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/teams/create" element={
-        <ProtectedRoute>
-          <CreateTeam />
-        </ProtectedRoute>
-      } />
-      <Route path="/teams/:teamId/space/*" element={
-        <ProtectedRoute>
-          <TeamSpace />
-        </ProtectedRoute>
-      } />
-
-      {/* Tournament routes */}
-      <Route path="/tournaments" element={
-        <ProtectedRoute>
-          <TournamentPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/tournaments/:id" element={
-        <ProtectedRoute>
-          <TournamentDetailsPage />
-        </ProtectedRoute>
-      } />
-
-      {/* System Dashboard - renamed from Admin Dashboard */}
-      <Route path="/admin/dashboard" element={
-        <ProtectedRoute>
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
-
-      {/* Not Found Route */}
-      <Route path="*" element={<NotFoundPage />} />
+      {/* Special Routes */}
+      {routes.specialRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={route.element}
+        />
+      ))}
     </Routes>
   );
 };

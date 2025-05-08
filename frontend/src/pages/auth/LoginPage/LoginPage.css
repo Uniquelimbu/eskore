@@ -113,6 +113,11 @@
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 10px;
+  position: relative;
+  z-index: 5; /* Ensure button is clickable */
+  transform: translateZ(0); /* Force hardware acceleration */
+  -webkit-appearance: none; /* Fix for some mobile browsers */
+  cursor: pointer !important;
 }
 
 .login-button:hover {
@@ -121,7 +126,8 @@
 
 .login-button:disabled {
   background-color: #a0aec0;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
 .login-footer {
@@ -223,4 +229,10 @@
     margin-top: 24px;
     font-size: 0.95rem;
   }
+}
+
+.login-container form {
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }

@@ -7,6 +7,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Notifications from './components/ui/Notifications/Notifications';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -53,6 +55,7 @@ function App() {
           </NotificationProvider>
         </ThemeProvider>
       </Router>
+      <ToastContainer position="top-right" autoClose={5000} />
     </ErrorBoundary>
   );
 }
