@@ -54,7 +54,7 @@ async function requireAuth(req, res, next) {
     const userRoles = user.Roles ? user.Roles.map(role => role.name) : [];
     
     req.user = {
-      id: user.id,
+      userId: user.id, // Changed from id to userId for consistency with token and authController
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -63,7 +63,7 @@ async function requireAuth(req, res, next) {
       role: userRoles.length > 0 ? userRoles[0] : (user.role || 'user')
     };
     
-    logger.info(`AUTH.JS (requireAuth): User ${req.user.email} (ID: ${req.user.id}) authenticated with primary role: ${req.user.role} and all roles: [${userRoles.join(', ')}]. Calling next().`);
+    logger.info(`AUTH.JS (requireAuth): User ${req.user.email} (ID: ${req.user.userId}) authenticated with primary role: ${req.user.role} and all roles: [${userRoles.join(', ')}]. Calling next().`);
     return next();
   } catch (error) {
     logger.error(`AUTH.JS (requireAuth): JWT verification or user fetch error: ${error.name} - ${error.message}`, error.stack);
@@ -97,11 +97,11 @@ function requireRole(roles) {
     const hasRequiredRole = roles.some(role => req.user.roles.includes(role));
 
     if (!hasRequiredRole) {
-      logger.warn(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.id}) does NOT have any of the required roles: [${roles.join(', ')}]. Access denied.`);
+      logger.warn(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.userId}) does NOT have any of the required roles: [${roles.join(', ')}]. Access denied.`);
       return next(new ApiError('Forbidden: You do not have the necessary permissions for this action.', 403, 'FORBIDDEN'));
     }
     
-    logger.info(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.id}) HAS a required role. Access granted. Calling next().`);
+    logger.info(`AUTH.JS (requireRole): User ${req.user.email} (ID: ${req.user.userId}) HAS a required role. Access granted. Calling next().`);
     next();
   };
 }

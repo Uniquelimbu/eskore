@@ -45,7 +45,7 @@ exports.getCurrentUser = async (req, res) => {
     // req.user should be populated by the requireAuth middleware
     if (!req.user || !req.user.userId) {
       logger.warn('AUTH_CONTROLLER_GET_CURRENT_USER: No user ID in request after requireAuth');
-      throw new ApiError(401, 'Not authenticated: User ID missing from request');
+      throw new ApiError('Not authenticated: User ID missing from request', 401, 'UNAUTHORIZED');
     }
 
     const userId = req.user.userId;
@@ -55,35 +55,33 @@ exports.getCurrentUser = async (req, res) => {
       include: [
         {
           model: Role,
-          as: 'roles',
           attributes: ['id', 'name'],
-          through: { attributes: [] } // Don't include attributes from the join table (UserRole)
+          through: { attributes: [] }
         },
         {
           model: Team,
-          as: 'teams', // Assuming 'teams' is the alias for user's teams
           attributes: ['id', 'name', 'logoUrl'],
-          through: { attributes: ['role'] } // Include role in team from UserTeam model
+          through: { attributes: ['role'] }
         }
       ]
     });
 
     if (!user) {
       logger.warn(`AUTH_CONTROLLER_GET_CURRENT_USER: User not found for userId: ${userId}`);
-      throw new ApiError(404, 'User not found');
+      throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
     }
 
     const safeUserData = sanitizeUserData(user); // Sanitize before sending
 
     // Enhance with roles and teams information similar to login
     let userRoles = [];
-    if (user.roles && user.roles.length > 0) {
-      userRoles = user.roles.map(role => role.name);
+    if (user.Roles && user.Roles.length > 0) {
+      userRoles = user.Roles.map(role => role.name);
     }
     
     let userTeams = [];
-    if (user.teams && user.teams.length > 0) {
-      userTeams = user.teams.map(team => ({
+    if (user.Teams && user.Teams.length > 0) {
+      userTeams = user.Teams.map(team => ({
         id: team.id,
         name: team.name,
         logoUrl: team.logoUrl,
