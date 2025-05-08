@@ -11,7 +11,7 @@ const AUTH_LOADING = 'AUTH_LOADING';
 // Initial state
 const initialState = {
   user: null,
-  loading: false, // Change this to false initially
+  loading: true, // Change this to true initially
   error: null,
   isAuthenticated: false
 };

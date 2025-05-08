@@ -20,17 +20,15 @@ const TeamsPage = () => {
         const response = await apiClient.get(`/api/teams/user/${user.id}`);
         
         if (response && response.teams && response.teams.length > 0) {
-          // Check if the user owns any team
-          const ownedTeam = response.teams.find(team => team.role === 'owner');
-          
-          if (ownedTeam) {
-            // Redirect to the owned team's space
-            navigate(`/teams/${ownedTeam.id}/space/overview`);
+          // Redirect to the first team the user is a member of (any role)
+          const firstTeam = response.teams[0];
+          if (firstTeam) {
+            navigate(`/teams/${firstTeam.id}/space/overview`);
             return;
           }
         }
         
-        // If we get here, the user doesn't own a team
+        // If we get here, the user is not in any team
         setLoading(false);
       } catch (error) {
         console.error('Error checking user teams:', error);

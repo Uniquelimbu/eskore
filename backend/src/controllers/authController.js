@@ -39,6 +39,76 @@ const getCookieOptions = () => ({
   secure: process.env.NODE_ENV === 'production',
 });
 
+// Function to get current user (me endpoint)
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user should be populated by the requireAuth middleware
+    if (!req.user || !req.user.userId) {
+      logger.warn('AUTH_CONTROLLER_GET_CURRENT_USER: No user ID in request after requireAuth');
+      throw new ApiError(401, 'Not authenticated: User ID missing from request');
+    }
+
+    const userId = req.user.userId;
+    logger.info(`AUTH_CONTROLLER_GET_CURRENT_USER: Fetching user data for userId: ${userId}`);
+
+    const user = await User.findByPk(userId, {
+      include: [
+        {
+          model: Role,
+          as: 'roles',
+          attributes: ['id', 'name'],
+          through: { attributes: [] } // Don't include attributes from the join table (UserRole)
+        },
+        {
+          model: Team,
+          as: 'teams', // Assuming 'teams' is the alias for user's teams
+          attributes: ['id', 'name', 'logoUrl'],
+          through: { attributes: ['role'] } // Include role in team from UserTeam model
+        }
+      ]
+    });
+
+    if (!user) {
+      logger.warn(`AUTH_CONTROLLER_GET_CURRENT_USER: User not found for userId: ${userId}`);
+      throw new ApiError(404, 'User not found');
+    }
+
+    const safeUserData = sanitizeUserData(user); // Sanitize before sending
+
+    // Enhance with roles and teams information similar to login
+    let userRoles = [];
+    if (user.roles && user.roles.length > 0) {
+      userRoles = user.roles.map(role => role.name);
+    }
+    
+    let userTeams = [];
+    if (user.teams && user.teams.length > 0) {
+      userTeams = user.teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        logoUrl: team.logoUrl,
+        role: team.UserTeam ? team.UserTeam.role : null // Access role from UserTeam join table
+      }));
+    }
+
+    logger.info(`AUTH_CONTROLLER_GET_CURRENT_USER: Successfully fetched user data for userId: ${userId}`);
+    sendSafeJson(res, {
+      ...safeUserData,
+      roles: userRoles,
+      teams: userTeams, // Include teams in the response
+      // Add any other necessary fields that are sent upon login/registration
+    });
+
+  } catch (error) {
+    logger.error(`AUTH_CONTROLLER_GET_CURRENT_USER: Error fetching current user: ${error.message}`, { error });
+    if (error instanceof ApiError) {
+      res.status(error.statusCode).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Internal server error while fetching user data' });
+    }
+  }
+};
+
 // Login function that now uses the unified User model
 exports.login = async (req, res) => {
   const { email, password } = req.body;

@@ -8,11 +8,11 @@ import { useAuth } from '../contexts/AuthContext';
  * Redirects unauthenticated users to the login page
  */
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
   // Show loading state if authentication is still being checked
-  if (isLoading) {
+  if (loading) {
     return <div className="loading-container">Loading...</div>;
   }
 
