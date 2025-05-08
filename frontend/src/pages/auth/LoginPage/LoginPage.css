@@ -117,6 +117,7 @@
   z-index: 5; /* Ensure button is clickable */
   transform: translateZ(0); /* Force hardware acceleration */
   -webkit-appearance: none; /* Fix for some mobile browsers */
+  appearance: none; /* Standard property for compatibility */
   cursor: pointer !important;
 }
 
