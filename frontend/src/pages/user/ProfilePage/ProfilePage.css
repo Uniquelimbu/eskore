@@ -239,11 +239,7 @@
   .profile-page-layout { /* Standardized: Adjust padding for collapsed sidebar */
     padding-left: var(--sidebar-collapsed-main-width, 90px);
   }
-  .profile-page-content {
-    /* margin-left: var(--sidebar-width, 90px); */ /* REMOVED */
-    /* max-width: calc(100% - var(--sidebar-width, 90px)); */ /* REMOVED */
-    /* Any other specific styles for profile-page-content at this breakpoint can remain */
-  }
+  
 }
 
 @media (max-width: 768px) {
@@ -276,11 +272,6 @@
 
   .profile-stats-card .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Allow more flexibility */
-  }
-
-  .profile-page-content {
-    /* margin-left: 90px; */ /* REMOVED as it's handled by .profile-page-layout */
-    /* max-width: calc(100% - 90px); */ /* REMOVED */
   }
 }
 
