@@ -49,34 +49,56 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 1;
-  /* Add horizontal margin so lines don't touch the numbers */
+  z-index: 1; /* Ensure step container itself has a z-index if needed, but step-number's z-index is more critical here */
   margin: 0 12px;
+  position: relative; 
+  overflow: visible !important; /* Ensure parent does not clip */
 }
 
-.step-number {
-  width: 36px;
-  height: 36px;
+/* More specific selector for step-number to override conflicting styles */
+.stepper .step .step-number {
+  width: 36px !important; /* Ensure width is applied */
+  height: 36px !important; /* Ensure height is applied */
   border-radius: 50%;
-  background-color: #2d3748;
-  color: #a0aec0;
-  display: flex;
+  background-color: #2d3748; /* Default background */
+  color: #ffffff !important; /* Ensure text is white */
+  
+  /* Flexbox/Grid for centering */
+  display: flex !important; /* CRITICAL: Override display: none */
   align-items: center;
   justify-content: center;
+  
+  font-family: Arial, Helvetica, sans-serif !important; /* Specify a common font stack */
   font-weight: 600;
-  margin-bottom: 8px;
+  font-size: 16px !important; /* Ensure font size is applied */
+  line-height: 1 !important; /* Adjusted for flex centering */
+  margin-bottom: 8px !important; /* Ensure correct margin with !important */
   transition: all 0.3s ease;
-  /* Add box-shadow for separation if desired */
+  z-index: 5 !important; /* Ensure it's above lines and other elements */
+  position: relative; 
+  text-align: center; /* Should be redundant with flex justify-content: center */
+  overflow: visible !important; /* Ensure content isn't clipped */
+  user-select: none; /* Prevent text selection */
+  opacity: 1 !important; /* Ensure it's fully opaque */
+  visibility: visible !important; /* Ensure it's visible */
+  text-indent: 0 !important; /* Reset any inherited text indent */
+  transform: none !important; /* Ensure no transform is hiding it */
+  text-decoration: none !important; /* Ensure no text decoration is obscuring it */
+  -webkit-font-smoothing: antialiased; /* Improve text rendering */
+  -moz-osx-font-smoothing: grayscale; /* Improve text rendering */
+  text-rendering: optimizeLegibility !important; /* Hint for text rendering */
 }
 
-.step.active .step-number {
-  background-color: #4a6cf7;
-  color: white;
+.stepper .step.active .step-number {
+  background-color: #4a6cf7 !important; /* Blue background for active step */
+  color: #ffffff !important; /* Ensure text remains white */
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2); 
 }
 
-.step.completed .step-number {
-  background-color: #48bb78;
-  color: white;
+.stepper .step.completed .step-number {
+  background-color: #48bb78 !important; /* Green background for completed step */
+  color: #ffffff !important; /* Ensure text remains white */
+  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2); 
 }
 
 .step-label {
@@ -93,12 +115,11 @@
 /* Stepper line: only between steps, not under numbers */
 .step-line {
   position: absolute;
-  top: 50%;
+  top: 18px; /* Adjusted to align with the step numbers */
   height: 2px;
   background-color: #2d3748;
   margin: 0;
-  transform: translateY(-50%);
-  z-index: 0;
+  z-index: 0; /* Ensure it's below the step numbers */
 }
 
 /* First line between steps 1 and 2 */

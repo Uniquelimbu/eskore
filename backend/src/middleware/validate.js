@@ -41,7 +41,7 @@ const validate = (validations) => {
         path: req.path,
         method: req.method,
         body: JSON.stringify(req.body),
-        user: req.user ? req.user.id : 'unauthenticated'
+        user: req.user ? req.user.userId : 'unauthenticated'
       });
       
       // Pass the error to the error handler middleware

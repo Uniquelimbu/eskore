@@ -160,20 +160,28 @@ router.post('/',
   requireAuth, 
   validate(schemas.team.createTeam), 
   catchAsync(async (req, res) => {
-    log.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user?.email}, Body: ${JSON.stringify(req.body)}`);
+    // Enhanced logging for user object
+    log.info(`TEAMROUTES.JS (POST /): ENTERING team creation logic. User: ${req.user ? req.user.email : 'No user email'}, User ID: ${req.user ? req.user.userId : 'No user ID'}, Body: ${JSON.stringify(req.body)}`);
+    
+    if (!req.user || req.user.userId === undefined || req.user.userId === null) { // Check for undefined or null explicitly
+      log.error(`TEAMROUTES.JS (POST /): CRITICAL - User ID is missing or undefined in req.user after auth. User object: ${JSON.stringify(req.user)}`);
+      throw new ApiError('Authenticated user ID is missing or invalid. Cannot create team.', 500, 'INTERNAL_SERVER_ERROR_AUTH_INVALID');
+    }
+
     const { name, abbreviation, foundedYear, city, nickname } = req.body;
     let newTeam; 
 
     // Check if the user already owns a team
+    log.info(`TEAMROUTES.JS (POST /): Checking for existing team for userId: ${req.user.userId}`); // Log before query
     const existingTeam = await UserTeam.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId, // req.user.userId should be valid here due to the check above
         role: 'manager'
       }
     });
 
     if (existingTeam) {
-      log.warn(`TEAMROUTES.JS (POST /): User ${req.user.id} (${req.user.email}) attempted to create a second team.`);
+      log.warn(`TEAMROUTES.JS (POST /): User ${req.user.userId} (${req.user.email}) attempted to create a second team.`);
       throw new ApiError('You already own a team. Leave your current team before creating a new one.', 403, 'FORBIDDEN_MULTIPLE_TEAMS');
     }
 
@@ -191,7 +199,7 @@ router.post('/',
     });
     log.info(`TEAMROUTES.JS (POST /): Team.create successful. New team ID: ${newTeam.id}`);
 
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       log.error('TEAMROUTES.JS (POST /): CRITICAL - User ID not found in req.user for team ownership assignment. This should have been caught by requireAuth.');
       // Clean up the created team if user assignment fails
       if (newTeam && newTeam.id) {
@@ -202,9 +210,18 @@ router.post('/',
       throw new ApiError('Authenticated user ID is missing. Cannot assign team ownership.', 500, 'INTERNAL_SERVER_ERROR_AUTH_MISSING');
     }
 
-    log.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.id}, teamId: ${newTeam.id}, role: 'manager'`);
+    log.info(`TEAMROUTES.JS (POST /): Attempting UserTeam.create for userId: ${req.user.userId}, teamId: ${newTeam.id}, role: 'manager'`);
+    // Ensure req.user.userId is still valid before this call, though the earlier check should suffice.
+    if (!req.user || req.user.userId === undefined || req.user.userId === null) {
+        log.error('TEAMROUTES.JS (POST /): CRITICAL - User ID became undefined before UserTeam.create. This should not happen.');
+        if (newTeam && newTeam.id) {
+            await Team.destroy({ where: { id: newTeam.id } });
+            log.warn(`TEAMROUTES.JS (POST /): Cleaned up orphaned team ${newTeam.id} due to missing user ID for owner assignment (second check).`);
+        }
+        throw new ApiError('Authenticated user ID became invalid during processing.', 500, 'INTERNAL_SERVER_ERROR_AUTH_LOST');
+    }
     await UserTeam.create({
-      userId: req.user.id,
+      userId: req.user.userId,
       teamId: newTeam.id,
       role: 'manager' // Always set as manager for creator
     });
@@ -251,7 +268,7 @@ router.post('/:id/members',
   // Check if user has permission (team manager or assistant manager)
   const userTeamPermission = await UserTeam.findOne({
     where: {
-      userId: req.user.id,
+      userId: req.user.userId,
       teamId: id,
       role: { [Op.in]: ['manager', 'assistant_manager'] }
     }
@@ -321,7 +338,7 @@ router.delete('/:id/members/:userId',
   // Check if user has permission (team manager)
   const userTeamManager = await UserTeam.findOne({
     where: {
-      userId: req.user.id,
+      userId: req.user.userId,
       teamId: id,
       role: { [Op.in]: ['manager', 'assistant_manager'] }
     }
@@ -330,7 +347,7 @@ router.delete('/:id/members/:userId',
   if (!userTeamManager) {
     // Allow managers to remove athletes or coaches they added? Or only owners?
     // Current logic: only owners can remove any member.
-    // If self-removal is allowed, that's a different check (e.g. if req.user.id === parseInt(userId))
+    // If self-removal is allowed, that's a different check (e.g. if req.user.userId === parseInt(userId))
     throw new ApiError('Forbidden - You must be a team manager to remove members', 403, 'FORBIDDEN');
   }
   
@@ -427,7 +444,7 @@ router.patch('/:id',
   // Check if user is team manager or assistant manager
   const userTeam = await UserTeam.findOne({
     where: {
-      userId: req.user.id,
+      userId: req.user.userId,
       teamId: id,
       role: { [Op.in]: ['manager', 'assistant_manager'] } // Updated roles
     }
@@ -490,7 +507,7 @@ router.patch('/:id/logo',
     // Check if user is team manager or assistant manager
     const userTeam = await UserTeam.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         teamId: id,
         role: { [Op.in]: ['manager', 'assistant_manager'] }
       }
@@ -543,7 +560,7 @@ router.delete('/:id',
       // Check if user is on this team as a manager
       const userTeam = await UserTeam.findOne({
         where: {
-          userId: req.user.id,
+          userId: req.user.userId,
           teamId: id,
           role: { [Op.in]: ['manager', 'assistant_manager'] }
         },
@@ -600,7 +617,7 @@ router.delete('/:id',
       // Commit transaction
       await t.commit();
       
-      log.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} successfully deleted by user ${req.user.id}`);
+      log.info(`TEAMROUTES.JS (DELETE /:id): Team ${id} successfully deleted by user ${req.user.userId}`);
       
       return sendSafeJson(res, {
         success: true,
@@ -625,7 +642,7 @@ router.post('/:id/transfer-manager',
     body('newManagerId').isInt().withMessage('New manager ID must be an integer')
   ]),
   catchAsync(async (req, res) => {
-    log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Transferring manager role in team ${req.params.id}, from user ${req.user?.id} to user ${req.body.newManagerId}`);
+    log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Transferring manager role in team ${req.params.id}, from user ${req.user?.userId} to user ${req.body.newManagerId}`);
     const { id } = req.params;
     const { newManagerId } = req.body;
     
@@ -644,7 +661,7 @@ router.post('/:id/transfer-manager',
       const currentManager = await UserTeam.findOne({
         where: {
           teamId: id,
-          userId: req.user.id,
+          userId: req.user.userId,
           role: 'manager'
         },
         transaction: t
@@ -679,7 +696,7 @@ router.post('/:id/transfer-manager',
       // Commit transaction
       await t.commit();
       
-      log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Manager role transferred from ${req.user.id} to ${newManagerId} for team ${id}`);
+      log.info(`TEAMROUTES.JS (POST /:id/transfer-manager): Manager role transferred from ${req.user.userId} to ${newManagerId} for team ${id}`);
       
       return sendSafeJson(res, {
         success: true,
@@ -706,7 +723,7 @@ router.get('/user/:userId',
   const { userId } = req.params;
   
   // Users can only see their own teams
-  if (parseInt(userId) !== req.user.id) { // Admin check removed
+  if (parseInt(userId) !== req.user.userId) { // Admin check removed
     throw new ApiError('Forbidden - You can only view your own teams', 403, 'FORBIDDEN');
   }
   
@@ -762,7 +779,7 @@ router.post('/:id/promote-last-member',
       // Check if user is a member of this team
       const userTeam = await UserTeam.findOne({
         where: {
-          userId: req.user.id,
+          userId: req.user.userId,
           teamId: id
         },
         transaction: t
@@ -786,7 +803,7 @@ router.post('/:id/promote-last-member',
       // Commit transaction
       await t.commit();
       
-      log.info(`TEAMROUTES.JS (POST /:id/promote-last-member): User ${req.user.id} promoted to manager for team ${id}`);
+      log.info(`TEAMROUTES.JS (POST /:id/promote-last-member): User ${req.user.userId} promoted to manager for team ${id}`);
       
       return sendSafeJson(res, {
         success: true,

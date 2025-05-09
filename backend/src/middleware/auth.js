@@ -54,7 +54,7 @@ async function requireAuth(req, res, next) {
     const userRoles = user.Roles ? user.Roles.map(role => role.name) : [];
     
     req.user = {
-      userId: user.id, // Changed from id to userId for consistency with token and authController
+      userId: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

@@ -18,7 +18,7 @@ router.get('/:id',
     const { id } = req.params;
     
     // Users can only see their own profile unless they're admin
-    if (parseInt(id) !== req.user.id && !req.user.roles.includes('admin')) {
+    if (parseInt(id) !== req.user.userId && !req.user.roles.includes('admin')) {
       throw new ApiError('Forbidden - You can only view your own profile', 403, 'FORBIDDEN');
     }
 
@@ -49,7 +49,7 @@ router.patch('/:id',
     const { id } = req.params;
     
     // Users can only update their own profile unless they're admin
-    if (parseInt(id) !== req.user.id && !req.user.roles.includes('admin')) {
+    if (parseInt(id) !== req.user.userId && !req.user.roles.includes('admin')) {
       throw new ApiError('Forbidden - You can only update your own profile', 403, 'FORBIDDEN');
     }
 
@@ -98,7 +98,7 @@ router.post('/:id/change-password',
     const { currentPassword, newPassword } = req.body;
     
     // Users can only change their own password
-    if (parseInt(id) !== req.user.id) {
+    if (parseInt(id) !== req.user.userId) {
       throw new ApiError('Forbidden - You can only change your own password', 403, 'FORBIDDEN');
     }
 

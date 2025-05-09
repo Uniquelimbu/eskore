@@ -16,7 +16,7 @@ const globalErrorHandler = (err, req, res, next) => {
   logger.error('--- GLOBAL ERROR HANDLER CAUGHT AN ERROR ---');
   logger.error(`Request: ${req.method} ${req.originalUrl}`);
   if (req.user) {
-    logger.error(`User: ${req.user.email} (ID: ${req.user.userId || req.user.id || 'N/A'})`);
+    logger.error(`User: ${req.user.email} (ID: ${req.user.userId || 'N/A'})`);
   }
   logger.error(`Error Name: ${err.name}`);
   logger.error(`Error Message: ${err.message}`);

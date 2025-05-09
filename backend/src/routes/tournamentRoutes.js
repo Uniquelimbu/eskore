@@ -22,7 +22,7 @@ router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
   const { userId } = req.params;
   
   // Users can only see their own tournaments
-  if (parseInt(userId) !== req.user.id) { // Admin check removed
+  if (parseInt(userId) !== req.user.userId) { // Admin check removed
     throw new ApiError('Forbidden - You can only view your own tournaments', 403, 'FORBIDDEN');
   }
   
@@ -160,12 +160,12 @@ router.post('/', requireAuth, validate(schemas.tournament.createTournament), cat
     startDate,
     endDate,
     status,
-    creatorId: req.user.id
+    creatorId: req.user.userId
   });
   
   // Automatically add creator as an organizer
   await UserTournament.create({
-    userId: req.user.id,
+    userId: req.user.userId,
     tournamentId: tournament.id,
     role: 'organizer'
   });
@@ -192,10 +192,10 @@ router.put('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, 
   }
   
   // Check if user has permission to update (creator, organizer)
-  if (tournament.creatorId !== req.user.id) { // Admin check removed
+  if (tournament.creatorId !== req.user.userId) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         tournamentId: id,
         role: 'organizer'
       }
@@ -241,7 +241,7 @@ router.delete('/:id', validate(schemas.tournament.tournamentIdParam), requireAut
     }
     
     // Check if user has permission to delete (creator)
-    if (tournament.creatorId !== req.user.id) { // Admin check removed
+    if (tournament.creatorId !== req.user.userId) { // Admin check removed
       await t.rollback();
       throw new ApiError('Forbidden - Only tournament creators can delete tournaments', 403, 'FORBIDDEN');
     }
@@ -295,12 +295,12 @@ router.post('/:id/participants',
   }
   
   // Check if user has permission to add participants (creator or organizer)
-  let hasPermission = tournament.creatorId === req.user.id; // Admin check removed
+  let hasPermission = tournament.creatorId === req.user.userId; // Admin check removed
   
   if (!hasPermission) {
     const userTournament = await UserTournament.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         tournamentId: id,
         role: 'organizer'
       }
@@ -376,10 +376,10 @@ router.post('/:id/teams', requireAuth, validate([
   }
   
   // Check if user has permission to add teams (creator or organizer)
-  if (tournament.creatorId !== req.user.id) { // Admin check removed
+  if (tournament.creatorId !== req.user.userId) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         tournamentId: id,
         role: 'organizer'
       }
@@ -439,10 +439,10 @@ router.delete('/:id/participants/:userId', requireAuth, validate([
   }
   
   // Check if user has permission to remove participants (organizer or admin)
-  if (tournament.creatorId !== req.user.id) { // Admin check removed
+  if (tournament.creatorId !== req.user.userId) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         tournamentId: id,
         role: 'organizer'
       }
@@ -489,10 +489,10 @@ router.delete('/:id/teams/:teamId', requireAuth, validate([
   }
   
   // Check if user has permission to remove teams (creator or organizer)
-  if (tournament.creatorId !== req.user.id) { // Admin check removed
+  if (tournament.creatorId !== req.user.userId) { // Admin check removed
     const userTournament = await UserTournament.findOne({
       where: {
-        userId: req.user.id,
+        userId: req.user.userId,
         tournamentId: id,
         role: 'organizer'
       }

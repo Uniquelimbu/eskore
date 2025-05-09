@@ -658,7 +658,7 @@ node scripts/db/diagnose.js
 
 - **Logging**: Use structured logging with Winston
   ```javascript
-  logger.info('Operation successful', { userId: user.id, action: 'login' });
+  logger.info('Operation successful', { userId: user.userId || user.id, action: 'login' });
   ```
 
 - **Performance Monitoring**: Set up monitoring with tools like New Relic or PM2
