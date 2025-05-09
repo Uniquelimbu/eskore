@@ -2,11 +2,8 @@
 .page-layout {
   width: 100%;
   position: relative;
-  margin-left: var(--sidebar-width, 260px);
-  width: calc(100% - var(--sidebar-width, 260px));
-  overflow-x: hidden; 
-  max-width: calc(100% - var(--sidebar-width, 260px)); /* Force maximum width */
-  box-sizing: border-box; /* Ensure padding doesn't add to width */
+  overflow-x: hidden;
+  box-sizing: border-box; /* Include padding */
 }
 
 .page-layout--full-height {
@@ -17,7 +14,8 @@
 
 .page-layout__container {
   width: 100%;
-  margin: 0 auto;
+  margin-left: 0;
+  margin-right: 0;
   position: relative;
   max-width: 100%;
   overflow-x: hidden;
@@ -29,24 +27,15 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 992px) {
-  .page-layout {
-    margin-left: var(--sidebar-width, 240px);
-    width: calc(100% - var(--sidebar-width, 240px));
-    max-width: calc(100% - var(--sidebar-width, 240px));
-  }
-}
-
 @media (max-width: 768px) {
-  .page-layout {
-    margin-left: var(--sidebar-width, 90px);
-    width: calc(100% - var(--sidebar-width, 90px));
-    max-width: calc(100% - var(--sidebar-width, 90px));
-  }
-  
   .page-layout__container--padded {
     padding: 1.5rem 0.75rem;
   }
+}
+
+/* Extra adjustment for medium screens if desired */
+@media (max-width: 992px) {
+  /* padding-left automatically follows var(--sidebar-width) */
 }
 
 /* Added extra breakpoint for very small screens */

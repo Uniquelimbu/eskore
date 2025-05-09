@@ -1,15 +1,23 @@
 .teams-page-layout {
   display: flex;
+  width: 100%;
   min-height: 100vh;
   background-color: #1a202c;
+  padding-left: 260px;
+  box-sizing: border-box;
 }
 
 .teams-page-content {
-  flex-grow: 1;
+  flex: 1;
   padding: 30px;
-  margin-left: var(--sidebar-width, 260px);
-  max-width: calc(100% - var(--sidebar-width, 260px));
   color: #e2e8f0;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.teams-page-content .page-layout__container {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .teams-header {
@@ -131,12 +139,12 @@
   background-color: #232b3a;
   border-radius: 12px;
   padding: 40px 30px;
-  width: 100%;
   max-width: 400px;
   text-align: center;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  flex: 1 1 320px;
 }
 
 .team-option-card:hover {
@@ -177,10 +185,14 @@
   background-color: #3a5bd9;
 }
 
+@media (max-width: 992px) {
+  .teams-page-layout {
+    padding-left: 90px;
+  }
+}
+
 @media (max-width: 768px) {
   .teams-page-content {
-    margin-left: 90px;
-    max-width: calc(100% - 90px);
     padding: 20px;
   }
   

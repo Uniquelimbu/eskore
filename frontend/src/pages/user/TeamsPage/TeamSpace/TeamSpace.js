@@ -26,6 +26,7 @@ const TeamSpace = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedNewManager, setSelectedNewManager] = useState(null);
+  const [showLeaveDeleteConfirm, setShowLeaveDeleteConfirm] = useState(false);
   
   // Fetch team data
   useEffect(() => {
@@ -136,21 +137,44 @@ const TeamSpace = () => {
   };
 
   const handleLeaveTeam = async () => {
+    // Case 1: Manager with other members -> must transfer role first
     if (isManager && members.length > 1) {
-      // Manager with other members - must transfer ownership first
       setShowTransferManagerModal(true);
-    } else {
-      // Regular member or sole manager can leave directly
-      try {
-        const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
-        if (response.success) {
-          toast.success('You have left the team');
-          navigate('/teams');
-        }
-      } catch (err) {
-        console.error('Error leaving team:', err);
-        toast.error(err.response?.data?.message || 'Failed to leave team');
+      return;
+    }
+
+    // Case 2: Sole remaining member (manager or not) -> confirm that team will be deleted
+    if (members.length === 1) {
+      setShowLeaveDeleteConfirm(true);
+      return;
+    }
+
+    // Case 3: Regular member (not last one) can leave directly
+    try {
+      const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+      if (response.success) {
+        toast.success('You have left the team');
+        navigate('/teams');
       }
+    } catch (err) {
+      console.error('Error leaving team:', err);
+      toast.error(err.response?.data?.message || 'Failed to leave team');
+    }
+  };
+  
+  const confirmLeaveAndDelete = async () => {
+    // Called when user confirms they understand team will be deleted
+    try {
+      const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+      if (response.success) {
+        toast.success('You have left the team and the team was deleted');
+        navigate('/teams');
+      }
+    } catch (err) {
+      console.error('Error leaving and deleting team:', err);
+      toast.error(err.response?.data?.message || 'Failed to leave team');
+    } finally {
+      setShowLeaveDeleteConfirm(false);
     }
   };
   
@@ -409,6 +433,30 @@ const TeamSpace = () => {
                   disabled={isTransferring || !selectedNewManager}
                 >
                   {isTransferring ? <><i className="fas fa-spinner fa-spin"></i> Transferring...</> : 'Transfer & Leave'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation dialog when the last member attempts to leave (team will be deleted) */}
+        {showLeaveDeleteConfirm && (
+          <div className="delete-confirmation-overlay">
+            <div className="delete-confirmation-dialog">
+              <h3>Leave Team & Delete?</h3>
+              <p>You are the only member of <strong>{team.name}</strong>. Leaving the team will <strong>delete the team and all its data</strong>. Are you sure you want to proceed?</p>
+              <div className="confirmation-buttons">
+                <button 
+                  className="cancel-button"
+                  onClick={() => setShowLeaveDeleteConfirm(false)}
+                >
+                  No, Stay
+                </button>
+                <button 
+                  className="delete-button"
+                  onClick={confirmLeaveAndDelete}
+                >
+                  Yes, Delete Team
                 </button>
               </div>
             </div>

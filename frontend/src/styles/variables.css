@@ -82,16 +82,16 @@
 }
 
 /* Responsive sizes */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
   :root {
     --header-height: 70px;
-    --sidebar-width: 240px;
+    --sidebar-width: 240px; /* medium sidebar */
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   :root {
-    --sidebar-width: 90px; /* Added mobile sidebar width */
+    --sidebar-width: 90px; /* compact sidebar */
   }
 }
 

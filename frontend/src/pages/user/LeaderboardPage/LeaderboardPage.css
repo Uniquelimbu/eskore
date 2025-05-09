@@ -7,9 +7,9 @@
 .leaderboard-page-content {
   flex-grow: 1;
   padding: 30px;
-  margin-left: 260px;
-  max-width: calc(100% - 260px);
   color: #e2e8f0;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .leaderboard-header {
@@ -113,8 +113,6 @@
 
 @media (max-width: 768px) {
   .leaderboard-page-content {
-    margin-left: 90px;
-    max-width: calc(100% - 90px);
     padding: 20px;
   }
   

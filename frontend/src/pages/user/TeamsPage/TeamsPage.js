@@ -14,26 +14,40 @@ const TeamsPage = () => {
 
   useEffect(() => {
     const checkUserTeam = async () => {
+      if (!user || !user.id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        // Get all teams for the current user
+        setError(null);
         const response = await apiClient.get(`/api/teams/user/${user.id}`);
         
         if (response && response.teams && response.teams.length > 0) {
-          // Redirect to the first team the user is a member of (any role)
           const firstTeam = response.teams[0];
-          if (firstTeam) {
+          if (firstTeam && firstTeam.id) {
             navigate(`/teams/${firstTeam.id}/space/overview`);
             return;
           }
         }
         
-        // If we get here, the user is not in any team
         setLoading(false);
-      } catch (error) {
-        console.error('Error checking user teams:', error);
-        setError('Failed to load team information');
-        setLoading(false);
+      } catch (err) {
+        console.error('Error checking user teams:', err);
+        if (err.response) {
+          const status = err.response.status;
+          if (status === 404 || status === 401) {
+            // user has no team or auth not ready – silent fallback
+            setLoading(false);
+          } else {
+            // For server errors, log but don't block UX
+            setLoading(false);
+          }
+        } else {
+          // Network error; silent
+          setLoading(false);
+        }
       }
     };
 
@@ -42,14 +56,12 @@ const TeamsPage = () => {
     } else {
       setLoading(false);
     }
-  }, [user, navigate]);
+  }, [user, user?.id, navigate]);
 
   const handleOptionClick = (option) => {
     if (option === 'join') {
-      // Navigate to search page with team filter applied
       navigate('/search?type=team');
     } else if (option === 'create') {
-      // Navigate to the Create Team page
       navigate('/teams/create');
     }
   };
@@ -68,19 +80,6 @@ const TeamsPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="teams-page-layout">
-        <Sidebar />
-        <PageLayout className="teams-page-content" maxWidth="1200px" withPadding={true}>
-          <div className="error-message">
-            {error}
-          </div>
-        </PageLayout>
-      </div>
-    );
-  }
-
   return (
     <div className="teams-page-layout">
       <Sidebar />
@@ -89,6 +88,11 @@ const TeamsPage = () => {
           <h1>Team Management</h1>
           <p className="teams-subtitle">Join an existing team or create a new one</p>
         </div>
+        {error && (
+          <div className="error-message" style={{ marginBottom: '20px' }}>
+            {error}
+          </div>
+        )}
         
         <div className="team-options">
           <div className="team-option-card" onClick={() => handleOptionClick('join')}>

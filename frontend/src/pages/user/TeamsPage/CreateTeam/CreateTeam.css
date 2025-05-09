@@ -1,3 +1,10 @@
+/* At the top, or ensure these are globally available if preferred */
+/* These values are based on Sidebar.css */
+:root { /* Or a more specific common ancestor if :root is too broad */
+  --sidebar-main-width: 260px;
+  --sidebar-collapsed-main-width: 90px;
+}
+
 .create-team-form-container {
   background-color: #232b3a;
   border-radius: 10px;
@@ -468,18 +475,27 @@
   display: flex;
   width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
-  position: relative; /* Add position relative */
+  /* position: relative; /* Already there, good */
+  /* Apply padding-left to offset for the fixed sidebar */
+  padding-left: var(--sidebar-main-width);
+  box-sizing: border-box; /* Ensures padding is part of the 100% width */
+  /* overflow-x: hidden; /* Temporarily comment out or remove to diagnose if content itself is overflowing */
 }
 
+/* Page content wrapper; PageLayout already handles sidebar offset, so remove extra margin */
 .create-team-page-content {
   flex: 1;
-  overflow-x: hidden;
+  /* overflow-x: hidden; /* Temporarily removed for diagnosis */
   padding: 20px;
-  margin-left: var(--sidebar-width, 260px); /* Use CSS variable instead of hardcoded value */
-  max-width: calc(100% - var(--sidebar-width, 260px)); /* Use CSS variable here too */
-  box-sizing: border-box; /* Ensure padding is included in flex-calculated width */
-  min-width: 0; /* Add min-width:0 to prevent content from overflowing flex container */
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%; /* Ensure it doesn't overflow its flex container */
+}
+
+/* Add this new rule to center the PageLayout's inner container */
+.create-team-page-content .page-layout__container {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Step content container to prevent overflow */
@@ -516,6 +532,10 @@
 }
 
 @media (max-width: 992px) {
+  .create-team-page-layout {
+    padding-left: var(--sidebar-collapsed-main-width);
+  }
+
   .stepper {
     padding: 0 5px;
   }
@@ -532,6 +552,7 @@
   /* Ensure form elements stay within bounds */
   .create-team-form-container {
     padding: 15px 12px; /* Further reduce padding */
+    min-width: 0; /* Reinforce shrinking capability if content is too wide */
   }
   
   .form-row {
@@ -541,8 +562,7 @@
   
   .create-team-page-content {
     padding: 15px 12px; /* Reduce padding */
-    margin-left: var(--sidebar-width, 260px);
-    max-width: calc(100% - var(--sidebar-width, 260px));
+    /* max-width: 100%; is already set above, which is correct. */
   }
   
   .section-title {
@@ -554,6 +574,7 @@
 @media (max-width: 768px) {
   .create-team-form-container {
     padding: 12px 10px; /* Further reduce padding */
+    min-width: 0; /* Reinforce shrinking capability */
   }
   
   .create-team-header h1 {
@@ -633,14 +654,14 @@
   
   .create-team-page-content {
     padding: 12px 10px; /* Further reduce padding */
-    margin-left: var(--sidebar-width, 90px);
-    max-width: calc(100% - var(--sidebar-width, 90px));
+    /* max-width: 100%; */
   }
 }
 
 @media (max-width: 576px) {
   .create-team-page-content {
     padding: 10px 8px;
+    /* max-width: 100%; */
   }
   
   .create-team-form-container {
@@ -698,6 +719,7 @@
 @media (max-width: 400px) {
   .create-team-page-content {
     padding: 8px 5px;
+    /* max-width: 100%; */
   }
   
   .create-team-form-container {
@@ -731,8 +753,14 @@
   }
 }
 
-/* Ensure horizontal scrolling never happens */
+/* Ensure horizontal scrolling never happens on the page itself, if needed */
+/* html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+} */
+/* The existing html, body rule might be sufficient:
 html, body {
   max-width: 100%;
   overflow-x: hidden;
 }
+Let's keep the existing one for now. */

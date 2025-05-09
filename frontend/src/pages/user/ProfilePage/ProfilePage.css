@@ -1,16 +1,29 @@
 .profile-page-layout {
   display: flex;
+  width: 100%; /* Added */
   min-height: 100vh;
   background-color: #1a202c; /* Match dashboard background */
+  padding-left: var(--sidebar-main-width, 260px); /* Standardized: using a consistent variable or fallback */
+  box-sizing: border-box; /* Added */
 }
 
 .profile-page-content {
-  flex-grow: 1;
-  /* Use PageLayout's padding, remove from here */
-  /* padding: 30px; */
-  margin-left: var(--sidebar-width, 260px); /* Use CSS variable */
-  max-width: calc(100% - var(--sidebar-width, 260px)); /* Use CSS variable */
+  /* flex-grow: 1; */ /* Replaced by flex: 1 */
+  flex: 1; /* Standardized for robust flex behavior */
+  /* padding: 30px; */ /* PageLayout component handles its own internal padding via withPadding prop */
+  /* The following margin/max-width were attempts to offset sidebar, now handled by parent's padding-left */
+  /* margin-left: var(--sidebar-width, 260px); */ /* REMOVED */
+  /* max-width: calc(100% - var(--sidebar-width, 260px)); */ /* REMOVED */
   color: #e2e8f0;
+  min-width: 0; /* Added: Crucial for allowing content to shrink */
+  max-width: 100%; /* Added: Ensures it doesn't overflow the padded area of its parent */
+  box-sizing: border-box; /* Added: Ensures consistency if direct padding/border were ever added */
+}
+
+/* Added: Rule to center the PageLayout's inner container (which has the 1200px max-width) */
+.profile-page-content .page-layout__container {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* General Card Styling */
@@ -223,9 +236,13 @@
 }
 
 @media (max-width: 992px) { /* Adjust breakpoint if needed */
+  .profile-page-layout { /* Standardized: Adjust padding for collapsed sidebar */
+    padding-left: var(--sidebar-collapsed-main-width, 90px);
+  }
   .profile-page-content {
-    margin-left: var(--sidebar-width, 90px); /* Use CSS variable */
-    max-width: calc(100% - var(--sidebar-width, 90px));
+    /* margin-left: var(--sidebar-width, 90px); */ /* REMOVED */
+    /* max-width: calc(100% - var(--sidebar-width, 90px)); */ /* REMOVED */
+    /* Any other specific styles for profile-page-content at this breakpoint can remain */
   }
 }
 
@@ -259,6 +276,11 @@
 
   .profile-stats-card .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* Allow more flexibility */
+  }
+
+  .profile-page-content {
+    /* margin-left: 90px; */ /* REMOVED as it's handled by .profile-page-layout */
+    /* max-width: calc(100% - 90px); */ /* REMOVED */
   }
 }
 
