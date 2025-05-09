@@ -7,7 +7,7 @@ import TeamsPage from '../pages/user/TeamsPage';
 // Remove missing import: import TeamDetailsPage from '../pages/user/TeamDetailsPage';
 import TournamentPage from '../pages/user/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage';
-import AdminDashboard from '../pages/admin/Dashboard';
+import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import CreateTeam from '../pages/user/TeamsPage/CreateTeam';
 // Remove missing import: import TeamDashboard from '../pages/user/TeamDashboard';
 import TeamSpace from '../pages/user/TeamsPage/TeamSpace';

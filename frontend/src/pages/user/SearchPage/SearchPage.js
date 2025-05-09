@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import SearchFilters from './components/SearchFilters';
 import SearchResults from './components/SearchResults';
 import Loading from '../../../components/ui/Loading/Loading';
 import './SearchPage.css';
+import apiClient from '../../../services/apiClient';
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,7 +39,9 @@ const SearchPage = () => {
     setSearchParams(updatedParams);
   };
   
-  // Fetch search results
+  // keep a ref to abort previous axios or fetch request
+  const abortRef = useRef(null);
+
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!currentQuery.trim()) {
@@ -50,69 +53,63 @@ const SearchPage = () => {
       setError(null);
       
       try {
-        // For now, use mock data - would be replaced with actual API call
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
-        
-        // Mock search results
-        const mockResults = generateMockResults(currentQuery, currentType);
-        setSearchResults(mockResults);
+        // cancel previous in-flight request if any
+        if (abortRef.current) {
+          abortRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortRef.current = controller;
+        let combinedResults = [];
+        // If teams are part of the requested type, query backend search API
+        if (currentType === 'all' || currentType === 'team') {
+          const res = await apiClient.get('/api/teams/search', { params: { q: currentQuery }, signal: controller.signal });
+          if (res && res.teams) {
+            const mappedTeams = res.teams.map(t => ({
+              id: t.id,
+              type: 'team',
+              name: t.name,
+              league: t.league || '', // placeholder if property exists later
+              country: t.city || '',
+              image: t.logoUrl || `${process.env.PUBLIC_URL}/images/default-team.png`
+            }));
+            combinedResults.push(...mappedTeams);
+          }
+        }
+
+        // Athletes are still mocked until athlete search endpoint is ready
+        if (currentType === 'all' || currentType === 'athlete') {
+          combinedResults.push(...generateMockAthleteResults(currentQuery));
+        }
+
+        setSearchResults(combinedResults);
       } catch (err) {
         console.error('Error fetching search results:', err);
         setError('Failed to fetch search results. Please try again.');
         setSearchResults([]);
       } finally {
+        abortRef.current = null;
         setIsLoading(false);
       }
     };
     
     fetchSearchResults();
+    // cleanup on param change/unmount
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, [currentQuery, currentType]);
   
-  // Function to generate mock search results - would be removed in production
-  const generateMockResults = (query, type) => {
+  // Mock athlete generator kept for now
+  const generateMockAthleteResults = (query) => {
     if (!query) return [];
-    
-    const lowerQuery = query.toLowerCase();
-    
+    const lower = query.toLowerCase();
     const athletes = [
       { id: 1, type: 'athlete', name: 'John Smith', position: 'FW', country: 'United States', image: `${process.env.PUBLIC_URL}/images/default-profile.png` },
       { id: 2, type: 'athlete', name: 'Maria Rodriguez', position: 'MF', country: 'Spain', image: `${process.env.PUBLIC_URL}/images/default-profile.png` },
       { id: 3, type: 'athlete', name: 'Ahmed Hassan', position: 'DF', country: 'Egypt', image: `${process.env.PUBLIC_URL}/images/default-profile.png` },
       { id: 4, type: 'athlete', name: 'Chen Wei', position: 'GK', country: 'China', image: `${process.env.PUBLIC_URL}/images/default-profile.png` }
     ];
-    
-    const teams = [
-      { id: 101, type: 'team', name: 'FC Barcelona', league: 'La Liga', country: 'Spain', image: `${process.env.PUBLIC_URL}/images/default-team.png` },
-      { id: 102, type: 'team', name: 'Manchester United', league: 'Premier League', country: 'England', image: `${process.env.PUBLIC_URL}/images/default-team.png` },
-      { id: 103, type: 'team', name: 'Bayern Munich', league: 'Bundesliga', country: 'Germany', image: `${process.env.PUBLIC_URL}/images/default-team.png` },
-      { id: 104, type: 'team', name: 'AC Milan', league: 'Serie A', country: 'Italy', image: `${process.env.PUBLIC_URL}/images/default-team.png` }
-    ];
-    
-    let filteredResults = [];
-    
-    if (type === 'all' || type === 'athlete') {
-      filteredResults = [
-        ...filteredResults,
-        ...athletes.filter(athlete => 
-          athlete.name.toLowerCase().includes(lowerQuery) || 
-          athlete.country.toLowerCase().includes(lowerQuery) ||
-          athlete.position.toLowerCase().includes(lowerQuery)
-        )
-      ];
-    }
-    
-    if (type === 'all' || type === 'team') {
-      filteredResults = [
-        ...filteredResults,
-        ...teams.filter(team => 
-          team.name.toLowerCase().includes(lowerQuery) || 
-          team.country.toLowerCase().includes(lowerQuery) ||
-          team.league.toLowerCase().includes(lowerQuery)
-        )
-      ];
-    }
-    
-    return filteredResults;
+    return athletes.filter(a => a.name.toLowerCase().includes(lower) || a.country.toLowerCase().includes(lower));
   };
   
   return (

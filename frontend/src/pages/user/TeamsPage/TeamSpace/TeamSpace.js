@@ -136,6 +136,21 @@ const TeamSpace = () => {
     setShowDeleteConfirm(prev => !prev);
   };
 
+  // Helper: remove the current user from the team then navigate out
+  const leaveTeam = async () => {
+    try {
+      const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+      if (response.success) {
+        toast.success('You have left the team');
+        navigate('/teams');
+      }
+    } catch (err) {
+      console.error('Error leaving team:', err);
+      toast.error(err.response?.data?.message || 'Failed to leave team');
+      throw err; // rethrow so callers know it failed
+    }
+  };
+
   const handleLeaveTeam = async () => {
     // Case 1: Manager with other members -> must transfer role first
     if (isManager && members.length > 1) {
@@ -150,16 +165,7 @@ const TeamSpace = () => {
     }
 
     // Case 3: Regular member (not last one) can leave directly
-    try {
-      const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
-      if (response.success) {
-        toast.success('You have left the team');
-        navigate('/teams');
-      }
-    } catch (err) {
-      console.error('Error leaving team:', err);
-      toast.error(err.response?.data?.message || 'Failed to leave team');
-    }
+    await leaveTeam();
   };
   
   const confirmLeaveAndDelete = async () => {
@@ -193,18 +199,9 @@ const TeamSpace = () => {
       if (response.success) {
         toast.success('Manager role transferred successfully');
         setShowTransferManagerModal(false);
-        
-        // Refresh team data to update roles
-        const updatedTeamData = await apiClient.get(`/api/teams/${teamId}`);
-        setTeam(updatedTeamData);
-        
-        // Find user's new role in the updated data
-        if (Array.isArray(updatedTeamData.Users)) {
-          const userMembership = updatedTeamData.Users.find(u => u.id === user?.id);
-          if (userMembership && userMembership.UserTeam) {
-            setUserRole(userMembership.UserTeam.role);
-          }
-        }
+        // Immediately leave the team now that role has been transferred
+        await leaveTeam();
+        return; // exit handler; navigation already performed
       }
     } catch (err) {
       console.error('Error transferring manager role:', err);
@@ -263,7 +260,7 @@ const TeamSpace = () => {
               <p className="team-founded">Est. {team.foundedYear || new Date().getFullYear()}</p>
               <div className="team-meta">
                 <span className="team-city">{team.city}</span>
-                <span className="team-privacy">Private Team</span>
+                {/* Team privacy indicator removed for MVP */}
               </div>
             </div>
           </div>
@@ -296,7 +293,7 @@ const TeamSpace = () => {
                   className="action-button danger"
                   onClick={toggleDeleteConfirm}
                   disabled={isDeleting || members.length > 1}
-                  title={members.length > 1 ? "Remove all members first" : "Delete team"}
+                  title={members.length > 1 ? "Remove all members first" : "Delete team (team will be deleted)"}
                 >
                   <i className="fas fa-trash-alt"></i> Delete Team
                 </button>

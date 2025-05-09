@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SearchFilters.css';
 
 const SearchFilters = ({ currentQuery, currentType, onSearchChange, onTypeChange }) => {
   const [localQuery, setLocalQuery] = useState(currentQuery);
   
-  // Sync local state with URL params when they change externally
+  // Sync local state with URL params when they change externally (but avoid cursor jumps)
   useEffect(() => {
+    // Only update if currentQuery changed programmatically (not from user typing)
     setLocalQuery(currentQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuery]);
   
-  // Handle input change with debounce
   const handleInputChange = (e) => {
-    const value = e.target.value;
-    setLocalQuery(value);
-    
-    // Debounce search to avoid excessive API calls
-    const timeoutId = setTimeout(() => {
-      onSearchChange(value);
-    }, 500);
-    
-    return () => clearTimeout(timeoutId);
+    setLocalQuery(e.target.value);
   };
+  
+  // Debounce onSearchChange so we call it only after the user pauses typing
+  const debounceRef = useRef(null);
+  useEffect(() => {
+    // skip on first mount when localQuery === currentQuery
+    if (localQuery === currentQuery) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearchChange(localQuery);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localQuery]);
   
   // Handle search form submission
   const handleSubmit = (e) => {

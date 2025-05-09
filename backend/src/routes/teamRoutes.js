@@ -75,6 +75,30 @@ router.get('/', catchAsync(async (req, res) => {
   });
 }));
 
+// SEARCH teams by name or abbreviation
+// GET /api/teams/search?q=<query>
+router.get('/search', catchAsync(async (req, res) => {
+  const { q } = req.query;
+  log.info(`TEAMROUTES.JS (GET /search): Searching teams with query: ${q}`);
+  if (!q || !q.trim()) {
+    return sendSafeJson(res, { success: true, count: 0, teams: [] });
+  }
+  const query = q.trim();
+  // Case-insensitive match (Op.iLike in Postgres, Op.like otherwise)
+  const likeOp = Op.iLike ? Op.iLike : Op.like;
+  const teams = await Team.findAll({
+    where: {
+      [Op.or]: [
+        { name: { [likeOp]: `%${query}%` } },
+        { abbreviation: { [likeOp]: `%${query}%` } }
+      ]
+    },
+    limit: 20,
+    order: [['name', 'ASC']]
+  });
+  return sendSafeJson(res, { success: true, count: teams.length, teams });
+}));
+
 // GET /api/teams/:id
 router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   log.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
