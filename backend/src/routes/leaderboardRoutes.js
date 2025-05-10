@@ -4,6 +4,13 @@ const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { sendSafeJson } = require('../utils/safeSerializer');
 const logger = require('../utils/logger');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Leaderboard
+ *   description: Leaderboard information
+ */
+
 // Placeholder function to simulate fetching leaderboard data
 // In a real application, this would interact with a database or a dedicated service
 const getMockLeaderboardData = async (gameId, metric, limit) => {
@@ -20,12 +27,70 @@ const getMockLeaderboardData = async (gameId, metric, limit) => {
 };
 
 /**
- * GET /api/leaderboard
- * Fetches leaderboard data.
- * Query Parameters:
- *  - gameId (required): The ID of the game for the leaderboard.
- *  - metric (optional): The metric to sort by (e.g., 'score', 'winRate'). Defaults to 'score'.
- *  - limit (optional): The number of entries to return. Defaults to 10.
+ * @swagger
+ * /api/leaderboard:
+ *   get:
+ *     summary: Fetches leaderboard data
+ *     tags: [Leaderboard]
+ *     parameters:
+ *       - in: query
+ *         name: gameId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the game for the leaderboard.
+ *       - in: query
+ *         name: metric
+ *         schema:
+ *           type: string
+ *           default: score
+ *         description: The metric to sort by (e.g., 'score', 'winRate').
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of entries to return.
+ *     responses:
+ *       200:
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 query:
+ *                   type: object
+ *                   properties:
+ *                     gameId:
+ *                       type: string
+ *                     metric:
+ *                       type: string
+ *                     limit:
+ *                       type: integer
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object # Define your leaderboard item structure here
+ *                     properties:
+ *                       rank:
+ *                         type: integer
+ *                       playerId:
+ *                         type: string
+ *                       username:
+ *                         type: string
+ *                       score:
+ *                         type: integer
+ *                       game:
+ *                         type: string
+ *                       metricUsed:
+ *                         type: string
+ *       400:
+ *         description: Invalid input (e.g., missing gameId, invalid limit)
+ *       500:
+ *         description: Server error
  */
 router.get('/', catchAsync(async (req, res) => {
   const { gameId, metric = 'score', limit = '10' } = req.query;

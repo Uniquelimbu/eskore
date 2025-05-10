@@ -1,3 +1,4 @@
+// This component is temporarily disabled and will be re-enabled in a future rollout.
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 import PageLayout from '../../../components/layout/PageLayout';

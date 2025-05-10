@@ -83,12 +83,14 @@ const Sidebar = () => {
               <span className="sidebar-nav-label">Home</span>
             </NavLink>
           </li>
+          {/*
           <li>
             <NavLink to="/leaderboards">
               <span role="img" aria-label="Standings" className="sidebar-nav-icon">🏆</span>
               <span className="sidebar-nav-label">Standings</span>
             </NavLink>
           </li>
+          */}
           <li>
             <NavLink to="/teams">
               <span role="img" aria-label="Team" className="sidebar-nav-icon">👥</span>

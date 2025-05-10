@@ -2,7 +2,7 @@ import React from 'react';
 import ProfilePage from '../pages/user/ProfilePage';
 import DashboardPage from '../pages/user/DashboardPage';
 import SearchPage from '../pages/user/SearchPage';
-import LeaderboardPage from '../pages/user/LeaderboardPage';
+// import LeaderboardPage from '../pages/user/LeaderboardPage';
 import TeamsPage from '../pages/user/TeamsPage';
 // Remove missing import: import TeamDetailsPage from '../pages/user/TeamDetailsPage';
 import TournamentPage from '../pages/user/TournamentPage';
@@ -28,7 +28,7 @@ export const privateRoutes = [
   { path: '/dashboard', element: <DashboardPage /> },
   { path: '/profile', element: <ProfilePage /> },
   { path: '/search', element: <SearchPage /> },
-  { path: '/leaderboards', element: <LeaderboardPage /> },
+  // { path: '/leaderboards', element: <LeaderboardPage /> },
   { path: '/teams', element: <TeamsPage />, exact: true },
   { path: '/teams/create', element: <CreateTeam /> },
   // Replace missing TeamDetailsPage with TeamSpace as a temporary solution
@@ -47,8 +47,10 @@ export const specialRoutes = [
   { path: '*', element: <NotFoundPage /> }
 ];
 
-export default {
+const routes = {
   publicRoutes,
   privateRoutes,
   specialRoutes
 };
+
+export default routes;

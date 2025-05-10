@@ -13,10 +13,53 @@ const { validate, schemas } = require('../validation');
 const { body, param } = require('express-validator'); // Add this import
 const db = require('../config/db');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Tournaments
+ *   description: Tournament management and participation
+ */
+
 // IMPORTANT: More specific routes first
 /**
- * GET /api/tournaments/user/:userId
- * Get all tournaments a user is participating in
+ * @swagger
+ * /api/tournaments/user/{userId}:
+ *   get:
+ *     summary: Get all tournaments a specific user is participating in
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the user.
+ *     responses:
+ *       200:
+ *         description: A list of tournaments the user is part of, with their roles.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tournaments:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Tournament'
+ *                       - type: object
+ *                         properties:
+ *                           role:
+ *                             type: string
+ *                             description: User's role in the tournament.
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g., trying to access another user's tournaments)
+ *       500:
+ *         description: Server error
  */
 router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
   const { userId } = req.params;
@@ -52,8 +95,53 @@ router.get('/user/:userId', requireAuth, catchAsync(async (req, res) => {
 
 // Regular routes below
 /**
- * GET /api/tournaments
- * List all tournaments with optional filters
+ * @swagger
+ * /api/tournaments:
+ *   get:
+ *     summary: List all tournaments with optional filters and pagination
+ *     tags: [Tournaments]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, registration, active, completed, cancelled]
+ *         description: Filter by tournament status.
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for tournament name.
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page.
+ *     responses:
+ *       200:
+ *         description: A list of tournaments with pagination information.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 tournaments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TournamentWithCreator'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *       500:
+ *         description: Server error
  */
 router.get('/', catchAsync(async (req, res) => {
   const { status, search } = req.query;
@@ -100,8 +188,36 @@ router.get('/', catchAsync(async (req, res) => {
 }));
 
 /**
- * GET /api/tournaments/:id
- * Get a single tournament by ID with details
+ * @swagger
+ * /api/tournaments/{id}:
+ *   get:
+ *     summary: Get a single tournament by ID with details (creator, participants, teams)
+ *     tags: [Tournaments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament to retrieve.
+ *     responses:
+ *       200:
+ *         description: Detailed information about the tournament.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 tournament:
+ *                   $ref: '#/components/schemas/TournamentDetail' # Assuming a detailed tournament schema
+ *       400:
+ *         description: Invalid ID supplied
+ *       404:
+ *         description: Tournament not found
+ *       500:
+ *         description: Server error
  */
 router.get('/:id', validate(schemas.tournament.tournamentIdParam), catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -143,9 +259,37 @@ router.get('/:id', validate(schemas.tournament.tournamentIdParam), catchAsync(as
 }));
 
 /**
- * POST /api/tournaments
- * Create a new tournament
- * Requires authenticated user
+ * @swagger
+ * /api/tournaments:
+ *   post:
+ *     summary: Create a new tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateTournamentInput'
+ *     responses:
+ *       201:
+ *         description: Tournament created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 tournament:
+ *                   $ref: '#/components/schemas/Tournament'
+ *       400:
+ *         description: Invalid input (e.g., missing name)
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 router.post('/', requireAuth, validate(schemas.tournament.createTournament), catchAsync(async (req, res) => {
   const { name, description, startDate, endDate, status = 'draft' } = req.body;
@@ -177,9 +321,48 @@ router.post('/', requireAuth, validate(schemas.tournament.createTournament), cat
 }));
 
 /**
- * PUT /api/tournaments/:id
- * Update a tournament
- * Requires creator/organizer of the tournament
+ * @swagger
+ * /api/tournaments/{id}:
+ *   put:
+ *     summary: Update an existing tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTournamentInput' # Can be same as CreateTournamentInput or a partial one
+ *     responses:
+ *       200:
+ *         description: Tournament updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 tournament:
+ *                   $ref: '#/components/schemas/Tournament'
+ *       400:
+ *         description: Invalid input or ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not creator or organizer)
+ *       404:
+ *         description: Tournament not found
+ *       500:
+ *         description: Server error
  */
 router.put('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, validate(schemas.tournament.createTournament), catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -224,9 +407,42 @@ router.put('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, 
 }));
 
 /**
- * DELETE /api/tournaments/:id
- * Delete a tournament
- * Requires creator of the tournament
+ * @swagger
+ * /api/tournaments/{id}:
+ *   delete:
+ *     summary: Delete a tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament to delete.
+ *     responses:
+ *       200:
+ *         description: Tournament deleted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid ID supplied
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not creator)
+ *       404:
+ *         description: Tournament not found
+ *       500:
+ *         description: Server error
  */
 router.delete('/:id', validate(schemas.tournament.tournamentIdParam), requireAuth, catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -275,9 +491,62 @@ router.delete('/:id', validate(schemas.tournament.tournamentIdParam), requireAut
 }));
 
 /**
- * POST /api/tournaments/:id/participants
- * Add a user participant to a tournament
- * Requires organizer role for the tournament
+ * @swagger
+ * /api/tournaments/{id}/participants:
+ *   post:
+ *     summary: Add a user participant to a tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               role:
+ *                 type: string
+ *                 default: participant
+ *                 enum: [participant, organizer, staff] # Adjust roles as needed
+ *     responses:
+ *       201:
+ *         description: Participant added or role updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 participant:
+ *                   $ref: '#/components/schemas/UserTournament' # Assuming UserTournament schema
+ *                 message:
+ *                   type: string
+ *                   nullable: true
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not organizer)
+ *       404:
+ *         description: Tournament or User not found
+ *       409:
+ *         description: User already has this role in the tournament (if not updating)
+ *       500:
+ *         description: Server error
  */
 router.post('/:id/participants', 
   validate(schemas.tournament.tournamentIdParam), 
@@ -354,9 +623,55 @@ router.post('/:id/participants',
 }));
 
 /**
- * POST /api/tournaments/:id/teams
- * Add a team to a tournament
- * Requires organizer role for the tournament
+ * @swagger
+ * /api/tournaments/{id}/teams:
+ *   post:
+ *     summary: Add a team to a tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - teamId
+ *             properties:
+ *               teamId:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Team added to tournament successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 teamRegistration:
+ *                   $ref: '#/components/schemas/TeamTournament' # Assuming TeamTournament schema
+ *       400:
+ *         description: Invalid input (e.g., missing teamId)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not organizer)
+ *       404:
+ *         description: Tournament or Team not found
+ *       409:
+ *         description: Team already registered for this tournament
+ *       500:
+ *         description: Server error
  */
 router.post('/:id/teams', requireAuth, validate([
   ...schemas.tournament.tournamentIdParam,
@@ -422,9 +737,48 @@ router.post('/:id/teams', requireAuth, validate([
 }));
 
 /**
- * DELETE /api/tournaments/:id/participants/:userId
- * Remove a user participant from a tournament
- * Requires organizer role for the tournament
+ * @swagger
+ * /api/tournaments/{id}/participants/{userId}:
+ *   delete:
+ *     summary: Remove a user participant from a tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament.
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the user to remove.
+ *     responses:
+ *       200:
+ *         description: Participant removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid ID(s) supplied
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not organizer)
+ *       404:
+ *         description: Tournament not found or User not a participant
+ *       500:
+ *         description: Server error
  */
 router.delete('/:id/participants/:userId', requireAuth, validate([
   ...schemas.tournament.tournamentIdParam,
@@ -472,9 +826,48 @@ router.delete('/:id/participants/:userId', requireAuth, validate([
 }));
 
 /**
- * DELETE /api/tournaments/:id/teams/:teamId
- * Remove a team from a tournament
- * Requires organizer role for the tournament
+ * @swagger
+ * /api/tournaments/{id}/teams/{teamId}:
+ *   delete:
+ *     summary: Remove a team from a tournament
+ *     tags: [Tournaments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the tournament.
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team to remove.
+ *     responses:
+ *       200:
+ *         description: Team removed from tournament successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid ID(s) supplied
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not organizer)
+ *       404:
+ *         description: Tournament not found or Team not registered
+ *       500:
+ *         description: Server error
  */
 router.delete('/:id/teams/:teamId', requireAuth, validate([
   ...schemas.tournament.tournamentIdParam,

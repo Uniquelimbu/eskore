@@ -13,6 +13,13 @@ const log = require('../utils/log');
 const { ROLES, MAX_FILE_SIZE_MB } = require('../config/constants');
 const sequelize = require('../config/db'); // Add Missing Import for Sequelize
 
+/**
+ * @swagger
+ * tags:
+ *   name: Teams
+ *   description: Team management and information
+ */
+
 // --- Multer setup for logo uploads ---
 // ... (existing multer setup) ...
 const multer = require('multer');
@@ -65,6 +72,31 @@ router.use((req, res, next) => {
 });
 
 // GET /api/teams
+/**
+ * @swagger
+ * /api/teams:
+ *   get:
+ *     summary: Retrieve a list of all teams
+ *     tags: [Teams]
+ *     responses:
+ *       200:
+ *         description: A list of teams.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 teams:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Team'
+ *       500:
+ *         description: Server error
+ */
 router.get('/', catchAsync(async (req, res) => {
   log.info('TEAMROUTES.JS (GET /): Fetching all teams.');
   const teams = await Team.findAll();
@@ -77,6 +109,38 @@ router.get('/', catchAsync(async (req, res) => {
 
 // SEARCH teams by name or abbreviation
 // GET /api/teams/search?q=<query>
+/**
+ * @swagger
+ * /api/teams/search:
+ *   get:
+ *     summary: Search for teams by name or abbreviation
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Search query for team name or abbreviation
+ *     responses:
+ *       200:
+ *         description: A list of matching teams.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 teams:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Team'
+ *       500:
+ *         description: Server error
+ */
 router.get('/search', catchAsync(async (req, res) => {
   const { q } = req.query;
   log.info(`TEAMROUTES.JS (GET /search): Searching teams with query: ${q}`);
@@ -100,6 +164,33 @@ router.get('/search', catchAsync(async (req, res) => {
 }));
 
 // GET /api/teams/:id
+/**
+ * @swagger
+ * /api/teams/{id}:
+ *   get:
+ *     summary: Retrieve a specific team by ID, including its members
+ *     tags: [Teams]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team to retrieve.
+ *     responses:
+ *       200:
+ *         description: Details of the team and its members.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeamWithMembers' # Assuming TeamWithMembers schema
+ *       400:
+ *         description: Invalid ID supplied
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   log.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
   const { id } = req.params;
@@ -121,9 +212,44 @@ router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, re
 }));
 
 /**
- * GET /api/teams/:id/members
- * Fetches all members of a specific team
- * Requires authenticated user
+ * @swagger
+ * /api/teams/{id}/members:
+ *   get:
+ *     summary: Fetches all members of a specific team
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team whose members to retrieve.
+ *     responses:
+ *       200:
+ *         description: A list of team members.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 members:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TeamMember' # Assuming TeamMember schema
+ *       400:
+ *         description: Invalid ID supplied
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Server error
  */
 router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   const { id: teamId } = req.params;
@@ -177,8 +303,41 @@ router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catc
 }));
 
 /**
- * POST /api/teams
- * Creates a new team
+ * @swagger
+ * /api/teams:
+ *   post:
+ *     summary: Creates a new team
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateTeamInput' # Assuming CreateTeamInput schema
+ *     responses:
+ *       201:
+ *         description: Team created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 team:
+ *                   $ref: '#/components/schemas/Team'
+ *       400:
+ *         description: Invalid input (validation error)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g., user already owns a team)
+ *       500:
+ *         description: Server error
  */
 router.post('/', 
   requireAuth, 
@@ -260,8 +419,63 @@ router.post('/',
 );
 
 /**
- * POST /api/teams/:id/members
- * Adds a member to a team
+ * @swagger
+ * /api/teams/{id}/members:
+ *   post:
+ *     summary: Adds a member to a team
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team to add a member to.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user to add.
+ *               role:
+ *                 type: string
+ *                 enum: [manager, assistant_manager, athlete, coach]
+ *                 default: athlete
+ *                 description: Role of the user in the team.
+ *     responses:
+ *       201:
+ *         description: User added to the team successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 membership:
+ *                   $ref: '#/components/schemas/UserTeam' # Assuming UserTeam schema for membership details
+ *       400:
+ *         description: Invalid input (e.g., missing userId, invalid role)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g., not a team manager)
+ *       404:
+ *         description: Team or User not found
+ *       409:
+ *         description: User already has this role in the team
+ *       500:
+ *         description: Server error
  */
 router.post('/:id/members', 
   requireAuth, 
@@ -340,8 +554,48 @@ router.post('/:id/members',
 }));
 
 /**
- * DELETE /api/teams/:id/members/:userId
- * Removes a member from a team
+ * @swagger
+ * /api/teams/{id}/members/{userId}:
+ *   delete:
+ *     summary: Removes a member from a team
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team.
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the user to remove.
+ *     responses:
+ *       200:
+ *         description: Team member removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid ID(s) supplied
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g., not a team manager, trying to remove manager incorrectly)
+ *       404:
+ *         description: Team or Member not found in this team
+ *       500:
+ *         description: Server error
  */
 router.delete('/:id/members/:userId', 
   requireAuth, 
@@ -444,9 +698,48 @@ router.delete('/:id/members/:userId',
 }));
 
 /**
- * PATCH /api/teams/:id
- * Updates a team
- * Requires team manager or assistant manager role
+ * @swagger
+ * /api/teams/{id}:
+ *   patch:
+ *     summary: Updates a team's details
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Numeric ID of the team to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTeamInput' # Assuming UpdateTeamInput schema (can be partial)
+ *     responses:
+ *       200:
+ *         description: Team updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 team:
+ *                   $ref: '#/components/schemas/Team'
+ *       400:
+ *         description: Invalid input or ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g., not a team manager or assistant manager)
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Server error
  */
 router.patch('/:id', 
   requireAuth, 

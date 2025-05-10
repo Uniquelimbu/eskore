@@ -7,8 +7,29 @@ const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { validate, schemas } = require('../validation');
 
 /**
- * GET /api/leagues
- * List all leagues
+ * @swagger
+ * tags:
+ *   name: Leagues
+ *   description: League management
+ */
+
+/**
+ * @swagger
+ * /api/leagues:
+ *   get:
+ *     summary: List all leagues
+ *     tags: [Leagues]
+ *     responses:
+ *       200:
+ *         description: A list of leagues
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/League' # Assuming you have a League schema
+ *       500:
+ *         description: Server error
  */
 router.get('/', catchAsync(async (req, res) => {
   const leagues = await League.findAll();
@@ -16,8 +37,31 @@ router.get('/', catchAsync(async (req, res) => {
 }));
 
 /**
- * GET /api/leagues/:id
- * Get a single league by ID
+ * @swagger
+ * /api/leagues/{id}:
+ *   get:
+ *     summary: Get a single league by ID
+ *     tags: [Leagues]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the league to get
+ *     responses:
+ *       200:
+ *         description: Details of the league
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/League'
+ *       400:
+ *         description: Invalid ID supplied
+ *       404:
+ *         description: League not found
+ *       500:
+ *         description: Server error
  */
 router.get('/:id', validate(schemas.league.leagueIdParam), catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -31,8 +75,32 @@ router.get('/:id', validate(schemas.league.leagueIdParam), catchAsync(async (req
 }));
 
 /**
- * POST /api/leagues
- * Create a new league
+ * @swagger
+ * /api/leagues:
+ *   post:
+ *     summary: Create a new league
+ *     tags: [Leagues]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LeagueInput' # Assuming an input schema for league creation
+ *     responses:
+ *       201:
+ *         description: League created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/League'
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  */
 router.post('/', 
   requireAuth, 
@@ -45,8 +113,41 @@ router.post('/',
 );
 
 /**
- * PATCH /api/leagues/:id
- * Update an existing league
+ * @swagger
+ * /api/leagues/{id}:
+ *   patch:
+ *     summary: Update an existing league
+ *     tags: [Leagues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the league to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LeagueInput' # Assuming an input schema for league update (can be partial)
+ *     responses:
+ *       200:
+ *         description: League updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/League'
+ *       400:
+ *         description: Invalid input or ID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: League not found
+ *       500:
+ *         description: Server error
  */
 router.patch('/:id', 
   requireAuth, 
@@ -73,8 +174,31 @@ router.patch('/:id',
 );
 
 /**
- * DELETE /api/leagues/:id
- * Delete a league
+ * @swagger
+ * /api/leagues/{id}:
+ *   delete:
+ *     summary: Delete a league
+ *     tags: [Leagues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the league to delete
+ *     responses:
+ *       204:
+ *         description: League deleted successfully
+ *       400:
+ *         description: Invalid ID supplied
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: League not found
+ *       500:
+ *         description: Server error
  */
 router.delete('/:id', 
   requireAuth, 

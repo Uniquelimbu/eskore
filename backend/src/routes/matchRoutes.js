@@ -7,7 +7,42 @@ const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { computeStandingsForLeague } = require('../helpers/computeStandings');
 const { validate, schemas } = require('../validation');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Matches
+ *   description: Match management and results
+ */
+
 // CREATE a match
+/**
+ * @swagger
+ * /api/matches:
+ *   post:
+ *     summary: Create a new match
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MatchInput' # Assuming MatchInput schema
+ *     responses:
+ *       201:
+ *         description: Match created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Match'
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 router.post('/', requireAuth, validate(schemas.match.matchSchema), catchAsync(async (req, res) => {
   const { homeTeamId, awayTeamId, homeScore, awayScore, status, date, leagueId } = req.body;
 
@@ -33,6 +68,43 @@ router.post('/', requireAuth, validate(schemas.match.matchSchema), catchAsync(as
 }));
 
 // UPDATE match
+/**
+ * @swagger
+ * /api/matches/{id}:
+ *   patch:
+ *     summary: Update an existing match (e.g., scores, status)
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the match to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MatchResultInput' # Assuming MatchResultInput schema for updates
+ *     responses:
+ *       200:
+ *         description: Match updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Match'
+ *       400:
+ *         description: Invalid input or ID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Match not found
+ *       500:
+ *         description: Server error
+ */
 router.patch('/:id', 
   requireAuth, 
   validate([
@@ -64,6 +136,36 @@ router.patch('/:id',
 }));
 
 // GET all matches
+/**
+ * @swagger
+ * /api/matches:
+ *   get:
+ *     summary: Get all matches, with optional filters
+ *     tags: [Matches]
+ *     parameters:
+ *       - in: query
+ *         name: leagueId
+ *         schema:
+ *           type: integer
+ *         description: Filter matches by league ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [scheduled, live, completed, postponed, cancelled] # Adjust as per your Match model
+ *         description: Filter matches by status
+ *     responses:
+ *       200:
+ *         description: A list of matches
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Match'
+ *       500:
+ *         description: Server error
+ */
 router.get('/', catchAsync(async (req, res) => {
   const { leagueId, status } = req.query;
   
@@ -81,6 +183,33 @@ router.get('/', catchAsync(async (req, res) => {
 }));
 
 // GET a single match
+/**
+ * @swagger
+ * /api/matches/{id}:
+ *   get:
+ *     summary: Get a single match by ID
+ *     tags: [Matches]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the match to get
+ *     responses:
+ *       200:
+ *         description: Details of the match
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Match'
+ *       400:
+ *         description: Invalid ID supplied
+ *       404:
+ *         description: Match not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/:id', 
   validate(schemas.match.matchIdParam), // Use the match ID param schema
   catchAsync(async (req, res) => {
@@ -98,6 +227,33 @@ router.get('/:id',
 }));
 
 // DELETE match
+/**
+ * @swagger
+ * /api/matches/{id}:
+ *   delete:
+ *     summary: Delete a match
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the match to delete
+ *     responses:
+ *       204:
+ *         description: Match deleted successfully
+ *       400:
+ *         description: Invalid ID supplied
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Match not found
+ *       500:
+ *         description: Server error
+ */
 router.delete('/:id', 
   requireAuth, 
   validate(schemas.match.matchIdParam), // Use the match ID param schema

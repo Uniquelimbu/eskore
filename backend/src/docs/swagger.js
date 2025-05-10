@@ -100,39 +100,37 @@ const swaggerDefinition = {
   }]
 };
 
-// Options for the swagger docs
+// Options for swagger-jsdoc
 const options = {
   swaggerDefinition,
-  // Paths to files containing OpenAPI definitions
-  apis: [
-    './src/routes/*.js',
-    './src/models/*.js',
-    './src/docs/components/*.yaml'
-  ],
+  // Path to the API docs
+  // IMPORTANT: Adjust this path to point to your route files
+  apis: ['./src/routes/*.js'], // This line ensures JSDoc comments in your route files are processed
 };
 
 // Initialize swagger-jsdoc
-const swaggerSpec = swaggerJSDoc(options);
+let swaggerSpec;
+try {
+  swaggerSpec = swaggerJSDoc(options);
+  logger.info('Swagger specification generated successfully.');
+} catch (error) {
+  logger.error('Error generating Swagger specification:', error);
+  // Fallback or default spec in case of error, or rethrow
+  swaggerSpec = {
+    openapi: '3.0.0',
+    info: {
+      title: 'eSkore API Documentation (Error)',
+      version: '0.0.0',
+      description: 'Error generating API documentation. Please check the logs.',
+    },
+    paths: {}
+  };
+}
 
-// Setup function to configure routes
+// Function to setup Swagger UI
 const setupSwagger = (app) => {
-  try {
-    // Serve swagger docs
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-      explorer: true,
-      customCss: '.swagger-ui .topbar { display: none }'
-    }));
-    
-    // Make swagger.json available
-    app.get('/swagger.json', (req, res) => {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(swaggerSpec);
-    });
-    
-    logger.info(`API Documentation available at http://localhost:${process.env.PORT || 5000}/api-docs`);
-  } catch (error) {
-    logger.warn('Could not set up Swagger documentation:', error.message);
-  }
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  logger.info(`Swagger UI available at /api-docs`);
 };
 
 module.exports = setupSwagger;
