@@ -3,13 +3,13 @@
   width: 100%;
   min-height: 100vh;
   background-color: #1a202c;
-  padding-left: 260px;
+  /* Remove padding-left: 260px; - now handled by AuthenticatedLayout */
   box-sizing: border-box;
 }
 
 .teams-page-content {
   flex: 1;
-  padding: 30px;
+  /* Remove padding - now handled by PageLayout */
   color: #e2e8f0;
   box-sizing: border-box;
   min-width: 0;

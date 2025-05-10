@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   min-height: 80px;
+  justify-content: flex-start; /* Start with left alignment when expanded */
   transition: padding 0.3s ease, justify-content 0.3s ease; /* Added for smooth transition */
 }
 
@@ -40,7 +41,7 @@
   align-items: center;
   justify-content: center;
   object-fit: contain;
-  transition: height 0.3s ease, width 0.3s ease; /* Added for smooth transition */
+  transition: height 0.3s ease, width 0.3s ease, transform 0.3s ease; /* Added transform for smoother transition */
 }
 
 .sidebar-logo-text {
@@ -109,7 +110,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: background 0.18s, color 0.18s, padding 0.3s ease, justify-content 0.3s ease; /* Added for smooth transition */
+  transition: background 0.18s, color 0.18s, padding 0.3s ease; /* Removed justify-content from transition for smoother behavior */
   gap: 16px; /* Add space between icon and label */
   justify-content: flex-start; /* Align items to the start */
   overflow: hidden; /* Prevent content from overflowing during transition */
@@ -122,28 +123,57 @@
 /* Using a class for JS-driven collapse provides an alternative/override to media query based collapse */
 .sidebar.sidebar-is-collapsed .sidebar-header,
 body.sidebar-is-collapsed .sidebar .sidebar-header {
-  padding: 18px 8px 12px 8px;
-  justify-content: center;
+  padding: 18px 0; /* Center horizontally by removing left/right padding */
+  justify-content: center; /* Center the logo in collapsed mode */
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-logo,
 body.sidebar-is-collapsed .sidebar .sidebar-logo {
   height: 28px;
   width: 28px;
+  transform: translateX(0); /* Ensure logo is centered */
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-logo-text,
 body.sidebar-is-collapsed .sidebar .sidebar-logo-text {
   opacity: 0;
-  /* display: none; /* Using opacity and overflow:hidden on text elements is often smoother for transitions */
+  width: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-nav a,
 .sidebar.sidebar-is-collapsed .sidebar-more-button,
 body.sidebar-is-collapsed .sidebar .sidebar-nav a,
 body.sidebar-is-collapsed .sidebar .sidebar-more-button {
-  padding: 10px;
-  justify-content: center;
+  padding: 12px 0; /* Remove horizontal padding */
+  justify-content: center; /* Center the icons horizontally */
+}
+
+/* Fix for icon alignment in collapsed state */
+.sidebar.sidebar-is-collapsed .sidebar-nav a,
+.sidebar.sidebar-is-collapsed .sidebar-more-button,
+body.sidebar-is-collapsed .sidebar .sidebar-nav a,
+body.sidebar-is-collapsed .sidebar .sidebar-more-button {
+  padding: 12px 0; /* Remove horizontal padding */
+  justify-content: center !important; /* Ensure icons are centered with high priority */
+  text-align: center;
+  width: 100%;
+}
+
+/* Ensure the icon itself is centered */
+.sidebar.sidebar-is-collapsed .sidebar-nav-icon,
+body.sidebar-is-collapsed .sidebar .sidebar-nav-icon {
+  margin: 0 auto !important; /* Center icon with !important to override */
+  padding-left: 0 !important;
+}
+
+/* Remove any text/label display */
+.sidebar.sidebar-is-collapsed .sidebar-nav-label,
+body.sidebar-is-collapsed .sidebar .sidebar-nav-label {
+  display: none;
+  width: 0;
+  opacity: 0;
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-nav-label,
@@ -324,33 +354,86 @@ body.sidebar-is-collapsed .sidebar .options-menu {
   /* Styles that specifically apply when the media query is active, 
      and --sidebar-current-width is --sidebar-collapsed-width */
   .sidebar-header {
-    padding: 18px 8px 12px 8px;
+    padding: 18px 0; /* Center horizontally */
     justify-content: center;
   }
+  
   .sidebar-logo {
     height: 28px;
     width: 28px;
+    margin: 0 auto; /* Center logo */
   }
+  
   .sidebar-logo-text {
     opacity: 0; /* Hide text */
+    width: 0;
+    margin: 0;
+    padding: 0;
   }
+  
   .sidebar-nav a,
   .sidebar-more-button {
-    padding: 10px;
-    justify-content: center;
+    padding: 12px 0; /* Remove horizontal padding */
+    justify-content: center; /* Center the icons */
   }
+  
   .sidebar-nav-label {
     opacity: 0; /* Hide label */
+    width: 0;
+    margin: 0;
+    padding: 0;
   }
+  
+  /* Remove any potential misalignments */
+  .sidebar-nav-icon {
+    margin-right: 0;
+    margin-left: 0;
+  }
+  
   .sidebar-generic-profile-icon {
     font-size: 1.2rem;
   }
+  
   .sidebar-more-btn {
     margin-bottom: 10px;
   }
+  
   .options-menu {
     left: var(--sidebar-collapsed-width); /* Use variable for positioning */
     min-width: 120px;
     font-size: 0.95rem;
+  }
+
+  /* Center all nav items when sidebar is collapsed by media query */
+  .sidebar .sidebar-nav a,
+  .sidebar .sidebar-more-button {
+    padding: 12px 0;
+    justify-content: center !important;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .sidebar .sidebar-nav-icon {
+    margin: 0 auto !important;
+    padding-left: 0 !important;
+  }
+  
+  /* Hide labels completely */
+  .sidebar .sidebar-nav-label {
+    display: none;
+    width: 0;
+    opacity: 0;
+  }
+}
+
+/* Add a smallest screen breakpoint for very narrow viewports */
+@media (max-width: 576px) {
+  .sidebar {
+    min-width: var(--sidebar-collapsed-width);
+    width: var(--sidebar-collapsed-width);
+  }
+
+  .sidebar-logo {
+    transform: scale(0.9); /* Slightly scale down logo for very small screens */
   }
 }

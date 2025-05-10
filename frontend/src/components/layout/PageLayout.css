@@ -4,6 +4,7 @@
   position: relative;
   overflow-x: hidden;
   box-sizing: border-box; /* Include padding */
+  /* Remove any left margin/padding here - container will handle centering */
 }
 
 .page-layout--full-height {
@@ -14,22 +15,29 @@
 
 .page-layout__container {
   width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+  margin: 0 auto; /* Center the container */
   position: relative;
-  max-width: 100%;
+  max-width: var(--content-max-width);
   overflow-x: hidden;
   box-sizing: border-box; /* Ensure padding doesn't add to width */
+  padding: var(--content-padding-y) var(--content-padding-x);
 }
 
 .page-layout__container--padded {
   padding: 2rem 1rem;
 }
 
+.page-layout--with-padding {
+  padding: 0; /* Remove padding here */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .page-layout__container--padded {
     padding: 1.5rem 0.75rem;
+  }
+  .page-layout__container {
+    padding: calc(var(--content-padding-y) * 0.66) calc(var(--content-padding-x) * 0.66);
   }
 }
 

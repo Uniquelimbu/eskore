@@ -80,6 +80,22 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-weight-extrabold: 800;
+  
+  /* Layout Standardization Variables */
+  /* Sidebar dimensions */
+  --sidebar-expanded-width: 260px;
+  --sidebar-collapsed-width: 90px;
+  --sidebar-current-width: var(--sidebar-expanded-width);
+  
+  /* Top navbar height */
+  --top-navbar-height: 56px;
+  
+  /* Content padding */
+  --content-padding-x: 30px;
+  --content-padding-y: 30px;
+  
+  /* Default max content width */
+  --content-max-width: 1200px;
 }
 
 /* Rule for JS-toggled sidebar collapse */
@@ -104,15 +120,9 @@ body.sidebar-is-collapsed {
   }
 }
 
+/* Responsive sidebar width adjustment */
 @media (max-width: 992px) {
   :root {
-    /* This ensures that on smaller screens, the sidebar is always collapsed, 
-       regardless of the body.sidebar-is-collapsed class. 
-       The :root selector has higher specificity for setting custom properties 
-       than a class on body if both were targeting the same element directly, 
-       but here they both define the same variable which elements then inherit. 
-       The latest definition in the cascade for the variable will be used. 
-       Media query rules are applied after baseline rules. */
     --sidebar-current-width: var(--sidebar-collapsed-width);
   }
 }

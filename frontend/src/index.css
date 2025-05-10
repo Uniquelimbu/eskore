@@ -252,3 +252,47 @@ body.with-sidebar .authenticated-content .tournament-details-page-content {
     /* max-width: 100% !important; */
   }
 }
+
+/* eSkore Layout Fix: Ensure authenticated content is correctly centered */
+.authenticated-layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #1a202c;
+  /* Standardize sidebar offset across all authenticated pages */
+  padding-left: var(--sidebar-current-width);
+  box-sizing: border-box;
+  transition: padding-left 0.3s ease;
+}
+
+.authenticated-content {
+  flex: 1;
+  min-width: 0; /* Allow content to shrink */
+  width: 100%;
+}
+
+/* Reset any page-specific sidebar offsets to prevent double-offsetting */
+body.with-sidebar .authenticated-content .profile-page-layout,
+body.with-sidebar .authenticated-content .teams-page-layout,
+body.with-sidebar .authenticated-content .team-space-layout,
+body.with-sidebar .authenticated-content .search-page-layout,
+body.with-sidebar .authenticated-content .leaderboard-page-layout {
+  padding-left: 0 !important; /* Remove individual page sidebar offsets */
+}
+
+/* On small screens, adjust paddings */
+@media (max-width: 992px) {
+  .authenticated-layout-wrapper {
+    padding-left: var(--sidebar-collapsed-width);
+  }
+}
+
+/* Allow dashboard main content to be consistently padded */
+.dashboard-main-content,
+.search-page-main,
+.teams-page-content,
+.profile-page-content,
+.leaderboard-page-content {
+  padding: 0 !important; /* Remove inconsistent padding */
+  max-width: 100% !important; /* Ensure full width */
+}

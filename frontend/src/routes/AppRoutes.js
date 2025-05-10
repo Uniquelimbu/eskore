@@ -16,6 +16,7 @@ import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/Tournamen
 // Fix import path for AdminDashboard
 import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
+import NewsPage from '../pages/user/NewsPage';
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -74,6 +75,7 @@ const AppRoutes = () => {
         <Route path="/teams/:teamId/space/*" element={<TeamSpace />} />
         <Route path="/tournaments" element={<TournamentPage />} />
         <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
+        <Route path="/news" element={<NewsPage />} /> {/* Add the News route */}
       </Route>
 
       {/* Admin routes */}

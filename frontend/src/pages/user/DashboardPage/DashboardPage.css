@@ -6,11 +6,12 @@
 
 .dashboard-main-content {
   flex-grow: 1;
-  /* Adjusted padding: top, right, bottom, left. Increased left padding by 30px. */
-  padding: 30px 30px 30px 60px; 
+  /* Remove asymmetric padding - handled by PageLayout now */
   font-family: 'Inter', sans-serif;
   background-color: #1a202c; /* Match sidebar */
   color: #e2e8f0; /* Light text for dark bg */
+  box-sizing: border-box;
+  min-width: 0; /* Allow content to shrink */
 }
 
 .dashboard-header {

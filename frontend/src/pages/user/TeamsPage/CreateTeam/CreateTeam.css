@@ -16,10 +16,12 @@
   overflow-x: hidden;
   box-sizing: border-box; /* Ensure padding is included in width calculation */
   min-width: 0; /* Add min-width:0 to prevent content from overflowing */
+  max-height: calc(100vh - 140px); /* Prevent scrolling by limiting height */
+  overflow: visible; /* Ensure form is fully visible */
 }
 
 .create-team-header {
-  margin-bottom: 20px;
+  margin-bottom: 10px; /* Reduced from 20px */
 }
 
 .create-team-header h1 {
@@ -37,7 +39,7 @@
 .stepper {
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* Reduced from 30px */
   justify-content: space-between;
   position: relative;
   min-height: 36px;
@@ -508,32 +510,37 @@
   border-radius: 4px;
 }
 
-/* Layout base styling for better overall responsiveness */
+/* Layout base styling - CORRECTED to prevent double offset */
 .create-team-page-layout {
   display: flex;
   width: 100%;
   min-height: 100vh;
-  /* position: relative; /* Already there, good */
-  /* Apply padding-left to offset for the fixed sidebar */
-  padding-left: var(--sidebar-main-width);
-  box-sizing: border-box; /* Ensures padding is part of the 100% width */
-  /* overflow-x: hidden; /* Temporarily comment out or remove to diagnose if content itself is overflowing */
+  padding-left: 0 !important; /* Override any existing padding */
+  box-sizing: border-box;
+  background-color: #1a202c;
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
 }
 
-/* Page content wrapper; PageLayout already handles sidebar offset, so remove extra margin */
+/* Page content wrapper - Updated for proper centering */
 .create-team-page-content {
   flex: 1;
-  /* overflow-x: hidden; /* Temporarily removed for diagnosis */
-  padding: 20px;
+  padding: 0 20px; /* Remove vertical padding */
   box-sizing: border-box;
   min-width: 0;
-  max-width: 100%; /* Ensure it doesn't overflow its flex container */
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content horizontally */
+  transform: translateY(-5vh); /* Move content up slightly */
 }
 
 /* Add this new rule to center the PageLayout's inner container */
 .create-team-page-content .page-layout__container {
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+  max-width: 900px; /* Set a max-width for better readability */
 }
 
 /* Step content container to prevent overflow */
@@ -541,7 +548,8 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  box-sizing: border-box; /* Ensure consistent box sizing */
+  overflow-y: visible; /* Ensure vertical content is visible */
+  box-sizing: border-box;
 }
 
 /* Improved responsive styles with multiple breakpoints */
@@ -571,7 +579,7 @@
 
 @media (max-width: 992px) {
   .create-team-page-layout {
-    padding-left: var(--sidebar-collapsed-main-width);
+    padding-left: 0 !important; /* Ensure no extra padding is added */
   }
 
   .stepper {
