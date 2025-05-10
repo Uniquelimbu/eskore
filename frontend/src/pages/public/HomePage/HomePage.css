@@ -105,7 +105,7 @@ button:focus {
 @media (max-width: 768px) {
   .cta-section {
     padding: 4rem 1.5rem; /* Adjust padding */
-    margin: 3rem 1rem; /* Adjust margin */
+    margin: 0; /* Changed from margin: 3rem 1rem; to prevent the dark background from showing through */
   }
 
   .cta-section h2 {
