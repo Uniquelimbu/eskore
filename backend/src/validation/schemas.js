@@ -210,12 +210,16 @@ const teamRules = [
     .notEmpty()
     .withMessage('Team name is required')
     .isLength({ min: 2, max: 100 })
-    .withMessage('Team name must be between 2 and 100 characters'),
+    .withMessage('Team name must be between 2 and 100 characters')
+    .matches(/^[a-zA-Z0-9\s\-_.&'()]+$/)
+    .withMessage('Team name can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))'),
   body('abbreviation')
     .optional({ checkFalsy: true })
     .trim()
     .isLength({ min: 2, max: 4 })
     .withMessage('Abbreviation must be 2-4 characters')
+    .matches(/^[a-zA-Z0-9]+$/)
+    .withMessage('Abbreviation can only contain letters and numbers')
     .toUpperCase(),
   body('foundedYear')
     .optional({ checkFalsy: true })
@@ -228,7 +232,9 @@ const teamRules = [
     .isString()
     .withMessage('City must be a string')
     .isLength({ max: 100 })
-    .withMessage('City name must be less than 100 characters'),
+    .withMessage('City name must be less than 100 characters')
+    .matches(/^[a-zA-Z0-9\s\-_.&'()áéíóúÁÉÍÓÚñÑçÇâêîôûÂÊÎÔÛäëïöüÄËÏÖÜàèìòùÀÈÌÒÙ]+$/)
+    .withMessage('City name can only contain letters, numbers, spaces, accented characters, and basic symbols (-, _, ., &, \', (, ))'),
   body('nickname')
     .optional({ checkFalsy: true })
     .trim()
@@ -236,6 +242,8 @@ const teamRules = [
     .withMessage('Nickname must be a string')
     .isLength({ max: 100 })
     .withMessage('Nickname must be less than 100 characters')
+    .matches(/^[a-zA-Z0-9\s\-_.&'()]+$/)
+    .withMessage('Nickname can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))')
 ];
 
 // Team schemas

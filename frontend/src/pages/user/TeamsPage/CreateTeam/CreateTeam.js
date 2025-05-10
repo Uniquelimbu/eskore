@@ -82,8 +82,7 @@ const CreateTeam = () => {
 
   const validateStep2 = () => {
     const newErrors = {};
-    
-    if (!formData.foundedYear) {
+      if (!formData.foundedYear) {
       newErrors.foundedYear = 'Founded year is required';
     } else if (parseInt(formData.foundedYear) < 1850 || parseInt(formData.foundedYear) > new Date().getFullYear()) {
       newErrors.foundedYear = `Year must be between 1850 and ${new Date().getFullYear()}`;
@@ -91,6 +90,12 @@ const CreateTeam = () => {
     
     if (!formData.city) {
       newErrors.city = 'City is required';
+    } else if (!/^[a-zA-Z0-9\s\-_.&'()áéíóúÁÉÍÓÚñÑçÇâêîôûÂÊÎÔÛäëïöüÄËÏÖÜàèìòùÀÈÌÒÙ]+$/.test(formData.city)) {
+      newErrors.city = 'City name can only contain letters, numbers, spaces, accented characters, and basic symbols (-, _, ., &, \', (, ))';
+    }
+    
+    if (formData.nickname && !/^[a-zA-Z0-9\s\-_.&'()]+$/.test(formData.nickname)) {
+      newErrors.nickname = 'Nickname can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
     }
     
     setErrors(newErrors);
@@ -221,16 +226,17 @@ const CreateTeam = () => {
                 <small className="form-hint">The official name of your club (e.g. Eskore United Football Club)</small>
               </div>
               
-              <div className="form-group">
-                <label htmlFor="nickname">Nickname <span className="optional">(optional)</span></label>
+              <div className="form-group">                <label htmlFor="nickname">Nickname <span className="optional">(optional)</span></label>
                 <input
                   type="text"
                   id="nickname"
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleChange}
+                  className={errors.nickname ? 'input-error' : ''}
                   placeholder="Enter team nickname"
                 />
+                {errors.nickname && <div className="error-message">{errors.nickname}</div>}
                 <small className="form-hint">Common name fans use (e.g. The Purple knights)</small>
               </div>
               
