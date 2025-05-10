@@ -2,7 +2,17 @@
   /* Layout */
   --header-height: 76px;
   --container-max-width: 1400px;
-  --sidebar-width: 260px; /* Updated to match actual sidebar width */
+  --top-navbar-height: 56px;
+  
+  /* Sidebar widths - Refined */
+  --sidebar-expanded-width: 260px;
+  --sidebar-collapsed-width: 90px;
+  --sidebar-current-width: var(--sidebar-expanded-width); /* Default to expanded */
+
+  /* Keep legacy eskore vars as aliases if strictly needed by other less critical components, otherwise phase out */
+  --eskore-sidebar-width: var(--sidebar-current-width); /* Alias to current width */
+  --eskore-sidebar-collapsed-width: var(--sidebar-collapsed-width);
+  --eskore-top-navbar-height: var(--top-navbar-height);
   
   /* Colors */
   --color-primary: #4a6cf7;
@@ -72,6 +82,12 @@
   --font-weight-extrabold: 800;
 }
 
+/* Rule for JS-toggled sidebar collapse */
+/* This should be the class name used by JavaScript to toggle sidebar state */
+body.sidebar-is-collapsed {
+  --sidebar-current-width: var(--sidebar-collapsed-width);
+}
+
 /* Dark theme variables */
 [data-theme='dark'] {
   --bg-light: #1A1F2C;
@@ -85,13 +101,19 @@
 @media (max-width: 1200px) {
   :root {
     --header-height: 70px;
-    --sidebar-width: 240px; /* medium sidebar */
   }
 }
 
 @media (max-width: 992px) {
   :root {
-    --sidebar-width: 90px; /* compact sidebar */
+    /* This ensures that on smaller screens, the sidebar is always collapsed, 
+       regardless of the body.sidebar-is-collapsed class. 
+       The :root selector has higher specificity for setting custom properties 
+       than a class on body if both were targeting the same element directly, 
+       but here they both define the same variable which elements then inherit. 
+       The latest definition in the cascade for the variable will be used. 
+       Media query rules are applied after baseline rules. */
+    --sidebar-current-width: var(--sidebar-collapsed-width);
   }
 }
 

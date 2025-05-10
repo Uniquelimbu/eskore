@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const moreBtnRef = useRef(null);
-  const optionsMenuRef = useRef(null);
 
   const handleLogoClick = (e) => {
     e.preventDefault();
@@ -19,41 +14,6 @@ const Sidebar = () => {
       navigate('/dashboard');
     }
   };
-
-  const toggleOptions = () => {
-    setIsOptionsOpen(!isOptionsOpen);
-  };
-
-  const handleLogout = () => {
-    // Don't use 'await' here - call logout and navigate immediately
-    logout();
-    navigate('/login');
-  };
-
-  const handleHelp = () => {
-    navigate('/help'); // Or your help route
-    setIsOptionsOpen(false);
-  };
-
-  // Close options menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        optionsMenuRef.current &&
-        !optionsMenuRef.current.contains(event.target) &&
-        moreBtnRef.current &&
-        !moreBtnRef.current.contains(event.target)
-      ) {
-        setIsOptionsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
 
   return (
     <div className="sidebar">
@@ -65,7 +25,6 @@ const Sidebar = () => {
           tabIndex={0}
           draggable={false}
         >
-          {/* Update the src attribute to use PUBLIC_URL */}
           <img
             src={`${process.env.PUBLIC_URL}/images/logos/eskore-logo.png`}
             alt="eSkore Logo"
@@ -83,14 +42,6 @@ const Sidebar = () => {
               <span className="sidebar-nav-label">Home</span>
             </NavLink>
           </li>
-          {/*
-          <li>
-            <NavLink to="/leaderboards">
-              <span role="img" aria-label="Standings" className="sidebar-nav-icon">🏆</span>
-              <span className="sidebar-nav-label">Standings</span>
-            </NavLink>
-          </li>
-          */}
           <li>
             <NavLink to="/teams">
               <span role="img" aria-label="Team" className="sidebar-nav-icon">👥</span>
@@ -109,38 +60,7 @@ const Sidebar = () => {
               <span className="sidebar-nav-label">News</span>
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/profile">
-              <span role="img" aria-label="Profile" className="sidebar-nav-icon">👤</span>
-              <span className="sidebar-nav-label">Profile</span>
-            </NavLink>
-          </li>
-          {/* More button remains a button, not a NavLink */}
-          <li className="sidebar-more-btn">
-            <button
-              className="sidebar-more-button"
-              onClick={toggleOptions}
-              aria-label="More"
-              aria-expanded={isOptionsOpen}
-              ref={moreBtnRef}
-            >
-              <span
-                className="sidebar-nav-icon"
-                aria-label="More"
-              >•••</span>
-              <span className="sidebar-nav-label">More</span>
-            </button>
-            {isOptionsOpen && (
-              <div className="options-menu" ref={optionsMenuRef}>
-                <button onClick={handleHelp} className="options-menu-item">
-                  <span role="img" aria-label="Help">❓</span> Help
-                </button>
-                <button onClick={handleLogout} className="options-menu-item options-menu-item--logout">
-                  <span role="img" aria-label="Logout">🚪</span> Log Out
-                </button>
-              </div>
-            )}
-          </li>
+          {/* Profile link is now handled by the top navbar dropdown */}
         </ul>
       </nav>
     </div>

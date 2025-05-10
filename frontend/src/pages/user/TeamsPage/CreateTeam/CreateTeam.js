@@ -212,7 +212,7 @@ const CreateTeam = () => {
               <h3 className="section-title">Team Identity</h3>
               
               <div className="form-group">
-                <label htmlFor="clubName">Club Name*</label>
+                <label htmlFor="clubName" data-required="*">Club Name</label>
                 <input
                   type="text"
                   id="clubName"
@@ -241,7 +241,7 @@ const CreateTeam = () => {
               </div>
               
               <div className="form-group">
-                <label htmlFor="abbreviation">Abbreviation*</label>
+                <label htmlFor="abbreviation" data-required="*">Abbreviation</label>
                 <input
                   type="text"
                   id="abbreviation"

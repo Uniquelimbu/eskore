@@ -1,0 +1,20 @@
+:root {
+  /* Sidebar dimensions */
+  --sidebar-main-width: 260px;
+  --sidebar-collapsed-main-width: 90px;
+  
+  /* Top navbar dimensions */
+  --top-navbar-height: 56px;
+}
+
+/* Adjust layout for pages with top navbar */
+.with-navbar {
+  padding-top: var(--top-navbar-height);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  :root {
+    --sidebar-width: var(--sidebar-collapsed-main-width);
+  }
+}

@@ -3,13 +3,11 @@ import { useParams, useNavigate, Routes, Route, NavLink, Navigate } from 'react-
 import { toast } from 'react-toastify'; // Add toast import
 import { useAuth } from '../../../../contexts/AuthContext';
 import apiClient from '../../../../services/apiClient';
-import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import Overview from './tabs/Overview';
 import Squad from './tabs/Squad';
 import Formation from './tabs/Formation';
 import Calendar from './tabs/Calendar';
-import Chat from './tabs/Chat';
 import './TeamSpace.css';
 
 const TeamSpace = () => {
@@ -213,254 +211,238 @@ const TeamSpace = () => {
 
   if (loading) {
     return (
-      <div className="team-space-layout">
-        <Sidebar />
-        <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
-          <div className="loading-spinner-container">
-            <div className="loading-spinner"></div>
-            <p>Loading team information...</p>
-          </div>
-        </PageLayout>
-      </div>
+      <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
+        <div className="loading-spinner-container">
+          <div className="loading-spinner"></div>
+          <p>Loading team information...</p>
+        </div>
+      </PageLayout>
     );
   }
   
   if (error || !team) {
     return (
-      <div className="team-space-layout">
-        <Sidebar />
-        <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
-          <div className="error-message">
-            {error || 'Team not found'}
-          </div>
-        </PageLayout>
-      </div>
+      <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
+        <div className="error-message">
+          {error || 'Team not found'}
+        </div>
+      </PageLayout>
     );
   }
   
   return (
-    <div className="team-space-layout">
-      <Sidebar />
-      <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
-        <div className="team-space-header">
-          <div className="team-identity-section">
-            {team.logoUrl ? (
-              <img src={team.logoUrl} alt={`${team.name} logo`} className="team-logo" />
-            ) : (
-              <div className="team-logo-placeholder">
-                {team.abbreviation || team.name.substring(0, 3)}
-              </div>
-            )}
-            <div className="team-details">
-              <h1>
-                {team.name} 
-                {team.abbreviation && <span className="team-abbreviation">[{team.abbreviation}]</span>}
-              </h1>
-              {team.nickname && <p className="team-nickname">{team.nickname}</p>}
-              <p className="team-founded">Est. {team.foundedYear || new Date().getFullYear()}</p>
-              <div className="team-meta">
-                <span className="team-city">{team.city}</span>
-                {/* Team privacy indicator removed for MVP */}
-              </div>
+    <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
+      <div className="team-space-header">
+        <div className="team-identity-section">
+          {team.logoUrl ? (
+            <img src={team.logoUrl} alt={`${team.name} logo`} className="team-logo" />
+          ) : (
+            <div className="team-logo-placeholder">
+              {team.abbreviation || team.name.substring(0, 3)}
+            </div>
+          )}
+          <div className="team-details">
+            <h1>
+              {team.name} 
+              {team.abbreviation && <span className="team-abbreviation">[{team.abbreviation}]</span>}
+            </h1>
+            {team.nickname && <p className="team-nickname">{team.nickname}</p>}
+            <p className="team-founded">Est. {team.foundedYear || new Date().getFullYear()}</p>
+            <div className="team-meta">
+              <span className="team-city">{team.city}</span>
+              {/* Team privacy indicator removed for MVP */}
             </div>
           </div>
+        </div>
 
-          <div className="team-quick-stats">
-            <div className="stat-item">
-              <span className="stat-value">0-0-0</span>
-              <span className="stat-label">Record (W-L-D)</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value">None</span>
-              <span className="stat-label">Next Match</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value">{members.length}</span>
-              <span className="stat-label">Members</span>
-            </div>
+        <div className="team-quick-stats">
+          <div className="stat-item">
+            <span className="stat-value">0-0-0</span>
+            <span className="stat-label">Record (W-L-D)</span>
           </div>
+          <div className="stat-item">
+            <span className="stat-value">None</span>
+            <span className="stat-label">Next Match</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">{members.length}</span>
+            <span className="stat-label">Members</span>
+          </div>
+        </div>
 
-          <div className="team-actions">
-            {isManager ? (
-              <>
-                <button className="action-button primary" onClick={handleInviteMember}>
-                  <i className="fas fa-user-plus"></i> Invite Players
-                </button>
-                <button className="action-button secondary">
-                  <i className="fas fa-cog"></i> Team Settings
-                </button>
-                <button 
-                  className="action-button danger"
-                  onClick={toggleDeleteConfirm}
-                  disabled={isDeleting || members.length > 1}
-                  title={members.length > 1 ? "Remove all members first" : "Delete team (team will be deleted)"}
-                >
-                  <i className="fas fa-trash-alt"></i> Delete Team
-                </button>
-                <button 
-                  className="action-button warning"
-                  onClick={handleLeaveTeam}
-                >
-                  <i className="fas fa-sign-out-alt"></i> Leave Team
-                </button>
-              </>
-            ) : (
+        <div className="team-actions">
+          {isManager ? (
+            <>
+              <button className="action-button primary" onClick={handleInviteMember}>
+                <i className="fas fa-user-plus"></i> Invite Players
+              </button>
+              <button className="action-button secondary">
+                <i className="fas fa-cog"></i> Team Settings
+              </button>
+              <button 
+                className="action-button danger"
+                onClick={toggleDeleteConfirm}
+                disabled={isDeleting || members.length > 1}
+                title={members.length > 1 ? "Remove all members first" : "Delete team (team will be deleted)"}
+              >
+                <i className="fas fa-trash-alt"></i> Delete Team
+              </button>
               <button 
                 className="action-button warning"
                 onClick={handleLeaveTeam}
               >
                 <i className="fas fa-sign-out-alt"></i> Leave Team
               </button>
-            )}
-            <div className="notification-bell">
-              <i className="fas fa-bell"></i>
-              <span className="notification-badge">0</span>
-            </div>
+            </>
+          ) : (
+            <button 
+              className="action-button warning"
+              onClick={handleLeaveTeam}
+            >
+              <i className="fas fa-sign-out-alt"></i> Leave Team
+            </button>
+          )}
+          <div className="notification-bell">
+            <i className="fas fa-bell"></i>
+            <span className="notification-badge">0</span>
           </div>
         </div>
-        
-        <div className="team-tabs">
-          <NavLink 
-            to={`/teams/${teamId}/space/overview`} 
-            className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
-          >
-            Overview
-          </NavLink>
-          <NavLink 
-            to={`/teams/${teamId}/space/squad`} 
-            className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
-          >
-            Squad
-          </NavLink>
-          <NavLink 
-            to={`/teams/${teamId}/space/formation`} 
-            className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
-          >
-            Formation
-          </NavLink>
-          <NavLink 
-            to={`/teams/${teamId}/space/calendar`} 
-            className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
-          >
-            Calendar
-          </NavLink>
-          <NavLink 
-            to={`/teams/${teamId}/space/chat`} 
-            className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
-          >
-            Chat
-          </NavLink>
-        </div>
-        
-        <div className="team-space-tab-content">
-          <Routes>
-            <Route path="overview" element={<Overview team={team} members={members} isManager={isManager} />} />
-            <Route path="squad" element={<Squad team={team} members={members} isManager={isManager} />} />
-            <Route path="formation" element={<Formation team={team} members={members} isManager={isManager} />} />
-            <Route path="calendar" element={<Calendar team={team} members={members} isManager={isManager} />} />
-            <Route path="chat" element={<Chat team={team} members={members} isManager={isManager} />} />
-            <Route path="/" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
-          </Routes>
-        </div>
+      </div>
+      
+      <div className="team-tabs">
+        <NavLink 
+          to={`/teams/${teamId}/space/overview`} 
+          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        >
+          Overview
+        </NavLink>
+        <NavLink 
+          to={`/teams/${teamId}/space/squad`} 
+          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        >
+          Squad
+        </NavLink>
+        <NavLink 
+          to={`/teams/${teamId}/space/formation`} 
+          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        >
+          Formation
+        </NavLink>
+        <NavLink 
+          to={`/teams/${teamId}/space/calendar`} 
+          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        >
+          Calendar
+        </NavLink>
+      </div>
+      
+      <div className="team-space-tab-content">
+        <Routes>
+          <Route path="overview" element={<Overview team={team} members={members} isManager={isManager} />} />
+          <Route path="squad" element={<Squad team={team} members={members} isManager={isManager} />} />
+          <Route path="formation" element={<Formation team={team} members={members} isManager={isManager} />} />
+          <Route path="calendar" element={<Calendar team={team} members={members} isManager={isManager} />} />
+          <Route path="/" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
+        </Routes>
+      </div>
 
-        {/* Confirmation dialog for deletion */}
-        {showDeleteConfirm && (
-          <div className="delete-confirmation-overlay">
-            <div className="delete-confirmation-dialog">
-              <h3>Delete Team?</h3>
-              <p>Are you sure you want to delete <strong>{team.name}</strong>? This action cannot be undone.</p>
-              <div className="confirmation-buttons">
-                <button 
-                  className="cancel-button"
-                  onClick={toggleDeleteConfirm}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="delete-button"
-                  onClick={handleDeleteTeam}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? <><i className="fas fa-spinner fa-spin"></i> Deleting...</> : 'Delete Team'}
-                </button>
-              </div>
+      {/* Confirmation dialog for deletion */}
+      {showDeleteConfirm && (
+        <div className="delete-confirmation-overlay">
+          <div className="delete-confirmation-dialog">
+            <h3>Delete Team?</h3>
+            <p>Are you sure you want to delete <strong>{team.name}</strong>? This action cannot be undone.</p>
+            <div className="confirmation-buttons">
+              <button 
+                className="cancel-button"
+                onClick={toggleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button 
+                className="delete-button"
+                onClick={handleDeleteTeam}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <><i className="fas fa-spinner fa-spin"></i> Deleting...</> : 'Delete Team'}
+              </button>
             </div>
           </div>
-        )}
-        
-        {/* Transfer manager role modal */}
-        {showTransferManagerModal && (
-          <div className="modal-overlay">
-            <div className="modal-dialog">
-              <h3>Transfer Manager Role</h3>
-              <p>As the team manager, you must transfer your role before leaving the team.</p>
-              <p>Select a new manager:</p>
-              
-              <div className="member-select-container">
-                {otherMembers.length > 0 ? (
-                  <select 
-                    className="member-select"
-                    value={selectedNewManager || ''}
-                    onChange={(e) => setSelectedNewManager(e.target.value)}
-                  >
-                    <option value="">Select a team member</option>
-                    {otherMembers.map(member => (
-                      <option key={member.id} value={member.id}>
-                        {member.firstName} {member.lastName}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="error-message">No other members available to transfer role to.</p>
-                )}
-              </div>
-              
-              <div className="modal-buttons">
-                <button 
-                  className="cancel-button"
-                  onClick={() => setShowTransferManagerModal(false)}
-                  disabled={isTransferring}
+        </div>
+      )}
+      
+      {/* Transfer manager role modal */}
+      {showTransferManagerModal && (
+        <div className="modal-overlay">
+          <div className="modal-dialog">
+            <h3>Transfer Manager Role</h3>
+            <p>As the team manager, you must transfer your role before leaving the team.</p>
+            <p>Select a new manager:</p>
+            
+            <div className="member-select-container">
+              {otherMembers.length > 0 ? (
+                <select 
+                  className="member-select"
+                  value={selectedNewManager || ''}
+                  onChange={(e) => setSelectedNewManager(e.target.value)}
                 >
-                  Cancel
-                </button>
-                <button 
-                  className="primary-button"
-                  onClick={handleTransferManager}
-                  disabled={isTransferring || !selectedNewManager}
-                >
-                  {isTransferring ? <><i className="fas fa-spinner fa-spin"></i> Transferring...</> : 'Transfer & Leave'}
-                </button>
-              </div>
+                  <option value="">Select a team member</option>
+                  {otherMembers.map(member => (
+                    <option key={member.id} value={member.id}>
+                      {member.firstName} {member.lastName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="error-message">No other members available to transfer role to.</p>
+              )}
+            </div>
+            
+            <div className="modal-buttons">
+              <button 
+                className="cancel-button"
+                onClick={() => setShowTransferManagerModal(false)}
+                disabled={isTransferring}
+              >
+                Cancel
+              </button>
+              <button 
+                className="primary-button"
+                onClick={handleTransferManager}
+                disabled={isTransferring || !selectedNewManager}
+              >
+                {isTransferring ? <><i className="fas fa-spinner fa-spin"></i> Transferring...</> : 'Transfer & Leave'}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Confirmation dialog when the last member attempts to leave (team will be deleted) */}
-        {showLeaveDeleteConfirm && (
-          <div className="delete-confirmation-overlay">
-            <div className="delete-confirmation-dialog">
-              <h3>Leave Team & Delete?</h3>
-              <p>You are the only member of <strong>{team.name}</strong>. Leaving the team will <strong>delete the team and all its data</strong>. Are you sure you want to proceed?</p>
-              <div className="confirmation-buttons">
-                <button 
-                  className="cancel-button"
-                  onClick={() => setShowLeaveDeleteConfirm(false)}
-                >
-                  No, Stay
-                </button>
-                <button 
-                  className="delete-button"
-                  onClick={confirmLeaveAndDelete}
-                >
-                  Yes, Delete Team
-                </button>
-              </div>
+      {/* Confirmation dialog when the last member attempts to leave (team will be deleted) */}
+      {showLeaveDeleteConfirm && (
+        <div className="delete-confirmation-overlay">
+          <div className="delete-confirmation-dialog">
+            <h3>Leave Team & Delete?</h3>
+            <p>You are the only member of <strong>{team.name}</strong>. Leaving the team will <strong>delete the team and all its data</strong>. Are you sure you want to proceed?</p>
+            <div className="confirmation-buttons">
+              <button 
+                className="cancel-button"
+                onClick={() => setShowLeaveDeleteConfirm(false)}
+              >
+                No, Stay
+              </button>
+              <button 
+                className="delete-button"
+                onClick={confirmLeaveAndDelete}
+              >
+                Yes, Delete Team
+              </button>
             </div>
           </div>
-        )}
-      </PageLayout>
-    </div>
+        </div>
+      )}
+    </PageLayout>
   );
 };
 

@@ -1,6 +1,6 @@
 .sidebar {
-  width: var(--sidebar-width, 260px);
-  min-width: var(--sidebar-width, 260px);
+  width: var(--sidebar-current-width); /* Use the dynamic current width */
+  min-width: var(--sidebar-current-width); /* Use the dynamic current width */
   height: 100vh;
   background-color: #1a202c;
   color: #e2e8f0;
@@ -10,8 +10,9 @@
   top: 0;
   left: 0;
   box-shadow: 2px 0 12px rgba(0,0,0,0.10);
-  z-index: 100;
+  z-index: 1000; /* Ensure sidebar is above other content like topnavbar */
   padding: 0;
+  transition: width 0.3s ease, min-width 0.3s ease; /* Smooth transition for width changes */
 }
 
 .sidebar-header {
@@ -19,6 +20,7 @@
   display: flex;
   align-items: center;
   min-height: 80px;
+  transition: padding 0.3s ease, justify-content 0.3s ease; /* Added for smooth transition */
 }
 
 .sidebar-logo-link {
@@ -38,6 +40,7 @@
   align-items: center;
   justify-content: center;
   object-fit: contain;
+  transition: height 0.3s ease, width 0.3s ease; /* Added for smooth transition */
 }
 
 .sidebar-logo-text {
@@ -45,6 +48,10 @@
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.5px;
+  opacity: calc( ( var(--sidebar-current-width) - var(--sidebar-collapsed-width) ) / ( var(--sidebar-expanded-width) - var(--sidebar-collapsed-width) ) );
+  transition: opacity 0.2s ease 0.1s; /* Delay opacity transition slightly */
+  white-space: nowrap; /* Prevent wrapping during transition */
+  overflow: hidden; /* Hide text that overflows during transition */
 }
 
 .sidebar-nav {
@@ -53,6 +60,8 @@
   flex-direction: column;
   justify-content: stretch;
   height: 100%;
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
+  overflow-x: hidden; /* Prevent horizontal scrollbars */
 }
 
 .sidebar-nav ul {
@@ -100,8 +109,64 @@
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: background 0.18s, color 0.18s; /* Ensure transition is defined */
+  transition: background 0.18s, color 0.18s, padding 0.3s ease, justify-content 0.3s ease; /* Added for smooth transition */
   gap: 16px; /* Add space between icon and label */
+  justify-content: flex-start; /* Align items to the start */
+  overflow: hidden; /* Prevent content from overflowing during transition */
+}
+
+/* Styles when sidebar is collapsed (driven by --sidebar-current-width) */
+/* This logic is primarily handled by the media query in variables.css that changes --sidebar-current-width */
+/* These specific style overrides ensure correct appearance when collapsed. */
+
+/* Using a class for JS-driven collapse provides an alternative/override to media query based collapse */
+.sidebar.sidebar-is-collapsed .sidebar-header,
+body.sidebar-is-collapsed .sidebar .sidebar-header {
+  padding: 18px 8px 12px 8px;
+  justify-content: center;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-logo,
+body.sidebar-is-collapsed .sidebar .sidebar-logo {
+  height: 28px;
+  width: 28px;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-logo-text,
+body.sidebar-is-collapsed .sidebar .sidebar-logo-text {
+  opacity: 0;
+  /* display: none; /* Using opacity and overflow:hidden on text elements is often smoother for transitions */
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-nav a,
+.sidebar.sidebar-is-collapsed .sidebar-more-button,
+body.sidebar-is-collapsed .sidebar .sidebar-nav a,
+body.sidebar-is-collapsed .sidebar .sidebar-more-button {
+  padding: 10px;
+  justify-content: center;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-nav-label,
+body.sidebar-is-collapsed .sidebar .sidebar-nav-label {
+  opacity: 0;
+  /* display: none; */
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-generic-profile-icon,
+body.sidebar-is-collapsed .sidebar .sidebar-generic-profile-icon {
+  font-size: 1.2rem;
+}
+
+.sidebar.sidebar-is-collapsed .sidebar-more-btn,
+body.sidebar-is-collapsed .sidebar .sidebar-more-btn {
+  margin-bottom: 10px;
+}
+
+.sidebar.sidebar-is-collapsed .options-menu,
+body.sidebar-is-collapsed .sidebar .options-menu {
+  left: var(--sidebar-collapsed-width);
+  min-width: 120px;
+  font-size: 0.95rem;
 }
 
 .sidebar-nav a:hover,
@@ -166,6 +231,10 @@
   display: flex;
   align-items: center; /* Vertically center label text */
   flex-grow: 1; /* Allow label to take remaining space */
+  opacity: calc( ( var(--sidebar-current-width) - var(--sidebar-collapsed-width) ) / ( var(--sidebar-expanded-width) - var(--sidebar-collapsed-width) ) );
+  transition: opacity 0.2s ease 0.1s; /* Delay opacity transition slightly */
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide text that overflows during transition */
 }
 
 .sidebar-more-btn {
@@ -250,30 +319,28 @@
   box-shadow: none !important;
 }
 
-/* Responsive adjustments for narrow sidebar */
+/* Media query for responsive sidebar collapse (updates --sidebar-current-width in variables.css) */
 @media (max-width: 992px) {
-  .sidebar {
-    width: var(--sidebar-width, 90px);
-    min-width: var(--sidebar-width, 90px);
-  }
+  /* Styles that specifically apply when the media query is active, 
+     and --sidebar-current-width is --sidebar-collapsed-width */
   .sidebar-header {
     padding: 18px 8px 12px 8px;
+    justify-content: center;
   }
   .sidebar-logo {
     height: 28px;
     width: 28px;
   }
   .sidebar-logo-text {
-    display: none;
+    opacity: 0; /* Hide text */
   }
   .sidebar-nav a,
   .sidebar-more-button {
-    padding: 10px 10px;
-    font-size: 0.92rem;
+    padding: 10px;
     justify-content: center;
   }
   .sidebar-nav-label {
-    display: none;
+    opacity: 0; /* Hide label */
   }
   .sidebar-generic-profile-icon {
     font-size: 1.2rem;
@@ -282,7 +349,7 @@
     margin-bottom: 10px;
   }
   .options-menu {
-    left: var(--sidebar-width, 90px);
+    left: var(--sidebar-collapsed-width); /* Use variable for positioning */
     min-width: 120px;
     font-size: 0.95rem;
   }

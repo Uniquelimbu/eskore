@@ -7,8 +7,6 @@
 .tournament-details-page-content {
   flex-grow: 1;
   padding: 30px;
-  margin-left: var(--sidebar-width, 260px);
-  max-width: calc(100% - var(--sidebar-width, 260px));
   color: #e2e8f0;
 }
 
@@ -429,8 +427,6 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .tournament-details-page-content {
-    margin-left: 90px;
-    max-width: calc(100% - 90px);
     padding: 20px;
   }
   

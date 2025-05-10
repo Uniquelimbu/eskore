@@ -1,0 +1,37 @@
+.authenticated-layout {
+  min-height: 100vh;
+  display: flex;
+  width: 100%;
+  background-color: var(--bg-dark, #1a202c); /* Use variable from variables.css */
+  position: relative; 
+  box-sizing: border-box;
+}
+
+.authenticated-content {
+  flex: 1;
+  /* Use the centralized CSS variables from src/styles/variables.css */
+  margin-left: var(--sidebar-current-width); 
+  /* Add 10px to the existing top padding */
+  padding-top: calc(var(--top-navbar-height) + 10px);
+  /* padding-left: 10px; REMOVED to allow PageLayout to handle its own padding */
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease, padding-left 0.3s ease, padding-top 0.3s ease; 
+  overflow-x: hidden; /* Prevent horizontal scroll within content area */
+  overflow-y: auto; /* Allow vertical scroll if content overflows */
+  /* The width is the remaining space after accounting for the current sidebar width */
+  width: calc(100% - var(--sidebar-current-width));
+  position: relative; /* For potential absolutely positioned children or stacking context */
+}
+
+/* 
+  All specific media queries (e.g., @media (max-width: 992px), @media (max-width: 576px)) 
+  and rules like 'body.sidebar-collapsed .authenticated-content' that previously 
+  adjusted margin-left and width have been removed from this file.
+
+  These layout adjustments are now entirely controlled by the --sidebar-current-width 
+  variable, which is dynamically updated in src/styles/variables.css based on 
+  viewport size (via media queries) and the 'body.sidebar-is-collapsed' class (for JS-driven toggles).
+
+  The --top-navbar-height is also consistently applied from variables.css.
+  This centralization ensures a more robust and maintainable layout.
+*/

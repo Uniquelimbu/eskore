@@ -1,0 +1,429 @@
+/* Main top navbar container - positioned to respect sidebar */
+.top-navbar {
+  height: var(--top-navbar-height, 56px);
+  background-color: #1a202c;
+  border-bottom: 1px solid #2d3748;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-current-width); /* Position after sidebar, using the dynamic current width */
+  right: 0;
+  z-index: 990; /* Lower than sidebar (z-index: 1000) to prevent overlap issues */
+  display: flex;
+  align-items: center;
+  padding: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  transition: left 0.3s ease; /* Smooth transition for left position when sidebar collapses/expands */
+}
+
+.top-navbar-container {
+  display: flex;
+  justify-content: flex-end; /* Push items to the right */
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+/* Left section with logo and search */
+.top-navbar-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.top-navbar-logo {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.top-navbar-logo-img {
+  height: 32px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.top-navbar-search {
+  position: relative;
+  max-width: 240px;
+}
+
+.top-navbar-search-input {
+  background-color: #2d3748;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px 8px 36px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.top-navbar-search-input:focus {
+  outline: none;
+  background-color: #3a4556;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.3);
+}
+
+.top-navbar-search-input::placeholder {
+  color: #a0aec0;
+}
+
+.top-navbar-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+/* Right section with action buttons */
+.top-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-navbar-button {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.top-navbar-button:hover {
+  background-color: #3a4556;
+}
+
+.top-navbar-icon {
+  font-size: 18px;
+}
+
+.notification-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #e53e3e;
+  border-radius: 50%;
+  border: 2px solid #1a202c;
+  display: none; /* Hidden by default, show when there are notifications */
+}
+
+/* Profile button specific styles */
+.top-navbar-profile-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-navbar-profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4a6cf7;
+}
+
+.top-navbar-profile-placeholder {
+  width: 40px;
+  height: 40px;
+  background-color: #4a6cf7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Dropdown menu for profile */
+.top-navbar-dropdown {
+  position: absolute;
+  top: var(--top-navbar-height, 56px);
+  right: 16px;
+  background-color: #232b3a;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 320px;
+  z-index: 991; /* Ensure dropdown is above navbar content but below sidebar if it ever overlaps */
+  overflow: hidden;
+  animation: eskore-dropdown-fade 0.2s ease;
+}
+
+@keyframes eskore-dropdown-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-header {
+  padding: 16px;
+}
+
+.dropdown-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dropdown-profile-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.dropdown-profile-placeholder {
+  width: 56px;
+  height: 56px;
+  background-color: #4a6cf7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.dropdown-user-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.dropdown-user-name span:first-child {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.dropdown-user-email {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #2d3748;
+  margin: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #2d3748;
+}
+
+.dropdown-item-icon {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-item-logout {
+  color: #e53e3e;
+}
+
+/* Chat panel styles */
+.top-navbar-chat-panel {
+  position: absolute;
+  top: var(--top-navbar-height, 56px);
+  right: 72px;
+  background-color: #232b3a;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 360px;
+  height: 480px;
+  z-index: 991; /* Same as dropdown */
+  display: flex;
+  flex-direction: column;
+  animation: eskore-dropdown-fade 0.2s ease;
+}
+
+.chat-panel-header {
+  padding: 16px;
+  border-bottom: 1px solid #2d3748;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-panel-header h3 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.chat-panel-close {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.chat-panel-close:hover {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.chat-panel-search {
+  padding: 12px 16px;
+  border-bottom: 1px solid #2d3748;
+}
+
+.chat-search-input {
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background-color: #2d3748;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.chat-search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.3);
+}
+
+.chat-search-input::placeholder {
+  color: #a0aec0;
+}
+
+.chat-conversations {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #a0aec0;
+  text-align: center;
+  padding: 20px;
+}
+
+.chat-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.chat-empty-state h4 {
+  margin: 0 0 8px 0;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.chat-empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 240px;
+}
+
+/* Responsive styles for collapsed sidebar */
+/* TopNavbar left position is now directly tied to --sidebar-current-width, 
+   so it will adjust automatically when --sidebar-current-width changes based on media queries in variables.css 
+   or when a class like .sidebar-is-collapsed is applied to the body/sidebar. */
+
+/* @media (max-width: 992px) { */
+  /* .top-navbar { */
+    /* left: var(--sidebar-collapsed-width); /* This is now handled by --sidebar-current-width */
+  /* } */
+  /* .top-navbar-chat-panel { */
+    /* width: 320px; */ /* Keep if specific sizing for this breakpoint is needed */
+  /* } */
+/* } */
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+  .top-navbar-search {
+    display: none;
+  }
+  
+  .top-navbar-dropdown,
+  .top-navbar-chat-panel {
+    width: calc(100% - 32px);
+    right: 16px;
+  }
+  
+  .top-navbar-chat-panel {
+    height: 400px;
+    /* Adjust right position if sidebar is an overlay and not pushing content */
+    /* right: 16px; */ 
+  }
+}
+
+@media (max-width: 576px) {
+  .top-navbar-button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .top-navbar-profile-img,
+  .top-navbar-profile-placeholder {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .top-navbar-icon {
+    font-size: 16px;
+  }
+  /* If sidebar becomes an overlay on very small screens, TopNavbar might need to span full width */
+  /* body.sidebar-is-overlay .top-navbar { left: 0; } */
+}
+
+/* body.with-sidebar .top-navbar-container padding rules removed – navbar already offset */

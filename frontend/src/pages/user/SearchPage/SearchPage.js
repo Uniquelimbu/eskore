@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Sidebar from '../components/Sidebar/Sidebar';
 import SearchFilters from './components/SearchFilters';
 import SearchResults from './components/SearchResults';
 import Loading from '../../../components/ui/Loading/Loading';
+import PageLayout from '../../../components/PageLayout/PageLayout';
 import './SearchPage.css';
 import apiClient from '../../../services/apiClient';
 
@@ -113,38 +113,35 @@ const SearchPage = () => {
   };
   
   return (
-    <div className="search-page-layout">
-      <Sidebar />
-      <div className="search-page-main">
-        <div className="search-header">
-          <h1>Search</h1>
-          <p className="search-subtitle">Find athletes, teams, and more</p>
-        </div>
-        
-        <SearchFilters 
-          currentQuery={currentQuery}
-          currentType={currentType}
-          onSearchChange={handleSearchChange}
-          onTypeChange={handleTypeChange}
-        />
-        
-        {isLoading ? (
-          <div className="search-loading">
-            <Loading size="large" message="Searching..." />
-          </div>
-        ) : error ? (
-          <div className="search-error">
-            <p>{error}</p>
-          </div>
-        ) : (
-          <SearchResults 
-            results={searchResults} 
-            query={currentQuery}
-            type={currentType}
-          />
-        )}
+    <PageLayout className="search-page-main">
+      <div className="search-header">
+        <h1>Search</h1>
+        <p className="search-subtitle">Find athletes, teams, and more</p>
       </div>
-    </div>
+      
+      <SearchFilters 
+        currentQuery={currentQuery}
+        currentType={currentType}
+        onSearchChange={handleSearchChange}
+        onTypeChange={handleTypeChange}
+      />
+      
+      {isLoading ? (
+        <div className="search-loading">
+          <Loading size="large" message="Searching..." />
+        </div>
+      ) : error ? (
+        <div className="search-error">
+          <p>{error}</p>
+        </div>
+      ) : (
+        <SearchResults 
+          results={searchResults} 
+          query={currentQuery}
+          type={currentType}
+        />
+      )}
+    </PageLayout>
   );
 };
 

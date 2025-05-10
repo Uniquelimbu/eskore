@@ -1,19 +1,18 @@
 import React from 'react';
 import './PageLayout.css';
 
-const PageLayout = ({ 
-  children, 
-  className = '', 
-  maxWidth = '1200px', 
-  withPadding = true 
-}) => {
+const PageLayout = ({ children, className = '', maxWidth = '1200px', withPadding = true }) => {
   return (
-    <main 
-      className={`page-layout ${className} ${withPadding ? 'with-padding' : ''}`}
-      style={{ maxWidth }}
+    <div 
+      className={`page-layout ${className}${withPadding ? ' page-layout--with-padding' : ''}`}
     >
-      {children}
-    </main>
+      <div
+        className="page-layout__container"
+        style={{ maxWidth }}
+      >
+        {children}
+      </div>
+    </div>
   );
 };
 

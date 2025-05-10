@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Sidebar from '../components/Sidebar/Sidebar';
 import PageLayout from '../../../components/layout/PageLayout';
 import './TournamentDetailsPage.css';
 
@@ -69,177 +68,174 @@ const TournamentDetailsPage = () => {
   const statusInfo = getStatusInfo(tournament.status);
 
   return (
-    <div className="tournament-details-page-layout">
-      <Sidebar />
-      <PageLayout className="tournament-details-page-content" maxWidth="1200px" withPadding={true}>
-        <div className="tournament-banner" style={{ backgroundImage: `url(${tournament.image})` }}>
-          <div className="tournament-banner-overlay">
-            <div className="tournament-banner-content">
-              <h1>{tournament.name}</h1>
-              <div className="tournament-banner-meta">
-                <span className="tournament-dates">
-                  <span className="meta-icon">📅</span>
-                  {formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}
-                </span>
-                <span className={`tournament-status ${statusInfo.className}`}>
-                  {statusInfo.label}
-                </span>
-              </div>
+    <PageLayout className="tournament-details-page-content" maxWidth="1200px" withPadding={true}>
+      <div className="tournament-banner" style={{ backgroundImage: `url(${tournament.image})` }}>
+        <div className="tournament-banner-overlay">
+          <div className="tournament-banner-content">
+            <h1>{tournament.name}</h1>
+            <div className="tournament-banner-meta">
+              <span className="tournament-dates">
+                <span className="meta-icon">📅</span>
+                {formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}
+              </span>
+              <span className={`tournament-status ${statusInfo.className}`}>
+                {statusInfo.label}
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="tournament-actions">
-          <button className="register-btn">Register for Tournament</button>
-          <button className="share-btn">Share</button>
-        </div>
+      <div className="tournament-actions">
+        <button className="register-btn">Register for Tournament</button>
+        <button className="share-btn">Share</button>
+      </div>
 
-        <div className="tournament-tabs">
-          <button 
-            className={`tournament-tab ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </button>
-          <button 
-            className={`tournament-tab ${activeTab === 'teams' ? 'active' : ''}`}
-            onClick={() => setActiveTab('teams')}
-          >
-            Teams
-          </button>
-          <button 
-            className={`tournament-tab ${activeTab === 'schedule' ? 'active' : ''}`}
-            onClick={() => setActiveTab('schedule')}
-          >
-            Schedule
-          </button>
-          <button 
-            className={`tournament-tab ${activeTab === 'bracket' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bracket')}
-          >
-            Bracket
-          </button>
-          <button 
-            className={`tournament-tab ${activeTab === 'rules' ? 'active' : ''}`}
-            onClick={() => setActiveTab('rules')}
-          >
-            Rules
-          </button>
-        </div>
+      <div className="tournament-tabs">
+        <button 
+          className={`tournament-tab ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button 
+          className={`tournament-tab ${activeTab === 'teams' ? 'active' : ''}`}
+          onClick={() => setActiveTab('teams')}
+        >
+          Teams
+        </button>
+        <button 
+          className={`tournament-tab ${activeTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => setActiveTab('schedule')}
+        >
+          Schedule
+        </button>
+        <button 
+          className={`tournament-tab ${activeTab === 'bracket' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bracket')}
+        >
+          Bracket
+        </button>
+        <button 
+          className={`tournament-tab ${activeTab === 'rules' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rules')}
+        >
+          Rules
+        </button>
+      </div>
 
-        <div className="tournament-content">
-          {activeTab === 'overview' && (
-            <div className="tournament-overview">
-              <div className="tournament-info-card">
-                <h3>Tournament Details</h3>
-                <div className="tournament-info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Organizer</span>
-                    <span className="info-value">{tournament.organizer}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Format</span>
-                    <span className="info-value">{tournament.format}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Prize Pool</span>
-                    <span className="info-value">{tournament.prize}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Teams</span>
-                    <span className="info-value">{tournament.teams}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Location</span>
-                    <span className="info-value">{tournament.location}</span>
-                  </div>
+      <div className="tournament-content">
+        {activeTab === 'overview' && (
+          <div className="tournament-overview">
+            <div className="tournament-info-card">
+              <h3>Tournament Details</h3>
+              <div className="tournament-info-grid">
+                <div className="info-item">
+                  <span className="info-label">Organizer</span>
+                  <span className="info-value">{tournament.organizer}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Format</span>
+                  <span className="info-value">{tournament.format}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Prize Pool</span>
+                  <span className="info-value">{tournament.prize}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Teams</span>
+                  <span className="info-value">{tournament.teams}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Location</span>
+                  <span className="info-value">{tournament.location}</span>
                 </div>
               </div>
+            </div>
+            
+            <div className="tournament-description-card">
+              <h3>About the Tournament</h3>
+              <p>{tournament.description}</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'teams' && (
+          <div className="tournament-teams">
+            <h3>Participating Teams</h3>
+            <div className="teams-grid">
+              {tournament.participants.map(team => (
+                <div className="team-card" key={team.id}>
+                  <div className="team-logo">
+                    <img src={team.logo} alt={team.name} />
+                  </div>
+                  <div className="team-info">
+                    <h4>{team.name}</h4>
+                    <span className={`team-status ${team.confirmed ? 'confirmed' : 'pending'}`}>
+                      {team.confirmed ? 'Confirmed' : 'Registration Pending'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'schedule' && (
+          <div className="tournament-schedule">
+            <h3>Match Schedule</h3>
+            <div className="schedule-list">
+              {tournament.matches.map(match => (
+                <div className="match-card" key={match.id}>
+                  <div className="match-info">
+                    <span className="match-round">{match.round}</span>
+                    <div className="match-date-time">
+                      <span className="match-date">{match.date}</span>
+                      <span className="match-time">{match.time}</span>
+                    </div>
+                  </div>
+                  <div className="match-teams">
+                    <span className="match-team">{match.team1}</span>
+                    <span className="match-vs">vs</span>
+                    <span className="match-team">{match.team2}</span>
+                  </div>
+                  <div className="match-result">
+                    {match.result}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'bracket' && (
+          <div className="tournament-bracket">
+            <h3>Tournament Bracket</h3>
+            <div className="bracket-placeholder">
+              <p>Bracket will be available once the tournament begins.</p>
+              <div className="bracket-coming-soon">Coming Soon</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'rules' && (
+          <div className="tournament-rules">
+            <h3>Rules & Guidelines</h3>
+            <div className="rules-content">
+              <h4>Tournament Format</h4>
+              <p>{tournament.format}</p>
               
-              <div className="tournament-description-card">
-                <h3>About the Tournament</h3>
-                <p>{tournament.description}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'teams' && (
-            <div className="tournament-teams">
-              <h3>Participating Teams</h3>
-              <div className="teams-grid">
-                {tournament.participants.map(team => (
-                  <div className="team-card" key={team.id}>
-                    <div className="team-logo">
-                      <img src={team.logo} alt={team.name} />
-                    </div>
-                    <div className="team-info">
-                      <h4>{team.name}</h4>
-                      <span className={`team-status ${team.confirmed ? 'confirmed' : 'pending'}`}>
-                        {team.confirmed ? 'Confirmed' : 'Registration Pending'}
-                      </span>
-                    </div>
-                  </div>
+              <h4>Rules</h4>
+              <ul className="rules-list">
+                {tournament.rules.map((rule, index) => (
+                  <li key={index}>{rule}</li>
                 ))}
-              </div>
+              </ul>
             </div>
-          )}
-
-          {activeTab === 'schedule' && (
-            <div className="tournament-schedule">
-              <h3>Match Schedule</h3>
-              <div className="schedule-list">
-                {tournament.matches.map(match => (
-                  <div className="match-card" key={match.id}>
-                    <div className="match-info">
-                      <span className="match-round">{match.round}</span>
-                      <div className="match-date-time">
-                        <span className="match-date">{match.date}</span>
-                        <span className="match-time">{match.time}</span>
-                      </div>
-                    </div>
-                    <div className="match-teams">
-                      <span className="match-team">{match.team1}</span>
-                      <span className="match-vs">vs</span>
-                      <span className="match-team">{match.team2}</span>
-                    </div>
-                    <div className="match-result">
-                      {match.result}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'bracket' && (
-            <div className="tournament-bracket">
-              <h3>Tournament Bracket</h3>
-              <div className="bracket-placeholder">
-                <p>Bracket will be available once the tournament begins.</p>
-                <div className="bracket-coming-soon">Coming Soon</div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'rules' && (
-            <div className="tournament-rules">
-              <h3>Rules & Guidelines</h3>
-              <div className="rules-content">
-                <h4>Tournament Format</h4>
-                <p>{tournament.format}</p>
-                
-                <h4>Rules</h4>
-                <ul className="rules-list">
-                  {tournament.rules.map((rule, index) => (
-                    <li key={index}>{rule}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-      </PageLayout>
-    </div>
+          </div>
+        )}
+      </div>
+    </PageLayout>
   );
 };
 

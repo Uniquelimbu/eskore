@@ -182,6 +182,23 @@
   color: #e2e8f0;
 }
 
+/* Make form labels more visible with increased specificity */
+.create-team-form .form-group label {
+  font-weight: 600;
+  color: #ffffff; /* Brighter white for better contrast */
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Subtle text shadow for better readability */
+  margin-bottom: 5px;
+  display: block; /* Ensure the label takes the full width */
+}
+
+/* Make the asterisk more visible for required fields */
+.create-team-form .form-group label::after {
+  content: attr(data-required);
+  color: #4a6cf7; /* Blue for required indicator */
+  margin-left: 3px;
+}
+
 .optional {
   font-weight: normal;
   color: #a0aec0;

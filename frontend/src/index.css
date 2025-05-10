@@ -229,3 +229,26 @@ html {
   overflow-x: hidden; /* Keep overflow hidden on root */
   width: 100%; /* Ensure root takes full width */
 }
+
+/* ------------------------------------------------------------------ */
+/* eSkore Layout Fix: Ensure authenticated content is correctly centered and not shifted twice */
+body.with-sidebar .authenticated-content .page-layout,
+body.with-sidebar .authenticated-content .dashboard-main-content,
+body.with-sidebar .authenticated-content .search-page-main,
+body.with-sidebar .authenticated-content .tournament-page-content,
+body.with-sidebar .authenticated-content .tournament-details-page-content {
+  /* margin-left: 0 !important; */
+  /* max-width: 100% !important; */
+}
+
+/* On small screens, still keep full-width layout */
+@media (max-width: 992px) {
+  body.with-sidebar .authenticated-content .page-layout,
+  body.with-sidebar .authenticated-content .dashboard-main-content,
+  body.with-sidebar .authenticated-content .search-page-main,
+  body.with-sidebar .authenticated-content .tournament-page-content,
+  body.with-sidebar .authenticated-content .tournament-details-page-content {
+    /* margin-left: 0 !important; */
+    /* max-width: 100% !important; */
+  }
+}
