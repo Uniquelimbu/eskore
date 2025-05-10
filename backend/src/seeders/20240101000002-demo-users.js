@@ -8,7 +8,7 @@ module.exports = {
       const existingUsers = await queryInterface.sequelize.query(
         'SELECT email FROM users WHERE email IN (:emails)',
         {
-          replacements: { emails: ['admin@eskore.com', 'user@eskore.com'] },
+          replacements: { emails: ['admin@eskore.com', 'user@eskore.com', 'test@eskore.com', 'coach@eskore.com', 'athlete@eskore.com'] },
           type: queryInterface.sequelize.QueryTypes.SELECT
         }
       );
@@ -17,20 +17,81 @@ module.exports = {
       console.log(`Found ${existingEmails.length} existing users: ${existingEmails.join(', ')}`);
       
       // Only seed users that don't already exist
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const hashedPassword = await bcrypt.hash('Password123', 10);
       
       const users = [
         {
           email: 'admin@eskore.com',
           password: hashedPassword,
+          firstName: 'Admin',
+          lastName: 'User',
           role: 'admin',
+          status: 'active',
+          lastLogin: null,
+          profileImageUrl: null,
+          bio: 'System administrator account',
+          socialLinks: JSON.stringify({}),
+          gameSpecificStats: JSON.stringify({}),
           createdAt: new Date(),
           updatedAt: new Date()
         },
         {
           email: 'user@eskore.com',
           password: hashedPassword,
+          firstName: 'Regular',
+          lastName: 'User',
           role: 'user',
+          status: 'active',
+          lastLogin: null,
+          profileImageUrl: null,
+          bio: 'Regular user account',
+          socialLinks: JSON.stringify({}),
+          gameSpecificStats: JSON.stringify({}),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          email: 'test@eskore.com',
+          password: hashedPassword,
+          firstName: 'Test',
+          lastName: 'Account',
+          role: 'user',
+          status: 'active',
+          lastLogin: null,
+          profileImageUrl: null,
+          bio: 'Test user account',
+          socialLinks: JSON.stringify({}),
+          gameSpecificStats: JSON.stringify({}),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          email: 'coach@eskore.com',
+          password: hashedPassword,
+          firstName: 'Coach',
+          lastName: 'Example',
+          role: 'user',
+          status: 'active',
+          lastLogin: null,
+          profileImageUrl: null,
+          bio: 'Coach test account',
+          socialLinks: JSON.stringify({}),
+          gameSpecificStats: JSON.stringify({}),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          email: 'athlete@eskore.com',
+          password: hashedPassword,
+          firstName: 'Athlete',
+          lastName: 'Player',
+          role: 'user',
+          status: 'active',
+          lastLogin: null,
+          profileImageUrl: null,
+          bio: 'Athlete test account',
+          socialLinks: JSON.stringify({}),
+          gameSpecificStats: JSON.stringify({}),
           createdAt: new Date(),
           updatedAt: new Date()
         }

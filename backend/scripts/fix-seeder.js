@@ -1,4 +1,8 @@
-'use strict';
+// Create a fixed seeder file for teams
+const fs = require('fs');
+const path = require('path');
+
+const teamsSeederContent = `'use strict';
 const bcrypt = require('bcrypt');
 
 module.exports = {
@@ -18,7 +22,7 @@ module.exports = {
         return Promise.resolve();
       }
       
-      console.log(`Found ${users.length} users to associate with teams`);
+      console.log(\`Found \${users.length} users to associate with teams\`);
       
       // Check if these emails already exist to avoid unique constraint violations
       const existingTeams = await queryInterface.sequelize.query(
@@ -28,7 +32,9 @@ module.exports = {
           type: queryInterface.sequelize.QueryTypes.SELECT
         }
       );
-      const existingEmails = existingTeams.map(team => team.email);      // Generate password hash
+      const existingEmails = existingTeams.map(team => team.email);
+
+      // Generate password hash
       const passwordHash = await bcrypt.hash('password123', 10);    
       
       // Prepare teams data
@@ -37,7 +43,7 @@ module.exports = {
           name: 'Barcelona FC',
           logoUrl: 'https://via.placeholder.com/150?text=Barcelona',
           email: 'barca@example.com',
-          passwordHash: passwordHash,
+          password: passwordHash,
           abbreviation: 'BAR',
           foundedYear: 1899,
           city: 'Barcelona',
@@ -49,7 +55,7 @@ module.exports = {
           name: 'Real Madrid',
           logoUrl: 'https://via.placeholder.com/150?text=Real+Madrid',
           email: 'madrid@example.com',
-          passwordHash: passwordHash,
+          password: passwordHash,
           abbreviation: 'RMA',
           foundedYear: 1902,
           city: 'Madrid',
@@ -61,7 +67,7 @@ module.exports = {
           name: 'Atletico Madrid',
           logoUrl: 'https://via.placeholder.com/150?text=Atletico+Madrid',
           email: 'atletico@example.com',
-          passwordHash: passwordHash,
+          password: passwordHash,
           abbreviation: 'ATM',
           foundedYear: 1903,
           city: 'Madrid',
@@ -76,7 +82,7 @@ module.exports = {
         return Promise.resolve();
       }
 
-      console.log(`Inserting ${teams.length} new teams`);
+      console.log(\`Inserting \${teams.length} new teams\`);
       await queryInterface.bulkInsert('teams', teams, {});
       
       return Promise.resolve();
@@ -93,4 +99,20 @@ module.exports = {
       }
     }, {});
   }
-};
+};`;
+
+const filePath = path.join(__dirname, 'src', 'seeders', '20240101000003-demo-teams.js');
+
+try {
+  // Delete the file if it exists
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    console.log(`Deleted existing file: ${filePath}`);
+  }
+
+  // Write the new file
+  fs.writeFileSync(filePath, teamsSeederContent);
+  console.log(`Successfully created: ${filePath}`);
+} catch (err) {
+  console.error(`Error: ${err.message}`);
+}

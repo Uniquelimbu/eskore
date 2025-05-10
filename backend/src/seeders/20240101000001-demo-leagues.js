@@ -14,7 +14,27 @@ module.exports = {
     const existingNames = existingLeagues.map(league => league.name);
     
     const leagues = [
-      // ...existing league objects...
+      {
+        name: 'Premier League',
+        startDate: new Date('2024-08-15'),
+        endDate: new Date('2025-05-25'),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'La Liga',
+        startDate: new Date('2024-08-20'),
+        endDate: new Date('2025-05-30'),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Nepal Super League',
+        startDate: new Date('2024-07-01'),
+        endDate: new Date('2024-12-15'),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     ].filter(league => !existingNames.includes(league.name));
     
     if (leagues.length === 0) {
@@ -22,9 +42,14 @@ module.exports = {
       return Promise.resolve();
     }
     
-    console.log(`Inserting ${leagues.length} new leagues`);
-    return queryInterface.bulkInsert('leagues', leagues);
+    console.log(`Inserting ${leagues.length} new leagues`);    return queryInterface.bulkInsert('leagues', leagues);
   },
 
-  // ...existing down method...
+  down: async (queryInterface, Sequelize) => {
+    return queryInterface.bulkDelete('leagues', {
+      name: {
+        [Sequelize.Op.in]: ['Premier League', 'La Liga', 'Nepal Super League']
+      }
+    }, {});
+  }
 };

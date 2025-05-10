@@ -25,6 +25,8 @@ scripts/
 | **createMigration.js** | Generate properly timestamped migration file | `node scripts/db/createMigration.js "add-new-feature"` |
 | **createSampleData.js** | Populate database with essential test data | `node scripts/db/createSampleData.js` |
 | **createTestUser.js** | Create/update test user account | `node scripts/db/createTestUser.js` |
+| **validateSeeders.js** | Validate and fix seeder file formats | `node scripts/db/validateSeeders.js` |
+| **runSeeders.bat** | Run seeders in the correct order | `scripts/db/runSeeders.bat` |
 
 ### Example: Database Reset Operation
 
