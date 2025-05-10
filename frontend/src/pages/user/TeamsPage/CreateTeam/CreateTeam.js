@@ -57,7 +57,6 @@ const CreateTeam = () => {
   const handleLogoClick = () => {
     fileInputRef.current.click();
   };
-
   const validateStep1 = () => {
     const newErrors = {};
     
@@ -65,12 +64,16 @@ const CreateTeam = () => {
       newErrors.clubName = 'Club name is required';
     } else if (formData.clubName.length < 3 || formData.clubName.length > 30) {
       newErrors.clubName = 'Club name must be between 3 and 30 characters';
+    } else if (!/^[a-zA-Z0-9\s\-_.&'()]+$/.test(formData.clubName)) {
+      newErrors.clubName = 'Club name can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
     }
     
     if (!formData.abbreviation.trim()) {
       newErrors.abbreviation = 'Abbreviation is required';
     } else if (formData.abbreviation.length < 2 || formData.abbreviation.length > 4) {
       newErrors.abbreviation = 'Abbreviation should be 2-4 characters';
+    } else if (!/^[a-zA-Z0-9]+$/.test(formData.abbreviation)) {
+      newErrors.abbreviation = 'Abbreviation can only contain letters and numbers';
     }
     
     setErrors(newErrors);
