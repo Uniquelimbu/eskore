@@ -62,25 +62,54 @@ app.use((req, res, next) => {
 // --- CORE MIDDLEWARE ---
 logger.info('APP.JS: Configuring CORS...'); // Restored
 
+// Read CORS settings from environment variables
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000';
+const allowedMethodsEnv = process.env.ALLOWED_METHODS || 'GET,POST,PUT,DELETE,OPTIONS';
+const allowedHeadersEnv = process.env.ALLOWED_HEADERS || 'Content-Type,Authorization';
+
+const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim());
+const allowedMethods = allowedMethodsEnv.split(',').map(m => m.trim());
+const allowedHeaders = allowedHeadersEnv.split(',').map(h => h.trim());
+
+logger.info(`CORS: Allowed origins: ${allowedOrigins.join(', ')}`);
+logger.info(`CORS: Allowed methods: ${allowedMethods.join(', ')}`);
+logger.info(`CORS: Allowed headers: ${allowedHeaders.join(', ')}`);
+
+// Create a CORS configuration that strictly only allows the specified origins
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
-    // Use ALLOWED_ORIGINS from .env, which is also used by Socket.IO and validated
-    // Default to 'http://localhost:3000' if ALLOWED_ORIGINS is not set
-    const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000';
-    const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim());
-
-    // Allow if origin is in the list, if it's undefined (e.g. same-origin requests not setting Origin header),
-    // or if '*' is explicitly in the allowedOrigins list.
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    // Only allow origins that are explicitly in the allowedOrigins list
+    // Also allow undefined origin (same-origin requests)
+    if (!origin) {
+      // Same-origin requests (no origin header)
+      callback(null, true);
+      return;
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      // Origin is in the allowed list
       callback(null, true);
     } else {
+      // Origin is not allowed
       logger.warn(`CORS: Origin not allowed by Express CORS: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
-      // Pass an error to the callback. This will be handled by an error-handling middleware.
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  },
+  methods: allowedMethods.join(','),
+  allowedHeaders: allowedHeaders.join(','),
+  preflightContinue: false,  // Handle OPTIONS requests fully in CORS middleware
+  optionsSuccessStatus: 204  // Some legacy browsers choke on 204
 };
+
+// Add methods and headers to corsOptions if they're defined
+if (allowedMethods && allowedMethods.length > 0) {
+  corsOptions.methods = allowedMethods.join(',');
+}
+
+if (allowedHeaders && allowedHeaders.length > 0) {
+  corsOptions.allowedHeaders = allowedHeaders.join(',');
+}
 app.use(cors(corsOptions)); // Using updated corsOptions
 logger.info('APP.JS: CORS configured.'); // Restored
 
@@ -116,7 +145,7 @@ app.use('/api/leaderboards', leaderboardRoutes); // Restored
 logger.info('APP.JS: API routes configured.'); // Restored
 
 // --- OTHER ROUTES AND HANDLERS ---
-// app.options('*', cors()); // This remains commented out - THIS WAS THE FIX FOR THE ORIGINAL ERROR
+// No need for app.options - the main CORS middleware will handle preflight requests
 app.get('/api/ping', (req, res) => { // Restored
   logger.info('APP.JS: GET /api/ping received');
   res.status(200).json({ success: true, message: 'pong', timestamp: new Date() });
