@@ -45,6 +45,11 @@ export const NotificationProvider = ({ children }) => {
   // Generate a unique ID for notifications
   const generateId = () => `notification-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   
+  // Remove a notification
+  const removeNotification = useCallback((id) => {
+    dispatch({ type: REMOVE_NOTIFICATION, payload: id });
+  }, []);
+  
   // Add a notification
   const addNotification = useCallback((notification) => {
     const id = notification.id || generateId();
@@ -69,7 +74,7 @@ export const NotificationProvider = ({ children }) => {
     }
     
     return id;
-  }, []);
+  }, [removeNotification]);
   
   // Show different types of notifications
   const showSuccess = useCallback((message, options = {}) => {
@@ -92,11 +97,6 @@ export const NotificationProvider = ({ children }) => {
   const showWarning = useCallback((message, options = {}) => {
     return addNotification({ message, type: 'warning', ...options });
   }, [addNotification]);
-  
-  // Remove a notification
-  const removeNotification = useCallback((id) => {
-    dispatch({ type: REMOVE_NOTIFICATION, payload: id });
-  }, []);
   
   // Clear all notifications
   const clearAllNotifications = useCallback(() => {

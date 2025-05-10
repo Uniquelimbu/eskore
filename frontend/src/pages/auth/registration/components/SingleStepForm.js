@@ -245,7 +245,7 @@ const SingleStepForm = ({ initialFormData, onSubmit, loading, serverError }) => 
             onChange={handleChange}
           />
           <label htmlFor="termsConsent" className="consent-text">
-            I agree to the <Link to="/terms" className="consent-link" target="_blank">Terms of Service</Link> and <Link to="/privacy" className="consent-link" target="_blank">Privacy Policy</Link>
+            I agree to the <Link to="/terms" className="consent-link" target="_blank">Terms of Service</Link> and <Link to="/privacy" className="consent-link" target="_blank">Privacy Policy</Link> of eSkore
           </label>
         </div>
         {errors.termsConsent && <div className="error">{errors.termsConsent}</div>}

@@ -2,15 +2,16 @@
   max-width: 600px;
   margin: 40px auto;
   padding: 30px;
-  background-color: #ffffff;
+  background-color: #2d3748 !important; /* Dark card background from dashboard, added !important */
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  color: #e2e8f0; /* Light text for dark background */
 }
 
 .athlete-registration-page h1 {
   text-align: center;
   margin-bottom: 30px;
-  color: #2d3748;
+  color: #e2e8f0; /* Light text for dark background */
 }
 
 /* Remove all multi-step related CSS */
@@ -43,14 +44,14 @@
 
 /* Form Styles */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px; /* Increased from 20px for more breathing room */
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #2d3748;
+  color: #a0aec0; /* Muted light text for dark background */
 }
 
 .form-group input,
@@ -58,11 +59,12 @@
 .form-group textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #4a5568; /* Darker border */
   border-radius: 6px;
   font-size: 1rem;
-  color: #4a5568;
+  color: #e2e8f0; /* Light text for dark background */
   transition: border-color 0.3s;
+  background-color: #1a202c; /* Darker input background */
 }
 
 .form-group textarea {
@@ -74,23 +76,28 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #4a6cf7;
-  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+  border-color: var(--color-primary); /* Ensure var is defined or replace with hex */
+  box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25); /* Ensure var is defined or replace with hex */
+  background-color: #232b3a; /* Slightly lighter on focus */
 }
 
 .error {
-  color: #e53e3e;
+  color: #f5c6cb;
   font-size: 0.85rem;
   margin-top: 5px;
   text-align: left;
   display: block;
   font-weight: 500;
+  background-color: #4a2424; /* Darker red for error messages */
+  border-color: #f5c6cb40; /* Assuming a border might be added or is present */
+  padding: 5px; /* Add some padding if it's a block */
+  border-radius: var(--radius-sm); /* Assuming var is defined */
 }
 
 .error-banner {
-  background-color: rgba(229, 62, 62, 0.1);
-  border-left: 4px solid #e53e3e;
-  color: #e53e3e;
+  background-color: #4a2424; /* Darker red for error messages */
+  border-left: 4px solid #e53e3e; /* Keep or adjust as needed */
+  color: #f5c6cb;
   padding: 12px 16px;
   border-radius: 4px;
   margin-bottom: 20px;
@@ -160,7 +167,7 @@
   margin: 32px auto 0 auto;
   display: block;
   background: none;
-  color: #a0aec0; /* light gray */
+  color: var(--color-info); /* Use a theme color for links */
   border: none;
   border-radius: 0;
   padding: 0;
@@ -178,8 +185,8 @@
 .back-to-role-selection-link:focus,
 .back-link:hover,
 .back-link:focus {
-  color: #4a5568; /* darker gray */
-  text-decoration: none;
+  color: var(--color-primary); /* Use a theme color for link hover */
+  text-decoration: underline;
   outline: none;
 }
 
@@ -203,8 +210,8 @@
 }
 
 .consent-group {
-  margin-bottom: 16px;
-  margin-top: 10px;
+  margin-bottom: 24px; /* Increased from 16px */
+  margin-top: 16px; /* Increased from 10px */
 }
 
 .consent-wrapper {
@@ -351,7 +358,7 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
 
 /* Make form elements more compact and consistent */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px; /* Increased from 20px for more breathing room */
 }
 
 .form-group label {
@@ -431,7 +438,7 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
 
 /* Ensure spacing between fields is still appropriate */
 .form-group {
-  margin-bottom: 20px; /* Consistent bottom margin for form groups */
+  margin-bottom: 24px; /* Increased from 20px for more breathing room */
 }
 
 /* Add a bit more space after the date of birth field */
@@ -479,7 +486,8 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
 }
 
 .submit-button {
-  background-color: #4a6cf7;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -492,7 +500,8 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
 }
 
 .submit-button:hover {
-  background-color: #3a5bd9;
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
 }
@@ -508,7 +517,7 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
   margin: 25px auto 0 auto;
   display: block;
   background: none;
-  color: #a0aec0;
+  color: var(--color-info); /* Use a theme color for links */
   border: none;
   border-radius: 0;
   padding: 0;
@@ -521,13 +530,14 @@ input[type="checkbox"].custom-checkbox:disabled:checked::after {
 
 .back-link:hover,
 .back-link:focus {
-  color: #4a5568;
+  color: var(--color-primary); /* Use a theme color for link hover */
   text-decoration: none;
 }
 
 /* Consent items styling */
 .consent-group {
-  margin-bottom: 12px;
+  margin-bottom: 24px; /* Increased from 12px */
+  margin-top: 16px; /* Increased from 10px */
 }
 
 .consent-wrapper {
@@ -595,7 +605,7 @@ input[type="checkbox"].custom-checkbox:checked::after {
 /* Add/update styles for the form row layout */
 .form-row {
   display: flex;
-  gap: 16px;
+  gap: 24px; /* Increased from 16px for more separation */
   margin-bottom: 0;
 }
 
@@ -715,8 +725,8 @@ input[type="date"],
 
 /* Ensure the birthdate group has proper spacing */
 .birthdate-group {
-  margin-bottom: 25px;
-  margin-top: 12px;
+  margin-bottom: 28px; /* Slightly more space after birthdate */
+  margin-top: 16px; /* More space before birthdate group */
 }
 
 /* Add page background matching login page */
@@ -733,6 +743,19 @@ input[type="date"],
   align-items: center;
   justify-content: center;
   padding: 20px;
+  width: 100%;
+  max-width: 580px; /* Increased from 480px */
+}
+
+.registration-form-container {
+  background-color: #2d3748;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 40px 50px; /* Increased horizontal padding from 40px to 50px */
+  width: 100%;
+  box-sizing: border-box;
+  color: #e2e8f0;
+  margin-bottom: 20px;
 }
 
 /* Style for login redirect button */
@@ -777,4 +800,150 @@ input[type="date"],
   color: #4a5568; /* Darker gray on hover */
   text-decoration: none;
   outline: none;
+}
+
+.user-registration-page-container { /* New wrapper class for the whole page */
+  min-height: 100vh;
+  background-color: #1a202c !important; /* Dark background from dashboard, added !important */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Update container styling to match login page */
+.registration-form-container {
+  background-color: #2d3748;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.registration-form-container h1 {
+  color: #e2e8f0;
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.registration-page {
+  width: 100%;
+  max-width: 580px; /* Increased from 480px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Update form elements for dark theme */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.date-select {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.date-select:focus {
+  outline: none;
+  background-color: #232b3a;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+}
+
+/* Update date select styling */
+.date-select {
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Update checkbox and text styling */
+.consent-text {
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.consent-link {
+  color: #4a6cf7;
+}
+
+/* Update submit button styling */
+.submit-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.submit-button:hover {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+}
+
+.submit-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Fix error messages for dark theme */
+.error {
+  color: #f5c6cb;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  text-align: left;
+  display: block;
+  font-weight: 500;
+}
+
+.error-banner {
+  background-color: #4a2424;
+  border-left: 4px solid #e53e3e;
+  color: #f5c6cb;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+/* Adjust responsive breakpoint to maintain form integrity on smaller screens */
+@media (max-width: 600px) {
+  .registration-form-container {
+    padding: 30px 25px; /* Slightly reduce padding on mobile */
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

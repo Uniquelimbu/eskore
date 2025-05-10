@@ -73,14 +73,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="page-bg-light">
-      <div className="login-page">
-        <Link to="/register" className="login-signup-top-btn">
-          Sign up
-        </Link>
+    <div className="login-page-container"> {/* Changed from page-bg-light */}
+      <div className="login-page"> {/* This class can remain if it serves other layout purposes */}
         
         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-          <div className="login-container">
+          <div className="login-form-container"> {/* Changed from login-container */}
             <h1>Welcome Back</h1>
             <p className="subtitle">Sign in to continue to eSkore</p>
             {error && <div className="error-banner">{error}</div>}
@@ -137,6 +134,12 @@ const LoginPage = () => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
+            
+            {/* Add "Create a new account" link */}
+            <div className="create-account-link">
+              <span>Don't have an account? </span>
+              <Link to="/register">Create a new account</Link>
+            </div>
           </div>
           {/* Move Back to Home button OUTSIDE the card */}
           <button

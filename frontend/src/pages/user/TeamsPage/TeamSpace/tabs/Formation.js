@@ -25,7 +25,6 @@ const Formation = ({ team, members, isManager }) => {
   
   // Generate positions based on formation template
   const generateTemplatePositions = (template) => {
-    const positions = {};
     const positions4_4_2 = [
       { id: 'gk', x: 50, y: 90, label: 'GK' },
       { id: 'lb', x: 20, y: 70, label: 'LB' },

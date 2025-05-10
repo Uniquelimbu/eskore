@@ -60,9 +60,9 @@ const UserRegistrationPage = () => {
   };
 
   return (
-    <div className="page-bg-light">
-      <div className="registration-page">
-        <div className="user-registration-page">
+    <div className="user-registration-page-container"> {/* Changed from page-bg-light */}
+      <div className="registration-page"> {/* This class can remain if it serves other layout purposes */}
+        <div className="registration-form-container"> {/* Changed from user-registration-page */}
           <h1>Create Your Account</h1>
           <SingleStepForm 
             initialFormData={initialFormData}
