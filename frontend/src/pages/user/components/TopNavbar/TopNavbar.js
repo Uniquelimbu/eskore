@@ -94,7 +94,7 @@ const TopNavbar = () => {
             aria-label="Chat"
             title="Chat"
           >
-            <span className="top-navbar-icon">💬</span>
+            <img src="/images/icons/message.png" alt="Messages" className="top-navbar-icon-img" />
             <span className="notification-indicator"></span>
           </button>
 

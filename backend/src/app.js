@@ -34,6 +34,7 @@ morgan.token('body', (req, res) => {
 
 const { globalErrorHandler, ApiError } = require('./middleware/errorHandler'); // Restored
 const corsErrorHandler = require('./middleware/corsErrorHandler'); // Added for specific CORS error handling
+const bodyParserErrorHandler = require('./middleware/bodyParserErrorHandler'); // Import the new middleware
 
 // --- Route requires ---
 const authRoutes = require('./routes/authRoutes'); // Restored
@@ -118,8 +119,18 @@ app.use(cookieParser()); // Restored
 logger.info('APP.JS: Cookie Parser configured.'); // Restored
 
 logger.info('APP.JS: Configuring Body Parsers (json, urlencoded)...'); // Restored
-app.use(express.json({ limit: '10mb' })); // Restored
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Restored
+app.use(express.json({ 
+  limit: '10mb',
+  // Save raw body for debugging
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Add the body parser error handler immediately after the parsers
+app.use(bodyParserErrorHandler);
+
 logger.info('APP.JS: Body Parsers configured.'); // Restored
 
 logger.info('APP.JS: Configuring Morgan (HTTP logger)...'); // Restored
@@ -148,8 +159,7 @@ logger.info('APP.JS: API routes configured.'); // Restored
 // No need for app.options - the main CORS middleware will handle preflight requests
 app.get('/api/ping', (req, res) => { // Restored
   logger.info('APP.JS: GET /api/ping received');
-  res.status(200).json({ success: true, message: 'pong', timestamp: new Date() });
-});
+  res.status(200).json({ success: true, message: 'pong', timestamp: new Date() });});
 
 // Handle 404 for API routes specifically
 app.use('/api', (req, res, next) => { // Restored API 404 Handler

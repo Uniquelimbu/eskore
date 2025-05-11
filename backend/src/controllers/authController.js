@@ -107,18 +107,26 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// Login function that now uses the unified User model
+// Update login function with better error handling
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    throw new ApiError('Email and password required', 400, 'MISSING_CREDENTIALS');
-  }
-
-  const lowerCaseEmail = String(email).toLowerCase().trim();
-  logger.info(`Login attempt for email: ${lowerCaseEmail}`);
-
+  // Declare here so it's visible in both try and catch blocks
+  let email = undefined;
   try {
+    const { email: incomingEmail, password } = req.body;
+    email = incomingEmail; // retain for logging later
+
+    // More robust input validation
+    if (!email || typeof email !== 'string') {
+      throw new ApiError('Valid email is required', 400, 'MISSING_EMAIL');
+    }
+    
+    if (!password || typeof password !== 'string') {
+      throw new ApiError('Valid password is required', 400, 'MISSING_PASSWORD');
+    }
+
+    const lowerCaseEmail = String(email).toLowerCase().trim();
+    logger.info(`Login attempt for email: ${lowerCaseEmail}`);
+
     // Find user in the unified User table
     const user = await User.findOne({
       where: { email: lowerCaseEmail },
@@ -253,9 +261,11 @@ exports.login = async (req, res) => {
     // Determine redirect URL (optional, frontend might handle routing)
     let redirectUrl = '/dashboard'; // Default
     
-    // Use sendSafeJson for the final response
+    // Include token so SPA clients can store it in localStorage for API calls (even though we set cookie)
+    // IMPORTANT: Do not expose token in production-level server logs (already redacted by morgan token setup).
     return sendSafeJson(res, {
       success: true,
+      token,           // <-- new field
       user: safeUserData,
       redirectUrl
     });
@@ -264,18 +274,26 @@ exports.login = async (req, res) => {
     // Handle known application errors
     if (error instanceof ApiError) {
       if (error.statusCode === 401) {
-        logger.warn(`Login failed for ${lowerCaseEmail}: ${error.message} (Code: ${error.code})`);
+        logger.warn(`Login failed for ${email || 'unknown-email'}: ${error.message} (Code: ${error.errorCode})`);
       } else {
-        logger.error(`Login error for ${lowerCaseEmail}: ${error.message} (Code: ${error.code})`);
+        logger.error(`Login error for ${email || 'unknown-email'}: ${error.message} (Code: ${error.errorCode})`);
       }
-      throw error; // Re-throw for the global error handler
+      return res.status(error.statusCode).json({ 
+        success: false,
+        message: error.message,
+        code: error.errorCode
+      });
     }
     
     // Log unexpected errors
-    logger.error(`Unexpected login error for ${lowerCaseEmail}:`, error);
+    logger.error(`Unexpected login error for ${email || 'unknown-email'}:`, error);
     
     // Return a generic safe error response
-    throw new ApiError('Login failed due to an internal error', 500, 'AUTH_FAILURE');
+    return res.status(500).json({
+      success: false,
+      message: 'Login failed due to an internal error',
+      code: 'AUTH_FAILURE'
+    });
   }
 };
 
@@ -367,7 +385,7 @@ exports.registerUser = async (req, res) => {
     
   } catch (error) {
     if (error instanceof ApiError) {
-      logger.error(`User registration error for ${lowerCaseEmail}: ${error.message} (Code: ${error.code})`);
+      logger.error(`User registration error for ${lowerCaseEmail}: ${error.message} (Code: ${error.errorCode})`);
       throw error;
     }
     

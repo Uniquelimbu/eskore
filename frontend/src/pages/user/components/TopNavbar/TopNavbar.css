@@ -83,7 +83,7 @@
 .top-navbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px; /* increased space between message and profile icons */
 }
 
 .top-navbar-button {
@@ -105,8 +105,12 @@
   background-color: #3a4556;
 }
 
-.top-navbar-icon {
-  font-size: 18px;
+/* Image-based icon for message button */
+.top-navbar-icon-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .notification-indicator {

@@ -97,12 +97,22 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Login function - properly implemented with dispatch
-  const login = async (credentials) => {
+  // Updated login: accept (email, password) instead of a single credentials object
+  const login = async (emailOrCredentials, maybePassword) => {
     dispatch({ type: AUTH_LOADING });
+
+    // Support backward-compatibility: if first arg is an object, extract fields; else treat args as email/password.
+    let email, password;
+    if (typeof emailOrCredentials === 'object' && emailOrCredentials !== null) {
+      ({ email, password } = emailOrCredentials);
+    } else {
+      email = emailOrCredentials;
+      password = maybePassword;
+    }
+
     try {
-      console.log('AuthContext: Logging in user');
-      const response = await apiClient.post('/api/auth/login', credentials);
+      console.log('AuthContext: Logging in user', { email });
+      const response = await apiClient.post('/api/auth/login', { email, password });
       const { token, user } = response;
       
       // Set token in localStorage
@@ -132,8 +142,11 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user };
     } catch (err) {
-      const errorMessage = 
-        err.response?.data?.message || 
+      // err may come from apiClient interceptor and already be normalized {status, message, code}
+      // Fall back to nested axios error shape if not.
+      const errorMessage =
+        err?.message ||
+        err?.response?.data?.message ||
         'Failed to login. Please check your credentials.';
       
       // Dispatch error action

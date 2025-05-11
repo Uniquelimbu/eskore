@@ -17,6 +17,42 @@ const { getUserActivities } = require('../controllers/activityController');
 
 /**
  * @swagger
+ * /api/users/activity:
+ *   get:
+ *     summary: Get recent activity for the current user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Maximum number of activities to return (1-50)
+ *     responses:
+ *       200:
+ *         description: List of user activities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/TeamActivity'
+ *                   - $ref: '#/components/schemas/MatchActivity'
+ *                   - $ref: '#/components/schemas/TournamentActivity'
+ *       400:
+ *         description: Invalid input parameters
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/activity', requireAuth, catchAsync(getUserActivities));
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user profile by ID
@@ -255,41 +291,5 @@ router.post('/:id/change-password',
     });
   })
 );
-
-/**
- * @swagger
- * /api/users/activity:
- *   get:
- *     summary: Get recent activity for the current user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Maximum number of activities to return (1-50)
- *     responses:
- *       200:
- *         description: List of user activities
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/TeamActivity'
- *                   - $ref: '#/components/schemas/MatchActivity'
- *                   - $ref: '#/components/schemas/TournamentActivity'
- *       400:
- *         description: Invalid input parameters
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.get('/activity', requireAuth, catchAsync(getUserActivities));
 
 module.exports = router;

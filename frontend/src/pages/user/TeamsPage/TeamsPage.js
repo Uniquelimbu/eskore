@@ -34,7 +34,7 @@ const TeamsPage = () => {
           const firstTeam = response.teams[0];
           
           if (firstTeam && firstTeam.id) {
-            console.log(`TeamsPage: Found team ${firstTeam.id, saving to localStorage`);
+            console.log(`TeamsPage: Found team ${firstTeam.id}, saving to localStorage`);
             localStorage.setItem('lastTeamId', firstTeam.id.toString());
             
             console.log(`TeamsPage: Redirecting to team space: /teams/${firstTeam.id}/space/overview`);

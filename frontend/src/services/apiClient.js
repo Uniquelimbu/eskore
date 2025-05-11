@@ -47,60 +47,56 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+// Consolidated single response interceptor (success + error)
 apiClient.interceptors.response.use(
   (response) => {
-    return response.data; // Automatically extract data
-  },
-  async (error) => {
-    // Handle 401 Unauthorized errors
-    if (error.response && error.response.status === 401) {
-      // Clear invalid token
-      localStorage.removeItem('token');
-      
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        console.log('API: Unauthorized access detected, redirecting to login');
-        window.location.href = '/login';
-      }
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor
-apiClient.interceptors.response.use(
-  (response) => {
-    // Return the data part of the response
+    // SUCCESS HANDLER
+    // Always return the response payload (axios response.data)
     return response.data;
   },
   (error) => {
-    // Handle different error scenarios
+    // ERROR HANDLER
+
+    // Axios wraps non-HTTP failures differently; normalize first
+    const { response } = error;
+
+    // ----- 401 Unauthorized handling -----
+    if (response && response.status === 401) {
+      // Clear invalid/expired token so subsequent calls don't reuse it
+      localStorage.removeItem('token');
+
+      // Only redirect if the SPA is not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        console.log('API: Unauthorized, redirecting to /login');
+        window.location.href = '/login';
+      }
+    }
+
+    // ----- Timeout & network failures -----
     if (error.code === 'ECONNABORTED') {
       console.error('Request timed out');
-      return Promise.reject({ 
+      return Promise.reject({
         message: 'Request timed out. Please try again.',
         status: 408,
-        code: 'REQUEST_TIMEOUT' 
+        code: 'REQUEST_TIMEOUT',
       });
     }
 
-    if (!error.response) {
+    if (!response) {
       console.error('Network error:', error);
-      return Promise.reject({ 
+      return Promise.reject({
         message: 'Network error. Please check your connection and try again.',
         status: 0,
-        code: 'NETWORK_ERROR'
+        code: 'NETWORK_ERROR',
       });
     }
 
-    // Get relevant error info from the response
+    // ----- Standardize error payload -----
     const errorData = {
-      status: error.response.status,
-      message: error.response.data?.message || error.message || 'An error occurred',
-      code: error.response.data?.code || `HTTP_${error.response.status}`,
-      errors: error.response.data?.errors
+      status: response.status,
+      message: response.data?.message || error.message || 'An error occurred',
+      code: response.data?.code || `HTTP_${response.status}`,
+      errors: response.data?.errors,
     };
 
     console.error('API Error Response:', errorData);
