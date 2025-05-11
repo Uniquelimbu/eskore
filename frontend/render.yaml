@@ -12,4 +12,4 @@ services:
       - key: NODE_VERSION
         value: 16.14.0
       - key: NODE_ENV
-        value: production
+        value: development
