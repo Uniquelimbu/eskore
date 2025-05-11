@@ -139,7 +139,9 @@ const CreateTeam = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+    setSubmitError(null);
+
     // Validate both steps
     if (validateStep1() && validateStep2()) {
       setIsSubmitting(true);

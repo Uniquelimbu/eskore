@@ -7,90 +7,93 @@ import PageLayout from '../../../components/PageLayout/PageLayout';
 import './TeamsPage.css';
 
 const TeamsPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Debug logging
+    console.log('TeamsPage: Component mounted, auth state:', { user, isAuthenticated });
+    
     const checkUserTeam = async () => {
-      if (!user || !user.id) {
+      if (!isAuthenticated || !user || !user.id) {
+        console.log('TeamsPage: No authenticated user, ending team check');
         setLoading(false);
         return;
       }
 
       try {
-        // Call the API to get user teams
+        console.log(`TeamsPage: Fetching teams for user ID ${user.id}`);
+        
+        // The correct endpoint for getting a user's teams
         const response = await apiClient.get(`/api/teams/user/${user.id}`);
+        console.log('TeamsPage: User teams API response:', response);
         
-        // Debug the response data structure
-        console.log('User teams response:', response);
-        
-        // Check if response has teams array and has at least one team
         if (response && response.teams && response.teams.length > 0) {
           const firstTeam = response.teams[0];
           
           if (firstTeam && firstTeam.id) {
-            // Save the redirect target to localStorage to ensure consistent behavior
-            localStorage.setItem('lastTeamId', firstTeam.id);
+            console.log(`TeamsPage: Found team ${firstTeam.id, saving to localStorage`);
+            localStorage.setItem('lastTeamId', firstTeam.id.toString());
             
-            console.log(`Redirecting to team space: /teams/${firstTeam.id}/space/overview`);
+            console.log(`TeamsPage: Redirecting to team space: /teams/${firstTeam.id}/space/overview`);
             navigate(`/teams/${firstTeam.id}/space/overview`);
             return;
+          } else {
+            console.log('TeamsPage: Invalid team structure in response:', firstTeam);
           }
         } else {
-          // No teams found - ensure we clear any previously saved team ID
+          console.log('TeamsPage: No teams found for user');
           localStorage.removeItem('lastTeamId');
         }
         
         setLoading(false);
       } catch (err) {
-        console.error('Error checking user teams:', err);
-        
-        // Clear localStorage on error to prevent redirect loops
+        console.error('TeamsPage: Error fetching user teams:', err);
         localStorage.removeItem('lastTeamId');
         
         if (err.response) {
-          const status = err.response.status;
-          if (status === 404 || status === 401) {
-            // user has no team or auth not ready – silent fallback
-            setLoading(false);
-          } else {
-            // For server errors, log but don't block UX
-            setError('Could not load team data. Please try again later.');
-            setLoading(false);
-          }
-        } else {
-          // Network error; silent
-          setLoading(false);
+          console.log('TeamsPage: Error response:', err.response.status, err.response.data);
         }
+        
+        setError('Could not load team data. Please try again.');
+        setLoading(false);
       }
     };
 
-    // Try to navigate to the last team if available
+    // First check localStorage for existing team
     const lastTeamId = localStorage.getItem('lastTeamId');
-    if (lastTeamId && user && user.id) {
-      console.log(`Found lastTeamId in storage: ${lastTeamId}, checking if still valid...`);
+    
+    if (lastTeamId && isAuthenticated) {
+      console.log(`TeamsPage: Found lastTeamId in localStorage: ${lastTeamId}, validating...`);
+      
       apiClient.get(`/api/teams/${lastTeamId}`)
         .then(response => {
-          if (response) {
-            console.log(`Team ${lastTeamId} still exists, navigating to team space`);
+          if (response && response.id) {
+            console.log(`TeamsPage: Team ${lastTeamId} validated, navigating`);
             navigate(`/teams/${lastTeamId}/space/overview`);
           } else {
-            // Team no longer exists or user no longer has access
-            localStorage.removeItem('lastTeamId');
+            console.log('TeamsPage: Team validation failed, checking user teams');
             checkUserTeam();
           }
         })
         .catch(err => {
-          console.error('Error checking last team:', err);
+          console.error(`TeamsPage: Error validating team ${lastTeamId}:`, err);
+          console.log('TeamsPage: Falling back to user teams check');
           localStorage.removeItem('lastTeamId');
           checkUserTeam();
         });
     } else {
+      console.log('TeamsPage: No lastTeamId in localStorage, checking user teams');
       checkUserTeam();
     }
-  }, [user, navigate]);
+    
+    // Cleanup function
+    return () => {
+      console.log('TeamsPage: Component unmounting');
+    };
+  }, [user, isAuthenticated, navigate]);
 
   const handleOptionClick = (option) => {
     if (option === 'join') {

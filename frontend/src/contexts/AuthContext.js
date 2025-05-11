@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }) => {
 
   // Updated logout function for immediate response
   const logout = () => {
+    console.log('AuthContext: Logging out user');
     // Clear auth state immediately
     dispatch({ type: AUTH_LOGOUT });
     
@@ -98,11 +99,9 @@ export const AuthProvider = ({ children }) => {
 
   // Login function - properly implemented with dispatch
   const login = async (credentials) => {
+    dispatch({ type: AUTH_LOADING });
     try {
-      // Set loading state
-      dispatch({ type: AUTH_LOADING });
-      
-      // Call API
+      console.log('AuthContext: Logging in user');
       const response = await apiClient.post('/api/auth/login', credentials);
       const { token, user } = response;
       
@@ -111,6 +110,25 @@ export const AuthProvider = ({ children }) => {
       
       // Update state with SUCCESS action
       dispatch({ type: AUTH_SUCCESS, payload: user });
+      
+      // After login, make a separate call to get user teams
+      try {
+        if (user && user.id) {
+          console.log(`AuthContext: Fetching teams for newly logged in user ${user.id}`);
+          const teamsResponse = await apiClient.get(`/api/teams/user/${user.id}`);
+          
+          if (teamsResponse && teamsResponse.teams && teamsResponse.teams.length > 0) {
+            const firstTeam = teamsResponse.teams[0];
+            if (firstTeam && firstTeam.id) {
+              console.log(`AuthContext: Saving team ID ${firstTeam.id} after login`);
+              localStorage.setItem('lastTeamId', firstTeam.id.toString());
+            }
+          }
+        }
+      } catch (teamErr) {
+        console.error('AuthContext: Error fetching user teams after login:', teamErr);
+        // Non-fatal error, continue with login
+      }
       
       return { success: true, user };
     } catch (err) {
@@ -182,6 +200,29 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
+  // Add a utility function to ensure team state is loaded
+  const refreshUserTeams = async () => {
+    if (!state.user || !state.user.id) return [];
+    
+    try {
+      console.log(`AuthContext: Refreshing teams for user ${state.user.id}`);
+      const teamsResponse = await apiClient.get(`/api/teams/user/${state.user.id}`);
+      if (teamsResponse && teamsResponse.teams) {
+        if (teamsResponse.teams.length > 0) {
+          const firstTeam = teamsResponse.teams[0];
+          if (firstTeam && firstTeam.id) {
+            localStorage.setItem('lastTeamId', firstTeam.id.toString());
+          }
+        }
+        return teamsResponse.teams;
+      }
+      return [];
+    } catch (err) {
+      console.error('AuthContext: Error refreshing user teams:', err);
+      return [];
+    }
+  };
+
   const value = {
     ...state,
     login,
@@ -189,6 +230,7 @@ export const AuthProvider = ({ children }) => {
     registerUser,  // Add new registerUser function
     hasRole,
     hasAnyRole,
+    refreshUserTeams, // Add this to the context
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

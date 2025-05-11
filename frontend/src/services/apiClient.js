@@ -15,6 +15,20 @@ const apiClient = axios.create({
   timeout: 15000, // 15 seconds
 });
 
+// Add request interceptor to ensure token is added
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Add request interceptor
 apiClient.interceptors.request.use(
   config => {
@@ -29,6 +43,28 @@ apiClient.interceptors.request.use(
   }, 
   error => {
     console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => {
+    return response.data; // Automatically extract data
+  },
+  async (error) => {
+    // Handle 401 Unauthorized errors
+    if (error.response && error.response.status === 401) {
+      // Clear invalid token
+      localStorage.removeItem('token');
+      
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        console.log('API: Unauthorized access detected, redirecting to login');
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
