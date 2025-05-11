@@ -98,7 +98,8 @@ const authService = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2-second timeout
       
-      const response = await apiClient.post('/api/auth/logout', null, { 
+      // Send an empty object as the body instead of null
+      const response = await apiClient.post('/api/auth/logout', {}, { 
         signal: controller.signal 
       });
       
@@ -110,8 +111,17 @@ const authService = {
     }
   },
 
-  // Improved getCurrentUser with better error categorization
-  getCurrentUser: async () => {
+  // Improved getCurrentUser with better error categorization and token pre-check
+  getCurrentUser: async (quietMode = false) => {
+    // Check if token exists first to avoid unnecessary API calls
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (!quietMode) {
+        console.log('No authentication token found, skipping getCurrentUser API call');
+      }
+      return null;
+    }
+    
     try {
       const response = await apiClient.get('/api/auth/me');
       return response;
@@ -121,7 +131,10 @@ const authService = {
           error.code === 'NO_TOKEN' || 
           error.code === 'INVALID_TOKEN' ||
           error.message?.includes('token')) {
-        console.log('Auth token invalid or expired, returning null');
+        // Only log if not in quiet mode
+        if (!quietMode) {
+          console.log('Auth token invalid or expired, returning null');
+        }
         return null;
       }
       

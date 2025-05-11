@@ -582,354 +582,6 @@
   justify-content: center;
 }
 
-/* Chat tab styles */
-.chat-container {
-  display: flex;
-  height: 600px;
-  background-color: #1a202c;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.chat-sidebar {
-  width: 240px; /* Changed from 280px to make it narrower than the main sidebar */
-  background-color: #232b3a;
-  padding: 16px;
-  border-right: 1px solid #2d3748;
-  display: flex;
-  flex-direction: column;
-}
-
-.channels-header, .direct-messages-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.channel-action-button {
-  background: none;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.channel-action-button:hover {
-  color: #e2e8f0;
-}
-
-.channels-list, .direct-messages-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 24px;
-}
-
-.channel-item, .dm-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.channel-item:hover, .dm-item:hover {
-  background-color: #2d3748;
-}
-
-.channel-item.active {
-  background-color: #4a6cf7;
-}
-
-.channel-item.active .channel-name, 
-.channel-item.active .channel-icon {
-  color: white;
-}
-
-.channel-icon {
-  color: #a0aec0;
-  width: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.channel-name {
-  flex: 1;
-  color: #e2e8f0;
-  font-size: 0.95rem;
-}
-
-.unread-badge {
-  background-color: #4a6cf7;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-}
-
-.dm-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: #2d3748;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dm-name {
-  flex: 1;
-  color: #e2e8f0;
-  font-size: 0.95rem;
-}
-
-.online-status {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.online-status.online {
-  background-color: #48bb78;
-}
-
-.online-status.offline {
-  background-color: #a0aec0;
-}
-
-.no-members-message {
-  padding: 10px;
-  color: #a0aec0;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-header {
-  padding: 16px;
-  border-bottom: 1px solid #2d3748;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.chat-channel-info h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 4px 0;
-}
-
-.channel-symbol {
-  color: #a0aec0;
-}
-
-.channel-meta {
-  color: #a0aec0;
-  font-size: 0.85rem;
-}
-
-.chat-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.chat-action-btn {
-  background: none;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.chat-action-btn:hover {
-  color: #e2e8f0;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.no-messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #a0aec0;
-}
-
-.message-item {
-  display: flex;
-  gap: 12px;
-  position: relative;
-}
-
-.message-item.pinned {
-  background-color: rgba(79, 209, 197, 0.1);
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.message-item.system {
-  background-color: rgba(74, 108, 247, 0.1);
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.pinned-indicator {
-  position: absolute;
-  top: -10px;
-  left: 40px;
-  background-color: #2d3748;
-  color: #a0aec0;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.message-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #2d3748;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.system-avatar {
-  color: #4a6cf7;
-  font-size: 1.2rem;
-}
-
-.message-content {
-  flex: 1;
-}
-
-.message-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.message-sender {
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-right: 8px;
-}
-
-.message-time {
-  color: #a0aec0;
-  font-size: 0.85rem;
-}
-
-.message-text {
-  color: #e2e8f0;
-  line-height: 1.5;
-}
-
-.message-actions {
-  opacity: 0;
-  transition: opacity 0.2s;
-  display: flex;
-  gap: 8px;
-}
-
-.message-item:hover .message-actions {
-  opacity: 1;
-}
-
-.message-action-btn {
-  background: none;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.message-action-btn:hover {
-  color: #e2e8f0;
-}
-
-.message-input-container {
-  padding: 16px;
-  border-top: 1px solid #2d3748;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.message-input {
-  flex: 1;
-  background-color: #2d3748;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 16px;
-  color: #e2e8f0;
-}
-
-.message-input:focus {
-  outline: none;
-}
-
-.input-action-btn {
-  background: none;
-  border: none;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.input-action-btn:hover {
-  color: #e2e8f0;
-}
-
-.send-button {
-  background-color: #4a6cf7;
-  color: white;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.send-button:hover {
-  background-color: #3a5bd9;
-}
-
-.send-button:disabled {
-  background-color: #4a5568;
-  cursor: not-allowed;
-}
-
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .formation-editor {
@@ -938,22 +590,6 @@
   
   .bench-area {
     width: 100%;
-  }
-  
-  .chat-container {
-    flex-direction: column;
-    height: auto;
-  }
-  
-  .chat-sidebar {
-    width: 100%;
-    height: 300px;
-    border-right: none;
-    border-bottom: 1px solid #2d3748;
-  }
-  
-  .chat-main {
-    height: 500px;
   }
 }
 
@@ -988,8 +624,92 @@
   .weekday, .day-number {
     font-size: 0.8rem;
   }
-  
-  .chat-messages {
-    padding: 12px;
-  }
+}
+
+/* Make sure all tab content uses dark backgrounds */
+.overview-container, .squad-container, .formation-container, .calendar-container, .settings-container, .team-page {
+  background-color: transparent !important;
+  color: #e2e8f0;
+}
+
+/* Ensure tables have proper dark styling */
+.roster-table {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.roster-table th {
+  background-color: #1a202c;
+  color: #a0aec0;
+}
+
+.roster-table tr:nth-child(even) {
+  background-color: #2d3748;
+}
+
+.roster-table tr:nth-child(odd) {
+  background-color: #232b3a;
+}
+
+/* Override any white backgrounds that might be applied */
+.team-overview, .team-details, .team-info-card, .team-stats-card {
+  background-color: #2d3748 !important;
+  color: #e2e8f0;
+}
+
+/* Ensure proper text colors for readability */
+.team-info-card h3, .team-stats-card h3 {
+  color: #e2e8f0;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 8px;
+}
+
+.team-info-card p, .team-stats-card p {
+  color: #a0aec0;
+}
+
+.team-info-card strong, .team-stats-card strong {
+  color: #e2e8f0;
+}
+
+/* Empty state styling for dark theme */
+.empty-state {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+/* Cards and sections in tabs */
+.card-style, .team-section, .section-card,
+.team-info-card, .team-stats-card { /* Added specific classes from Overview.js */
+  background-color: var(--bg-card, #232b3a); /* Use variable or fallback to dark color */
+  color: #e2e8f0; /* Light text color */
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px; /* Consistent margin */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Optional: maintain a subtle shadow */
+}
+
+/* Ensure headings and text within these cards are styled for dark background */
+.card-style h3, .team-section h3, .section-card h3,
+.team-info-card h3, .team-stats-card h3 {
+  color: #e2e8f0;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2d3748; /* Darker border for heading separator */
+}
+
+.card-style p, .team-section p, .section-card p,
+.team-info-card p, .team-stats-card p {
+  color: #cbd5e0; /* Slightly muted light text for paragraphs */
+  line-height: 1.6;
 }

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify'; // Add toast import
 import { useAuth } from '../../../../contexts/AuthContext';
 import apiClient from '../../../../services/apiClient';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
-import Overview from './tabs/Overview';
-import Squad from './tabs/Squad';
-import Formation from './tabs/Formation';
-import Calendar from './tabs/Calendar';
+import Overview from './pages/Overview';
+import Squad from './pages/Squad';
+import Formation from './pages/Formation';
+import Calendar from './pages/Calendar';
+import Settings from './pages/Settings';
 import './TeamSpace.css';
 
 const TeamSpace = () => {
   const { teamId } = useParams();
-  const { user } = useAuth();
+  const { user, verifyUserData } = useAuth(); // Add verifyUserData to destructuring
   const navigate = useNavigate();
   const [team, setTeam] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -26,9 +27,60 @@ const TeamSpace = () => {
   const [selectedNewManager, setSelectedNewManager] = useState(null);
   const [showLeaveDeleteConfirm, setShowLeaveDeleteConfirm] = useState(false);
   
-  // Fetch team data
+  // Robust user authentication and refresh logic in a single effect
+  useEffect(() => {
+    const validateAndRefreshUser = async () => {
+      if (!user || !user.id) {
+        console.warn('TeamSpace: User data is incomplete or missing. Attempting to refresh auth state...');
+        try {
+          // Try to refresh the user data from the auth context
+          const refreshedUser = await verifyUserData(true);
+          if (!refreshedUser || !refreshedUser.id) {
+            // If still not valid, try to refresh from API directly as a fallback
+            const token = localStorage.getItem('token');
+            if (!token) {
+              toast.error('Your session has expired. Please log in again.');
+              navigate('/login');
+              return;
+            }
+            try {
+              const response = await apiClient.get('/api/auth/me');
+              if (response && response.id) {
+                console.log('TeamSpace: Successfully refreshed user data from API');
+                // Optionally update context here if needed
+              } else {
+                toast.error('Unable to verify your identity. Please log in again.');
+                navigate('/login');
+              }
+            } catch (err) {
+              console.error('TeamSpace: Failed to refresh user data from API', err);
+              toast.error('Authentication error. Please log in again.');
+              navigate('/login');
+            }
+          } else {
+            console.log('TeamSpace: Successfully refreshed user data from context:', refreshedUser);
+          }
+        } catch (error) {
+          console.error('TeamSpace: Error refreshing auth state:', error);
+          toast.error('Session expired. Please login again.');
+          navigate('/login');
+        }
+      }
+    };
+
+    validateAndRefreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, navigate, verifyUserData]);
+
+  // Fetch team data - modify to depend on validated user
   useEffect(() => {
     const fetchTeamData = async () => {
+      // Only proceed if user is authenticated with a valid ID
+      if (!user || !user.id) {
+        console.warn('TeamSpace: Skipping team data fetch due to missing user ID');
+        return;
+      }
+      
       try {
         setLoading(true);
         console.log(`Fetching team data for ID: ${teamId}`);
@@ -88,10 +140,10 @@ const TeamSpace = () => {
       }
     };
     
-    if (teamId) {
+    if (teamId && user && user.id) {
       fetchTeamData();
     }
-  }, [teamId, user?.id]);
+  }, [teamId, user, user?.id]);
   
   const isManager = userRole === 'manager';
   const otherMembers = members.filter(m => m.id !== user?.id);
@@ -169,19 +221,67 @@ const TeamSpace = () => {
   const confirmLeaveAndDelete = async () => {
     // Called when user confirms they understand team will be deleted
     try {
-      const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
-      if (response.success) {
-        toast.success('You have left the team and the team was deleted');
-        navigate('/teams');
+      // Check if user ID is valid before proceeding
+      if (!user || !user.id) {
+        console.error('User ID is missing. User object:', user);
+        
+        // Try to refresh user data one more time
+        const refreshedUser = await verifyUserData(true);
+        
+        // If still no valid user ID, show error
+        if (!refreshedUser || !refreshedUser.id) {
+          toast.error('Authentication error: Unable to identify user. Please try logging in again.');
+          setShowLeaveDeleteConfirm(false);
+          return;
+        }
+        
+        console.log(`Recovered user ID from refresh: ${refreshedUser.id}`);
+        const response = await apiClient.delete(`/api/teams/${teamId}/members/${refreshedUser.id}`);
+        
+        if (response.success) {
+          toast.success('You have left the team and the team was deleted');
+          localStorage.removeItem('lastTeamId');
+          navigate('/teams');
+          return;
+        }
+      } else {
+        console.log(`Attempting to leave team ${teamId} as user ${user.id}`);
+      
+        const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+      
+        if (response.success) {
+          toast.success('You have left the team and the team was deleted');
+        
+          // Remove from localStorage if this was the last active team
+          const lastTeamId = localStorage.getItem('lastTeamId');
+          if (lastTeamId === teamId) {
+            localStorage.removeItem('lastTeamId');
+          }
+        
+          navigate('/teams');
+        } else {
+          // This handles the case where the API returns success: false
+          throw new Error(response.message || 'Unknown error when leaving team');
+        }
       }
     } catch (err) {
       console.error('Error leaving and deleting team:', err);
-      toast.error(err.response?.data?.message || 'Failed to leave team');
+      
+      // More detailed error handling
+      let errorMessage = 'Failed to leave team';
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setShowLeaveDeleteConfirm(false);
     }
   };
-  
+
   const handleTransferManager = async () => {
     if (!selectedNewManager) {
       toast.error('Please select a team member to transfer manager role to');
@@ -207,6 +307,11 @@ const TeamSpace = () => {
     } finally {
       setIsTransferring(false);
     }
+  };
+
+  // Navigate to specific section
+  const navigateTo = (path) => {
+    navigate(`/teams/${teamId}/space/${path}`);
   };
 
   if (loading) {
@@ -266,16 +371,10 @@ const TeamSpace = () => {
 
         <div className="team-quick-stats">
           <div className="stat-item">
-            <span className="stat-value">0-0-0</span>
-            <span className="stat-label">Record (W-L-D)</span>
+            <span className="stat-value">Record: 0-0-0-0-0</span>
           </div>
           <div className="stat-item">
-            <span className="stat-value">None</span>
-            <span className="stat-label">Next Match</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-value">{members.length}</span>
-            <span className="stat-label">Members</span>
+            <span className="stat-value">Members: {members.length}/30</span>
           </div>
         </div>
 
@@ -306,31 +405,44 @@ const TeamSpace = () => {
         </div>
       </div>
       
-      <div className="team-tabs">
-        <NavLink 
-          to={`/teams/${teamId}/space/overview`} 
-          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+      <div className="team-navigation-buttons">
+        <button 
+          className="navigation-button" 
+          onClick={() => navigateTo('overview')}
         >
+          <i className="fas fa-home"></i>
           Overview
-        </NavLink>
-        <NavLink 
-          to={`/teams/${teamId}/space/squad`} 
-          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        </button>
+        <button 
+          className="navigation-button" 
+          onClick={() => navigateTo('squad')}
         >
+          <i className="fas fa-users"></i>
           Squad
-        </NavLink>
-        <NavLink 
-          to={`/teams/${teamId}/space/formation`} 
-          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        </button>
+        <button 
+          className="navigation-button" 
+          onClick={() => navigateTo('formation')}
         >
+          <i className="fas fa-futbol"></i>
           Formation
-        </NavLink>
-        <NavLink 
-          to={`/teams/${teamId}/space/calendar`} 
-          className={({isActive}) => isActive ? 'tab-link active' : 'tab-link'}
+        </button>
+        <button 
+          className="navigation-button" 
+          onClick={() => navigateTo('calendar')}
         >
+          <i className="fas fa-calendar-alt"></i>
           Calendar
-        </NavLink>
+        </button>
+        {isManager && (
+          <button 
+            className="navigation-button" 
+            onClick={() => navigateTo('settings')}
+          >
+            <i className="fas fa-cog"></i>
+            Settings
+          </button>
+        )}
       </div>
       
       <div className="team-space-tab-content">
@@ -339,6 +451,7 @@ const TeamSpace = () => {
           <Route path="squad" element={<Squad team={team} members={members} isManager={isManager} />} />
           <Route path="formation" element={<Formation team={team} members={members} isManager={isManager} />} />
           <Route path="calendar" element={<Calendar team={team} members={members} isManager={isManager} />} />
+          {isManager && <Route path="settings" element={<Settings team={team} members={members} isManager={isManager} />} />}
           <Route path="/" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
         </Routes>
       </div>

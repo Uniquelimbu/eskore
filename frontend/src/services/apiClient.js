@@ -104,4 +104,70 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Store reference to the original axios delete method before overriding it
+const originalDelete = apiClient.delete;
+
+// Enhance the delete method to better validate parameters
+apiClient.delete = async (url) => {
+  try {
+    // Enhanced validation for URLs with null/undefined parameters
+    if (url.includes('/null') || url.includes('/undefined')) {
+      console.error(`Invalid URL with null/undefined parameters: ${url}`);
+      
+      // Extract the team ID for potential recovery
+      const teamIdMatch = url.match(/\/teams\/(\d+)\/members\/(null|undefined)/);
+      if (teamIdMatch && teamIdMatch[1]) {
+        // eslint-disable-next-line no-unused-vars
+        const teamId = teamIdMatch[1];
+        
+        // Try to get the current user ID directly from the server
+        try {
+          const userResponse = await apiClient.get('/api/auth/me');
+          if (userResponse && userResponse.id) {
+            const userId = userResponse.id;
+            console.log(`Recovered user ID: ${userId}, reconstructing URL`);
+            
+            // Replace the URL with valid user ID
+            url = url.replace(/(\/null|\/undefined)$/, `/${userId}`);
+            console.log(`Corrected URL: ${url}`);
+          } else {
+            throw new Error('Could not retrieve valid user ID');
+          }
+        } catch (authError) {
+          console.error('Auth verification failed:', authError);
+          throw new Error('Invalid request parameters. User ID is missing and could not be recovered.');
+        }
+      } else {
+        throw new Error('Invalid request parameters. Resource ID is missing.');
+      }
+    }
+    
+    // Call the original axios delete method, not our custom version
+    const response = await originalDelete(url);
+    
+    // Additional validation to check the response structure
+    const data = response || {};
+    
+    // If debugging is needed
+    console.debug(`DELETE ${url} response:`, data);
+    
+    return data;
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('API Error Response:', error.response?.data || error);
+    }
+    
+    // Handle auth errors
+    if (error.response?.status === 401) {
+      console.warn('Authorization failed, redirecting to login');
+      // Store the current URL to redirect back after login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      window.location.href = '/login';
+      return Promise.reject(error.response.data || error);
+    }
+    
+    throw error.response?.data || error;
+  }
+};
+
 export default apiClient;

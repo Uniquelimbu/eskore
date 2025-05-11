@@ -15,7 +15,7 @@
   padding: 12px 16px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background-color: white;
+  background-color: #2d3748; /* Changed from white */
   animation: slide-in 0.3s ease-out;
   max-width: 100%;
 }
@@ -71,13 +71,13 @@
   flex: 1;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #4a5568;
+  color: #e2e8f0; /* Changed from #4a5568 */
 }
 
 .notification-close {
   background: none;
   border: none;
-  color: #a0aec0;
+  color: #718096; /* Changed from #a0aec0 */
   font-size: 1.25rem;
   cursor: pointer;
   padding: 2px 6px;
@@ -90,8 +90,8 @@
 }
 
 .notification-close:hover {
-  background-color: #edf2f7;
-  color: #4a5568;
+  background-color: #4a5568; /* Changed from #edf2f7 */
+  color: #e2e8f0; /* Changed from #4a5568 */
 }
 
 @keyframes slide-in {
@@ -124,20 +124,20 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .notification-item {
-    background-color: #2d3748;
+    background-color: #2d3748; /* Explicitly set, good */
   }
   
   .notification-content {
-    color: #e2e8f0;
+    color: #e2e8f0; /* Explicitly set, good */
   }
   
   .notification-close {
-    color: #718096;
+    color: #718096; /* Explicitly set, good */
   }
   
   .notification-close:hover {
-    background-color: #4a5568;
-    color: #e2e8f0;
+    background-color: #4a5568; /* Explicitly set, good */
+    color: #e2e8f0; /* Explicitly set, good */
   }
 }
 

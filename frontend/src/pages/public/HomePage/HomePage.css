@@ -22,7 +22,7 @@
 }
 
 .cta-section {
-  background: #f8f9fa; /* Creamy off-white */
+  background: #1a202c; /* Changed from #f8f9fa to a dark background */
   width: 100%;
   margin: 0;
   padding: 5rem 0 4rem 0;
@@ -35,7 +35,7 @@
 .cta-section h2 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: #2d3748;
+  color: #e2e8f0; /* Changed from #2d3748 */
   font-weight: 700;
   line-height: 1.3;
   text-shadow: none;
@@ -43,7 +43,7 @@
 
 .cta-section p {
   font-size: 1.15rem;
-  color: #718096;
+  color: #a0aec0; /* Changed from #718096 */
   margin-bottom: 2.5rem;
   max-width: 600px;
   margin-left: auto;

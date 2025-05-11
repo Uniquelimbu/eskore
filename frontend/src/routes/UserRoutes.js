@@ -1,15 +1,47 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import HomePage from '../pages/user/HomePage/HomePage';
-import ProfilePage from '../pages/user/ProfilePage/ProfilePage';
-import TeamPage from '../pages/user/TeamPage/TeamPage';
+import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
+import DashboardPage from '../pages/user/DashboardPage/DashboardPage';
+import SearchPage from '../pages/user/SearchPage/SearchPage';
+import TeamsPage from '../pages/user/TeamsPage/TeamsPage';
+import TeamSpace from '../pages/user/TeamsPage/TeamSpace';
+import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
+import JoinTeam from '../pages/user/TeamsPage/JoinTeam/JoinTeam';
+import TournamentPage from '../pages/user/TournamentPage/TournamentPage';
+import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/TournamentDetailsPage';
+import NotFoundPage from '../pages/public/NotFoundPage/NotFoundPage';
 
 const UserRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/team" element={<TeamPage />} />
+      <Route element={<AuthenticatedLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="team" element={<TeamPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="search" element={<SearchPage />} />
+        
+        {/* Teams routes */}
+        <Route path="teams" element={<TeamsPage />} />
+        <Route path="teams/create" element={<CreateTeam />} />
+        <Route path="teams/join" element={<JoinTeam />} />
+        
+        {/* Team space routes - now with nested page routes */}
+        <Route path="teams/:teamId/*" element={<TeamSpace />}>
+          <Route path="overview" element={null} /> {/* These are handled inside TeamSpace */}
+          <Route path="squad" element={null} />
+          <Route path="formation" element={null} />
+          <Route path="calendar" element={null} />
+          <Route path="chat" element={null} />
+          <Route path="settings" element={null} />
+        </Route>
+        
+        {/* Tournament routes */}
+        <Route path="tournaments" element={<TournamentPage />} />
+        <Route path="tournaments/:id" element={<TournamentDetailsPage />} />
+        
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
     </Routes>
   );
 };

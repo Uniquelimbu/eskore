@@ -26,7 +26,7 @@
   /* Background Colors */
   --bg-light: #f8f9fa;
   --bg-dark: #1A1F2C;
-  --bg-card: #ffffff;
+  --bg-card: #232b3a; /* Changed from #ffffff to a dark card background */
   --bg-card-dark: #2d3748;
   
   /* Text Colors */

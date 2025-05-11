@@ -33,14 +33,14 @@
 }
 
 .btn--secondary {
-  background-color: white;
-  color: var(--color-primary);
-  border: 2px solid transparent;
+  background-color: #2d3748; /* Changed from white */
+  color: #e2e8f0; /* Changed from var(--color-primary) */
+  border: 2px solid transparent; /* Keep or change to #4a5568 if a border is desired */
   box-shadow: var(--shadow-sm);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background-color: #f8f9fa;
+  background-color: #4a5568; /* Changed from #f8f9fa */
   box-shadow: var(--shadow-md);
 }
 
@@ -150,12 +150,12 @@
 
 /* Dark theme */
 [data-theme='dark'] .btn--secondary {
-  background-color: #2d3748;
-  color: #e2e8f0;
+  background-color: #2d3748; /* Consistent */
+  color: #e2e8f0; /* Consistent */
 }
 
 [data-theme='dark'] .btn--secondary:hover:not(:disabled) {
-  background-color: #4a5568;
+  background-color: #4a5568; /* Consistent */
 }
 
 [data-theme='dark'] .btn--text,

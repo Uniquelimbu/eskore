@@ -3,13 +3,13 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: #1a202c; /* Changed from #f8f9fa to dark page background */
   padding: 20px;
   font-family: 'Inter', sans-serif;
 }
 
 .not-found-content {
-  background-color: white;
+  background-color: #232b3a; /* Changed from white to dark card background */
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: 40px;
@@ -33,11 +33,11 @@
 .not-found-content h1 {
   font-size: 2.5rem;
   margin-bottom: 16px;
-  color: #2d3748;
+  color: #e2e8f0; /* Changed from #2d3748 */
 }
 
 .not-found-content p {
-  color: #6c757d;
+  color: #a0aec0; /* Changed from #6c757d */
   margin-bottom: 30px;
   font-size: 1.1rem;
 }
@@ -67,16 +67,16 @@
 }
 
 .dashboard-button {
-  background-color: #e2e8f0;
-  color: #4a5568;
+  background-color: #2d3748; /* Changed from #e2e8f0 */
+  color: #e2e8f0; /* Changed from #4a5568 */
 }
 
 .dashboard-button:hover {
-  background-color: #cbd5e0;
+  background-color: #4a5568; /* Changed from #cbd5e0 */
 }
 
 .not-found-help {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #2d3748; /* Changed from #e2e8f0 */
   padding-top: 24px;
 }
 

@@ -17,21 +17,37 @@ const initialState = {
   isAuthenticated: false
 };
 
-// Reducer function to manage state updates
+// Updated reducer function to validate user data
 const authReducer = (state, action) => {
   switch (action.type) {
     case AUTH_INIT:
       // Initialize state, typically when auth check completes with no user
       return { ...initialState, loading: false };
     case AUTH_SUCCESS:
-      // Ensure payload is the user object itself
+      // Enhanced validation of user payload
       const userPayload = action.payload && typeof action.payload === 'object' ? action.payload : null;
+      
+      // Verify the user object has an ID - if not, reject it
+      if (!userPayload || !userPayload.id) {
+        console.error('AuthContext: Received invalid user data (missing ID):', userPayload);
+        
+        // Don't update the state with invalid data, but keep the previous valid state if it exists
+        return {
+          ...state,
+          loading: false,
+          error: 'Invalid user data received',
+          // Only clear user and auth if we don't already have a valid user
+          isAuthenticated: state.user?.id ? state.isAuthenticated : false,
+          user: state.user?.id ? state.user : null
+        };
+      }
+      
       return {
         ...state,
-        user: userPayload, // Store the user object directly
+        user: userPayload,
         loading: false,
         error: null,
-        isAuthenticated: !!userPayload, // Set isAuthenticated based on userPayload presence
+        isAuthenticated: true,
       };
     case AUTH_ERROR:
       return {
@@ -81,7 +97,8 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         dispatch({ type: AUTH_LOADING });
-        const currentUser = await authService.getCurrentUser();
+        // Use quietMode=true to prevent unnecessary error logging on expected auth failures
+        const currentUser = await authService.getCurrentUser(true);
 
         if (currentUser && typeof currentUser === 'object') {
           dispatch({ type: AUTH_SUCCESS, payload: currentUser });
@@ -236,6 +253,62 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Add an improved version of verifyUserData that can force a refresh
+  const verifyUserData = async (forceRefresh = false) => {
+    // If user data exists and is valid and we're not forcing refresh, return it
+    if (state.user && state.user.id && !forceRefresh) {
+      return state.user;
+    }
+    
+    console.warn('AuthContext: User data is incomplete or missing, attempting to refresh');
+    try {
+      dispatch({ type: AUTH_LOADING });
+      
+      // Check if we have a token first
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('AuthContext: No authentication token available');
+        dispatch({ type: AUTH_INIT });
+        return null;
+      }
+      
+      // Try to get current user data from API
+      const response = await apiClient.get('/api/auth/me');
+      
+      if (response && response.id) {
+        console.log('AuthContext: Successfully refreshed user data:', response);
+        dispatch({ type: AUTH_SUCCESS, payload: response });
+        return response;
+      } else {
+        console.error('AuthContext: Invalid user data received from server:', response);
+        // Clear token to prevent infinite refresh loops
+        localStorage.removeItem('token');
+        dispatch({ type: AUTH_INIT });
+        return null;
+      }
+    } catch (err) {
+      console.error('AuthContext: Failed to refresh user data:', err);
+      // Clear potentially invalid token
+      localStorage.removeItem('token');
+      dispatch({ type: AUTH_INIT });
+      return null;
+    }
+  };
+
+  // Validate auth state on initial load
+  useEffect(() => {
+    const validateAuthState = async () => {
+      // If user is null but we're authenticated according to state, try refreshing
+      if (state.isAuthenticated && (!state.user || !state.user.id)) {
+        console.warn('AuthContext: Inconsistent auth state detected, refreshing user data');
+        await verifyUserData(true);
+      }
+    };
+    
+    validateAuthState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isAuthenticated, state.user]);
+
   const value = {
     ...state,
     login,
@@ -244,6 +317,7 @@ export const AuthProvider = ({ children }) => {
     hasRole,
     hasAnyRole,
     refreshUserTeams, // Add this to the context
+    verifyUserData, // Add this new method
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

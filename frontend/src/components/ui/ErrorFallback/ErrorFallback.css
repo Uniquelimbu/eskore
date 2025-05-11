@@ -5,7 +5,7 @@
   justify-content: center;
   text-align: center;
   padding: 3rem 1.5rem;
-  background-color: #fff;
+  background-color: #2d3748; /* Changed from #fff */
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   max-width: 600px;
@@ -27,11 +27,11 @@
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #e53e3e;
+  color: #fc8181; /* Adjusted from #e53e3e for better dark theme contrast */
 }
 
 .error-fallback__message {
-  color: #4a5568;
+  color: #e2e8f0; /* Changed from #4a5568 */
   margin-bottom: 1.5rem;
   max-width: 400px;
 }
@@ -52,13 +52,13 @@
 }
 
 [data-theme='dark'] .error-fallback {
-  background-color: #2d3748;
+  background-color: #2d3748; /* Consistent with direct change */
 }
 
 [data-theme='dark'] .error-fallback__title {
-  color: #fc8181;
+  color: #fc8181; /* Consistent with direct change */
 }
 
 [data-theme='dark'] .error-fallback__message {
-  color: #e2e8f0;
+  color: #e2e8f0; /* Consistent with direct change */
 }

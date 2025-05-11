@@ -1,12 +1,12 @@
 .features-section {
   padding: 5rem 2rem;
-  background-color: #f8f9fa;
+  background-color: #1a202c; /* Changed from #f8f9fa */
   text-align: center;
 }
 
 .features-heading {
   font-size: 2.5rem;
-  color: #2d3748;
+  color: #e2e8f0; /* Changed from #2d3748 */
   margin-bottom: 3rem;
   position: relative;
 }
@@ -32,7 +32,7 @@
 }
 
 .feature-card {
-  background-color: #fff;
+  background-color: #232b3a; /* Changed from #fff */
   border-radius: 10px;
   padding: 2.5rem 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -64,12 +64,12 @@
 .feature-card h3 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2d3748;
+  color: #e2e8f0; /* Changed from #2d3748 */
   margin-bottom: 1rem;
 }
 
 .feature-card p {
-  color: #718096;
+  color: #a0aec0; /* Changed from #718096 */
   line-height: 1.6;
 }
 
