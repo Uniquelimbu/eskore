@@ -24,11 +24,8 @@
 
 ## 🚀 Live Demo
 
-Experience eSkore in action at [https://eskore.dev](https://eskore.dev) (Coming Soon)
+Experience eSkore in action at [https://www.eskore.com](https://www.eskore.com)
 
-<div align="center">
-  <img src="frontend/public/images/mockups/eskore-mockup.png" alt="eSkore Dashboard Preview" width="800">
-</div>
 
 ## 📋 Overview
 
