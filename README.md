@@ -24,7 +24,7 @@
 
 ## 🚀 Live Demo
 
-Experience eSkore in action at [https://www.eskore.com](https://www.eskore.com) (Coming Soon)
+Experience eSkore in action at [https://www.eskore.com](https://www.eskore.com)
 
 
 ## 📋 Overview
