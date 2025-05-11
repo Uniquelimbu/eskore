@@ -4,6 +4,7 @@ const cors = require('cors'); // Restored
 const cookieParser = require('cookie-parser'); // Restored
 const morgan = require('morgan'); // Restored
 const path = require('path');
+const fs = require('fs');
 
 const logger = require('./utils/logger'); // Restored
 logger.info('APP.JS: Application starting...'); // Restored
@@ -154,6 +155,26 @@ app.use('/api/leagues', leagueRoutes); // Restored
 app.use('/api/matches', matchRoutes); // Restored
 app.use('/api/leaderboards', leaderboardRoutes); // Restored
 logger.info('APP.JS: API routes configured.'); // Restored
+
+// --- SERVE FRONTEND BUILD IN PRODUCTION ---
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../../frontend/build');
+  if (fs.existsSync(clientBuildPath)) {
+    logger.info(`APP.JS: Serving static frontend from ${clientBuildPath}`);
+    app.use(express.static(clientBuildPath));
+
+    // For any non-API route, send back index.html so that React Router can handle it
+    app.get('*', (req, res, next) => {
+      // Skip if the route starts with /api or /uploads (already handled)
+      if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/uploads')) {
+        return next();
+      }
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+  } else {
+    logger.warn(`APP.JS: Expected React build directory not found at ${clientBuildPath}. Frontend will not be served by Express.`);
+  }
+}
 
 // --- OTHER ROUTES AND HANDLERS ---
 // No need for app.options - the main CORS middleware will handle preflight requests

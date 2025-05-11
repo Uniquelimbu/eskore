@@ -233,6 +233,15 @@ const TeamSpace = () => {
   return (
     <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
       <div className="team-space-header">
+        {/* Add Leave Team button at the top right */}
+        <button 
+          className="leave-team-button"
+          onClick={handleLeaveTeam}
+          title="Leave this team"
+        >
+          <i className="fas fa-sign-out-alt"></i> Leave Team
+        </button>
+        
         <div className="team-identity-section">
           {team.logoUrl ? (
             <img src={team.logoUrl} alt={`${team.name} logo`} className="team-logo" />
@@ -287,25 +296,13 @@ const TeamSpace = () => {
               >
                 <i className="fas fa-trash-alt"></i> Delete Team
               </button>
-              <button 
-                className="action-button warning"
-                onClick={handleLeaveTeam}
-              >
-                <i className="fas fa-sign-out-alt"></i> Leave Team
-              </button>
+              {/* Remove Leave Team button from here */}
             </>
           ) : (
-            <button 
-              className="action-button warning"
-              onClick={handleLeaveTeam}
-            >
-              <i className="fas fa-sign-out-alt"></i> Leave Team
-            </button>
+            // Remove Leave Team button from here - it's now positioned at the top right
+            <div style={{ height: '1px' }}></div> // Placeholder div to maintain layout spacing
           )}
-          <div className="notification-bell">
-            <i className="fas fa-bell"></i>
-            <span className="notification-badge">0</span>
-          </div>
+
         </div>
       </div>
       

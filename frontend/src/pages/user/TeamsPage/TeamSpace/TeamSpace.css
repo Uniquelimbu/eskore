@@ -31,6 +31,7 @@
   border-radius: 10px;
   padding: 24px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative; /* Add position relative to serve as positioning context */
 }
 
 .team-identity-section {
@@ -195,34 +196,6 @@
 .action-button.warning:hover {
   background-color: #dd6b20;
   transform: translateY(-2px);
-}
-
-.notification-bell {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  background-color: #2d3748;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #e53e3e;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
 }
 
 /* Tabs styling */
@@ -435,6 +408,33 @@
   color: #fc8181;
   font-size: 14px;
   margin-top: 8px;
+}
+
+/* New leave team button style */
+.leave-team-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ed8936;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.leave-team-button:hover {
+  background-color: #dd6b20;
+}
+
+.leave-team-button i {
+  font-size: 0.8rem;
 }
 
 /* Responsive adjustments */
