@@ -20,11 +20,18 @@ const DashboardPage = () => {
       try {
         setLoadingActivities(true);
         const data = await dashboardService.getRecentActivity();
-        setActivities(data || []);
+        
+        // Check if data is an array before setting state
+        if (Array.isArray(data)) {
+          setActivities(data);
+        } else {
+          console.warn('Activity data is not an array:', data);
+          setActivities([]);
+        }
       } catch (err) {
         console.error('Error fetching activities:', err);
-        // Don't show error for activities as it's less critical
         setActivities([]);
+        // Optionally show a toast notification here
       } finally {
         setLoadingActivities(false);
       }

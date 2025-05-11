@@ -11,6 +11,7 @@ const UserTeam = require('./UserTeam');
 const Tournament = require('./Tournament');
 const UserTournament = require('./UserTournament');
 const TeamTournament = require('./TeamTournament');
+const UserMatch = require('./UserMatch');
 
 function setupAssociations() {
   // Existing associations
@@ -59,6 +60,26 @@ function setupAssociations() {
   TeamTournament.belongsTo(Team, { foreignKey: 'teamId' });
   Tournament.hasMany(TeamTournament, { foreignKey: 'tournamentId' });
   TeamTournament.belongsTo(Tournament, { foreignKey: 'tournamentId' });
+
+  // UserMatch associations
+  if (User && Match && UserMatch) {
+    // User to Match through UserMatch (many-to-many)
+    User.belongsToMany(Match, { through: UserMatch, foreignKey: 'userId' });
+    Match.belongsToMany(User, { through: UserMatch, foreignKey: 'matchId' });
+    
+    // Direct associations to UserMatch
+    User.hasMany(UserMatch, { foreignKey: 'userId' });
+    UserMatch.belongsTo(User, { foreignKey: 'userId' });
+    
+    Match.hasMany(UserMatch, { foreignKey: 'matchId' });
+    UserMatch.belongsTo(Match, { foreignKey: 'matchId' });
+    
+    // Team association with UserMatch if applicable
+    if (Team) {
+      Team.hasMany(UserMatch, { foreignKey: 'teamId' });
+      UserMatch.belongsTo(Team, { foreignKey: 'teamId' });
+    }
+  }
 }
 
 module.exports = { setupAssociations };

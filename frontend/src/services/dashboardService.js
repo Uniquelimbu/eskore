@@ -16,12 +16,19 @@ const dashboardService = {
   // Get recent activity for the current user's dashboard
   getRecentActivity: async (limit = 10) => {
     try {
+      // Validate limit as a positive integer before sending
+      const safeLimit = Math.max(1, Math.min(50, parseInt(limit) || 10));
+      
       // Uses the authenticated user's context on the backend
-      const response = await apiClient.get(`/api/users/activity?limit=${limit}`);
-      return response.data;
+      const response = await apiClient.get(`/api/users/activity`, {
+        params: { limit: safeLimit }
+      });
+      
+      return response || [];
     } catch (error) {
-      console.error('Error fetching recent activity:', error.response?.data || error.message);
-      throw error.response?.data || error;
+      console.error('Error fetching recent activity:', error.response?.data || error.message || 'Unknown error');
+      // Return empty array instead of throwing to avoid breaking the UI
+      return [];
     }
   },
 

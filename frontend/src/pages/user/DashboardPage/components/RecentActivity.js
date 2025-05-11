@@ -12,12 +12,14 @@ const RecentActivity = ({ activities, loading }) => {
   };
 
   // Function to get activity icon based on type
-  const getActivityIcon = (type, result) => {
-    switch (type) {
+  const getActivityIcon = (activity) => {
+    switch (activity.type) {
       case 'match':
-        return result === 'win' ? '🏆' : '❌';
-      case 'achievement':
-        return '🏅';
+        return activity.result === 'win' ? '🏆' : (activity.result === 'draw' ? '🤝' : '❌');
+      case 'tournament':
+        return '🏆';
+      case 'team':
+        return '👥';
       case 'training':
         return '🎯';
       default:
@@ -32,19 +34,28 @@ const RecentActivity = ({ activities, loading }) => {
         return (
           <>
             <div className="activity-title">
-              {activity.game} Match {activity.result === 'win' ? 'Won' : 'Lost'}
+              {activity.userTeamName} vs {activity.opponentName} {activity.result === 'win' ? 'Won' : (activity.result === 'draw' ? 'Draw' : 'Lost')}
             </div>
             <div className="activity-description">
               Score: {activity.score}
             </div>
           </>
         );
-      case 'achievement':
+      case 'team':
         return (
           <>
-            <div className="activity-title">Achievement Unlocked</div>
+            <div className="activity-title">Team {activity.action}</div>
             <div className="activity-description">
-              {activity.title}: {activity.description}
+              Joined {activity.teamName} as {activity.role}
+            </div>
+          </>
+        );
+      case 'tournament':
+        return (
+          <>
+            <div className="activity-title">Tournament {activity.action}</div>
+            <div className="activity-description">
+              {activity.tournamentName} - Role: {activity.role}
             </div>
           </>
         );
@@ -58,7 +69,7 @@ const RecentActivity = ({ activities, loading }) => {
           </>
         );
       default:
-        return <div className="activity-title">Unknown Activity</div>;
+        return <div className="activity-title">Activity: {activity.type}</div>;
     }
   };
 
@@ -85,7 +96,7 @@ const RecentActivity = ({ activities, loading }) => {
                 className={`activity-item ${activity.type} ${activity.result || ''}`}
               >
                 <div className="activity-icon">
-                  {getActivityIcon(activity.type, activity.result)}
+                  {getActivityIcon(activity)}
                 </div>
                 <div className="activity-content">
                   {renderActivityDetails(activity)}

@@ -17,6 +17,7 @@ import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/Tournamen
 import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
 import NewsPage from '../pages/user/NewsPage';
+import AboutPage from '../pages/public/AboutPage';
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -58,6 +59,7 @@ const AppRoutes = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<UserRegistrationPage />} />
+      <Route path="/about" element={<AboutPage />} />
       
       {/* Authenticated routes */}
       <Route element={

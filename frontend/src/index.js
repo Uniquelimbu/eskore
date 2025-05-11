@@ -4,6 +4,16 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Create fallback HTML for 404 handling
+// This helps SEO and avoids blank pages when directly loading a route
+if (typeof window !== 'undefined') {
+  const noscriptContent = document.querySelector('noscript');
+  if (noscriptContent) {
+    const fallbackHTML = noscriptContent.innerHTML;
+    window.__FALLBACK_HTML__ = fallbackHTML;
+  }
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
