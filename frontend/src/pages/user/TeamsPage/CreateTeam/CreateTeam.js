@@ -181,6 +181,8 @@ const CreateTeam = () => {
 
         // Navigate to the overview tab of the team space
         if (teamId) {
+          // Save the team ID to localStorage for consistent navigation
+          localStorage.setItem('lastTeamId', teamId);
           navigate(`/teams/${teamId}/space/overview`);
         } else {
           console.error("Team ID is missing in the response");

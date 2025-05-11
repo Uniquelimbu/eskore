@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import authService from '../services/authService'; // Assumes authService uses apiClient
+import authService from '../services/authService';
+import apiClient from '../services/apiClient'; // Add this import
 
 // Define action types
 const AUTH_INIT = 'AUTH_INIT';
@@ -64,10 +65,13 @@ export const AuthProvider = ({ children }) => {
     // Clear auth state immediately
     dispatch({ type: AUTH_LOGOUT });
     
-    // Send the API call in the background, don't wait for it
+    // Remove localStorage items
+    localStorage.removeItem('token');
+    localStorage.removeItem('lastTeamId'); // Remove team ID on logout
+    
+    // Send the API call in the background
     authService.logout().catch(error => {
       console.error('Logout API error:', error);
-      // Error already handled by returning { success: true } in authService
     });
   };
 
@@ -92,40 +96,36 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Login function
-  const login = async (email, password) => {
-    console.log("AuthContext: login called with email:", email);
-    dispatch({ type: AUTH_LOADING }); // Set loading to true
+  // Login function - properly implemented with dispatch
+  const login = async (credentials) => {
     try {
-      // Add a client-side timeout to prevent hanging requests
-      console.log("AuthContext: calling auth service login");
-      const loginPromise = authService.login({ email, password });
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login request timed out')), 10000)
-      );
+      // Set loading state
+      dispatch({ type: AUTH_LOADING });
       
-      // Race between actual login and timeout
-      const loginResponse = await Promise.race([loginPromise, timeoutPromise]);
-      console.log("AuthContext: received login response:", loginResponse);
-
-      if (loginResponse && loginResponse.success && loginResponse.user) {
-        console.log("AuthContext: login successful, updating state");
-        dispatch({ type: AUTH_SUCCESS, payload: loginResponse.user }); // Resets loading to false
-        return { success: true, redirectUrl: loginResponse.redirectUrl || '/dashboard' };
-      } else {
-        // This case should ideally not be reached if authService.login always throws on non-success
-        const errorMessage = loginResponse?.message || 'Login failed: Unexpected response';
-        console.error("AuthContext: Unexpected response format:", loginResponse);
-        dispatch({ type: AUTH_ERROR, payload: errorMessage });
-        throw new Error(errorMessage); // Ensure an error is thrown here
-      }
-    } catch (error) {
-      console.error("AuthContext: Login error:", error.message || error);
-      dispatch({
-        type: AUTH_ERROR,
-        payload: error.message || 'Login failed'
-      });
-      throw error;
+      // Call API
+      const response = await apiClient.post('/api/auth/login', credentials);
+      const { token, user } = response;
+      
+      // Set token in localStorage
+      localStorage.setItem('token', token);
+      
+      // Update state with SUCCESS action
+      dispatch({ type: AUTH_SUCCESS, payload: user });
+      
+      return { success: true, user };
+    } catch (err) {
+      const errorMessage = 
+        err.response?.data?.message || 
+        'Failed to login. Please check your credentials.';
+      
+      // Dispatch error action
+      dispatch({ type: AUTH_ERROR, payload: errorMessage });
+      
+      // Clean up localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('lastTeamId'); // Remove team ID on failed login
+      
+      return { success: false, error: errorMessage };
     }
   };
 

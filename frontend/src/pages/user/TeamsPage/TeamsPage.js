@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar/Sidebar';
-import PageLayout from '../../../components/layout/PageLayout';
-import apiClient from '../../../services/apiClient';
 import { useAuth } from '../../../contexts/AuthContext';
+import apiClient from '../../../services/apiClient';
+import Sidebar from '../components/Sidebar/Sidebar';
+import PageLayout from '../../../components/PageLayout/PageLayout';
 import './TeamsPage.css';
 
 const TeamsPage = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,21 +20,36 @@ const TeamsPage = () => {
       }
 
       try {
-        setLoading(true);
-        setError(null);
+        // Call the API to get user teams
         const response = await apiClient.get(`/api/teams/user/${user.id}`);
         
+        // Debug the response data structure
+        console.log('User teams response:', response);
+        
+        // Check if response has teams array and has at least one team
         if (response && response.teams && response.teams.length > 0) {
           const firstTeam = response.teams[0];
+          
           if (firstTeam && firstTeam.id) {
+            // Save the redirect target to localStorage to ensure consistent behavior
+            localStorage.setItem('lastTeamId', firstTeam.id);
+            
+            console.log(`Redirecting to team space: /teams/${firstTeam.id}/space/overview`);
             navigate(`/teams/${firstTeam.id}/space/overview`);
             return;
           }
+        } else {
+          // No teams found - ensure we clear any previously saved team ID
+          localStorage.removeItem('lastTeamId');
         }
         
         setLoading(false);
       } catch (err) {
         console.error('Error checking user teams:', err);
+        
+        // Clear localStorage on error to prevent redirect loops
+        localStorage.removeItem('lastTeamId');
+        
         if (err.response) {
           const status = err.response.status;
           if (status === 404 || status === 401) {
@@ -42,6 +57,7 @@ const TeamsPage = () => {
             setLoading(false);
           } else {
             // For server errors, log but don't block UX
+            setError('Could not load team data. Please try again later.');
             setLoading(false);
           }
         } else {
@@ -51,12 +67,30 @@ const TeamsPage = () => {
       }
     };
 
-    if (user && user.id) {
-      checkUserTeam();
+    // Try to navigate to the last team if available
+    const lastTeamId = localStorage.getItem('lastTeamId');
+    if (lastTeamId && user && user.id) {
+      console.log(`Found lastTeamId in storage: ${lastTeamId}, checking if still valid...`);
+      apiClient.get(`/api/teams/${lastTeamId}`)
+        .then(response => {
+          if (response) {
+            console.log(`Team ${lastTeamId} still exists, navigating to team space`);
+            navigate(`/teams/${lastTeamId}/space/overview`);
+          } else {
+            // Team no longer exists or user no longer has access
+            localStorage.removeItem('lastTeamId');
+            checkUserTeam();
+          }
+        })
+        .catch(err => {
+          console.error('Error checking last team:', err);
+          localStorage.removeItem('lastTeamId');
+          checkUserTeam();
+        });
     } else {
-      setLoading(false);
+      checkUserTeam();
     }
-  }, [user, user?.id, navigate]);
+  }, [user, navigate]);
 
   const handleOptionClick = (option) => {
     if (option === 'join') {
