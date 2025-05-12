@@ -371,9 +371,6 @@ const TeamSpace = () => {
 
         <div className="team-quick-stats">
           <div className="stat-item">
-            <span className="stat-value">Record: 0-0-0-0-0</span>
-          </div>
-          <div className="stat-item">
             <span className="stat-value">Members: {members.length}/30</span>
           </div>
         </div>
