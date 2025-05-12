@@ -3,103 +3,126 @@ import axios from 'axios';
 // Define the base URL for the API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Debug flag - can toggle this for auth debugging
+const DEBUG_AUTH = true;
+
 // Create an Axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // <-- Crucial for sending cookies cross-origin
+  withCredentials: true, // Crucial for sending cookies cross-origin
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  // Add a reasonable timeout for requests
   timeout: 15000, // 15 seconds
 });
 
-// Add request interceptor to ensure token is added
+// Request interceptor with enhanced error and debug handling
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    
+    // Enhanced debugging for auth issues
+    if (DEBUG_AUTH && config.url.includes('/auth/me')) {
+      console.log('🔒 Auth Debug: Sending request to', config.url);
+      console.log('🔒 Auth Debug: Token in localStorage:', token ? `${token.substring(0, 15)}...` : 'NO TOKEN');
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Add request interceptor
-apiClient.interceptors.request.use(
-  config => {
-    // Add timestamp to prevent caching for GET requests
+    
+    if (token) {
+      // Ensure Authorization header is properly set
+      config.headers.Authorization = `Bearer ${token}`;
+      
+      if (DEBUG_AUTH && config.url.includes('/auth')) {
+        console.log('🔒 Auth Debug: Added Authorization header');
+      }
+    } else if (config.url.includes('/auth/me')) {
+      console.warn('⚠️ Auth request without token in localStorage!');
+    }
+    
+    // Prevent caching for GET requests
     if (config.method?.toLowerCase() === 'get') {
       config.params = {
         ...config.params,
         _t: Date.now()
       };
     }
+    
     return config;
-  }, 
-  error => {
+  },
+  (error) => {
     console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Consolidated single response interceptor (success + error)
+// Consolidated response interceptor with improved debugging
 apiClient.interceptors.response.use(
   (response) => {
-    // SUCCESS HANDLER
-    // Always return the response payload (axios response.data)
+    // Success handler - always return data
+    if (DEBUG_AUTH && response.config.url.includes('/auth')) {
+      console.log(`🔒 Auth Debug: Successful response from ${response.config.url}`);
+    }
+    
+    // If response includes a token, save it in localStorage
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      if (DEBUG_AUTH) {
+        console.log('🔒 Auth Debug: Saved new token to localStorage');
+      }
+    }
+    
+    // If response is from /auth/me, store user data
+    if (response.config.url.includes('/auth/me') && response.data && response.data.id) {
+      localStorage.setItem('user', JSON.stringify(response.data));
+      if (DEBUG_AUTH) {
+        console.log('🔒 Auth Debug: Saved user data to localStorage');
+      }
+    }
+    
     return response.data;
   },
   (error) => {
-    // ERROR HANDLER
-
-    // Axios wraps non-HTTP failures differently; normalize first
-    const { response } = error;
-
-    // ----- 401 Unauthorized handling -----
-    if (response && response.status === 401) {
-      // Clear invalid/expired token so subsequent calls don't reuse it
-      localStorage.removeItem('token');
-
-      // Only redirect if the SPA is not already on the login page
-      if (!window.location.pathname.includes('/login')) {
-        console.log('API: Unauthorized, redirecting to /login');
+    // Enhanced error logging for auth issues
+    if (DEBUG_AUTH && error.config && error.config.url.includes('/auth')) {
+      console.error('🔒 Auth Debug: Error response from', error.config.url);
+      console.error('🔒 Auth Debug: Status:', error.response?.status);
+      console.error('🔒 Auth Debug: Response data:', error.response?.data);
+    }
+    
+    // Handle 401 Unauthorized
+    if (error.response && error.response.status === 401) {
+      // Only clear token if the error is from an auth endpoint
+      if (error.config.url.includes('/auth')) {
+        if (DEBUG_AUTH) {
+          console.warn('🔒 Auth Debug: Unauthorized (401) - Clearing token');
+        }
+        localStorage.removeItem('token');
+        
+        // Don't clear user data here to prevent flashes during refresh
+        // That will be handled by the auth context if needed
+      }
+      
+      // Only redirect if not already on login page and it's a legitimate auth failure
+      // from an endpoint that should be authenticated
+      if (!window.location.pathname.includes('/login') && 
+          (error.config.url.includes('/auth/me') || error.config.url.includes('/api/users'))) {
+        if (DEBUG_AUTH) {
+          console.log('🔒 Auth Debug: Redirecting to login page');
+        }
+        // Save current location for redirect after login
+        localStorage.setItem('redirectAfterLogin', window.location.pathname);
         window.location.href = '/login';
       }
     }
-
-    // ----- Timeout & network failures -----
-    if (error.code === 'ECONNABORTED') {
-      console.error('Request timed out');
-      return Promise.reject({
-        message: 'Request timed out. Please try again.',
-        status: 408,
-        code: 'REQUEST_TIMEOUT',
-      });
-    }
-
-    if (!response) {
-      console.error('Network error:', error);
-      return Promise.reject({
-        message: 'Network error. Please check your connection and try again.',
-        status: 0,
-        code: 'NETWORK_ERROR',
-      });
-    }
-
-    // ----- Standardize error payload -----
+    
+    // Normalize error response
     const errorData = {
-      status: response.status,
-      message: response.data?.message || error.message || 'An error occurred',
-      code: response.data?.code || `HTTP_${response.status}`,
-      errors: response.data?.errors,
+      status: error.response?.status || 0,
+      message: error.response?.data?.message || error.message || 'An error occurred',
+      code: error.response?.data?.code || `HTTP_${error.response?.status || 'UNKNOWN'}`,
+      errors: error.response?.data?.errors,
     };
-
-    console.error('API Error Response:', errorData);
+    
     return Promise.reject(errorData);
   }
 );

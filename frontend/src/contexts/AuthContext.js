@@ -31,14 +31,14 @@ const authReducer = (state, action) => {
       if (!userPayload || !userPayload.id) {
         console.error('AuthContext: Received invalid user data (missing ID):', userPayload);
         
-        // Don't update the state with invalid data, but keep the previous valid state if it exists
+        // Clear token if the user data is invalid
+        localStorage.removeItem('token');
+        
+        // Don't update the state with invalid data - reset to logged out state
         return {
-          ...state,
+          ...initialState,
           loading: false,
-          error: 'Invalid user data received',
-          // Only clear user and auth if we don't already have a valid user
-          isAuthenticated: state.user?.id ? state.isAuthenticated : false,
-          user: state.user?.id ? state.user : null
+          error: 'Invalid user data received. Please log in again.'
         };
       }
       
@@ -95,18 +95,64 @@ export const AuthProvider = ({ children }) => {
   // Effect to check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
+      dispatch({ type: AUTH_LOADING });
+      
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (!token) {
+        console.log('AuthContext: No token found, initializing as logged out');
+        dispatch({ type: AUTH_INIT });
+        return;
+      }
+      
+      console.log('AuthContext: Token found in localStorage, attempting to restore session');
+      
+      // If we have a stored user, always use it first to prevent flickering
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.id) {
+            console.log('AuthContext: Restoring user from localStorage:', parsedUser.id);
+            dispatch({ type: AUTH_SUCCESS, payload: parsedUser });
+            
+            // We still try to validate with server, but don't wait for it
+            validateWithServer(token);
+            return;
+          }
+        } catch (error) {
+          console.error('AuthContext: Error parsing stored user:', error);
+          localStorage.removeItem('user');
+        }
+      }
+      
+      // If no valid stored user but we have a token, validate with server
+      await validateWithServer(token);
+    };
+    
+    // Helper function to validate token with server
+    const validateWithServer = async (token) => {
       try {
-        dispatch({ type: AUTH_LOADING });
-        // Use quietMode=true to prevent unnecessary error logging on expected auth failures
-        const currentUser = await authService.getCurrentUser(true);
-
-        if (currentUser && typeof currentUser === 'object') {
+        console.log('AuthContext: Validating token with server...');
+        const currentUser = await authService.getCurrentUser(false); // Not quiet mode
+        
+        if (currentUser && currentUser.id) {
+          console.log('AuthContext: Token valid, user authenticated:', currentUser.id);
+          
+          // Update localStorage with latest user data
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          
           dispatch({ type: AUTH_SUCCESS, payload: currentUser });
         } else {
+          console.warn('AuthContext: Token validation failed, no valid user returned');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           dispatch({ type: AUTH_INIT });
         }
       } catch (error) {
-        console.error('Initial auth check error:', error.message || error);
+        console.error('AuthContext: Error validating token:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         dispatch({ type: AUTH_INIT });
       }
     };
@@ -117,12 +163,16 @@ export const AuthProvider = ({ children }) => {
   // Updated login: accept (email, password) instead of a single credentials object
   const login = async (emailOrCredentials, maybePassword) => {
     dispatch({ type: AUTH_LOADING });
-
-    // Support backward-compatibility: if first arg is an object, extract fields; else treat args as email/password.
+    
+    // Support backward-compatibility: if first arg is an object, extract fields; else treat args as email/password
     let email, password;
+    
     if (typeof emailOrCredentials === 'object' && emailOrCredentials !== null) {
-      ({ email, password } = emailOrCredentials);
+      // First argument is a credentials object
+      email = emailOrCredentials.email;
+      password = emailOrCredentials.password;
     } else {
+      // First argument is email, second is password
       email = emailOrCredentials;
       password = maybePassword;
     }
@@ -134,6 +184,7 @@ export const AuthProvider = ({ children }) => {
       
       // Set token in localStorage
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(response.user)); // <-- Add this line
       
       // Update state with SUCCESS action
       dispatch({ type: AUTH_SUCCESS, payload: user });
@@ -181,13 +232,14 @@ export const AuthProvider = ({ children }) => {
   const registerUser = async (userData) => {
     try {
       dispatch({ type: AUTH_LOADING });
+      
       // Call the unified register API endpoint
       const registerResponse = await authService.registerUser(userData);
 
       if (registerResponse && registerResponse.success && registerResponse.user) {
-         // Use the user data from registration response
-         dispatch({ type: AUTH_SUCCESS, payload: registerResponse.user });
-         return registerResponse.user; // Return the registered user data
+        // Use the user data from registration response
+        dispatch({ type: AUTH_SUCCESS, payload: registerResponse.user });
+        return registerResponse.user; // Return the registered user data
       } else {
         throw new Error(registerResponse?.message || 'Registration failed');
       }
@@ -237,6 +289,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log(`AuthContext: Refreshing teams for user ${state.user.id}`);
       const teamsResponse = await apiClient.get(`/api/teams/user/${state.user.id}`);
+      
       if (teamsResponse && teamsResponse.teams) {
         if (teamsResponse.teams.length > 0) {
           const firstTeam = teamsResponse.teams[0];
@@ -246,6 +299,7 @@ export const AuthProvider = ({ children }) => {
         }
         return teamsResponse.teams;
       }
+      
       return [];
     } catch (err) {
       console.error('AuthContext: Error refreshing user teams:', err);

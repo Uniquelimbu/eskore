@@ -111,36 +111,69 @@ const authService = {
     }
   },
 
-  // Improved getCurrentUser with better error categorization and token pre-check
+  // Improved getCurrentUser with better error handling
   getCurrentUser: async (quietMode = false) => {
+    // Always add a cache-busting parameter for auth requests
+    const cacheParam = `_nocache=${Date.now()}`;
+    
     // Check if token exists first to avoid unnecessary API calls
     const token = localStorage.getItem('token');
     if (!token) {
       if (!quietMode) {
-        console.log('No authentication token found, skipping getCurrentUser API call');
+        console.log('Auth Service: No authentication token found, skipping getCurrentUser API call');
       }
       return null;
     }
     
     try {
-      const response = await apiClient.get('/api/auth/me');
-      return response;
-    } catch (error) {
-      // Categorize errors better
-      if (error.status === 401 || 
-          error.code === 'NO_TOKEN' || 
-          error.code === 'INVALID_TOKEN' ||
-          error.message?.includes('token')) {
-        // Only log if not in quiet mode
-        if (!quietMode) {
-          console.log('Auth token invalid or expired, returning null');
+      // Using cache-busting to ensure we don't get cached responses
+      const response = await apiClient.get(`/api/auth/me?${cacheParam}`);
+      
+      // Log the actual response data for debugging
+      console.log('Auth Service: /auth/me response data:', response);
+      
+      // Verify response has a valid user with ID
+      if (!response || typeof response !== 'object') {
+        console.error('Auth Service: Invalid response format from /auth/me:', response);
+        return null;
+      }
+      
+      // Check for user ID directly
+      if (!response.id) {
+        console.warn('Auth Service: User ID missing in /auth/me response:', response);
+        
+        // Fallback: If we don't have a proper user but the server accepted our token,
+        // try to get stored user data from localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            if (parsedUser && parsedUser.id) {
+              console.warn('Auth Service: Using localStorage user data as fallback');
+              return parsedUser;
+            }
+          } catch (parseError) {
+            console.error('Auth Service: Error parsing stored user:', parseError);
+          }
         }
         return null;
       }
       
-      // Network or server errors should be logged but still return null
-      // to prevent app from getting stuck in loading state
-      console.error('Error getting current user:', error);
+      // Store the user data in localStorage
+      localStorage.setItem('user', JSON.stringify(response));
+      
+      return response;
+    } catch (error) {
+      // Log the error for debugging
+      if (!quietMode) {
+        console.error('Auth Service: Error getting current user:', error);
+        
+        // Add specific logging for token issues
+        if (error.status === 401) {
+          console.warn('Auth Service: Invalid or expired token. Status 401 Unauthorized');
+        }
+      }
+      
       return null;
     }
   },

@@ -71,17 +71,19 @@ exports.getCurrentUser = async (req, res) => {
       throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
     }
 
-    const safeUserData = sanitizeUserData(user); // Sanitize before sending
+    // Convert Sequelize model to plain object before sanitizing
+    const userObject = user.get({ plain: true });
+    const safeUserData = sanitizeUserData(userObject); 
 
     // Enhance with roles and teams information similar to login
     let userRoles = [];
-    if (user.Roles && user.Roles.length > 0) {
-      userRoles = user.Roles.map(role => role.name);
+    if (userObject.Roles && userObject.Roles.length > 0) {
+      userRoles = userObject.Roles.map(role => role.name);
     }
     
     let userTeams = [];
-    if (user.Teams && user.Teams.length > 0) {
-      userTeams = user.Teams.map(team => ({
+    if (userObject.Teams && userObject.Teams.length > 0) {
+      userTeams = userObject.Teams.map(team => ({
         id: team.id,
         name: team.name,
         logoUrl: team.logoUrl,
@@ -89,14 +91,16 @@ exports.getCurrentUser = async (req, res) => {
       }));
     }
 
-    logger.info(`AUTH_CONTROLLER_GET_CURRENT_USER: Successfully fetched user data for userId: ${userId}`);
-    sendSafeJson(res, {
+    // Ensure ID is properly included in the response
+    const responseData = {
+      id: user.id, // Ensure ID is included
       ...safeUserData,
       roles: userRoles,
       teams: userTeams, // Include teams in the response
-      // Add any other necessary fields that are sent upon login/registration
-    });
+    };
 
+    logger.info(`AUTH_CONTROLLER_GET_CURRENT_USER: Successfully fetched user data for userId: ${userId}`);
+    return sendSafeJson(res, responseData);
   } catch (error) {
     logger.error(`AUTH_CONTROLLER_GET_CURRENT_USER: Error fetching current user: ${error.message}`, { error });
     if (error instanceof ApiError) {
