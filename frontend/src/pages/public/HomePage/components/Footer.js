@@ -41,10 +41,20 @@ const Footer = () => {
                   style={{ display: 'block' }}
                 />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a href="https://www.instagram.com/eskore_com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <img
                   src={`${process.env.PUBLIC_URL}/images/logos/instagram.png`}
                   alt="Instagram"
+                  className="social-icon"
+                  width={24}
+                  height={24}
+                  style={{ display: 'block' }}
+                />
+              </a>
+              <a href="https://www.linkedin.com/company/eskore-com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <img
+                  src={`${process.env.PUBLIC_URL}/images/logos/linkedin.png`}
+                  alt="LinkedIn"
                   className="social-icon"
                   width={24}
                   height={24}
