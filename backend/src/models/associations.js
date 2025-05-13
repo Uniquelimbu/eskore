@@ -12,6 +12,7 @@ const Tournament = require('./Tournament');
 const UserTournament = require('./UserTournament');
 const TeamTournament = require('./TeamTournament');
 const UserMatch = require('./UserMatch');
+const Formation = require('./Formation');
 
 function setupAssociations() {
   // Existing associations
@@ -80,6 +81,8 @@ function setupAssociations() {
       UserMatch.belongsTo(Team, { foreignKey: 'teamId' });
     }
   }
+
+  // Formation associations are now handled by Formation.associate and Team.associate
 }
 
 module.exports = { setupAssociations };

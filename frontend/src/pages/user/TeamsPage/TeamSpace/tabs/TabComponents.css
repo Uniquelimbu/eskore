@@ -713,3 +713,135 @@
   color: #cbd5e0; /* Slightly muted light text for paragraphs */
   line-height: 1.6;
 }
+
+/* Settings page styles */
+.settings-page {
+  color: white;
+}
+
+.settings-page h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+}
+
+.settings-section {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.settings-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #f0f0f0;
+}
+
+.settings-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.team-detail-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #cccccc;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #2d3748;
+  color: white;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+}
+
+.form-group input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.help-text {
+  font-size: 0.875rem;
+  color: #999999;
+  margin-top: 1rem;
+}
+
+.confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirmation-dialog {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+}
+
+.confirmation-dialog h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #f8f8f8;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-button, .danger-button {
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background-color: #4a5568;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #2d3748;
+}
+
+.danger-button {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.danger-button:hover {
+  background-color: #c53030;
+}
+
+.danger-button:disabled, .cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

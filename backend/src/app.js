@@ -45,6 +45,7 @@ const tournamentRoutes = require('./routes/tournamentRoutes'); // Restored
 const leagueRoutes = require('./routes/leagueRoutes'); // Restored
 const matchRoutes = require('./routes/matchRoutes'); // Restored
 const leaderboardRoutes = require('./routes/leaderboardRoutes'); // Restored
+const formationRoutes = require('./routes/formationRoutes'); // Add the new route
 
 const app = express();
 
@@ -146,15 +147,16 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'))); // Orig
 logger.info(`APP.JS: Static file serving for /uploads configured from ${path.join(__dirname, '../uploads')}`); // Restored
 
 // --- API Routes ---
-logger.info('APP.JS: Configuring API routes...'); // Restored
-app.use('/api/auth', authRoutes); // Restored
-app.use('/api/users', userRoutes); // Restored
-app.use('/api/teams', teamRoutes); // Restored
-app.use('/api/tournaments', tournamentRoutes); // Restored
-app.use('/api/leagues', leagueRoutes); // Restored
-app.use('/api/matches', matchRoutes); // Restored
-app.use('/api/leaderboards', leaderboardRoutes); // Restored
-logger.info('APP.JS: API routes configured.'); // Restored
+logger.info('APP.JS: Configuring API routes...'); 
+app.use('/api/auth', authRoutes); 
+app.use('/api/users', userRoutes); 
+app.use('/api/teams', teamRoutes); 
+app.use('/api/tournaments', tournamentRoutes); 
+app.use('/api/leagues', leagueRoutes); 
+app.use('/api/matches', matchRoutes); 
+app.use('/api/leaderboards', leaderboardRoutes); 
+app.use('/api/formations', formationRoutes); // Confirm this line is present and correct
+logger.info('APP.JS: API routes configured.'); 
 
 // --- SERVE FRONTEND BUILD IN PRODUCTION ---
 if (process.env.NODE_ENV === 'production') {
@@ -180,7 +182,8 @@ if (process.env.NODE_ENV === 'production') {
 // No need for app.options - the main CORS middleware will handle preflight requests
 app.get('/api/ping', (req, res) => { // Restored
   logger.info('APP.JS: GET /api/ping received');
-  res.status(200).json({ success: true, message: 'pong', timestamp: new Date() });});
+  res.status(200).json({ success: true, message: 'pong', timestamp: new Date() });
+});
 
 // Handle 404 for API routes specifically
 app.use('/api', (req, res, next) => { // Restored API 404 Handler

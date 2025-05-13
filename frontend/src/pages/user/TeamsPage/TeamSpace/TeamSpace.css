@@ -720,3 +720,297 @@
   color: #e2e8f0;
   border: 1px solid #4a5568;
 }
+
+/* Danger Zone Styling */
+.danger-zone {
+  background-color: rgba(229, 62, 62, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+  border-left: 4px solid #e53e3e;
+  margin-bottom: 10px; /* Add margin to separate from the button */
+}
+
+.danger-zone h3 {
+  color: #e53e3e;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.danger-zone p {
+  color: #cbd5e0;
+  margin-bottom: 0; /* No bottom margin as the button is now outside */
+  line-height: 1.6;
+}
+
+/* Leave Team Button Container and Button */
+.leave-team-button-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+/* Enhanced Leave Team Button Styling */
+.leave-team-button {
+  padding: 12px 20px;
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(229, 62, 62, 0.2);
+  width: auto;
+}
+
+.leave-team-button:hover {
+  background-color: #c53030;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(229, 62, 62, 0.3);
+}
+
+.leave-team-button:active {
+  transform: translateY(0);
+}
+
+.leave-team-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Danger Zone Styling - Completely redesigned */
+.danger-zone-section {
+  background-color: rgba(229, 62, 62, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
+  margin-top: 30px !important;
+  border-left: 4px solid #e53e3e !important;
+  margin-bottom: 20px !important; /* Space between danger zone and button */
+}
+
+.danger-zone-heading {
+  color: #e53e3e !important;
+  margin-top: 0 !important;
+  margin-bottom: 15px !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-bottom: none !important; /* Override any border from settings-section h3 */
+  padding-bottom: 0 !important;
+}
+
+.danger-zone-text {
+  color: #cbd5e0 !important;
+  margin-bottom: 0 !important; /* No bottom margin as the button is outside */
+  line-height: 1.6 !important;
+}
+
+/* Leave Button Container - Completely separated */
+.leave-team-button-wrapper {
+  display: flex !important;
+  justify-content: flex-start !important;
+  margin-top: 20px !important;
+  margin-bottom: 30px !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Leave Team Button Styling - with size reductions */
+.leave-team-button {
+  padding: 10px 16px !important; /* Reduced padding */
+  background-color: #e53e3e !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important; /* Smaller font */
+  cursor: pointer !important;
+  display: inline-flex !important; /* Changed to inline-flex */
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important; /* Reduced gap */
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(229, 62, 62, 0.2) !important; /* Reduced shadow */
+  width: auto !important;
+  max-width: 200px !important; /* Set maximum width */
+  margin: 0 !important; /* Reset any margins */
+  position: static !important; /* Ensure no positioning issues */
+}
+
+.leave-team-button:hover {
+  background-color: #c53030 !important;
+  transform: translateY(-1px) !important; /* Reduced transform */
+  box-shadow: 0 3px 6px rgba(229, 62, 62, 0.3) !important;
+}
+
+.leave-team-button:active {
+  transform: translateY(0) !important;
+}
+
+.leave-team-button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.leave-team-button i {
+  font-size: 0.9rem !important; /* Match the text size */
+}
+
+/* Form styling enhancements */
+.team-settings-form {
+  margin-top: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.save-button {
+  padding: 12px 24px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover {
+  background-color: #3182ce;
+  transform: translateY(-2px);
+}
+
+.save-button:active {
+  transform: translateY(0);
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Success and error messages */
+.save-success-message,
+.save-error-message {
+  padding: 12px 16px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-success-message {
+  background-color: rgba(72, 187, 120, 0.1);
+  color: #48bb78;
+  border-left: 4px solid #48bb78;
+}
+
+.save-error-message {
+  background-color: rgba(229, 62, 62, 0.1);
+  color: #e53e3e;
+  border-left: 4px solid #e53e3e;
+}
+
+/* Loading state */
+.loading-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+/* Settings page specific */
+.settings-header {
+  margin-bottom: 20px;
+}
+
+.settings-header h2 {
+  font-size: 1.8rem;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.settings-section {
+  background-color: #232b3a;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.settings-section h3 {
+  font-size: 1.4rem;
+  color: #e2e8f0;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #4a5568;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

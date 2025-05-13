@@ -34,7 +34,10 @@
     "create:sample-data": "node scripts/db/createSampleData.js",
     "test:auth": "node scripts/test/authTest.js",
     "test:serialization": "node scripts/test/serializationTest.js",
-    "run:tests": "node scripts/test/runTests.js all"
+    "run:tests": "node scripts/test/runTests.js all",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "migrate:status": "npx sequelize-cli db:migrate:status"
   },
   "keywords": [
     "sports",

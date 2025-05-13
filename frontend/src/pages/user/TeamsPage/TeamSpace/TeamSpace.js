@@ -68,7 +68,8 @@ const TeamSpace = () => {
       }
     };
 
-    validateAndRefreshUser();
+    validateAndRefreshUser(); // Call the function
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, verifyUserData]);
 
@@ -77,36 +78,50 @@ const TeamSpace = () => {
     const fetchTeamData = async () => {
       // Only proceed if user is authenticated with a valid ID
       if (!user || !user.id) {
-        console.warn('TeamSpace: Skipping team data fetch due to missing user ID');
+        console.warn('TeamSpace: Skipping team data fetch due to missing user ID. User:', user);
+        setLoading(false); // Ensure loading is stopped if we return early
         return;
       }
       
       try {
         setLoading(true);
-        console.log(`Fetching team data for ID: ${teamId}`);
+        console.log(`Fetching team data for ID: ${teamId} with User ID: ${user.id}`);
         
         const response = await apiClient.get(`/api/teams/${teamId}`);
         
-        // Debug team response structure
-        console.log('Team data response:', response);
+        console.log('Team data raw response:', response);
         
         if (!response || typeof response !== 'object') {
           console.error('Invalid team response format:', response);
           setError('Invalid team data received');
+          setTeam(null); // Clear previous team data
+          setUserRole(null); // Clear previous role
           setLoading(false);
           return;
         }
         
-        // apiClient already returns the data part of the response
         setTeam(response);
         
-        // Determine user's role in the team
-        if (Array.isArray(response.Users)) {
-          const userMembership = response.Users.find(u => u.id === user?.id);
-          console.log('User membership found:', userMembership);
-          setUserRole(userMembership?.UserTeam?.role || null);
+        // Determine user's role in the team from team data
+        let userRoleFound = null;
+        if (response.Users && Array.isArray(response.Users)) {
+          console.log(`Current user ID from context: ${user?.id} (type: ${typeof user?.id})`);
+          console.log('Team users from API:', JSON.stringify(response.Users.map(u => ({id: u.id, type: typeof u.id, role: u.UserTeam?.role}))));
+
+          const userMembership = response.Users.find(
+            u => String(u.id) === String(user?.id) // Type-insensitive comparison
+          );
+          
+          console.log('User membership found (after string comparison):', userMembership);
+          
+          if (userMembership && userMembership.UserTeam) {
+            console.log(`User role from UserTeam: '${userMembership.UserTeam.role}'`);
+            userRoleFound = userMembership.UserTeam.role;
+          } else {
+            console.warn('User not found in team members list or UserTeam data missing in team response.');
+          }
         } else {
-          console.warn('No Users array in team response');
+          console.warn('No Users array in team response or Users is not an array.');
         }
         
         // Get all team members
@@ -114,9 +129,57 @@ const TeamSpace = () => {
         const membersResponse = await apiClient.get(`/api/teams/${teamId}/members`);
         console.log('Members response:', membersResponse);
         
+        // Try to find user role in members data if not found in team data
+        if (!userRoleFound && membersResponse && membersResponse.members) {
+          const currentUserInMembers = membersResponse.members.find(
+            m => String(m.id) === String(user?.id)
+          );
+          
+          console.log('Current user in members:', currentUserInMembers);
+          
+          if (currentUserInMembers) {
+            // Check if UserTeam is present in member data
+            if (currentUserInMembers.UserTeam && currentUserInMembers.UserTeam.role) {
+              userRoleFound = currentUserInMembers.UserTeam.role;
+              console.log(`Found user role from members response: ${userRoleFound}`);
+            } 
+            // Fallback: check if separate role property exists
+            else if (currentUserInMembers.role) {
+              userRoleFound = currentUserInMembers.role;
+              console.log(`Found user role direct property from members: ${userRoleFound}`);
+            }
+            // Special case: if user is team creator, they should be manager
+            else if (response.createdBy === user.id || response.ownerId === user.id) {
+              userRoleFound = 'manager';
+              console.log('User is team creator, setting role to manager');
+            }
+            // If only one member and that's the current user, likely the owner/manager
+            else if (membersResponse.members.length === 1) {
+              userRoleFound = 'manager';
+              console.log('User is the only team member, assuming role is manager');
+            }
+          }
+        }
+        
+        // Update state with found role
+        setUserRole(userRoleFound);
+        
         // Update members array from response
         if (membersResponse && membersResponse.members) {
-          setMembers(membersResponse.members);
+          // Ensure each member has role information
+          const processedMembers = membersResponse.members.map(member => {
+            // If this is the current user and we found a role, make sure it's included
+            if (String(member.id) === String(user?.id) && userRoleFound) {
+              return {
+                ...member,
+                role: userRoleFound, // Add role as direct property for compatibility
+                UserTeam: { ...member.UserTeam, role: userRoleFound } // Update nested structure if it exists
+              };
+            }
+            return member;
+          });
+          
+          setMembers(processedMembers);
         } else {
           console.warn('No members array in response:', membersResponse);
           setMembers([]);
@@ -140,12 +203,16 @@ const TeamSpace = () => {
       }
     };
     
-    if (teamId && user && user.id) {
+    if (teamId && user && user.id) { // Ensure user.id is explicitly checked here
       fetchTeamData();
+    } else if (teamId && (!user || !user.id)) {
+      console.log('TeamSpace: Waiting for user data to be validated before fetching team data.');
+      // setLoading(true); // Optionally keep loading true until user is validated
     }
-  }, [teamId, user, user?.id]);
+  }, [teamId, user]); // Updated dependency array to include user
   
-  const isManager = userRole === 'manager';
+  const isManager = userRole === 'manager' || userRole === 'owner';
+  console.log(`TeamSpace calculated isManager: ${isManager} (userRole: '${userRole}')`); // Add log for isManager calculation
   const otherMembers = members.filter(m => m.id !== user?.id);
   
   const handleInviteMember = () => {
@@ -201,6 +268,7 @@ const TeamSpace = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleLeaveTeam = async () => {
     // Case 1: Manager with other members -> must transfer role first
     if (isManager && members.length > 1) {
@@ -338,14 +406,7 @@ const TeamSpace = () => {
   return (
     <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
       <div className="team-space-header">
-        {/* Add Leave Team button at the top right */}
-        <button 
-          className="leave-team-button"
-          onClick={handleLeaveTeam}
-          title="Leave this team"
-        >
-          <i className="fas fa-sign-out-alt"></i> Leave Team
-        </button>
+        {/* Remove Leave Team button from top bar */}
         
         <div className="team-identity-section">
           {team.logoUrl ? (
@@ -381,24 +442,14 @@ const TeamSpace = () => {
               <button className="action-button primary" onClick={handleInviteMember}>
                 <i className="fas fa-user-plus"></i> Invite Players
               </button>
-              <button className="action-button secondary">
+              <button className="action-button secondary" onClick={() => navigateTo('settings')}>
                 <i className="fas fa-cog"></i> Team Settings
               </button>
-              <button 
-                className="action-button danger"
-                onClick={toggleDeleteConfirm}
-                disabled={isDeleting || members.length > 1}
-                title={members.length > 1 ? "Remove all members first" : "Delete team (team will be deleted)"}
-              >
-                <i className="fas fa-trash-alt"></i> Delete Team
-              </button>
-              {/* Remove Leave Team button from here */}
+              {/* Remove Delete Team button from here */}
             </>
           ) : (
-            // Remove Leave Team button from here - it's now positioned at the top right
             <div style={{ height: '1px' }}></div> // Placeholder div to maintain layout spacing
           )}
-
         </div>
       </div>
       

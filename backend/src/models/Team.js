@@ -8,6 +8,23 @@ class Team extends Model {
   async validatePassword(password) {
     return await bcrypt.compare(password, this.passwordHash);
   }
+
+  // Static associate method
+  static associate(models) {
+    // Team can have many Formations
+    this.hasMany(models.Formation, {
+      foreignKey: 'teamId',
+      as: 'formations' // This alias should be unique for Team's associations
+    });
+    // Add other associations for Team here if needed
+    // e.g., this.belongsToMany(models.User, { through: models.UserTeam, foreignKey: 'teamId', otherKey: 'userId' });
+    // this.hasMany(models.UserTeam, { foreignKey: 'teamId' });
+    // this.hasMany(models.Match, { as: 'homeMatches', foreignKey: 'homeTeamId' });
+    // this.hasMany(models.Match, { as: 'awayMatches', foreignKey: 'awayTeamId' });
+    // this.belongsToMany(models.Tournament, { through: models.TeamTournament, foreignKey: 'teamId', otherKey: 'tournamentId' });
+    // this.hasMany(models.TeamTournament, { foreignKey: 'teamId' });
+    // this.hasMany(models.UserMatch, { foreignKey: 'teamId' });
+  }
 }
 
 Team.init({
