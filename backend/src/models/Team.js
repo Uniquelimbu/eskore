@@ -16,6 +16,18 @@ class Team extends Model {
       foreignKey: 'teamId',
       as: 'formations' // This alias should be unique for Team's associations
     });
+    // Define association to User through UserTeam
+    this.belongsToMany(models.User, {
+      through: models.UserTeam, // Junction table
+      foreignKey: 'teamId',    // Foreign key in UserTeam that points to Team
+      otherKey: 'userId',      // Foreign key in UserTeam that points to User
+      as: 'Users'              // Alias for the association (team.Users)
+    });
+    // Team has many UserTeam entries (optional, but can be useful for direct access)
+    this.hasMany(models.UserTeam, {
+      foreignKey: 'teamId',
+      as: 'TeamMemberships'    // Alias for team.getTeamMemberships()
+    });
     // Add other associations for Team here if needed
     // e.g., this.belongsToMany(models.User, { through: models.UserTeam, foreignKey: 'teamId', otherKey: 'userId' });
     // this.hasMany(models.UserTeam, { foreignKey: 'teamId' });

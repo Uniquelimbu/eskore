@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const { Formation, UserTeam } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
-const Formation = require('../models/Formation');
-const Team = require('../models/Team');
-const UserTeam = require('../models/UserTeam');
+const { validate } = require('../validation');
+const { param } = require('express-validator');
+const log = require('../utils/log');
+
+// Debug route for testing
+router.get('/test', (req, res) => {
+  log.info('Formation routes test endpoint hit');
+  res.json({ message: 'Formation routes are working' });
+});
 
 /**
  * @swagger
@@ -13,7 +20,6 @@ const UserTeam = require('../models/UserTeam');
  *   description: Team formation management
  */
 
-// GET a team's formation
 /**
  * @swagger
  * /api/formations/{teamId}:
@@ -23,42 +29,51 @@ const UserTeam = require('../models/UserTeam');
  *     parameters:
  *       - in: path
  *         name: teamId
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: Numeric ID of the team
+ *         description: Team ID
  *     responses:
  *       200:
- *         description: Formation data retrieved successfully
+ *         description: Returns the team formation
  *       404:
  *         description: Formation not found
  */
-router.get('/:teamId', catchAsync(async (req, res) => {
-  const { teamId } = req.params;
-  
-  // Check if the team exists
-  const team = await Team.findByPk(teamId);
-  if (!team) {
-    throw new ApiError('Team not found', 404, 'TEAM_NOT_FOUND');
-  }
-  
-  const formation = await Formation.findOne({
-    where: { teamId }
-  });
-  
-  // Instead of throwing a 404 when formation doesn't exist, return an empty default
-  if (!formation) {
-    return res.json({
-      id: null,
-      teamId,
-      schema_json: {}
-    });
-  }
+router.get('/:teamId', 
+  validate([
+    param('teamId').isInt().withMessage('Team ID must be an integer').toInt()
+  ]),
+  catchAsync(async (req, res) => {
+    const { teamId } = req.params;
+    
+    log.info(`GET formation for team ${teamId}`);
+    
+    try {
+      let formation = await Formation.findOne({ 
+        where: { teamId } 
+      });
+      
+      // If no formation exists, create a default 4-3-3 formation
+      if (!formation) {
+        log.info(`No formation found for team ${teamId}, creating default 4-3-3 formation`);
+        try {
+          formation = await Formation.createDefaultFormation(teamId);
+          log.info(`Created default 4-3-3 formation for team ${teamId}`);
+        } catch (error) {
+          log.error(`Failed to create default formation for team ${teamId}:`, error);
+          throw new ApiError('Failed to create default formation', 500, 'SERVER_ERROR');
+        }
+      }
+      
+      log.info(`Returning formation for team ${teamId}: ${JSON.stringify(formation ? { id: formation.id, teamId: formation.teamId } : 'null')}`);
+      return res.json(formation);
+    } catch (error) {
+      log.error(`Error getting formation for team ${teamId}:`, error);
+      throw error;
+    }
+  })
+);
 
-  return res.json(formation);
-}));
-
-// PUT (update or create) a team's formation
 /**
  * @swagger
  * /api/formations/{teamId}:
@@ -70,10 +85,10 @@ router.get('/:teamId', catchAsync(async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: teamId
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: Numeric ID of the team
+ *         description: Team ID
  *     requestBody:
  *       required: true
  *       content:
@@ -88,48 +103,69 @@ router.get('/:teamId', catchAsync(async (req, res) => {
  *         description: Formation updated successfully
  *       201:
  *         description: Formation created successfully
+ *       401:
+ *         description: Unauthorized
  *       403:
- *         description: Unauthorized - not a team manager
+ *         description: Forbidden - not a team manager
  */
-router.put('/:teamId', requireAuth, catchAsync(async (req, res) => {
-  const { teamId } = req.params;
-  const { schema_json } = req.body;
-  const userId = req.user.userId; // Changed from req.user.id to req.user.userId
-  
-  // Check if user is a manager of this team
-  const userTeam = await UserTeam.findOne({
-    where: {
-      userId,
-      teamId,
-      role: ['manager', 'assistant_manager', 'coach'] // Allow managers, assistant managers and coaches
+router.put('/:teamId', 
+  requireAuth,
+  validate([
+    param('teamId').isInt().withMessage('Team ID must be an integer').toInt()
+  ]),
+  catchAsync(async (req, res) => {
+    const { teamId } = req.params;
+    const { schema_json } = req.body;
+    
+    log.info(`PUT formation for team ${teamId}`);
+    
+    try {
+      // Check if user has permission (is a manager of this team)
+      if (req.user && req.user.userId) {
+        const userTeam = await UserTeam.findOne({
+          where: {
+            userId: req.user.userId,
+            teamId,
+            role: 'manager' // Only managers can update formations
+          }
+        });
+        
+        if (!userTeam) {
+          log.warn(`User ${req.user.userId} attempted to update formation for team ${teamId} but is not a manager`);
+          throw new ApiError('Only team managers can update formations', 403, 'FORBIDDEN');
+        }
+      } else {
+        throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
+      }
+
+      // Check if formation exists
+      let formation = await Formation.findOne({ where: { teamId } });
+      let statusCode = 200;
+      
+      if (formation) {
+        // Update existing formation
+        formation.schema_json = schema_json;
+        await formation.save();
+        log.info(`Updated formation for team ${teamId}`);
+      } else {
+        // Create new formation
+        formation = await Formation.create({
+          teamId,
+          schema_json
+        });
+        statusCode = 201;
+        log.info(`Created new formation for team ${teamId}`);
+      }
+      
+      return res.status(statusCode).json(formation);
+    } catch (error) {
+      log.error(`Error saving formation for team ${teamId}:`, error);
+      throw error;
     }
-  });
-  
-  if (!userTeam) {
-    throw new ApiError('You must be a team manager, assistant manager, or coach to update formations', 403, 'FORBIDDEN');
-  }
-  
-  // Check if team exists
-  const team = await Team.findByPk(teamId);
-  if (!team) {
-    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-  
-  // Find or create the formation
-  const [formation, created] = await Formation.findOrCreate({
-    where: { teamId },
-    defaults: {
-      schema_json
-    }
-  });
-  
-  // If formation exists, update it
-  if (!created) {
-    formation.schema_json = schema_json;
-    await formation.save();
-  }
-  
-  return res.status(created ? 201 : 200).json(formation);
-}));
+  })
+);
+
+// Log that formation routes are loaded
+log.info('Formation routes loaded successfully');
 
 module.exports = router;

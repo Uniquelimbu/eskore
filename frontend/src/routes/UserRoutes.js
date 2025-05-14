@@ -30,7 +30,7 @@ const UserRoutes = () => {
         <Route path="teams/:teamId/*" element={<TeamSpace />}>
           <Route path="overview" element={null} /> {/* These are handled inside TeamSpace */}
           <Route path="squad" element={null} />
-          <Route path="formation" element={null} />
+          <Route path="formation" element={<Formation />} />
           <Route path="calendar" element={null} />
           <Route path="chat" element={null} />
           <Route path="settings" element={null} />

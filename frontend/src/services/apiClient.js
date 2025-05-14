@@ -3,6 +3,9 @@ import axios from 'axios';
 // Define the base URL for the API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Add this line for debugging:
+console.log('🚀 apiClient: API_BASE_URL is set to:', API_BASE_URL);
+
 // Debug flag - can toggle this for auth debugging
 const DEBUG_AUTH = true;
 
@@ -122,6 +125,12 @@ apiClient.interceptors.response.use(
       code: error.response?.data?.code || `HTTP_${error.response?.status || 'UNKNOWN'}`,
       errors: error.response?.data?.errors,
     };
+
+    // Specifically identify network errors (like ERR_CONNECTION_REFUSED)
+    if (!error.response && error.message === 'Network Error') {
+      errorData.message = 'Network connection refused. Please ensure the server is running.';
+      errorData.code = 'NETWORK_ERROR';
+    }
     
     return Promise.reject(errorData);
   }

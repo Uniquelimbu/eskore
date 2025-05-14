@@ -94,25 +94,55 @@ const useFormationStore = create((set, get) => ({
     set({ teamId, loading: true });
     try {
       // Try to load existing formation from API
+      console.log(`Attempting to fetch formation for team ${teamId}`);
       let response;
       try {
-        // Use relative path instead of absolute URL
+        // Ensure ALL axios requests use the /api/formations/ prefix:
         response = await axios.get(`/api/formations/${teamId}`);
+        console.log(`Formation API response received for team ${teamId}:`, 
+          response.status === 200 ? 'Success' : `Unexpected status: ${response.status}`);
       } catch (error) {
         // If 404, the formation doesn't exist yet - we'll create one
         if (error.response && error.response.status === 404) {
           console.log('Formation API endpoint not found (404), creating default formation');
-          // Instead of just using dummy players, create a default formation in the backend
-          await get().createDefaultFormation(teamId);
-          // Now set dummy players in the UI while we wait for backend to process
-          get().setDummyPlayers();
-          set({ loading: false, saved: true });
-          return;
+          // Create a default formation in the backend
+          const defaultCreated = await get().createDefaultFormation(teamId);
+          
+          if (defaultCreated) {
+            // Try to fetch again after creating
+            try {
+              response = await axios.get(`/api/formations/${teamId}`);
+              console.log(`Retrieved newly created formation for team ${teamId}`);
+            } catch (secondFetchError) {
+              console.error('Failed to fetch newly created formation:', secondFetchError);
+              // Fall back to dummy players
+              get().setDummyPlayers();
+              set({ loading: false, saved: true });
+              return;
+            }
+          } else {
+            // Fall back to dummy players if creation failed
+            get().setDummyPlayers();
+            set({ loading: false, saved: true });
+            return;
+          }
+        } else {
+          // Log detailed error information
+          console.error('Error fetching formation:', error);
+          if (error.response) {
+            console.error('Response data:', error.response.data);
+            console.error('Response status:', error.response.status);
+            console.error('Response headers:', error.response.headers);
+          } else if (error.request) {
+            console.error('Request made but no response received');
+          } else {
+            console.error('Error message:', error.message);
+          }
+          throw error; // Re-throw other errors
         }
-        throw error; // Re-throw other errors
       }
       
-      if (response.data && response.data.schema_json) {
+      if (response && response.data && response.data.schema_json) {
         const { preset, starters, subs } = response.data.schema_json;
         
         // Check if starters and subs exist and have content, otherwise use default data
@@ -151,7 +181,7 @@ const useFormationStore = create((set, get) => ({
   
   // New method: Create default formation in the backend
   createDefaultFormation: async (teamId) => {
-    if (!teamId) return;
+    if (!teamId) return false;
     
     try {
       // Use the current preset and dummy players to create a default formation
@@ -167,15 +197,27 @@ const useFormationStore = create((set, get) => ({
       
       console.log('Creating default formation for team:', teamId);
       
-      // PUT to the formation endpoint to create the formation
-      await axios.put(`/api/formations/${teamId}`, {
+      // Ensure ALL axios requests use the /api/formations/ prefix:
+      const response = await axios.put(`/api/formations/${teamId}`, {
         schema_json: formationSchema
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
-      console.log('Default formation created successfully');
-      return true;
+      if (response.status === 200 || response.status === 201) {
+        console.log('Default formation created successfully');
+        return true;
+      } else {
+        console.warn(`Unexpected response status: ${response.status}`);
+        return false;
+      }
     } catch (error) {
       console.error('Failed to create default formation:', error);
+      if (error.response) {
+        console.error('Server responded with error:', error.response.status, error.response.data);
+      }
       return false;
     }
   },
@@ -709,16 +751,37 @@ const useFormationStore = create((set, get) => ({
         updated_at: new Date().toISOString()
       };
       
-      // Use relative path instead of absolute URL
-      await axios.put(`/api/formations/${teamId}`, { schema_json: schemaJson });
+      console.log('Saving formation for team:', teamId);
       
-      set({ saved: true, loading: false });
+      // Ensure ALL axios requests use the /api/formations/ prefix:
+      const response = await axios.put(`/api/formations/${teamId}`, { schema_json: schemaJson });
+      
+      if (response.status === 200 || response.status === 201) {
+        console.log('Formation saved successfully');
+        set({ saved: true, loading: false });
+      } else {
+        throw new Error('Unexpected response from server');
+      }
     } catch (error) {
       console.error('Failed to save formation:', error);
+      
+      // Enhanced error logging for debugging
+      if (error.response) {
+        console.error(`Server responded with status ${error.response.status}:`, error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Check if backend is running.');
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+      
+      // Continue with local state rather than failing completely
       set({ loading: false });
+      
+      // Return the error so it can be handled by the calling component if needed
+      return error;
     }
   },
-  
+
   // Export formation as PNG
   exportAsPNG: async (stageRef) => {
     if (!stageRef.current) return;

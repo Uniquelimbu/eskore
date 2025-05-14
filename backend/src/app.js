@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser'); // Restored
 const morgan = require('morgan'); // Restored
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
+const compression = require('compression');
 
 const logger = require('./utils/logger'); // Restored
 logger.info('APP.JS: Application starting...'); // Restored
@@ -146,6 +148,14 @@ logger.info('APP.JS: Configuring static file serving for /uploads...'); // Resto
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'))); // Original path restored
 logger.info(`APP.JS: Static file serving for /uploads configured from ${path.join(__dirname, '../uploads')}`); // Restored
 
+// Load models through the index.js file to ensure proper initialization
+try {
+  const models = require('./models');
+  logger.info('Models loaded successfully');
+} catch (error) {
+  logger.error('Error loading models:', error);
+}
+
 // --- API Routes ---
 logger.info('APP.JS: Configuring API routes...'); 
 app.use('/api/auth', authRoutes); 
@@ -155,7 +165,12 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/leagues', leagueRoutes); 
 app.use('/api/matches', matchRoutes); 
 app.use('/api/leaderboards', leaderboardRoutes); 
-app.use('/api/formations', formationRoutes); // Confirm this line is present and correct
+
+// Add debug log before registering formation routes
+logger.info('APP.JS: Registering formation routes at /api/formations'); 
+app.use('/api/formations', formationRoutes);
+logger.info('APP.JS: Formation routes registered successfully');
+
 logger.info('APP.JS: API routes configured.'); 
 
 // --- SERVE FRONTEND BUILD IN PRODUCTION ---

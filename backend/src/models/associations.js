@@ -82,7 +82,28 @@ function setupAssociations() {
     }
   }
 
-  // Formation associations are now handled by Formation.associate and Team.associate
+  // Set up Formation-Team association with debug logging
+  try {
+    console.log('Setting up Formation-Team association');
+    Formation.belongsTo(Team, { foreignKey: 'teamId' });
+    Team.hasOne(Formation, { foreignKey: 'teamId' });
+    console.log('Formation-Team association established successfully');
+  } catch (error) {
+    console.error('Error setting up Formation-Team association:', error);
+  }
+
+  // Team hooks with better error handling
+  Team.afterCreate(async (team, options) => {
+    try {
+      // Create default 4-3-3 formation for the new team
+      console.log(`Team afterCreate hook triggered for team ID: ${team.id}`);
+      await Formation.createDefaultFormation(team.id);
+      console.log(`Created default 4-3-3 formation for team ID: ${team.id}`);
+    } catch (error) {
+      console.error(`Failed to create default formation for team ${team.id}:`, error);
+      // Don't throw error to prevent blocking team creation
+    }
+  });
 }
 
 module.exports = { setupAssociations };

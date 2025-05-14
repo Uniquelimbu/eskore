@@ -51,6 +51,39 @@
   background-color: #2563eb;
 }
 
+/* Save button styles */
+.save-button {
+  background-color: #facc15;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  font-weight: 500;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #eab308;
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.save-button.saved {
+  background-color: #4ade80;
+}
+
+/* Save status indicator animation */
+.save-status {
+  color: #facc15;
+  animation: pulse 2s infinite;
+  font-size: 0.875rem;
+  margin-left: 0.5rem;
+}
+
 /* Pitch Styles */
 .pitch-container {
   width: 100%;

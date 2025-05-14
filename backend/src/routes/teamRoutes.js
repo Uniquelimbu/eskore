@@ -194,21 +194,55 @@ router.get('/search', catchAsync(async (req, res) => {
 router.get('/:id', validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
   log.info(`TEAMROUTES.JS (GET /:id): Fetching team with ID: ${req.params.id}`);
   const { id } = req.params;
-  const team = await Team.findByPk(id, {
+  const teamInstance = await Team.findByPk(id, {
     include: [
       {
         model: User,
-        through: { attributes: ['role'] },
-        attributes: ['id', 'firstName', 'lastName', 'email']
+        as: 'Users', // Use the alias defined in Team's association
+        attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl'], // Attributes from User model
+        through: {
+          // model: UserTeam, // Sequelize infers this from the belongsToMany setup
+          attributes: ['role', 'status', 'joinedAt'] // Attributes from UserTeam junction table
+        }
       }
+      // Add other direct associations of Team here if needed, e.g., Formations
+      // { model: Formation, as: 'formations' }
     ]
   });
   
-  if (!team) {
+  if (!teamInstance) {
     throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
   }
+
+  // Convert to plain object to safely manipulate
+  const teamData = teamInstance.toJSON();
+
+  // Ensure Users array and its contents are as expected for the frontend
+  if (teamData.Users && Array.isArray(teamData.Users)) {
+    teamData.Users = teamData.Users.map(user => {
+      // 'user' here is an object from teamInstance.toJSON().Users
+      // It should have User attributes directly, and UserTeam attributes nested under 'UserTeam' property.
+      if (!user || user.id === null || user.id === undefined) {
+        log.warn(`TEAMROUTES.JS (GET /:id): User object in teamData.Users has null or undefined id. User data: ${JSON.stringify(user)}`);
+        return null; // Skip this user if ID is missing
+      }
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profileImageUrl: user.profileImageUrl,
+        // The 'through' attributes are typically nested under the name of the junction model (UserTeam)
+        UserTeam: user.UserTeam ? { 
+            role: user.UserTeam.role,
+            status: user.UserTeam.status,
+            joinedAt: user.UserTeam.joinedAt
+        } : null
+      };
+    }).filter(user => user !== null); // Remove any null entries from problematic users
+  }
   
-  return sendSafeJson(res, team);
+  return sendSafeJson(res, teamData);
 }));
 
 /**
@@ -409,6 +443,28 @@ router.post('/',
       role: 'manager' // Always set as manager for creator
     });
     log.info(`TEAMROUTES.JS (POST /): UserTeam.create successful. Team and ownership link created.`);
+
+    try {
+      // After team is created and before sending response
+      if (newTeam && newTeam.id) {
+        // Check if Formation model is loaded
+        const Formation = require('../models/Formation');
+        
+        // Create default formation if it doesn't exist yet
+        // This is a fallback in case the afterCreate hook didn't run
+        const existingFormation = await Formation.findOne({ where: { teamId: newTeam.id } });
+        if (!existingFormation) {
+          await Formation.createDefaultFormation(newTeam.id);
+          console.log(`Created default 4-3-3 formation for new team ID: ${newTeam.id}`);
+        }
+      }
+      
+      // ...existing response code...
+    } catch (error) {
+      console.error("Error creating default formation:", error);
+      // Continue with the response even if formation creation fails
+      // ...existing response code...
+    }
 
     return sendSafeJson(res, {
       success: true,

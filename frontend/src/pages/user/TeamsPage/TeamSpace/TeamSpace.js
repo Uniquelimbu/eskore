@@ -108,11 +108,16 @@ const TeamSpace = () => {
           console.log(`Current user ID from context: ${user?.id} (type: ${typeof user?.id})`);
           console.log('Team users from API:', JSON.stringify(response.Users.map(u => ({id: u.id, type: typeof u.id, role: u.UserTeam?.role}))));
 
-          const userMembership = response.Users.find(
-            u => String(u.id) === String(user?.id) // Type-insensitive comparison
-          );
+          // First, try to find using strict equality
+          let userMembership = response.Users.find(u => u.id === user?.id);
           
-          console.log('User membership found (after string comparison):', userMembership);
+          // If not found, try converting IDs to strings for comparison
+          if (!userMembership) {
+            console.log('User not found with strict comparison, trying string comparison');
+            userMembership = response.Users.find(u => String(u.id) === String(user?.id));
+          }
+          
+          console.log('User membership found:', userMembership);
           
           if (userMembership && userMembership.UserTeam) {
             console.log(`User role from UserTeam: '${userMembership.UserTeam.role}'`);
@@ -131,34 +136,44 @@ const TeamSpace = () => {
         
         // Try to find user role in members data if not found in team data
         if (!userRoleFound && membersResponse && membersResponse.members) {
-          const currentUserInMembers = membersResponse.members.find(
-            m => String(m.id) === String(user?.id)
-          );
+          // Try exact match first
+          let currentUserInMembers = membersResponse.members.find(m => m.id === user?.id);
+          
+          // If not found, try string comparison
+          if (!currentUserInMembers) {
+            console.log('User not found in members with strict comparison, trying string comparison');
+            currentUserInMembers = membersResponse.members.find(m => String(m.id) === String(user?.id));
+          }
           
           console.log('Current user in members:', currentUserInMembers);
           
           if (currentUserInMembers) {
-            // Check if UserTeam is present in member data
+            // Check different possible locations for role data
             if (currentUserInMembers.UserTeam && currentUserInMembers.UserTeam.role) {
               userRoleFound = currentUserInMembers.UserTeam.role;
-              console.log(`Found user role from members response: ${userRoleFound}`);
+              console.log(`Found user role from members response UserTeam: ${userRoleFound}`);
             } 
-            // Fallback: check if separate role property exists
+            // Check if role is available as a direct property
             else if (currentUserInMembers.role) {
               userRoleFound = currentUserInMembers.role;
-              console.log(`Found user role direct property from members: ${userRoleFound}`);
+              console.log(`Found user role from direct property: ${userRoleFound}`);
             }
-            // Special case: if user is team creator, they should be manager
+            // Special fallback cases
             else if (response.createdBy === user.id || response.ownerId === user.id) {
               userRoleFound = 'manager';
               console.log('User is team creator, setting role to manager');
             }
-            // If only one member and that's the current user, likely the owner/manager
             else if (membersResponse.members.length === 1) {
               userRoleFound = 'manager';
               console.log('User is the only team member, assuming role is manager');
             }
           }
+        }
+        
+        // Final fallback - if still no role found but user clearly has team access
+        if (!userRoleFound && team) {
+          console.log('No explicit role found but user can access team, defaulting to athlete');
+          userRoleFound = 'athlete';  // Default fallback role
         }
         
         // Update state with found role
@@ -209,10 +224,11 @@ const TeamSpace = () => {
       console.log('TeamSpace: Waiting for user data to be validated before fetching team data.');
       // setLoading(true); // Optionally keep loading true until user is validated
     }
-  }, [teamId, user]); // Updated dependency array to include user
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, user]); // Disable ESLint warning
   
-  const isManager = userRole === 'manager' || userRole === 'owner';
-  console.log(`TeamSpace calculated isManager: ${isManager} (userRole: '${userRole}')`); // Add log for isManager calculation
+  const isManager = userRole === 'manager' || userRole === 'owner'; // Note: 'owner' is not in current UserTeam model enum
+  console.log(`TeamSpace calculated isManager: ${isManager} (userRole: '${userRole || "null/undefined"}')`); // Improved log
   const otherMembers = members.filter(m => m.id !== user?.id);
   
   const handleInviteMember = () => {

@@ -132,6 +132,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     movePlayerToSubSlot,  // New store action
     swapPlayersInFormation, // New store action
     moveStarterToSubsGeneral, // New store action for dropping starter on strip
+    saveFormation, // Add this to extract the saveFormation function
   } = useFormationStore();
   
   // Get PRESETS from the store
@@ -247,6 +248,13 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     }
   };
   
+  // Add a handler for the save button
+  const handleSaveFormation = () => {
+    if (!saved && !loading) {
+      saveFormation();
+    }
+  };
+  
   // Add pitch container style
   const pitchContainerStyle = {
     width: '100%',
@@ -304,6 +312,26 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
             >
               Export PNG
             </button>
+            
+            {/* Add Save Changes button */}
+            {isManager && (
+              <button
+                className="save-button"
+                onClick={handleSaveFormation}
+                disabled={loading || saved}
+                style={{ 
+                  backgroundColor: saved ? '#4ade80' : '#facc15', 
+                  color: 'white', 
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.25rem',
+                  border: 'none',
+                  cursor: loading || saved ? 'default' : 'pointer',
+                  opacity: loading || saved ? 0.7 : 1
+                }}
+              >
+                {loading ? 'Saving...' : saved ? 'Saved' : 'Save Changes'}
+              </button>
+            )}
             
             {!saved && (
               <span style={{ 
