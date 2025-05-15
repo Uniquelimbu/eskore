@@ -22,9 +22,6 @@ const envSchema = Joi.object({
   // CORS settings
   ALLOWED_ORIGINS: Joi.string().default('http://localhost:3000'),
   
-  // Feature flags
-  DISABLE_CACHE: Joi.boolean().default(false),
-  
   // Other optional settings
   LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'http', 'debug').default('info')
 })
