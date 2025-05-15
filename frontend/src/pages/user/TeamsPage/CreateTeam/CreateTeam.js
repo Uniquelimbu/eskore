@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify'; // Add missing toast import
 import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
@@ -158,10 +159,23 @@ const CreateTeam = () => {
       console.log("Attempting to create team with payload:", teamPayload);
 
       try {
+        // First, check if user is authenticated before proceeding
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Your session has expired. Please log in again.');
+          navigate('/login');
+          return;
+        }
+
         // First, create team without logo
         const teamResponse = await apiClient.post('/api/teams', teamPayload);
         
         console.log("Team creation API response:", teamResponse);
+        
+        if (!teamResponse || !teamResponse.team || !teamResponse.team.id) {
+          throw new Error('Invalid response from server: Missing team data');
+        }
+        
         const teamId = teamResponse.team.id;
         
         // If there's a logo, upload it in a separate request
@@ -170,12 +184,18 @@ const CreateTeam = () => {
           const logoData = new FormData();
           logoData.append('logo', formData.teamLogo);
           
-          const logoResponse = await apiClient.patch(`/api/teams/${teamId}/logo`, logoData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-          console.log("Logo upload API response:", logoResponse);
+          try {
+            const logoResponse = await apiClient.patch(`/api/teams/${teamId}/logo`, logoData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+            console.log("Logo upload API response:", logoResponse);
+          } catch (logoError) {
+            // Just log logo upload errors, but continue with team creation
+            console.error("Error uploading team logo:", logoError);
+            toast.warn("Team created but logo upload failed. You can add a logo later.");
+          }
         }
         
         // First check team response structure
@@ -193,6 +213,14 @@ const CreateTeam = () => {
         }
       } catch (error) {
         logErrorDetails(error, formData.teamLogo ? 'team creation or logo upload' : 'team creation');
+        
+        // Check for auth errors
+        if (error.status === 401 || error.code === 'AUTH_ERROR') {
+          toast.error('Your session has expired. Please log in again.');
+          navigate('/login');
+          return;
+        }
+        
         const errorMessage = 
           error.response?.data?.message || 
           error.response?.data?.error?.message || // Check for nested error message

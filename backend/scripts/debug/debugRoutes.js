@@ -11,7 +11,7 @@ const tempApp = express();
 
 // Load and initialize all route files in a controlled environment
 const authRoutes = require('../../src/routes/authRoutes');
-const teamRoutes = require('../../src/routes/teamRoutes');
+const teamRoutes = require('../../src/routes/teamRoutes/index'); // Updated to explicitly use index.js
 const matchRoutes = require('../../src/routes/matchRoutes');
 const leagueRoutes = require('../../src/routes/leagueRoutes');
 const standingsRoutes = require('../../src/routes/standingsRoutes');

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="frontend/public/images/logos/eskore-logo.png" alt="eSkore Logo" width="200">
-  <h1>eSkore - Modern Esports Performance Platform</h1>
-  <p><strong>Track, analyze, and elevate your gaming journey with comprehensive analytics</strong></p>
+  <h1>eSkore - Modern Soccer Performance Platform</h1>
+  <p><strong>Track, analyze, and elevate your soccer journey with comprehensive analytics</strong></p>
   
   <!-- Badges -->
   <p>
@@ -29,27 +29,27 @@ Experience eSkore in action at [https://www.eskore.com](https://www.eskore.com)
 
 ## 📋 Overview
 
-eSkore is a state-of-the-art platform designed to provide professional-grade performance analytics and team management tools for esports players and organizations. Leveraging modern web technologies and data science, eSkore offers comprehensive insights tailored for competitive gaming scenarios.
+eSkore is a state-of-the-art platform designed to provide professional-grade performance analytics and team management tools for soccer players, coaches, and organizations. Leveraging modern web technologies and sports science, eSkore offers comprehensive insights tailored for soccer teams at all levels.
 
 ## ✨ Key Features
 
 ### For Players
 - **Comprehensive Performance Tracking:** Monitor your progress with detailed statistics and trend analysis
 - **Match History:** Review past performances with detailed breakdowns and insights
-- **Personalized Recommendations:** Get AI-driven suggestions to improve your gameplay
+- **Personalized Recommendations:** Get data-driven suggestions to improve your gameplay
 - **Team Integration:** Seamlessly collaborate with teammates and coaches
 
 ### For Teams
 - **Team Management:** Complete roster control, role assignments, and player analytics
-- **Strategic Insights:** Team performance patterns and optimization opportunities
+- **Formation Setup:** Visual formation builder with player positioning
 - **Match Planning:** Preparation tools and opponent analysis
 - **Communication Hub:** Centralized team communication and coordination
 
-### For Tournament Organizers
+### For Coaches
 - **Tournament Creation & Management:** Flexible bracket systems and scheduling
 - **Real-time Updates:** Live score tracking and statistics
-- **Participant Management:** Streamlined registration and team administration
-- **Analytics Dashboard:** Comprehensive tournament metrics and highlights
+- **Player Development:** Track individual progress and areas for improvement
+- **Analytics Dashboard:** Comprehensive performance metrics and highlights
 
 ## 🛠️ Tech Stack
 
@@ -204,5 +204,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
   <p>© 2025 eSkore Team. All rights reserved.</p>
-  <p>Made with ❤️ for the global esports community</p>
+  <p>Made with ❤️ for the global soccer community</p>
 </div>

@@ -9,6 +9,52 @@ console.log('🚀 apiClient: API_BASE_URL is set to:', API_BASE_URL);
 // Debug flag - can toggle this for auth debugging
 const DEBUG_AUTH = true;
 
+// Circuit breaker pattern to prevent excessive retries
+const circuitBreaker = {
+  failures: 0,
+  lastFailure: 0,
+  isOpen: false,
+  threshold: 3,
+  resetTimeout: 30000, // 30 seconds
+  
+  // Record a failure and potentially open the circuit
+  recordFailure() {
+    const now = Date.now();
+    
+    // Reset failure count if last failure was a while ago
+    if (now - this.lastFailure > this.resetTimeout) {
+      this.failures = 0;
+    }
+    
+    this.failures++;
+    this.lastFailure = now;
+    
+    if (this.failures >= this.threshold) {
+      this.isOpen = true;
+      
+      // Auto-reset circuit after resetTimeout
+      setTimeout(() => {
+        this.reset();
+      }, this.resetTimeout);
+    }
+  },
+  
+  // Check if circuit is open (prevent requests)
+  isCircuitOpen() {
+    // If circuit is open, but it's been a while, try to reset
+    if (this.isOpen && Date.now() - this.lastFailure > this.resetTimeout) {
+      this.reset();
+    }
+    return this.isOpen;
+  },
+  
+  // Reset the circuit breaker
+  reset() {
+    this.failures = 0;
+    this.isOpen = false;
+  }
+};
+
 // Create an Axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -82,9 +128,12 @@ apiClient.interceptors.response.use(
       }
     }
     
+    // Reset circuit breaker on successful response
+    circuitBreaker.reset();
+    
     return response.data;
   },
-  (error) => {
+  async (error) => {
     // Enhanced error logging for auth issues
     if (DEBUG_AUTH && error.config && error.config.url.includes('/auth')) {
       console.error('🔒 Auth Debug: Error response from', error.config.url);
@@ -130,6 +179,38 @@ apiClient.interceptors.response.use(
     if (!error.response && error.message === 'Network Error') {
       errorData.message = 'Network connection refused. Please ensure the server is running.';
       errorData.code = 'NETWORK_ERROR';
+      
+      // Record failure for circuit breaker
+      circuitBreaker.recordFailure();
+      
+      // If this is a GET request and we're not in a circuit breaker state, 
+      // implement exponential backoff retry
+      if (error.config.method === 'get' && !circuitBreaker.isCircuitOpen() && 
+          (!error.config.retryCount || error.config.retryCount < 3)) {
+        
+        const retryCount = error.config.retryCount || 0;
+        error.config.retryCount = retryCount + 1;
+        
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, retryCount) * 1000; 
+        
+        console.log(`Backend connection error. Retrying in ${delay/1000}s... (Attempt ${error.config.retryCount} of 3)`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Return a new request promise
+        return apiClient(error.config);
+      }
+      
+      // If circuit is open, add additional info to error
+      if (circuitBreaker.isCircuitOpen()) {
+        errorData.message = 'Backend server appears to be down. Please try again later.';
+        errorData.circuitOpen = true;
+        // Log only once when circuit opens to avoid console spam
+        if (circuitBreaker.failures === circuitBreaker.threshold) {
+          console.error('Circuit breaker opened: Backend server appears down. Temporarily suspending requests.');
+        }
+      }
     }
     
     return Promise.reject(errorData);
@@ -200,6 +281,35 @@ apiClient.delete = async (url) => {
     
     throw error.response?.data || error;
   }
+};
+
+// Modify the existing post method to improve error handling
+const originalPost = apiClient.post;
+apiClient.post = function(url, data, config = {}) {
+  // Add special handling for team creation
+  if (url === '/api/teams') {
+    return originalPost.call(this, url, data, { 
+      ...config, 
+      timeout: 30000, // Increase to 30 seconds for team creation
+      headers: {
+        ...config.headers,
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure token is sent
+      }
+    }).catch(error => {
+      console.error(`Error in POST request to ${url}:`, error);
+      
+      // Check for specific team creation errors
+      if (error.response?.status === 401) {
+        console.error('Authorization failed when creating team - token may be invalid');
+      } else if (error.response?.status === 500) {
+        console.error('Server error during team creation:', error.response.data);
+      }
+      
+      // Rethrow the error for the caller to handle
+      throw error;
+    });
+  }
+  return originalPost.call(this, url, data, config);
 };
 
 export default apiClient;

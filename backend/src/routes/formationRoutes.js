@@ -57,8 +57,41 @@ router.get('/:teamId',
       if (!formation) {
         log.info(`No formation found for team ${teamId}, creating default 4-3-3 formation`);
         try {
-          formation = await Formation.createDefaultFormation(teamId);
-          log.info(`Created default 4-3-3 formation for team ${teamId}`);
+          // Check if user is authenticated
+          if (req.user && req.user.userId) {
+            // Check if user is a team manager or has permission to create
+            const userTeam = await UserTeam.findOne({
+              where: {
+                userId: req.user.userId,
+                teamId,
+                role: { [Op.in]: ['manager', 'assistant_manager', 'coach'] } // Allow more roles to create default
+              }
+            });
+            
+            if (userTeam) {
+              formation = await Formation.createDefaultFormation(teamId);
+              log.info(`Created default 4-3-3 formation for team ${teamId}`);
+            } else {
+              // If user isn't a team member with sufficient permissions, still return the default formation data
+              // but don't save it to database
+              const defaultFormation = Formation.getDefaultFormationData();
+              return res.json({
+                teamId: parseInt(teamId),
+                schema_json: defaultFormation,
+                isDefault: true,
+                notSaved: true
+              });
+            }
+          } else {
+            // For unauthenticated requests, return default formation without saving
+            const defaultFormation = Formation.getDefaultFormationData();
+            return res.json({
+              teamId: parseInt(teamId),
+              schema_json: defaultFormation,
+              isDefault: true,
+              notSaved: true
+            });
+          }
         } catch (error) {
           log.error(`Failed to create default formation for team ${teamId}:`, error);
           throw new ApiError('Failed to create default formation', 500, 'SERVER_ERROR');

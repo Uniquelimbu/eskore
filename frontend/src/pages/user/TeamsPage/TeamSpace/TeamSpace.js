@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify'; // Add toast import
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -26,6 +26,7 @@ const TeamSpace = () => {
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedNewManager, setSelectedNewManager] = useState(null);
   const [showLeaveDeleteConfirm, setShowLeaveDeleteConfirm] = useState(false);
+  const isMounted = useRef(true);
   
   // Robust user authentication and refresh logic in a single effect
   useEffect(() => {
@@ -72,6 +73,63 @@ const TeamSpace = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, verifyUserData]);
+
+  // Wrap fetchTeamData in useCallback to prevent unnecessary re-renders
+  const fetchTeamData = useCallback(async () => {
+    try {
+      setError(null);
+      
+      // If circuit breaker is open, wait before making new requests
+      if (window.circuitBreakerOpen) {
+        setError({
+          status: 0,
+          message: 'Backend server appears to be down. Reconnection paused to prevent flickering.',
+          code: 'CIRCUIT_OPEN'
+        });
+        return;
+      }
+      
+      const response = await apiClient.get(`/api/teams/${teamId}`);
+      // Process successful response
+      if (isMounted.current) {
+        setTeam(response.data);
+        setLoading(false);
+      }
+    } catch (err) {
+      // Prevent UI flickering by maintaining stable error state
+      if (err.circuitOpen) {
+        window.circuitBreakerOpen = true;
+        
+        // Set a timeout to try again after circuit reset time
+        setTimeout(() => {
+          window.circuitBreakerOpen = false;
+          // Only attempt to refetch if component is still mounted
+          if (isMounted.current) {
+            fetchTeamData();
+          }
+        }, 30000); // 30 seconds matches circuit breaker reset time
+      }
+      
+      if (isMounted.current) {
+        setError(err);
+        setLoading(false);
+      }
+      console.error('Error fetching team data:', err);
+    }
+  }, [teamId]); // Add teamId as dependency
+
+  // Replace your existing useEffect for fetching data with this improved version
+  useEffect(() => {
+    const isMounted = { current: true };
+    
+    if (teamId) {
+      fetchTeamData();
+    }
+    
+    return () => {
+      isMounted.current = false;
+    };
+  }, [teamId, fetchTeamData]); // fetchTeamData is now stable thanks to useCallback
 
   // Fetch team data - modify to depend on validated user
   useEffect(() => {

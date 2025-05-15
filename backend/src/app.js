@@ -42,7 +42,7 @@ const bodyParserErrorHandler = require('./middleware/bodyParserErrorHandler'); /
 // --- Route requires ---
 const authRoutes = require('./routes/authRoutes'); // Restored
 const userRoutes = require('./routes/userRoutes'); // Restored
-const teamRoutes = require('./routes/teamRoutes'); // Restored
+const teamRoutes = require('./routes/teamRoutes'); // Now imports the index.js from teamRoutes folder
 const tournamentRoutes = require('./routes/tournamentRoutes'); // Restored
 const leagueRoutes = require('./routes/leagueRoutes'); // Restored
 const matchRoutes = require('./routes/matchRoutes'); // Restored

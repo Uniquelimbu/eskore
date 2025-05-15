@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import apiClient from '../../../../../../services/apiClient';
 
 // Formation presets with normalized coordinates (0-100 range)
 const PRESETS = {
@@ -98,7 +98,7 @@ const useFormationStore = create((set, get) => ({
       let response;
       try {
         // Ensure ALL axios requests use the /api/formations/ prefix:
-        response = await axios.get(`/api/formations/${teamId}`);
+        response = await apiClient.get(`/api/formations/${teamId}`);
         console.log(`Formation API response received for team ${teamId}:`, 
           response.status === 200 ? 'Success' : `Unexpected status: ${response.status}`);
       } catch (error) {
@@ -111,7 +111,7 @@ const useFormationStore = create((set, get) => ({
           if (defaultCreated) {
             // Try to fetch again after creating
             try {
-              response = await axios.get(`/api/formations/${teamId}`);
+              response = await apiClient.get(`/api/formations/${teamId}`);
               console.log(`Retrieved newly created formation for team ${teamId}`);
             } catch (secondFetchError) {
               console.error('Failed to fetch newly created formation:', secondFetchError);
@@ -138,7 +138,10 @@ const useFormationStore = create((set, get) => ({
           } else {
             console.error('Error message:', error.message);
           }
-          throw error; // Re-throw other errors
+          // Fall back to dummy players on error
+          get().setDummyPlayers();
+          set({ loading: false, saved: true });
+          return;
         }
       }
       
@@ -181,44 +184,96 @@ const useFormationStore = create((set, get) => ({
   
   // New method: Create default formation in the backend
   createDefaultFormation: async (teamId) => {
-    if (!teamId) return false;
-    
     try {
-      // Use the current preset and dummy players to create a default formation
-      const { preset } = get();
+      set({ loading: true });
+      console.log('Creating default formation for team', teamId);
       
-      // Create the formation schema
-      const formationSchema = {
-        preset: preset || '4-3-3',
-        starters: get().generateDefaultStarters(preset || '4-3-3'),
-        subs: DEFAULT_SUBS,
-        updated_at: new Date().toISOString()
-      };
+      // First try to GET the formation - the backend will return a default if it doesn't exist
+      const response = await apiClient.get(`/api/formations/${teamId}`);
       
-      console.log('Creating default formation for team:', teamId);
+      // Check if we got a formation that's not saved (marked by the backend)
+      if (response && response.notSaved) {
+        console.log('Received default formation template from server');
+        const defaultFormation = response.schema_json || {};
+        
+        // Ensure starters and subs are always arrays
+        const starters = Array.isArray(defaultFormation.starters) ? defaultFormation.starters : [];
+        const subs = Array.isArray(defaultFormation.subs) ? defaultFormation.subs : DEFAULT_SUBS;
+        
+        // Update the local state with the default formation
+        set({ 
+          teamId,
+          starters: starters,
+          subs: subs,
+          preset: defaultFormation.preset || '4-3-3',
+          loading: false,
+          saved: false // Mark as not saved
+        });
+        
+        return response;
+      }
       
-      // Ensure ALL axios requests use the /api/formations/ prefix:
-      const response = await axios.put(`/api/formations/${teamId}`, {
-        schema_json: formationSchema
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.status === 200 || response.status === 201) {
-        console.log('Default formation created successfully');
-        return true;
-      } else {
-        console.warn(`Unexpected response status: ${response.status}`);
-        return false;
+      // Otherwise, we got a real formation from the database
+      if (response) {
+        console.log('Successfully created/fetched default formation');
+        const schemaJson = response.schema_json || {};
+        
+        // Ensure starters and subs are always arrays
+        const starters = Array.isArray(schemaJson.starters) ? schemaJson.starters : [];
+        const subs = Array.isArray(schemaJson.subs) ? schemaJson.subs : DEFAULT_SUBS;
+        
+        set({
+          teamId,
+          starters: starters,
+          subs: subs,
+          preset: schemaJson.preset || '4-3-3',
+          loading: false,
+          saved: true
+        });
+        return response;
       }
     } catch (error) {
       console.error('Failed to create default formation:', error);
-      if (error.response) {
-        console.error('Server responded with error:', error.response.status, error.response.data);
+      // If we get Forbidden, still create a client-side default
+      if (error.status === 403 || (error.response && error.response.status === 403)) {
+        console.log('Server responded with error:', error.status || error.response?.status, error.data || error.response?.data);
+        
+        // If forbidden, use local defaults
+        const preset = '4-3-3';
+        const defaultData = get().generateDefaultStarters(preset);
+        
+        // Ensure defaultData.starters is an array
+        const starters = Array.isArray(defaultData) ? defaultData : [];
+        
+        set({
+          teamId,
+          starters: starters,
+          subs: DEFAULT_SUBS,
+          preset: preset,
+          loading: false,
+          saved: false // Mark as not saved since this is client-side only
+        });
+        
+        return { 
+          teamId, 
+          schema_json: { 
+            starters: starters, 
+            subs: DEFAULT_SUBS, 
+            preset: preset 
+          }, 
+          isDefault: true, 
+          clientGenerated: true 
+        };
       }
-      return false;
+      
+      // Ensure we set valid defaults even on error
+      set({ 
+        loading: false,
+        starters: [],
+        subs: DEFAULT_SUBS
+      });
+      
+      throw error;
     }
   },
 
@@ -251,13 +306,15 @@ const useFormationStore = create((set, get) => ({
     });
   },
   
-  // Change formation preset
+  // Change formation preset - FIXED VERSION
   changePreset: (newPreset) => {
     if (!PRESETS[newPreset]) return;
 
     // Keep player assignments when changing formation
+    const { starters, subs } = get();
     const currentPlayerMap = {};
-    get().starters.forEach(player => {
+    
+    starters.forEach(player => {
       if (player.playerId || player.playerName) { // Also consider playerName
         currentPlayerMap[player.id] = {
           playerId: player.playerId,
@@ -275,41 +332,37 @@ const useFormationStore = create((set, get) => ({
       return {
         ...pos,
         ...playerData,
-        // Ensure required properties exist and use index-based names as fallback
         playerId: playerData.playerId || null,
+        position: pos.label,
         jerseyNumber: playerData.jerseyNumber || String(index + 1),
-        playerName: playerData.playerName || `Player ${index + 1}`
+        playerName: playerData.playerName || `Player ${index + 1}`,
+        positionId: pos.id
       };
     });
     
     set({ 
       preset: newPreset, 
-      starters: newStarters,
-      saved: false
+      starters: newStarters, 
+      saved: false 
     });
     
-    // Save the new formation to the server
+    // Save the updated formation
     get().saveFormation();
   },
   
-  // Handle when a player is dragged
-  handleDragEnd: (id, newX, newY, isStarter, targetType) => {
+  // Handle different drag scenarios - FIXED VERSION
+  handleDrag: (id, newX, newY, targetType) => {
     const { starters, subs } = get();
-    let newStarters = [...starters];
-    let newSubs = [...subs];
     
-    // Skip placeholder subs
-    if (!isStarter) {
-      const subIndex = subs.findIndex(s => s.id === id);
-      if (subIndex !== -1 && subs[subIndex].isPlaceholder) {
-        return;
-      }
-    }
+    // Find the player's location (starter or sub)
+    const isStarter = starters.some(s => s.id === id);
     
-    // Handle different drag scenarios
     if (isStarter) {
       const starterIndex = starters.findIndex(s => s.id === id);
       if (starterIndex === -1) return;
+      
+      const newStarters = [...starters];
+      const newSubs = [...subs];
       
       if (targetType === 'pitch') {
         // Update position on pitch - find closest position in the formation
@@ -346,9 +399,12 @@ const useFormationStore = create((set, get) => ({
           xNorm: newX,
           yNorm: newY
         };
+        
+        set({ starters: newStarters, saved: false });
       } else if (targetType === 'subs') {
         // Move starter to subs - find an empty slot
         const starter = starters[starterIndex];
+        
         // Add to subs with the next available position
         newSubs.push({
           id: starter.id,
@@ -358,13 +414,19 @@ const useFormationStore = create((set, get) => ({
           jerseyNumber: starter.jerseyNumber,
           playerName: starter.playerName
         });
+        
         // Remove from starters
         newStarters.splice(starterIndex, 1);
+        
+        set({ starters: newStarters, subs: newSubs, saved: false });
       }
     } else {
       // Moving a sub to starters
       const subIndex = subs.findIndex(s => s.id === id);
       if (subIndex === -1) return;
+      
+      const newStarters = [...starters];
+      const newSubs = [...subs];
       
       if (targetType === 'pitch' || targetType === 'starters') {
         const sub = subs[subIndex];
@@ -392,11 +454,11 @@ const useFormationStore = create((set, get) => ({
           
           // Remove from subs
           newSubs.splice(subIndex, 1);
+          
+          set({ starters: newStarters, subs: newSubs, saved: false });
         }
       }
     }
-    
-    set({ starters: newStarters, subs: newSubs, saved: false });
     
     // Save the updated formation
     get().saveFormation();
@@ -418,9 +480,11 @@ const useFormationStore = create((set, get) => ({
       return;
     }
     
+    const newStarters = [...starters];
+    const newSubs = [...subs];
+    
     if (starter1Index !== -1 && starter2Index !== -1) {
       // Both are starters - swap positions
-      const newStarters = [...starters];
       const pos1 = { xNorm: newStarters[starter1Index].xNorm, yNorm: newStarters[starter1Index].yNorm };
       const pos2 = { xNorm: newStarters[starter2Index].xNorm, yNorm: newStarters[starter2Index].yNorm };
       
@@ -432,9 +496,6 @@ const useFormationStore = create((set, get) => ({
       // Starter and sub - swap them
       const starter = starters[starter1Index];
       const sub = subs[sub2Index];
-      
-      const newStarters = [...starters];
-      const newSubs = [...subs];
       
       // Move sub to starter position
       newStarters[starter1Index] = {
@@ -464,9 +525,6 @@ const useFormationStore = create((set, get) => ({
       const sub = subs[sub1Index];
       const starter = starters[starter2Index];
       
-      const newStarters = [...starters];
-      const newSubs = [...subs];
-      
       // Move sub to starter position
       newStarters[starter2Index] = {
         id: sub.id,
@@ -492,9 +550,6 @@ const useFormationStore = create((set, get) => ({
       set({ starters: newStarters, subs: newSubs, saved: false });
     } else if (sub1Index !== -1 && sub2Index !== -1) {
       // Both are subs - swap positions in the subs array
-      const newSubs = [...subs];
-      
-      // Simple array swap
       const temp = newSubs[sub1Index];
       newSubs[sub1Index] = newSubs[sub2Index];
       newSubs[sub2Index] = temp;
@@ -506,7 +561,7 @@ const useFormationStore = create((set, get) => ({
     get().saveFormation();
   },
   
-  // Map real players to positions - enhanced with intelligent assignment
+  // Map real players to positions - enhanced with intelligent assignment  
   mapPlayersToPositions: (players) => {
     const { starters, subs, preset } = get();
     
@@ -557,7 +612,7 @@ const useFormationStore = create((set, get) => ({
   // New method: Intelligently assign players to formation positions
   assignPlayersToFormation: (players, presetName) => {
     if (!players || !players.length) return;
-    
+
     const presetPositions = PRESETS[presetName || '4-3-3'];
     const playersToAssign = [...players]; // Create a copy we can modify
     
@@ -735,11 +790,14 @@ const useFormationStore = create((set, get) => ({
     get().saveFormation();
   },
   
-  // Save formation to server
+  // Save formation to server - with improved error handling
   saveFormation: async () => {
     const { teamId, starters, subs, preset } = get();
     
-    if (!teamId) return;
+    if (!teamId) {
+      console.error('Cannot save formation: teamId is missing');
+      return { error: 'Missing teamId', success: false };
+    }
     
     try {
       set({ loading: true });
@@ -753,39 +811,46 @@ const useFormationStore = create((set, get) => ({
       
       console.log('Saving formation for team:', teamId);
       
-      // Ensure ALL axios requests use the /api/formations/ prefix:
-      const response = await axios.put(`/api/formations/${teamId}`, { schema_json: schemaJson });
+      // Use apiClient for consistent error handling across the app
+      const response = await apiClient.put(`/api/formations/${teamId}`, { 
+        schema_json: schemaJson 
+      });
       
-      if (response.status === 200 || response.status === 201) {
-        console.log('Formation saved successfully');
-        set({ saved: true, loading: false });
-      } else {
-        throw new Error('Unexpected response from server');
-      }
+      console.log('Formation saved successfully:', response);
+      set({ saved: true, loading: false });
+      return { success: true };
     } catch (error) {
       console.error('Failed to save formation:', error);
       
       // Enhanced error logging for debugging
+      let errorMessage = 'Unknown error saving formation';
+      
       if (error.response) {
-        console.error(`Server responded with status ${error.response.status}:`, error.response.data);
+        errorMessage = `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
       } else if (error.request) {
-        console.error('No response received from server. Check if backend is running.');
+        errorMessage = 'No response received from server. Check if backend is running.';
       } else {
-        console.error('Error setting up request:', error.message);
+        errorMessage = `Error setting up request: ${error.message}`;
       }
+      
+      console.error(errorMessage);
       
       // Continue with local state rather than failing completely
       set({ loading: false });
       
-      // Return the error so it can be handled by the calling component if needed
-      return error;
+      // Return the error so it can be handled by the calling component 
+      return { 
+        error: errorMessage, 
+        originalError: error,
+        success: false
+      };
     }
   },
 
   // Export formation as PNG
   exportAsPNG: async (stageRef) => {
     if (!stageRef.current) return;
-    
+
     try {
       // Generate high resolution PNG
       const dataURL = stageRef.current.toDataURL({
@@ -813,7 +878,7 @@ const useFormationStore = create((set, get) => ({
     const draggedPlayerLocation = findPlayerAndLocation(draggedPlayerId, starters, subs);
     if (!draggedPlayerLocation) { console.error("Dragged player not found in store"); return {}; }
 
-    // Remove dragged player from original list
+    // Remove dragged player from original list    
     draggedPlayerLocation.list.splice(draggedPlayerLocation.index, 1);
     let playerToMove = { ...draggedPlayerLocation.player };
 
@@ -860,10 +925,10 @@ const useFormationStore = create((set, get) => ({
 
     const draggedPlayerLocation = findPlayerAndLocation(draggedPlayerId, starters, subs);
     if (!draggedPlayerLocation) { console.error("Dragged player not found for sub move"); return {}; }
-    
+
     draggedPlayerLocation.list.splice(draggedPlayerLocation.index, 1);
     let playerToMove = { ...draggedPlayerLocation.player, isStarter: false, positionId: null }; // Now a sub
-
+    
     let occupant = null;
     if (targetSubIndex >= 0 && targetSubIndex < subs.length) {
       occupant = subs[targetSubIndex]; // Get potential occupant

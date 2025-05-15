@@ -14,19 +14,15 @@ This script will:
 1. Validate the seeders for proper naming and dependencies
 2. Run the seeders in the following order:
 
-   a. Leagues (20240101000001-demo-leagues.js)
-   b. Users (20240101000002-demo-users.js)
-   c. Teams (20240101000003-demo-teams.js)
-   d. User-Team Relationships (20240101000004-demo-user-teams.js)
-   e. Tournaments (20250510-demo-001-tournaments.js)
-   f. Matches (20250510-demo-002-matches.js)
+   a. Users (20240101000002-demo-users.js)
+   b. Tournaments (20240101000005-demo-tournaments.js)
 
 ## Naming Convention
 
 Seeders follow a specific naming convention to ensure they run in the correct order:
 
 - YYYYMMDD prefix for date ordering
-- Descriptive name for the content (e.g., demo-users, demo-teams)
+- Descriptive name for the content (e.g., demo-users, demo-tournaments)
 - Optional numbering suffix for same-day seeders (e.g., -001, -002)
 
 ## Validating Seeders
@@ -41,9 +37,6 @@ This script will check all seeder files for syntax errors, missing functions, an
 
 ## Seeder Files
 
-### 20240101000001-demo-leagues.js
-Creates sample leagues in the system.
-
 ### 20240101000002-demo-users.js
 Creates sample user accounts with various roles:
 - Admin user (admin@eskore.com)
@@ -54,25 +47,10 @@ Creates sample user accounts with various roles:
 
 All users are created with the password: `Password123`
 
-### 20240101000003-demo-teams.js
-Creates sample teams:
-- Barcelona FC
-- Real Madrid
-- Atletico Madrid
-
-### 20250510-demo-user-teams.js
-Creates relationships between users and teams:
-- Admin user is a manager of Barcelona FC
-- Test user is an athlete on Real Madrid
-- Regular user is a coach for Atletico Madrid
-
-### 20250510-demo-tournaments.js
+### 20240101000005-demo-tournaments.js
 Creates sample tournaments:
 - Summer Cup 2025
 - Winter Championship 2025
-
-### 20250510-demo-matches.js
-Creates sample matches between teams in the leagues.
 
 ## Best Practices for Seeders
 

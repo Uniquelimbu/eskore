@@ -11,7 +11,8 @@ const Settings = ({ team, isManager }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [teamData, setTeamData] = useState(team || null);
-  const [loading, setLoading] = useState(!team);
+  // Fix the ESLint warning by only destructuring the state variable without the setter
+  const [loading] = useState(!team);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);

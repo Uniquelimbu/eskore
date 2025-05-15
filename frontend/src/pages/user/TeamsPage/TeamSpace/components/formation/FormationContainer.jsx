@@ -153,12 +153,13 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     if (players.length > 0) {
       console.log("Mapping real players to positions", players.length);
       mapPlayersToPositions(players);
-    } else if (starters.length === 0) {
-      // Ensure we have at least dummy players if no real players exist
-      console.log("No players available, ensuring dummy players exist");
-      init(teamId);
+    } else if (players.length === 0 && starters.length === 0 && !loading) {
+      // If we still have no starters after the initial load (and no real players),
+      // populate the pitch with dummy players so the UI is never blank.
+      console.log("No players and no starters – inserting dummy players for display");
+      useFormationStore.getState().setDummyPlayers();
     }
-  }, [players, mapPlayersToPositions, starters.length, init, teamId]);
+  }, [players, mapPlayersToPositions, starters.length, loading]);
   
   // Handle resize for responsive pitch
   useEffect(() => {
@@ -220,8 +221,12 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
       return null;
     }
     
+    // Add defensive check to ensure starters is an array
+    const startersArray = Array.isArray(starters) ? starters : [];
+    console.log("renderPlaceholders with starters:", { starters: startersArray, type: typeof starters });
+    
     // Find positions that don't have a player
-    const filledPositions = starters.map(player => player.id);
+    const filledPositions = startersArray.map(player => player.id);
     
     return PRESETS[preset]
       .filter(pos => !filledPositions.includes(pos.id))
@@ -361,7 +366,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
           {isManager && renderPlaceholders()}
           
           {/* Player chips */}
-          {starters.map(player => {
+          {Array.isArray(starters) ? starters.map(player => {
             if (!player) return null;
             const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
             return (
@@ -381,7 +386,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                 indexInSubs={null} // Not a sub
               />
             );
-          })}
+          }) : null}
         </div>
       </div>
       

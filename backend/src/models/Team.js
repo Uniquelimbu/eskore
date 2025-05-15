@@ -80,6 +80,18 @@ Team.init({
   nickname: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  // Identifies the user that originally created the team. This mirrors the NOT NULL
+  // `creatorId` column that already exists in the database migration.
+  creatorId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
   }
 }, {
   sequelize,
