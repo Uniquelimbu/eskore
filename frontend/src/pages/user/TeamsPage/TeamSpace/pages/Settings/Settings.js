@@ -1,55 +1,108 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useAuth } from '../../../../../contexts/AuthContext';
-import apiClient from '../../../../../services/apiClient';
-import '../tabs/TabComponents.css';
-import '../TeamSpace.css'; // Ensure this CSS file (containing .danger-zone and .leave-team-button styles) is imported
+import { useAuth } from '../../../../../../contexts/AuthContext';
+import apiClient from '../../../../../../services/apiClient';
+import PageLayout from '../../../../../../components/PageLayout/PageLayout';
+import '../../TeamSpace.css'; // Ensure this CSS file is imported
 
-const Settings = ({ team, isManager }) => {
+const Settings = ({ team, members: propMembers, isManager: propIsManager }) => {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [teamData, setTeamData] = useState(team || null);
-  // Fix the ESLint warning by only destructuring the state variable without the setter
-  const [loading] = useState(!team);
+  const [members, setMembers] = useState(propMembers || []);
+  const [loading, setLoading] = useState(!team);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [showConfirmLeave, setShowConfirmLeave] = useState(false);
+  const [isManager, setIsManager] = useState(propIsManager || false);
+  
+  // State for team deletion
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
-    name: team?.name || '',
-    abbreviation: team?.abbreviation || '',
-    city: team?.city || '',
-    foundedYear: team?.foundedYear || '',
-    nickname: team?.nickname || '',
-    description: team?.description || ''
+    name: '',
+    abbreviation: '',
+    city: '',
+    foundedYear: '',
+    nickname: '',
+    description: ''
   });
-  
+
+  // Load team data if not provided as props
   useEffect(() => {
-    // If team prop changes, update form data
-    if (team && team !== teamData) {
-      setTeamData(team);
-      setFormData({
-        name: team.name || '',
-        abbreviation: team.abbreviation || '',
-        city: team.city || '',
-        foundedYear: team.foundedYear || '',
-        nickname: team.nickname || '',
-        description: team.description || ''
-      });
-    }
-  }, [team, teamData]);
-  
-  // Check if user is a manager
-  useEffect(() => {
-    if (!isManager) {
-      navigate(`/teams/${teamId}/space/overview`);
-    }
-  }, [isManager, navigate, teamId]);
+    const fetchTeamData = async () => {
+      if (team) {
+        // If we have props, use them
+        setTeamData(team);
+        setMembers(propMembers || []);
+        setFormData({
+          name: team.name || '',
+          abbreviation: team.abbreviation || '',
+          city: team.city || '',
+          foundedYear: team.foundedYear || '',
+          nickname: team.nickname || '',
+          description: team.description || ''
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Otherwise fetch from API
+      try {
+        setLoading(true);
+        const response = await apiClient.get(`/api/teams/${teamId}`);
+        
+        if (!response) {
+          throw new Error('No response from server');
+        }
+        
+        setTeamData(response);
+        
+        // Determine user's role in the team
+        let userRoleFound = null;
+        if (response.Users && Array.isArray(response.Users)) {
+          const userMembership = response.Users.find(u => String(u.id) === String(user?.id));
+          
+          if (userMembership && userMembership.UserTeam) {
+            userRoleFound = userMembership.UserTeam.role;
+          }
+        }
+        
+        setIsManager(userRoleFound === 'manager' || userRoleFound === 'owner');
+        
+        // Get members
+        const membersResponse = await apiClient.get(`/api/teams/${teamId}/members`);
+        
+        if (membersResponse && membersResponse.members) {
+          setMembers(membersResponse.members);
+        }
+        
+        // Set form data
+        setFormData({
+          name: response.name || '',
+          abbreviation: response.abbreviation || '',
+          city: response.city || '',
+          foundedYear: response.foundedYear || '',
+          nickname: response.nickname || '',
+          description: response.description || ''
+        });
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching team data:', error);
+        setLoading(false);
+        toast.error('Failed to load team data. Please try again.');
+      }
+    };
+
+    fetchTeamData();
+  }, [teamId, team, propMembers, user]);
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -135,13 +188,72 @@ const Settings = ({ team, isManager }) => {
     }
   };
   
+  // Team deletion logic moved from TeamSpace
+  const handleDeleteTeam = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await apiClient.delete(`/api/teams/${teamId}`);
+      
+      if (response.success) {
+        toast.success('Team deleted successfully');
+        navigate('/teams');
+      }
+    } catch (err) {
+      console.error('Error deleting team:', err);
+      let errorMessage = 'Failed to delete team. Please try again.';
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+  
+  const toggleDeleteConfirm = () => {
+    // Show warning if there are other members
+    const currentMembers = members || [];
+    if (currentMembers.length > 1 && isManager) {
+      toast.warning('You must remove all other members before deleting the team');
+      return;
+    }
+    
+    setShowDeleteConfirm(prev => !prev);
+  };
+  
+  const handleBackClick = () => {
+    // Direct navigation to team space instead of using browser history
+    navigate(`/teams/${teamId}/space`);
+  };
+  
   if (loading) return <div className="loading-message">Loading team settings...</div>;
   if (!teamData) return <div className="error-message">Team not found</div>;
   
   return (
-    <div className="team-page settings-page">
+    <PageLayout className="team-settings-content" maxWidth="1200px" withPadding={true}>
       <div className="settings-header">
-        <h2>Team Settings</h2>
+        <div className="settings-header-top">
+          <button 
+            className="back-button" 
+            onClick={handleBackClick}
+          >
+            <i className="fas fa-arrow-left"></i> Back to Team Space
+          </button>
+          <h1>Team Settings</h1>
+        </div>
+        {teamData && (
+          <div className="team-info-summary">
+            <h2>{teamData.name}</h2>
+            {teamData.nickname && <p className="nickname">{teamData.nickname}</p>}
+            <p className="meta-details">
+              {teamData.city && <span className="city">{teamData.city}</span>}
+              {teamData.foundedYear && <span className="founded">Est. {teamData.foundedYear}</span>}
+            </p>
+          </div>
+        )}
       </div>
       
       <div className="settings-section">
@@ -249,29 +361,81 @@ const Settings = ({ team, isManager }) => {
         </form>
       </div>
       
-      {/* Separate the danger zone and leave button completely */}
+      {/* Separate the danger zone with both deletion options */}
       <div className="settings-section danger-zone-section">
         <h3 className="danger-zone-heading">
           <i className="fas fa-exclamation-triangle"></i> Danger Zone
         </h3>
         <p className="danger-zone-text">
-          Leaving a team when you are the sole member will permanently delete the team. All team data, 
-          members, matches, and other associated data will be lost.
+          The following actions are destructive and cannot be undone. Please proceed with caution.
         </p>
+        
+        <div className="danger-zone-actions">
+          <div className="danger-action">
+            <div className="danger-action-info">
+              <h4>Leave Team</h4>
+              <p>You will be removed from this team and lose access to all team content.</p>
+            </div>
+            <button 
+              type="button"
+              className="leave-team-button"
+              onClick={handleLeaveTeam}
+              disabled={isLeaving}
+            >
+              <i className="fas fa-sign-out-alt"></i> Leave Team
+            </button>
+          </div>
+          
+          {isManager && (
+            <div className="danger-action">
+              <div className="danger-action-info">
+                <h4>Delete Team</h4>
+                <p>Permanently delete this team and all associated data. This action cannot be undone.</p>
+              </div>
+              <button 
+                type="button"
+                className="delete-team-button"
+                onClick={toggleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                <i className="fas fa-trash-alt"></i> Delete Team
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       
-      {/* Completely separate leave button container */}
-      <div className="leave-team-button-wrapper">
-        <button 
-          type="button"
-          className="leave-team-button"
-          onClick={handleLeaveTeam}
-          disabled={isLeaving}
-        >
-          <i className="fas fa-sign-out-alt"></i> Leave Team
-        </button>
-      </div>
+      {/* Delete confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Delete Team?</h3>
+            <p>Are you sure you want to delete <strong>{teamData.name}</strong>? This action cannot be undone.</p>
+            <div className="confirmation-buttons">
+              <button 
+                className="cancel-button"
+                onClick={toggleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button 
+                className="danger-button"
+                onClick={handleDeleteTeam}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <><i className="fas fa-spinner fa-spin"></i> Deleting...</>
+                ) : (
+                  'Delete Team'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
+      {/* Leave confirmation dialog */}
       {showConfirmLeave && (
         <div className="confirmation-overlay">
           <div className="confirmation-dialog">
@@ -304,7 +468,7 @@ const Settings = ({ team, isManager }) => {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 

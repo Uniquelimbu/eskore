@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import '../tabs/TabComponents.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import './Squad.css'; // Import the CSS file
 
 const Squad = ({ team, members, isManager }) => {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const [teamMembers, setTeamMembers] = useState(members || []);
   const [loading, setLoading] = useState(!members);
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
@@ -111,6 +112,11 @@ const Squad = ({ team, members, isManager }) => {
     }
   };
   
+  const handleBackClick = () => {
+    // Navigate directly to the team space base route without any sub-path
+    navigate(`/teams/${teamId}/space`);
+  };
+  
   if (loading) return <div>Loading squad information...</div>;
   
   // Filter members by role for better organization
@@ -120,16 +126,14 @@ const Squad = ({ team, members, isManager }) => {
   
   return (
     <div className="team-page squad-page">
-      <div className="squad-header">
+      <div className="back-button-container">
+        <button className="back-button" onClick={handleBackClick}>
+          Back
+        </button>
+      </div>
+      
+      <div className="page-header">
         <h2>Team Squad</h2>
-        {isManager && (
-          <button 
-            className="add-member-btn" 
-            onClick={() => setShowAddMemberForm(!showAddMemberForm)}
-          >
-            {showAddMemberForm ? 'Cancel' : 'Add Member'}
-          </button>
-        )}
       </div>
       
       {submitStatus && (
@@ -174,7 +178,7 @@ const Squad = ({ team, members, isManager }) => {
               {managers.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
@@ -201,7 +205,7 @@ const Squad = ({ team, members, isManager }) => {
               {athletes.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
@@ -229,7 +233,7 @@ const Squad = ({ team, members, isManager }) => {
               {coaches.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>

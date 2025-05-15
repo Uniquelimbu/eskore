@@ -1,32 +1,39 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Add toast import
+import { useParams, useNavigate, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../../../contexts/AuthContext';
 import apiClient from '../../../../services/apiClient';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
-import Overview from './pages/Overview';
-import Squad from './pages/Squad';
-import Formation from './pages/Formation';
-import Calendar from './pages/Calendar';
-import Settings from './pages/Settings';
+// Import pages directly rather than rendering conditionally
 import './TeamSpace.css';
+import Overview from './pages/Overview/Overview';
+// Update the Squad import to correctly point to the file within the Squad directory
+import Squad from './pages/Squad/Squad';
+import Formation from './pages/Formation/Formation';
+import Calendar from './pages/Calendar/Calendar';
+// We'll still import Settings but we'll navigate to it rather than render it as a tab
+import Settings from './pages/Settings/Settings';
 
 const TeamSpace = () => {
   const { teamId } = useParams();
-  const { user, verifyUserData } = useAuth(); // Add verifyUserData to destructuring
+  const { user, verifyUserData } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Add this to access the current location
   const [team, setTeam] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTransferManagerModal, setShowTransferManagerModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedNewManager, setSelectedNewManager] = useState(null);
-  const [showLeaveDeleteConfirm, setShowLeaveDeleteConfirm] = useState(false);
   const isMounted = useRef(true);
+  
+  // Remove tab-related logic and state
+  // Navigate to settings page
+  const navigateToSettings = () => {
+    navigate(`/teams/${teamId}/settings`);
+  };
   
   // Robust user authentication and refresh logic in a single effect
   useEffect(() => {
@@ -293,40 +300,6 @@ const TeamSpace = () => {
     navigate(`/teams/${teamId}/invite`);
   };
   
-  const handleDeleteTeam = async () => {
-    try {
-      setIsDeleting(true);
-      const response = await apiClient.delete(`/api/teams/${teamId}`);
-      
-      if (response.success) {
-        toast.success('Team deleted successfully');
-        navigate('/teams');
-      }
-    } catch (err) {
-      console.error('Error deleting team:', err);
-      let errorMessage = 'Failed to delete team. Please try again.';
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  };
-  
-  const toggleDeleteConfirm = () => {
-    // Show warning if there are other members
-    if (members.length > 1 && isManager) {
-      toast.warning('You must remove all other members before deleting the team');
-      return;
-    }
-    
-    setShowDeleteConfirm(prev => !prev);
-  };
-
   // Helper: remove the current user from the team then navigate out
   const leaveTeam = async () => {
     try {
@@ -342,7 +315,6 @@ const TeamSpace = () => {
     }
   };
 
-  // eslint-disable-next-line no-unused-vars
   const handleLeaveTeam = async () => {
     // Case 1: Manager with other members -> must transfer role first
     if (isManager && members.length > 1) {
@@ -352,76 +324,13 @@ const TeamSpace = () => {
 
     // Case 2: Sole remaining member (manager or not) -> confirm that team will be deleted
     if (members.length === 1) {
-      setShowLeaveDeleteConfirm(true);
+      // We'll handle this in the Settings component
+      navigate(`/teams/${teamId}/space/settings`);
       return;
     }
 
     // Case 3: Regular member (not last one) can leave directly
     await leaveTeam();
-  };
-  
-  const confirmLeaveAndDelete = async () => {
-    // Called when user confirms they understand team will be deleted
-    try {
-      // Check if user ID is valid before proceeding
-      if (!user || !user.id) {
-        console.error('User ID is missing. User object:', user);
-        
-        // Try to refresh user data one more time
-        const refreshedUser = await verifyUserData(true);
-        
-        // If still no valid user ID, show error
-        if (!refreshedUser || !refreshedUser.id) {
-          toast.error('Authentication error: Unable to identify user. Please try logging in again.');
-          setShowLeaveDeleteConfirm(false);
-          return;
-        }
-        
-        console.log(`Recovered user ID from refresh: ${refreshedUser.id}`);
-        const response = await apiClient.delete(`/api/teams/${teamId}/members/${refreshedUser.id}`);
-        
-        if (response.success) {
-          toast.success('You have left the team and the team was deleted');
-          localStorage.removeItem('lastTeamId');
-          navigate('/teams');
-          return;
-        }
-      } else {
-        console.log(`Attempting to leave team ${teamId} as user ${user.id}`);
-      
-        const response = await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
-      
-        if (response.success) {
-          toast.success('You have left the team and the team was deleted');
-        
-          // Remove from localStorage if this was the last active team
-          const lastTeamId = localStorage.getItem('lastTeamId');
-          if (lastTeamId === teamId) {
-            localStorage.removeItem('lastTeamId');
-          }
-        
-          navigate('/teams');
-        } else {
-          // This handles the case where the API returns success: false
-          throw new Error(response.message || 'Unknown error when leaving team');
-        }
-      }
-    } catch (err) {
-      console.error('Error leaving and deleting team:', err);
-      
-      // More detailed error handling
-      let errorMessage = 'Failed to leave team';
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setShowLeaveDeleteConfirm(false);
-    }
   };
 
   const handleTransferManager = async () => {
@@ -451,9 +360,49 @@ const TeamSpace = () => {
     }
   };
 
-  // Navigate to specific section
-  const navigateTo = (path) => {
+  // Navigate to specific detail page - updated to maintain structure
+  const navigateToDetail = (path) => {
     navigate(`/teams/${teamId}/space/${path}`);
+  };
+
+  // Create navigation buttons for the team space home view - this is now the primary navigation
+  const renderNavigationButtons = () => {
+    const navItems = [
+      { id: 'overview', label: 'Overview', icon: 'fas fa-home' },
+      { id: 'squad', label: 'Squad', icon: 'fas fa-users' },
+      { id: 'formation', label: 'Formation', icon: 'fas fa-futbol' },
+      { id: 'calendar', label: 'Calendar', icon: 'fas fa-calendar-alt' },
+    ];
+    
+    // Only add settings for managers
+    if (isManager) {
+      navItems.push({ id: 'settings', label: 'Settings', icon: 'fas fa-cog' });
+    }
+    
+    return (
+      <div className="team-navigation-buttons">
+        {navItems.map(item => (
+          <button 
+            key={item.id}
+            className="navigation-button"
+            onClick={() => navigateToDetail(item.id)}
+          >
+            <i className={`${item.icon} nav-icon`}></i>
+            <span className="nav-label">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Updated method to determine if we're on a specific page or the main dashboard
+  const isSpecificPage = () => {
+    // Get the path after /teams/:teamId/space/
+    const pathSegments = location.pathname.split('/');
+    const spaceIndex = pathSegments.findIndex(segment => segment === 'space');
+    
+    // If we're at /teams/:teamId/space exactly (no additional segments), we're on the main dashboard
+    return spaceIndex >= 0 && pathSegments.length > spaceIndex + 1;
   };
 
   if (loading) {
@@ -479,132 +428,84 @@ const TeamSpace = () => {
   
   return (
     <PageLayout className="team-space-content" maxWidth="1200px" withPadding={true}>
-      <div className="team-space-header">
-        {/* Remove Leave Team button from top bar */}
-        
-        <div className="team-identity-section">
-          {team.logoUrl ? (
-            <img src={team.logoUrl} alt={`${team.name} logo`} className="team-logo" />
-          ) : (
-            <div className="team-logo-placeholder">
-              {team.abbreviation || team.name.substring(0, 3)}
+      {/* Only show the team header and dashboard when NOT on a specific page */}
+      {!isSpecificPage() && (
+        <>
+          <div className="team-space-header">
+            <div className="team-identity-section">
+              {team.logoUrl ? (
+                <img src={team.logoUrl} alt={`${team.name} logo`} className="team-logo" />
+              ) : (
+                <div className="team-logo-placeholder">
+                  {team.abbreviation || team.name.substring(0, 3)}
+                </div>
+              )}
+              <div className="team-details">
+                <h1>
+                  {team.name} 
+                  {team.abbreviation && <span className="team-abbreviation">[{team.abbreviation}]</span>}
+                </h1>
+                {team.nickname && <p className="team-nickname">{team.nickname}</p>}
+                <p className="team-founded">Est. {team.foundedYear || new Date().getFullYear()}</p>
+                <div className="team-meta">
+                  <span className="team-city">{team.city}</span>
+                </div>
+              </div>
             </div>
-          )}
-          <div className="team-details">
-            <h1>
-              {team.name} 
-              {team.abbreviation && <span className="team-abbreviation">[{team.abbreviation}]</span>}
-            </h1>
-            {team.nickname && <p className="team-nickname">{team.nickname}</p>}
-            <p className="team-founded">Est. {team.foundedYear || new Date().getFullYear()}</p>
-            <div className="team-meta">
-              <span className="team-city">{team.city}</span>
-              {/* Team privacy indicator removed for MVP */}
+
+            <div className="team-quick-stats">
+              <div className="stat-item">
+                <span className="stat-value">Members: {members.length}/30</span>
+              </div>
+            </div>
+
+            <div className="team-actions">
+              {isManager ? (
+                <>
+                  <button className="action-button primary" onClick={handleInviteMember}>
+                    <i className="fas fa-user-plus"></i> Invite Players
+                  </button>
+                  <button className="action-button secondary" onClick={navigateToSettings}>
+                    <i className="fas fa-cog"></i> Team Settings
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="action-button secondary" onClick={handleLeaveTeam}>
+                    <i className="fas fa-sign-out-alt"></i> Leave Team
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        </div>
-
-        <div className="team-quick-stats">
-          <div className="stat-item">
-            <span className="stat-value">Members: {members.length}/30</span>
+          
+          {/* Main navigation area - only shown on home route */}
+          <div className="team-space-home-content">
+            <h2 className="team-space-home-title">Team Dashboard</h2>
+            <p className="team-space-home-subtitle">Manage your team and view important information</p>
+            
+            {renderNavigationButtons()}
           </div>
-        </div>
-
-        <div className="team-actions">
-          {isManager ? (
-            <>
-              <button className="action-button primary" onClick={handleInviteMember}>
-                <i className="fas fa-user-plus"></i> Invite Players
-              </button>
-              <button className="action-button secondary" onClick={() => navigateTo('settings')}>
-                <i className="fas fa-cog"></i> Team Settings
-              </button>
-              {/* Remove Delete Team button from here */}
-            </>
-          ) : (
-            <div style={{ height: '1px' }}></div> // Placeholder div to maintain layout spacing
-          )}
-        </div>
-      </div>
+        </>
+      )}
       
-      <div className="team-navigation-buttons">
-        <button 
-          className="navigation-button" 
-          onClick={() => navigateTo('overview')}
-        >
-          <i className="fas fa-home"></i>
-          Overview
-        </button>
-        <button 
-          className="navigation-button" 
-          onClick={() => navigateTo('squad')}
-        >
-          <i className="fas fa-users"></i>
-          Squad
-        </button>
-        <button 
-          className="navigation-button" 
-          onClick={() => navigateTo('formation')}
-        >
-          <i className="fas fa-futbol"></i>
-          Formation
-        </button>
-        <button 
-          className="navigation-button" 
-          onClick={() => navigateTo('calendar')}
-        >
-          <i className="fas fa-calendar-alt"></i>
-          Calendar
-        </button>
-        {isManager && (
-          <button 
-            className="navigation-button" 
-            onClick={() => navigateTo('settings')}
-          >
-            <i className="fas fa-cog"></i>
-            Settings
-          </button>
-        )}
-      </div>
-      
-      <div className="team-space-tab-content">
+      {/* Content area for the routes - always shown */}
+      <div className="team-content">
         <Routes>
           <Route path="overview" element={<Overview team={team} members={members} isManager={isManager} />} />
           <Route path="squad" element={<Squad team={team} members={members} isManager={isManager} />} />
           <Route path="formation" element={<Formation team={team} members={members} isManager={isManager} />} />
           <Route path="calendar" element={<Calendar team={team} members={members} isManager={isManager} />} />
-          {isManager && <Route path="settings" element={<Settings team={team} members={members} isManager={isManager} />} />}
-          <Route path="/" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
+          {isManager && (
+            <Route path="settings" element={<Settings team={team} members={members} isManager={isManager} />} />
+          )}
+          {/* Don't automatically redirect from the root path - just show the dashboard */}
+          <Route path="/" element={null} />
+          <Route path="*" element={<Navigate to={`/teams/${teamId}/space/overview`} replace />} />
         </Routes>
       </div>
 
-      {/* Confirmation dialog for deletion */}
-      {showDeleteConfirm && (
-        <div className="delete-confirmation-overlay">
-          <div className="delete-confirmation-dialog">
-            <h3>Delete Team?</h3>
-            <p>Are you sure you want to delete <strong>{team.name}</strong>? This action cannot be undone.</p>
-            <div className="confirmation-buttons">
-              <button 
-                className="cancel-button"
-                onClick={toggleDeleteConfirm}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button 
-                className="delete-button"
-                onClick={handleDeleteTeam}
-                disabled={isDeleting}
-              >
-                {isDeleting ? <><i className="fas fa-spinner fa-spin"></i> Deleting...</> : 'Delete Team'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Transfer manager role modal */}
+      {/* Transfer manager modal */}
       {showTransferManagerModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
@@ -645,30 +546,6 @@ const TeamSpace = () => {
                 disabled={isTransferring || !selectedNewManager}
               >
                 {isTransferring ? <><i className="fas fa-spinner fa-spin"></i> Transferring...</> : 'Transfer & Leave'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation dialog when the last member attempts to leave (team will be deleted) */}
-      {showLeaveDeleteConfirm && (
-        <div className="delete-confirmation-overlay">
-          <div className="delete-confirmation-dialog">
-            <h3>Leave Team & Delete?</h3>
-            <p>You are the only member of <strong>{team.name}</strong>. Leaving the team will <strong>delete the team and all its data</strong>. Are you sure you want to proceed?</p>
-            <div className="confirmation-buttons">
-              <button 
-                className="cancel-button"
-                onClick={() => setShowLeaveDeleteConfirm(false)}
-              >
-                No, Stay
-              </button>
-              <button 
-                className="delete-button"
-                onClick={confirmLeaveAndDelete}
-              >
-                Yes, Delete Team
               </button>
             </div>
           </div>

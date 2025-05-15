@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import '../tabs/TabComponents.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import './Overview.css';
 
 const Overview = ({ team, members, isManager }) => {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const [teamData, setTeamData] = useState(team || null);
   const [teamMembers, setTeamMembers] = useState(members || []);
   const [loading, setLoading] = useState(!team);
+  
+  const handleBackClick = () => {
+    // Direct navigation to team space instead of using browser history
+    navigate(`/teams/${teamId}/space`);
+  };
   
   useEffect(() => {
     // If team props are passed, use them
@@ -49,10 +55,18 @@ const Overview = ({ team, members, isManager }) => {
   if (loading) return <div>Loading team overview...</div>;
   if (!teamData) return <div>Team not found</div>;
   
-  // Team overview content
   return (
     <div className="overview-container">
-      <h2>Team Overview</h2>
+      <div className="back-button-container">
+        <button className="back-button" onClick={handleBackClick}>
+          Back
+        </button>
+      </div>
+      
+      <div className="page-header">
+        <h2>Team Overview</h2>
+      </div>
+      
       <div className="team-details">
         <div className="team-info-card">
           <h3>About {teamData.name}</h3>
@@ -69,8 +83,6 @@ const Overview = ({ team, members, isManager }) => {
           <p><strong>Matches Played:</strong> 24</p> {/* This would be fetched from API */}
         </div>
       </div>
-      
-      {/* Recent activity section removed as requested */}
     </div>
   );
 };

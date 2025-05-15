@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { toast } from 'react-toastify';
-import FormationContainer from '../components/formation/FormationContainer';
-import '../tabs/TabComponents.css';
+import { FormationContainer } from '../../components/formation';
+import './Formation.css';
 
 const Formation = ({ team, members, isManager }) => {
+  const { teamId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [error] = useState(null);
   console.log('Formation page rendering with isManager:', isManager);
   console.log('Members data structure sample:', members?.[0]);
   
@@ -28,10 +33,44 @@ const Formation = ({ team, members, isManager }) => {
       setSaveError(null);
     }
   };
+
+  const handleBackClick = () => {
+    // Direct navigation to team space instead of using browser history
+    navigate(`/teams/${teamId}/space`);
+  };
+
+  useEffect(() => {
+    if (!team || !members) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [team, members]);
+
+  if (loading) return <div className="formation-loading">Loading formation data...</div>;
+  if (error) return <div className="formation-error">{error}</div>;
   
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="team-page formation-page">
+      <div className="formation-page">
+        <div className="back-button-container">
+          <button className="back-button" onClick={handleBackClick}>
+            Back
+          </button>
+        </div>
+        
+        <div className="page-header">
+          <h2>Team Formation</h2>
+        </div>
+        
+        <div className="formation-page-header">
+          <p className="formation-page-subtitle">
+            {isManager 
+              ? 'Drag and drop players to create your ideal team formation' 
+              : 'View the current team formation setup'}
+          </p>
+        </div>
+        
         {saveError && (
           <div className="error-message" style={{
             color: '#ef4444',
@@ -45,7 +84,7 @@ const Formation = ({ team, members, isManager }) => {
         )}
         
         <FormationContainer 
-          teamId={team?.id} 
+          teamId={teamId} 
           isManager={isManager} 
           players={players}
           onSaveError={handleSaveError}

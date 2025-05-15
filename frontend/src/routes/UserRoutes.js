@@ -28,12 +28,13 @@ const UserRoutes = () => {
         
         {/* Team space routes - now with nested page routes */}
         <Route path="teams/:teamId/*" element={<TeamSpace />}>
-          <Route path="overview" element={null} /> {/* These are handled inside TeamSpace */}
-          <Route path="squad" element={null} />
-          <Route path="formation" element={<Formation />} />
-          <Route path="calendar" element={null} />
-          <Route path="chat" element={null} />
-          <Route path="settings" element={null} />
+          {/* These routes need to match the /space/tabName structure */}
+          <Route path="space/overview" element={null} />
+          <Route path="space/squad" element={null} />
+          <Route path="space/formation" element={<Formation />} />
+          <Route path="space/calendar" element={null} />
+          <Route path="space/chat" element={null} />
+          <Route path="space/settings" element={null} />
         </Route>
         
         {/* Tournament routes */}

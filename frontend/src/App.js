@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -9,6 +9,8 @@ import AppRoutes from './routes/AppRoutes';
 import './App.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+// Remove this import as we'll handle the TabDetailPage within TeamSpace
+// import TabDetailPage from './pages/user/TeamsPage/TeamSpace/TabDetailPage';
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -49,6 +51,7 @@ function App() {
             <AuthProvider>
               <div className={`App ${appReady ? 'app-ready' : ''}`}>
                 <AppRoutes />
+                {/* Remove the duplicated Routes */}
                 <Notifications />
               </div>
             </AuthProvider>

@@ -135,14 +135,14 @@ const TeamsPage = () => {
           <div className="team-option-card" onClick={() => handleOptionClick('join')}>
             <span className="option-icon">🤝</span>
             <h2>Join Team</h2>
-            <p>Join an existing team to collaborate with other players and participate in tournaments together</p>
+            <p>Join an existing team to collaborate with other players</p>
             <button className="option-button">Join Now</button>
           </div>
           
           <div className="team-option-card" onClick={() => handleOptionClick('create')}>
             <span className="option-icon">✨</span>
             <h2>Create Team</h2>
-            <p>Start your own team, invite players, and build your reputation in the competitive scene</p>
+            <p>Start your own team and invite players</p>
             <button className="option-button">Create New</button>
           </div>
         </div>

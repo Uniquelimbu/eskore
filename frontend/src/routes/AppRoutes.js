@@ -18,6 +18,7 @@ import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
 import NewsPage from '../pages/user/NewsPage';
 import AboutPage from '../pages/public/AboutPage';
+import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings';
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -74,7 +75,9 @@ const AppRoutes = () => {
         <Route path="/teams/create" element={<CreateTeam />} />
         <Route path="/teams/:id" element={<TeamSpace />} />
         <Route path="/teams/:teamId/space" element={<TeamSpace />} />
-        <Route path="/teams/:teamId/space/*" element={<TeamSpace />} />
+        <Route path="/teams/:teamId/space/*" element={<TeamSpace />} /> {/* Update the TeamSpace route to support nested routing */}
+        {/* Add a separate route for settings */}
+        <Route path="/teams/:teamId/settings" element={<Settings />} />
         <Route path="/tournaments" element={<TournamentPage />} />
         <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
         <Route path="/news" element={<NewsPage />} /> {/* Add the News route */}
