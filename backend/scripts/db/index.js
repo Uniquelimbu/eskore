@@ -9,6 +9,7 @@ const { validateAllTemplates } = require('./templates/utilities/template-validat
 const { generateFromTemplate, generateMigration } = require('./generate-from-template');
 const { validateSeeders, fixSeeder } = require('./validateSeeders');
 const { organizeTemplates } = require('./organize-templates');
+const { validateSchema } = require('./validateSchema'); // Add this import
 
 /**
  * Run a comprehensive database maintenance routine
@@ -62,6 +63,9 @@ module.exports = {
   seeders: {
     validate: validateSeeders,
     fix: fixSeeder
+  },
+  schema: {
+    validate: validateSchema  // Add schema validation export
   },
   organize: organizeTemplates,
   maintain: maintainDatabase
