@@ -76,6 +76,11 @@ const authService = {
       try {
         const response = await apiClient.post('/api/auth/register', userData);
         if (response && response.success && response.user) {
+          // Store token in localStorage if it's included in the response
+          if (response.token) {
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
           return response;
         }
         throw new Error(response?.message || 'Registration failed: Invalid response from server');

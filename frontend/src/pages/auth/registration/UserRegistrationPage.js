@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../../services/apiClient';
+import { useAuth } from '../../../contexts/AuthContext'; // Add this import
 import SingleStepForm from './components/SingleStepForm';
 import './UserRegistrationPage.css';
 
@@ -8,6 +8,7 @@ const UserRegistrationPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const { registerUser } = useAuth(); // Use auth context
   
   // Initial form state - removed height, position, and country
   const initialFormData = {
@@ -41,17 +42,18 @@ const UserRegistrationPage = () => {
       delete formattedData.dobDay;
       delete formattedData.confirmPassword;
       
-      // Send registration request
-      const response = await apiClient.post('/api/auth/register', formattedData);
+      // Use the auth context registerUser method instead of apiClient directly
+      const user = await registerUser(formattedData);
       
-      // Handle successful registration
-      if (response.success) {
-        navigate('/login?registered=true');
+      // If successful, the auth context will update with the new user
+      // and we can navigate directly to the dashboard
+      if (user) {
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Registration error:', error);
       setServerError(
-        error.response?.data?.message || 
+        error.message || 
         'An error occurred during registration. Please try again.'
       );
     } finally {

@@ -152,9 +152,11 @@ module.exports = {
   }
 };
 
-const main = async () => {
+async function validateSeeders() {
   const results = [];
   
+  console.log('Validating seeders...');
+
   for (const seeder of seeders) {
     const result = await validateSeeder(seeder);
     results.push(result);
@@ -193,60 +195,18 @@ const main = async () => {
     results.filter(r => !r.valid).forEach(r => console.log(`- ${r.file}: ${r.error}`));
   }
   
-  // Create a template directory if it doesn't exist
-  const templateDir = path.join(__dirname, 'templates');
-  if (!fs.existsSync(templateDir)) {
-    fs.mkdirSync(templateDir);
-    
-    // Create a seeder template
-    const templateContent = `'use strict';
+  return { valid, invalid, results };
+}
 
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    try {
-      // Your implementation here
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error in seeder:', error);
-      return Promise.reject(error);
-    }
-  },
+// Export the functions
+module.exports = { validateSeeders, validateSeeder, fixSeeder };
 
-  down: async (queryInterface, Sequelize) => {
-    // Your implementation here
-    return Promise.resolve();
-  }
-};`;
-    
-    fs.writeFileSync(path.join(templateDir, 'seeder.template.js'), templateContent);
-    console.log('Created seeder template at templates/seeder.template.js');
-  }
-  
-  // Clean up any backup files from previous runs
-  console.log('Cleaning up any old backup files...');
-  fs.readdirSync(seedersDir)
-    .filter(file => file.endsWith('.bak'))
-    .forEach(file => {
-      const backupDate = fs.statSync(path.join(seedersDir, file)).mtime;
-      const now = new Date();
-      const hoursDiff = (now - backupDate) / (1000 * 60 * 60);
-      
-      // Delete backups older than 24 hours
-      if (hoursDiff > 24) {
-        fs.unlinkSync(path.join(seedersDir, file));
-        console.log(`Deleted old backup: ${file}`);
-      }
+// Run the validation if called directly
+if (require.main === module) {
+  validateSeeders()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Validation failed:', error);
+      process.exit(1);
     });
-};
-
-// Run the validation
-main()
-  .then(() => {
-    console.log('Done!');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-    process.exit(1);
-  });
+}
