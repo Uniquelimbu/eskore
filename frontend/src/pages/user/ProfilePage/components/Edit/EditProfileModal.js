@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { positionMapping } from '../../../../utils/soccerUtils';
-import { formatDateForInput } from '../../../../utils/dateUtils';
+import { positionMapping } from '../../../../../utils/soccerUtils';
+import { formatDateForInput } from '../../../../../utils/dateUtils';
 
 const EditProfileModal = ({ profileData, onClose, onSave }) => {
   const [formData, setFormData] = useState({

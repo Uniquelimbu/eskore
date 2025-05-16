@@ -184,7 +184,12 @@ export const AuthProvider = ({ children }) => {
       
       // Set token in localStorage
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(response.user)); // <-- Add this line
+      
+      // Always ensure we store the full user object including firstName
+      localStorage.setItem('user', JSON.stringify(user)); 
+      
+      // Log the user data to help debug firstName issues
+      console.log('AuthContext: User data received:', user);
       
       // Update state with SUCCESS action
       dispatch({ type: AUTH_SUCCESS, payload: user });

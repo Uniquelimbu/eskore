@@ -14,6 +14,10 @@ const DashboardPage = () => {
   
   const { user } = useAuth();
   
+  // Extract first name for welcome message
+  const firstName = user?.firstName || '';
+  const displayName = firstName || user?.username || 'Athlete';
+  
   // Fetch activity data
   useEffect(() => {
     const fetchActivities = async () => {
@@ -46,7 +50,7 @@ const DashboardPage = () => {
 
       <div className="dashboard-content-grid">
         <div className="dashboard-welcome-section">
-          <h1>Welcome, {user?.firstName || user?.username || 'Athlete'}!</h1>
+          <h1>Welcome, {displayName}!</h1>
           <p>Track your performance, view upcoming matches, and manage your soccer career all in one place.</p>
           
           <div className="dashboard-quicklinks">
