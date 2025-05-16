@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import apiClient from '../../../../../../services/apiClient';
 import './Squad.css';
 
 const Squad = () => {
   const { teamId } = useParams();
+  const navigate = useNavigate();
+  const { isManager } = useOutletContext() || {}; // Get isManager from outlet context
+  
   const [managers, setManagers] = useState([]);
   const [athletes, setAthletes] = useState([]);
   const [coaches, setCoaches] = useState([]);
@@ -12,26 +16,38 @@ const Squad = () => {
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('athlete');
-  const [isManager] = useState(true); // For demo purposes
+  
+  console.log('Squad: Is user a manager?', isManager);
   
   useEffect(() => {
     const fetchSquad = async () => {
       try {
         setLoading(true);
         // API calls should go here instead of mock data
-        // Example:
-        // const managersResponse = await apiClient.get(`/api/teams/${teamId}/members?role=manager`);
-        // const athletesResponse = await apiClient.get(`/api/teams/${teamId}/members?role=athlete`);
-        // const coachesResponse = await apiClient.get(`/api/teams/${teamId}/members?role=coach`);
+        const membersResponse = await apiClient.get(`/api/teams/${teamId}/members`);
+        console.log('Squad: Members fetched:', membersResponse);
         
-        // setManagers(managersResponse.data);
-        // setAthletes(athletesResponse.data);
-        // setCoaches(coachesResponse.data);
-
-        // Temporary empty arrays until API integration
-        setManagers([]);
-        setAthletes([]);
-        setCoaches([]);
+        if (membersResponse && membersResponse.members && Array.isArray(membersResponse.members)) {
+          // Categorize members by role
+          const managerMembers = membersResponse.members.filter(m => 
+            m.role === 'manager' || m.role === 'assistant_manager');
+          const athleteMembers = membersResponse.members.filter(m => 
+            m.role === 'athlete');
+          const coachMembers = membersResponse.members.filter(m => 
+            m.role === 'coach');
+          
+          setManagers(managerMembers);
+          setAthletes(athleteMembers);
+          setCoaches(coachMembers);
+          
+          console.log(`Squad: Categorized ${managerMembers.length} managers, ${athleteMembers.length} athletes, ${coachMembers.length} coaches`);
+        } else {
+          // Temporary empty arrays if API response is invalid
+          console.warn('Squad: Invalid members response format, using empty arrays');
+          setManagers([]);
+          setAthletes([]);
+          setCoaches([]);
+        }
       } catch (err) {
         console.error('Error fetching squad:', err);
         setError('Failed to load squad information. Please try again later.');
@@ -63,6 +79,10 @@ const Squad = () => {
     setShowAddMemberForm(false);
   };
 
+  const handleBack = () => {
+    navigate(`/teams/${teamId}/space`);
+  };
+
   if (loading) {
     return <div className="squad-loading">Loading squad information...</div>;
   }
@@ -76,6 +96,9 @@ const Squad = () => {
   return (
     <div className="squad-page">
       <div className="squad-header">
+        <button className="back-button" onClick={handleBack}>
+          &larr; Back to Team Space
+        </button>
         <h2>Squad</h2>
         {isManager && (
           <button className="add-member-btn" onClick={handleAddMember}>

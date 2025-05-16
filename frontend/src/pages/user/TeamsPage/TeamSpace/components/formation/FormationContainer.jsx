@@ -4,7 +4,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import useFormationStore from './formationStore';
 import PlayerChip from './PlayerChip';
 import PositionPlaceholder from './PositionPlaceholder';
-import PresetSelector from './PresetSelector';
 import SubsStrip from './SubsStrip';
 import './FormationStyles.css';
 
@@ -127,14 +126,11 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     subs,
     preset,
     loading,
-    saved,
-    changePreset,
     mapPlayersToPositions,
-    movePlayerToPosition, // New store action
-    movePlayerToSubSlot,  // New store action
-    swapPlayersInFormation, // New store action
-    moveStarterToSubsGeneral, // New store action for dropping starter on strip
-    saveFormation, // Add this to extract the saveFormation function
+    movePlayerToPosition,
+    movePlayerToSubSlot,
+    swapPlayersInFormation,
+    moveStarterToSubsGeneral,
   } = useFormationStore();
   
   // Get PRESETS from the store
@@ -248,20 +244,6 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
       });
   };
   
-  // Save formation as PNG
-  const handleExportPNG = () => {
-    if (containerRef.current) {
-      alert('Export PNG feature will be implemented here');
-    }
-  };
-  
-  // Add a handler for the save button
-  const handleSaveFormation = () => {
-    if (!saved && !loading) {
-      saveFormation();
-    }
-  };
-  
   // Add pitch container style
   const pitchContainerStyle = {
     width: '100%',
@@ -279,12 +261,34 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     overflow: 'hidden'
   };
   
+  // Add explicit debugging for manager status
+  useEffect(() => {
+    console.log(`FormationContainer: Manager status received: ${isManager}`);
+    // If we're not a manager but should be (e.g., this is your team), log it for debugging
+  }, [isManager]);
+  
   console.log("Render FormationContainer", { starters: starters.length, subs: subs.length, isManager });
   
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '1rem', borderRadius: '0.5rem' }}>
-        {/* Formation header removed */}
+        {isManager ? (
+          <div className="manager-indicator" style={{ 
+            color: 'green', 
+            marginBottom: '10px', 
+            fontSize: '0.9rem' 
+          }}>
+            Manager View - You can edit this formation
+          </div>
+        ) : (
+          <div className="viewer-indicator" style={{ 
+            color: 'gray',
+            marginBottom: '10px',
+            fontSize: '0.9rem' 
+          }}>
+            View Only - Contact a team manager to make changes
+          </div>
+        )}
         
         <div 
           ref={containerRef} 

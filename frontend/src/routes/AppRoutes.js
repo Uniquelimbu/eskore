@@ -10,7 +10,6 @@ import ProfilePage from '../pages/user/ProfilePage/ProfilePage';
 import SearchPage from '../pages/user/SearchPage/SearchPage';
 import TeamsPage from '../pages/user/TeamsPage/TeamsPage';
 import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
-import TeamSpace from '../pages/user/TeamsPage/TeamSpace/TeamSpace';
 import TournamentPage from '../pages/user/TournamentPage/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/TournamentDetailsPage';
 // Fix import path for AdminDashboard
@@ -18,7 +17,11 @@ import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
 import NewsPage from '../pages/user/NewsPage';
 import AboutPage from '../pages/public/AboutPage';
-import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings';
+import TeamSpace from '../pages/user/TeamsPage/TeamSpace/TeamSpace'; // Import TeamSpace
+import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings'; // Import Settings component
+import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad'; // Import Squad component
+import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation'; // Import Formation component
+import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar'; // Import Calendar component
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -71,13 +74,21 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/search" element={<SearchPage />} />
+        
+        {/* Team related routes */}
         <Route path="/teams" element={<TeamsPage />} />
         <Route path="/teams/create" element={<CreateTeam />} />
-        <Route path="/teams/:id" element={<TeamSpace />} />
-        <Route path="/teams/:teamId/space" element={<TeamSpace />} />
-        <Route path="/teams/:teamId/space/*" element={<TeamSpace />} /> {/* Update the TeamSpace route to support nested routing */}
-        {/* Add a separate route for settings */}
-        <Route path="/teams/:teamId/settings" element={<Settings />} />
+        
+        {/* TeamSpace and its nested child routes */}
+        <Route path="/teams/:teamId/space" element={<TeamSpace />}>
+          {/* Default child can be set here if needed, e.g., redirect to squad */}
+          {/* <Route index element={<Navigate to="squad" replace />} /> */}
+          <Route path="squad" element={<Squad />} />
+          <Route path="formation" element={<Formation />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        
         <Route path="/tournaments" element={<TournamentPage />} />
         <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
         <Route path="/news" element={<NewsPage />} /> {/* Add the News route */}

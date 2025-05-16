@@ -12,6 +12,10 @@ import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/Tournamen
 import NotFoundPage from '../pages/public/NotFoundPage/NotFoundPage';
 import HomePage from '../pages/public/HomePage/HomePage';
 import ProfilePage from '../pages/user/ProfilePage/ProfilePage';
+import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad';
+import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation';
+import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar';
+import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings';
 
 const UserRoutes = () => {
   return (
@@ -27,9 +31,25 @@ const UserRoutes = () => {
         <Route path="teams/create" element={<CreateTeam />} />
         <Route path="teams/join" element={<JoinTeam />} />
         
-        {/* TeamSpace route - no longer using nested routes for tabs */}
-        <Route path="teams/:teamId" element={<TeamSpace />} />
-        <Route path="teams/:teamId/settings" element={<TeamSpace />} />
+        {/* TeamSpace routes - each section gets its own route */}
+        <Route path="teams/:teamId" element={<TeamSpace />}>
+          {/* Use React.Fragment for the index route to ensure useOutlet() works as expected in TeamSpace */}
+          <Route index element={<React.Fragment />} /> 
+          <Route path="space/squad" element={<Squad />} />
+          <Route path="space/formation" element={<Formation />} />
+          <Route path="space/calendar" element={<Calendar />} />
+          <Route path="space/settings" element={<Settings />} />
+        </Route>
+        
+        {/* Redirect old routes to new structure - These might be less necessary if direct links are updated,
+            but can remain for backward compatibility. Ensure params are correctly passed if needed.
+            Note: The Navigate component might need teamId from useParams if used directly like this.
+            For simplicity, these are kept as is, but review if they cause issues with param passing.
+        */}
+        <Route path="/teams/:teamId/squad" element={<Navigate to="space/squad" replace />} />
+        <Route path="/teams/:teamId/formation" element={<Navigate to="space/formation" replace />} />
+        <Route path="/teams/:teamId/calendar" element={<Navigate to="space/calendar" replace />} />
+        <Route path="/teams/:teamId/settings" element={<Navigate to="space/settings" replace />} />
         
         {/* Tournament routes */}
         <Route path="tournaments" element={<TournamentPage />} />

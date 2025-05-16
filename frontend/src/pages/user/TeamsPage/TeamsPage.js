@@ -44,6 +44,7 @@ const TeamsPage = () => {
             const firstTeam = response.teams[0];
             if (firstTeam.id) {
               console.log(`TeamsPage: Navigating to team space for: ${firstTeam.id}`);
+              // Navigate to the base team space URL
               navigate(`/teams/${firstTeam.id}/space`);
               return; // Important to return to avoid setting loading to false
             }
@@ -70,6 +71,11 @@ const TeamsPage = () => {
     } else if (option === 'create') {
       navigate('/teams/create');
     }
+  };
+
+  const handleTeamClick = (teamId) => {
+    // Navigate to the team's space dashboard
+    navigate(`/teams/${teamId}/space`);
   };
 
   if (loading) {
@@ -103,7 +109,7 @@ const TeamsPage = () => {
               <div 
                 key={team.id}
                 className="team-card"
-                onClick={() => navigate(`/teams/${team.id}/space`)}
+                onClick={() => handleTeamClick(team.id)}
               >
                 <div className="team-logo-container">
                   {team.logoUrl ? (

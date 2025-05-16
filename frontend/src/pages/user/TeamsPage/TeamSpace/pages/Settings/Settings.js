@@ -1,215 +1,265 @@
-import React, { useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useAuth } from '../../../../../../contexts/AuthContext';
+import apiClient from '../../../../../../services/apiClient';
 import './Settings.css';
 
 const Settings = () => {
   const { teamId } = useParams();
-  const [team, setTeam] = useState({
-    name: 'Phoenix FC',
-    abbreviation: 'PHX',
-    logo: null,
-    primaryColor: '#4a6cf7',
-    secondaryColor: '#1a202c'
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const outletCtx = useOutletContext(); // {team, isManager}
+
+  const [team, setTeam] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    nickname: '',
+    city: '',
+    foundedYear: '',
+    logoUrl: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
-  const fileInputRef = useRef(null);
-  
-  const handleLogoClick = () => {
-    fileInputRef.current.click();
-  };
-  
-  const handleLogoChange = (e) => {
-    // Handle logo file upload
-    const file = e.target.files[0];
-    if (file) {
-      // Process file
-      console.log('New logo selected:', file.name);
-    }
-  };
-  
-  const handleTeamInfoChange = (e) => {
+  const [statusMsg, setStatusMsg] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isManager, setIsManager] = useState(outletCtx?.isManager || false);
+
+  // Fetch team details on mount
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        setLoading(true);
+        const data = await apiClient.get(`/api/teams/${teamId}`);
+        setTeam(data);
+        setFormData({
+          name: data.name || '',
+          nickname: data.nickname || '',
+          city: data.city || '',
+          foundedYear: data.foundedYear || '',
+          logoUrl: data.logoUrl || ''
+        });
+        // Determine manager status
+        const mgrRoles = ['manager', 'owner', 'admin'];
+        const computeIsManager = (teamData) => {
+          if (!teamData || !user) return false;
+          if (teamData.userRole && mgrRoles.includes(teamData.userRole.toLowerCase())) return true;
+          if (teamData.role && mgrRoles.includes(teamData.role.toLowerCase())) return true;
+          if (Array.isArray(teamData.members)) {
+            const membership = teamData.members.find(m => (m.userId || m.id) === user.id);
+            if (membership && membership.role && mgrRoles.includes(membership.role.toLowerCase())) return true;
+          }
+          if (Array.isArray(teamData.managers)) {
+            if (teamData.managers.some(mgr => (mgr.userId || mgr.id) === user.id)) return true;
+          }
+          return false;
+        };
+
+        if (!outletCtx || outletCtx.isManager === undefined) {
+          setIsManager(computeIsManager(data));
+        } else {
+          setIsManager(outletCtx.isManager);
+        }
+      } catch (err) {
+        console.error('Error loading team:', err);
+        setStatusMsg({ type: 'error', text: err.message || 'Failed to load team.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (teamId) fetchTeam();
+  }, [teamId, user, outletCtx]);
+
+  const handleBack = () => navigate(`/teams/${teamId}/space`);
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setTeam(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
-  const handleColorChange = (e) => {
-    const { name, value } = e.target;
-    setTeam(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    
+
+  const handleSave = async () => {
     try {
-      // Save team settings
-      console.log('Saving team settings:', team);
-      // API call would go here
-      
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setSaving(true);
+      await apiClient.put(`/api/teams/${teamId}`, formData);
+      setStatusMsg({ type: 'success', text: 'Team updated successfully.' });
     } catch (err) {
-      setError('Failed to save team settings. Please try again.');
-      console.error('Error saving team settings:', err);
+      console.error('Save failed:', err);
+      setStatusMsg({ type: 'error', text: err.message || 'Failed to save changes.' });
     } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleDeleteTeam = () => {
-    if (window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
-      // Delete team logic
-      console.log('Deleting team:', teamId);
+      setSaving(false);
     }
   };
 
+  const handleLeaveTeam = async () => {
+    if (!window.confirm('Are you sure you want to leave this team?')) return;
+    try {
+      await apiClient.post(`/api/teams/${teamId}/leave`);
+      navigate('/teams');
+    } catch (err) {
+      console.error('Leave team failed:', err);
+      setStatusMsg({ type: 'error', text: err.message || 'Failed to leave team.' });
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    try {
+      await apiClient.delete(`/api/teams/${teamId}`);
+      navigate('/teams');
+    } catch (err) {
+      console.error('Delete team failed:', err);
+      setStatusMsg({ type: 'error', text: err.message || 'Failed to delete team.' });
+    }
+  };
+
+  // ---------- RENDER ----------
+  if (loading) {
+    return <div className="loading-message">Loading settings…</div>;
+  }
+
+  if (!team) {
+    return (
+      <div className="settings-page">
+        <div className="settings-header">
+          <button className="back-button" onClick={handleBack}>&larr; Back to Team Space</button>
+        </div>
+        <p className="save-error-message">Team not found.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="settings-page">
-      <div className="settings-content">
+      <div className="settings-header">
+        <button className="back-button" onClick={handleBack}>&larr; Back to Team Space</button>
         <h2>Team Settings</h2>
-        
-        {success && (
-          <div className="success-message">
-            Team settings saved successfully!
-          </div>
-        )}
-        
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="settings-section">
-            <h3>Team Information</h3>
+      </div>
+
+      {statusMsg && (
+        <div className={statusMsg.type === 'success' ? 'save-success-message' : 'save-error-message'}>
+          {statusMsg.text}
+        </div>
+      )}
+
+      {/* TEAM INFO SECTION */}
+      <div className="settings-section">
+        <h3>Team Information</h3>
+        <form className="team-settings-form" onSubmit={(e) => e.preventDefault()}>
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="name">Team Name</label>
+              <label htmlFor="name">Name</label>
               <input
-                type="text"
                 id="name"
                 name="name"
-                value={team.name}
-                onChange={handleTeamInfoChange}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="abbreviation">Team Abbreviation</label>
-              <input
                 type="text"
-                id="abbreviation"
-                name="abbreviation"
-                value={team.abbreviation}
-                onChange={handleTeamInfoChange}
-                maxLength={3}
-                required
+                value={formData.name}
+                onChange={handleInputChange}
+                disabled={!isManager}
               />
-              <small>3 letters maximum</small>
+            </div>
+            <div className="form-group">
+              <label htmlFor="nickname">Nickname</label>
+              <input
+                id="nickname"
+                name="nickname"
+                type="text"
+                value={formData.nickname}
+                onChange={handleInputChange}
+                disabled={!isManager}
+              />
             </div>
           </div>
-          
-          <div className="settings-section">
-            <h3>Team Logo</h3>
-            <div className="logo-section">
-              <div className="current-logo">
-                {team.logo ? (
-                  <img src={team.logo} alt="Team logo" className="team-logo-img" />
-                ) : (
-                  <div className="logo-placeholder">
-                    {team.abbreviation || 'TEAM'}
-                  </div>
-                )}
-              </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="city">City</label>
+              <input
+                id="city"
+                name="city"
+                type="text"
+                value={formData.city}
+                onChange={handleInputChange}
+                disabled={!isManager}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="foundedYear">Founded</label>
+              <input
+                id="foundedYear"
+                name="foundedYear"
+                type="number"
+                value={formData.foundedYear}
+                onChange={handleInputChange}
+                disabled={!isManager}
+              />
+            </div>
+          </div>
+          {/* Logo Upload (simplified) */}
+          <div className="logo-section">
+            <div className="current-logo">
+              {formData.logoUrl ? (
+                <img className="team-logo-img" src={formData.logoUrl} alt="team logo" />
+              ) : (
+                <div className="logo-placeholder">{formData.name ? formData.name.charAt(0) : 'T'}</div>
+              )}
+            </div>
+            {isManager && (
               <div className="logo-actions">
-                <button
-                  type="button"
-                  className="upload-logo-button"
-                  onClick={handleLogoClick}
-                >
-                  <i className="fas fa-upload"></i>
-                  Upload Logo
+                {/* TODO: Implement actual upload */}
+                <button className="upload-logo-button" type="button" disabled>
+                  Upload New Logo
                 </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleLogoChange}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                />
-                {team.logo && (
-                  <button
-                    type="button"
-                    className="remove-logo-button"
-                    onClick={() => setTeam(prev => ({ ...prev, logo: null }))}
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                    Remove Logo
-                  </button>
-                )}
+                <button className="remove-logo-button" type="button" disabled={!formData.logoUrl}>
+                  Remove Logo
+                </button>
               </div>
+            )}
+          </div>
+          {isManager && (
+            <div className="form-actions">
+              <button
+                className="save-button"
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
             </div>
-          </div>
-          
-          <div className="settings-section">
-            <h3>Team Colors</h3>
-            <div className="color-inputs">
-              <div className="form-group">
-                <label htmlFor="primaryColor">Primary Color</label>
-                <input
-                  type="color"
-                  id="primaryColor"
-                  name="primaryColor"
-                  value={team.primaryColor}
-                  onChange={handleColorChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="secondaryColor">Secondary Color</label>
-                <input
-                  type="color"
-                  id="secondaryColor"
-                  name="secondaryColor"
-                  value={team.secondaryColor}
-                  onChange={handleColorChange}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="save-settings-button"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
+          )}
         </form>
-        
-        <div className="settings-section danger-zone-section">
-          <h3>Danger Zone</h3>
-          <p>These actions are irreversible. Please proceed with caution.</p>
-          <button
-            type="button"
-            className="delete-team-button"
-            onClick={handleDeleteTeam}
-          >
-            Delete Team
+      </div>
+
+      {/* DANGER ZONE SECTION */}
+      <div className="settings-section danger-zone-section">
+        <h3 className="danger-zone-heading">Danger Zone</h3>
+        <p className="danger-zone-text">
+          Leaving a team will remove you from its roster. Deleting a team is permanent.
+        </p>
+        <div className="delete-team-button-wrapper">
+          <button className="cancel-button" onClick={handleLeaveTeam}>
+            Leave Team
           </button>
+          {isManager && (
+            <button className="danger-button" onClick={() => setShowDeleteConfirm(true)}>
+              Delete Team
+            </button>
+          )}
         </div>
       </div>
+
+      {/* CONFIRM DELETE POPUP */}
+      {showDeleteConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Delete Team</h3>
+            <p>
+              This will permanently delete the team and all related data. Are you sure you want to proceed?
+            </p>
+            <div className="confirmation-buttons">
+              <button className="cancel-button" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className="danger-button" onClick={handleDeleteTeam}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

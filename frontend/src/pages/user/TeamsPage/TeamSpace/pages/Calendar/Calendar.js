@@ -10,8 +10,7 @@ const Calendar = ({ team, members, isManager }) => {
   const [error, setError] = useState(null);
   
   const handleBackClick = () => {
-    // Direct navigation to team space instead of using browser history
-    navigate(`/teams/${teamId}/space`);
+    navigate(`/teams/${teamId}`);
   };
   
   useEffect(() => {
@@ -97,7 +96,7 @@ const Calendar = ({ team, members, isManager }) => {
     <div className="calendar-page">
       <div className="back-button-container">
         <button className="back-button" onClick={handleBackClick}>
-          Back
+          &larr; Back to Team Space
         </button>
       </div>
       
