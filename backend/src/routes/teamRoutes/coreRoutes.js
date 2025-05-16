@@ -18,7 +18,6 @@ const { Op } = require('sequelize');
 router.get('/', catchAsync(async (req, res) => {
   log.info('TEAMROUTES/CORE (GET /): Fetching all teams.');
   const teams = await Team.findAll();
-  
   return sendSafeJson(res, {
     success: true,
     count: teams.length,

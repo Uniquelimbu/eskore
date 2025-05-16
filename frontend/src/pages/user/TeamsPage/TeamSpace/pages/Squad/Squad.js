@@ -1,134 +1,184 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import './Squad.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import './Squad.css'; // Import the CSS file
 
-const Squad = () => {
+const Squad = ({ team, members, isManager }) => {
   const { teamId } = useParams();
-  const [managers, setManagers] = useState([]);
-  const [athletes, setAthletes] = useState([]);
-  const [coaches, setCoaches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [teamMembers, setTeamMembers] = useState(members || []);
+  const [loading, setLoading] = useState(!members);
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('athlete');
-  const [isManager] = useState(true); // For demo purposes
+  const [submitStatus, setSubmitStatus] = useState(null);
   
   useEffect(() => {
-    const fetchSquad = async () => {
+    // If members props are passed, use them
+    if (members) {
+      setTeamMembers(members);
+      return;
+    }
+    
+    // Otherwise fetch members for this specific team
+    const fetchTeamMembers = async () => {
       try {
         setLoading(true);
-        // API calls should go here instead of mock data
-        // Example:
-        // const managersResponse = await apiClient.get(`/api/teams/${teamId}/members?role=manager`);
-        // const athletesResponse = await apiClient.get(`/api/teams/${teamId}/members?role=athlete`);
-        // const coachesResponse = await apiClient.get(`/api/teams/${teamId}/members?role=coach`);
+        const response = await fetch(`/api/teams/${teamId}/members`);
         
-        // setManagers(managersResponse.data);
-        // setAthletes(athletesResponse.data);
-        // setCoaches(coachesResponse.data);
-
-        // Temporary empty arrays until API integration
-        setManagers([]);
-        setAthletes([]);
-        setCoaches([]);
-      } catch (err) {
-        console.error('Error fetching squad:', err);
-        setError('Failed to load squad information. Please try again later.');
-      } finally {
+        if (!response.ok) {
+          throw new Error('Failed to fetch team members');
+        }
+        
+        const data = await response.json();
+        setTeamMembers(data.members || []);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching team members:', error);
         setLoading(false);
       }
     };
     
-    fetchSquad();
-  }, [teamId]);
+    fetchTeamMembers();
+  }, [members, teamId]);
   
-  const handleAddMember = () => {
-    setShowAddMemberForm(true);
-  };
-  
-  const handleRemoveMember = (memberId) => {
-    if (window.confirm('Are you sure you want to remove this member from the team?')) {
-      // Remove logic
-      console.log('Removing member:', memberId);
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setSubmitStatus({ type: 'loading', message: 'Adding member...' });
+      const response = await fetch(`/api/teams/${teamId}/members`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newMemberEmail,
+          role: newMemberRole
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add member');
+      }
+      
+      // Refresh the member list
+      const membersResponse = await fetch(`/api/teams/${teamId}/members`);
+      const membersData = await membersResponse.json();
+      setTeamMembers(membersData.members || []);
+      
+      // Reset form
+      setNewMemberEmail('');
+      setNewMemberRole('athlete');
+      setShowAddMemberForm(false);
+      setSubmitStatus({ type: 'success', message: 'Member added successfully!' });
+      
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error adding member:', error);
+      setSubmitStatus({ type: 'error', message: error.message });
     }
   };
-
-  const handleAddMemberSubmit = (e) => {
-    e.preventDefault();
-    console.log('Adding new member:', { email: newMemberEmail, role: newMemberRole });
-    // Add logic to send request to backend
-    setNewMemberEmail('');
-    setNewMemberRole('athlete');
-    setShowAddMemberForm(false);
-  };
-
-  if (loading) {
-    return <div className="squad-loading">Loading squad information...</div>;
-  }
   
-  if (error) {
-    return <div className="squad-error">{error}</div>;
-  }
-
-  const teamHasMembers = managers.length > 0 || athletes.length > 0 || coaches.length > 0;
-
+  const handleRemoveMember = async (userId) => {
+    if (!window.confirm('Are you sure you want to remove this member?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/teams/${teamId}/members/${userId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to remove member');
+      }
+      
+      // Update the member list without a full refresh
+      setTeamMembers(teamMembers.filter(member => member.id !== userId));
+      setSubmitStatus({ type: 'success', message: 'Member removed successfully!' });
+      
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error removing member:', error);
+      setSubmitStatus({ type: 'error', message: error.message });
+    }
+  };
+  
+  const handleBackClick = () => {
+    // Navigate directly to the team space base route without any sub-path
+    navigate(`/teams/${teamId}/space`);
+  };
+  
+  if (loading) return <div>Loading squad information...</div>;
+  
+  // Filter members by role for better organization
+  const managers = teamMembers.filter(m => m.role === 'manager' || m.role === 'assistant_manager');
+  const athletes = teamMembers.filter(m => m.role === 'athlete');
+  const coaches = teamMembers.filter(m => m.role === 'coach');
+  
   return (
-    <div className="squad-page">
-      <div className="squad-header">
-        <h2>Squad</h2>
-        {isManager && (
-          <button className="add-member-btn" onClick={handleAddMember}>
-            Add Member
-          </button>
-        )}
+    <div className="team-page squad-page">
+      <div className="back-button-container">
+        <button className="back-button" onClick={handleBackClick}>
+          Back
+        </button>
       </div>
       
-      {showAddMemberForm && (
-        <div className="add-member-form">
-          <h3>Add New Team Member</h3>
-          <form onSubmit={handleAddMemberSubmit}>
-            <div className="form-group">
-              <label htmlFor="memberEmail">Email:</label>
-              <input
-                type="email"
-                id="memberEmail"
-                value={newMemberEmail}
-                onChange={(e) => setNewMemberEmail(e.target.value)}
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="memberRole">Role:</label>
-              <select
-                id="memberRole"
-                value={newMemberRole}
-                onChange={(e) => setNewMemberRole(e.target.value)}
-              >
-                <option value="athlete">Athlete</option>
-                <option value="coach">Coach</option>
-                {isManager && <option value="assistant_manager">Assistant Manager</option>}
-              </select>
-            </div>
-            <div className="form-actions">
-              <button type="button" className="cancel-btn" onClick={() => setShowAddMemberForm(false)}>
-                Cancel
-              </button>
-              <button type="submit" className="submit-btn">Add Member</button>
-            </div>
-          </form>
+      <div className="page-header">
+        <h2>Team Squad</h2>
+      </div>
+      
+      {submitStatus && (
+        <div className={`status-message ${submitStatus.type}`}>
+          {submitStatus.message}
         </div>
+      )}
+      
+      {showAddMemberForm && (
+        <form onSubmit={handleAddMember} className="add-member-form">
+          <div className="form-group">
+            <label htmlFor="memberEmail">Email:</label>
+            <input
+              type="email"
+              id="memberEmail"
+              value={newMemberEmail}
+              onChange={(e) => setNewMemberEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="memberRole">Role:</label>
+            <select
+              id="memberRole"
+              value={newMemberRole}
+              onChange={(e) => setNewMemberRole(e.target.value)}
+            >
+              <option value="athlete">Athlete</option>
+              <option value="coach">Coach</option>
+              {isManager && <option value="assistant_manager">Assistant Manager</option>}
+            </select>
+          </div>
+          <button type="submit" className="submit-btn">Add Member</button>
+        </form>
       )}
       
       <div className="squad-container">
         {managers.length > 0 && (
           <div className="squad-section">
-            <h3>Managers</h3>
+            <h3>Management</h3>
             <div className="squad-members">
               {managers.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
@@ -155,7 +205,7 @@ const Squad = () => {
               {athletes.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
@@ -183,7 +233,7 @@ const Squad = () => {
               {coaches.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} {member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
@@ -203,7 +253,7 @@ const Squad = () => {
           </div>
         )}
         
-        {!teamHasMembers && (
+        {teamMembers.length === 0 && (
           <div className="empty-state">
             <p>This team has no members yet. Add members to get started!</p>
           </div>

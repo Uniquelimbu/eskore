@@ -29,18 +29,8 @@ function setupAssociations() {
   Role.belongsToMany(User, { through: UserRole, foreignKey: 'roleId', otherKey: 'userId' });
   
   // User - Team (many-to-many)
-  User.belongsToMany(Team, { 
-    through: UserTeam, 
-    foreignKey: 'userId', 
-    otherKey: 'teamId' 
-  });
-  // Provide explicit alias 'Users' so we can eagerly load team members with team.getUsers()
-  Team.belongsToMany(User, { 
-    through: UserTeam, 
-    foreignKey: 'teamId', 
-    otherKey: 'userId', 
-    as: 'Users' // Alias must match the include used in routes
-  });
+  User.belongsToMany(Team, { through: UserTeam, foreignKey: 'userId', otherKey: 'teamId' });
+  Team.belongsToMany(User, { through: UserTeam, foreignKey: 'teamId', otherKey: 'userId' });
   
   // UserTeam relationships
   User.hasMany(UserTeam, { foreignKey: 'userId' });

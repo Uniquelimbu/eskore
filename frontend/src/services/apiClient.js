@@ -55,7 +55,7 @@ const circuitBreaker = {
   }
 };
 
-// Create an Axios instance with improved timeout settings for different request types
+// Create an Axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Crucial for sending cookies cross-origin
@@ -63,18 +63,8 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 15000, // Default timeout (15 seconds)
+  timeout: 15000, // 15 seconds
 });
-
-// Add a method to create a custom instance with different timeout
-apiClient.withTimeout = function(timeoutMs) {
-  return axios.create({
-    baseURL: this.defaults.baseURL,
-    withCredentials: this.defaults.withCredentials,
-    headers: this.defaults.headers,
-    timeout: timeoutMs
-  });
-};
 
 // Request interceptor with enhanced error and debug handling
 apiClient.interceptors.request.use(
@@ -320,23 +310,6 @@ apiClient.post = function(url, data, config = {}) {
     });
   }
   return originalPost.call(this, url, data, config);
-};
-
-// Add a specific method for team requests with shorter timeout
-apiClient.getTeam = async function(teamId, options = {}) {
-  const timeoutMs = options.timeout || 5000; // 5 second default for team requests
-  
-  try {
-    const teamClient = this.withTimeout(timeoutMs);
-    // Copy interceptors from main instance
-    teamClient.interceptors.request = this.interceptors.request;
-    teamClient.interceptors.response = this.interceptors.response;
-    
-    return await teamClient.get(`/api/teams/${teamId}`);
-  } catch (error) {
-    console.warn(`Team request timed out after ${timeoutMs}ms:`, error);
-    throw error;
-  }
 };
 
 export default apiClient;

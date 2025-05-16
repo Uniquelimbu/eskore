@@ -53,25 +53,13 @@ const app = express();
 
 // --- VERY EARLY RAW REQUEST LOGGER ---
 app.use((req, res, next) => {
-  // Skip logging for OPTIONS requests (CORS preflight)
-  if (req.method === 'OPTIONS') {
-    return next();
-  }
-  
-  // Skip logging for requests with timestamp parameters (polling)
-  if (req.originalUrl.includes('_t=')) {
-    return next();
-  }
-  
-  // Add request ID for tracing through the request lifecycle
-  req.requestId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
-  
   // Using logger here if available, otherwise console for very early stages
+  // Changed from (logger || console).log to logger.info for correct Winston usage
   if (logger && typeof logger.info === 'function') {
-    logger.info(`APP.JS [${req.requestId}]: INCOMING REQUEST --- Method: ${req.method}, URL: ${req.originalUrl}`);
+    logger.info(`APP.JS: RAW INCOMING REQUEST --- Method: ${req.method}, URL: ${req.originalUrl}`);
   } else {
     // Fallback to console.log if logger or logger.info is not available
-    console.log(`APP.JS [${req.requestId}]: INCOMING REQUEST --- Method: ${req.method}, URL: ${req.originalUrl}`);
+    console.log(`APP.JS: RAW INCOMING REQUEST --- Method: ${req.method}, URL: ${req.originalUrl}`);
   }
   next();
 });
@@ -149,19 +137,10 @@ app.use(bodyParserErrorHandler);
 
 logger.info('APP.JS: Body Parsers configured.'); // Restored
 
-// Update Morgan logging to also skip timestamp requests
 logger.info('APP.JS: Configuring Morgan (HTTP logger)...'); // Restored
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body', {
-    stream: { 
-      write: message => {
-        // Extract request ID from the active request if available
-        const reqId = req => req.requestId ? `[${req.requestId}]` : '';
-        logger.info(message.trim(), reqId);
-      } 
-    },
-    skip: function (req, res) { 
-      return req.url === '/api/ping' || req.method === 'OPTIONS' || req.originalUrl.includes('_t='); 
-    }
+    stream: { write: message => logger.info(message.trim()) },
+    skip: function (req, res) { return req.url === '/api/ping'; }
 })); // Restored
 logger.info('APP.JS: Morgan configured.'); // Restored
 
@@ -179,12 +158,6 @@ try {
 
 // --- API Routes ---
 logger.info('APP.JS: Configuring API routes...'); 
-
-// Add a healthcheck endpoint first to detect API availability
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.use('/api/auth', authRoutes); 
 app.use('/api/users', userRoutes); 
 app.use('/api/teams', teamRoutes); 
@@ -229,56 +202,13 @@ app.get('/api/ping', (req, res) => { // Restored
 
 // Handle 404 for API routes specifically
 app.use('/api', (req, res, next) => { // Restored API 404 Handler
-  // Enhanced logging for 404 errors to help troubleshoot
-  logger.warn(`API 404: No endpoint found for ${req.method} ${req.originalUrl} [${req.requestId}]`);
   next(new ApiError('API endpoint not found', 404, 'NOT_FOUND'));
-});
-
-// Custom error handler for route processing errors
-app.use((err, req, res, next) => {
-  if (err && err.name === 'SyntaxError') {
-    logger.error(`Route processing error [${req.requestId}]: ${err.message}`, err);
-    return res.status(400).json({
-      error: {
-        message: 'Invalid JSON format in request',
-        code: 'INVALID_JSON'
-      }
-    });
-  }
-  
-  if (err && err.code === 'ECONNREFUSED') {
-    logger.error(`Database connection error [${req.requestId}]: ${err.message}`, err);
-    return res.status(503).json({
-      error: {
-        message: 'Database service unavailable',
-        code: 'DB_UNAVAILABLE'
-      }
-    });
-  }
-  
-  // Forward to the global error handler for other errors
-  next(err);
 });
 
 // Custom CORS error handler, placed before the global error handler
 app.use(corsErrorHandler);
 
-// Global error handler - Update to include request ID
-app.use((err, req, res, next) => {
-  const requestId = req.requestId || 'unknown';
-  
-  // Log error with request ID for correlation
-  logger.error(`Global error handler [${requestId}]: ${err.message}`, {
-    url: req.originalUrl,
-    method: req.method,
-    statusCode: err.statusCode || 500,
-    stack: err.stack
-  });
-  
-  // ...rest of globalErrorHandler remains the same
-  // Use the existing globalErrorHandler implementation
-  globalErrorHandler(err, req, res, next);
-});
+app.use(globalErrorHandler); // Restored
 
-logger.info('APP.JS: Application setup complete with enhanced error handling.');
+logger.info('APP.JS: Application setup complete (all original app.js handlers restored, CORS updated).'); // Updated log
 module.exports = app;

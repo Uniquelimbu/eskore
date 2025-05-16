@@ -616,37 +616,6 @@
    ```
 </details>
 
-<details>
-<summary><strong>Error: Excessive "Returning cached teams data" log messages</strong></summary>
-
-#### Symptoms
-- Server logs are flooded with "TEAMROUTES/CORE (GET /): Returning cached teams data" messages
-- Application may crash due to log buffer overflow
-- Team data might appear stale or not update properly
-
-#### Solutions
-1. **Remove in-memory caching from team routes**
-   - The simple caching implementation in teamRoutes/coreRoutes.js has been removed
-   - This prevents the excessive logging and ensures fresh data is always retrieved
-
-2. **Clear npm cache if needed**
-   ```bash
-   npm cache clean --force
-   ```
-
-3. **Restart the server**
-   ```bash
-   npm run dev
-   # or
-   npm start
-   ```
-
-4. **Implement proper caching if needed**
-   - For performance improvements, consider using Redis or another dedicated caching solution
-   - Ensure proper cache invalidation is implemented
-   - Configure appropriate TTL (Time To Live) values
-</details>
-
 ## 🚫 Common Error Codes
 
 | Code | Description | Common Causes | Solutions |

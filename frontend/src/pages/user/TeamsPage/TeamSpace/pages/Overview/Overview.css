@@ -1,0 +1,99 @@
+/* Overview Page Specific Styles */
+.overview-container {
+  width: 100%;
+  background-color: transparent;
+  color: var(--text-light);
+}
+
+.overview-container h2 {
+  color: var(--text-light);
+  font-size: 1.8rem;
+  margin: 0 0 24px 0;
+}
+
+.team-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.team-info-card, 
+.team-stats-card {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  height: 100%;
+}
+
+.team-info-card h3,
+.team-stats-card h3 {
+  color: var(--text-light);
+  font-size: 1.3rem;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #4a5568;
+}
+
+.team-info-card p,
+.team-stats-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.team-info-card p strong,
+.team-stats-card p strong {
+  font-weight: 600;
+  margin-right: 8px;
+  color: var(--text-light);
+}
+
+/* Empty state styling */
+.empty-state {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.empty-state p {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+}
+
+/* Loading indicator */
+.overview-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overview-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .team-details {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .team-info-card, 
+  .team-stats-card {
+    padding: 16px;
+  }
+  
+  .team-info-card h3,
+  .team-stats-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+}

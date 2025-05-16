@@ -9,12 +9,9 @@ const mediaRoutes = require('./mediaRoutes');
 const managementRoutes = require('./managementRoutes');
 const searchRoutes = require('./searchRoutes');
 
-// Middleware for all routes in this router, skip excessive logging
+// Middleware for all routes in this router, to log entry
 router.use((req, res, next) => {
-  // Skip logging for timestamp/polling requests
-  if (!req.originalUrl.includes('_t=')) {
-    log.info(`TEAMROUTES/INDEX (router.use): Request received for ${req.method} ${req.path}`);
-  }
+  log.info(`TEAMROUTES/INDEX (router.use): Request received for ${req.method} ${req.path} (Original URL: ${req.originalUrl})`);
   next();
 });
 
