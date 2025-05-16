@@ -92,24 +92,13 @@ const Calendar = ({ team, members, isManager }) => {
   if (loading) return <div className="calendar-loading">Loading calendar...</div>;
   if (error) return <div className="calendar-error">{error}</div>;
   
+  // Keep only the back button in the header
   return (
     <div className="calendar-page">
       <div className="back-button-container">
         <button className="back-button" onClick={handleBackClick}>
           Back
         </button>
-      </div>
-      
-      <div className="page-header">
-        <h2>Team Calendar</h2>
-      </div>
-      
-      <div className="calendar-header">
-        {isManager && (
-          <button className="add-event-btn">
-            Add Event
-          </button>
-        )}
       </div>
       
       <div className="calendar-content">

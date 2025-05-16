@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import useFormationStore from './formationStore';
 import PlayerChip from './PlayerChip';
 import PositionPlaceholder from './PositionPlaceholder';
@@ -280,143 +282,76 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   console.log("Render FormationContainer", { starters: starters.length, subs: subs.length, isManager });
   
   return (
-    <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '1rem', borderRadius: '0.5rem' }}>
-      <div className="formation-header" style={{ marginBottom: '1rem' }}>
-        <h2 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '0.75rem' }}>Team Formation</h2>
-        <div className="formation-controls" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginBottom: '0.75rem' 
-        }}>
-          <div className="formation-selector-wrapper">
-            <PresetSelector 
-              currentPreset={preset} 
-              onChangePreset={changePreset}
-              disabled={!isManager}
-            />
-          </div>
-          
-          <div className="formation-actions" style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem',
-            marginLeft: '1.5rem' // Add specific left margin to create more space
-          }}>
-            <button
-              className="export-button"
-              onClick={handleExportPNG}
-              style={{ 
-                backgroundColor: '#3b82f6', 
-                color: 'white', 
-                padding: '0.5rem 1rem',
-                borderRadius: '0.25rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Export PNG
-            </button>
-            
-            {/* Add Save Changes button */}
-            {isManager && (
-              <button
-                className="save-button"
-                onClick={handleSaveFormation}
-                disabled={loading || saved}
-                style={{ 
-                  backgroundColor: saved ? '#4ade80' : '#facc15', 
-                  color: 'white', 
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.25rem',
-                  border: 'none',
-                  cursor: loading || saved ? 'default' : 'pointer',
-                  opacity: loading || saved ? 0.7 : 1
-                }}
-              >
-                {loading ? 'Saving...' : saved ? 'Saved' : 'Save Changes'}
-              </button>
-            )}
-            
-            {!saved && (
-              <span style={{ 
-                color: '#facc15', 
-                animation: 'pulse 2s infinite',
-                fontSize: '0.875rem',
-                marginLeft: '0.5rem' // Add some spacing for the status indicator
-              }}>
-                {loading ? 'Saving...' : 'Changes not saved'}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <div 
-        ref={containerRef} 
-        style={pitchContainerStyle}
-      >
+    <DndProvider backend={HTML5Backend}>
+      <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '1rem', borderRadius: '0.5rem' }}>
+        {/* Formation header removed */}
+        
         <div 
-          ref={pitchRef}
-          style={pitchStyle}
+          ref={containerRef} 
+          style={pitchContainerStyle}
         >
-          <PitchMarkings />
-          
-          {/* Position placeholders - only render if isManager is true */}
-          {isManager && renderPlaceholders()}
-          
-          {/* Player chips */}
-          {Array.isArray(starters) ? starters.map(player => {
-            if (!player) return null;
-            const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
-            return (
-              <PlayerChip
-                key={player.id}
-                id={player.id}
-                x={pixelPos.x}
-                y={pixelPos.y}
-                label={player.position || player.label}
-                jerseyNumber={player.jerseyNumber}
-                playerName={player.playerName}
-                isStarter={true}
-                draggable={isManager}
-                onDropOrSwap={handlePlayerDropOrSwap} // Unified handler
-                isPlaceholder={false} // Starters are not placeholders
-                positionId={player.positionId} // The slot this starter occupies
-                indexInSubs={null} // Not a sub
-              />
-            );
-          }) : null}
+          <div 
+            ref={pitchRef}
+            style={pitchStyle}
+          >
+            <PitchMarkings />
+            
+            {/* Position placeholders - only render if isManager is true */}
+            {isManager && renderPlaceholders()}
+            
+            {/* Player chips */}
+            {Array.isArray(starters) ? starters.map(player => {
+              if (!player) return null;
+              const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
+              return (
+                <PlayerChip
+                  key={player.id}
+                  id={player.id}
+                  x={pixelPos.x}
+                  y={pixelPos.y}
+                  label={player.position || player.label}
+                  jerseyNumber={player.jerseyNumber}
+                  playerName={player.playerName}
+                  isStarter={true}
+                  draggable={isManager}
+                  onDropOrSwap={handlePlayerDropOrSwap} // Unified handler
+                  isPlaceholder={false} // Starters are not placeholders
+                  positionId={player.positionId} // The slot this starter occupies
+                  indexInSubs={null} // Not a sub
+                />
+              );
+            }) : null}
+          </div>
+        </div>
+        
+        <SubsStrip 
+          subs={subs} 
+          draggable={isManager}
+          onDropOrSwap={handlePlayerDropOrSwap} // Pass unified handler
+          showPlaceholders={isManager && subs.length < 7} // Max 7 subs generally
+          isManager={isManager}
+        />
+        
+        <div className="formation-notes" style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Formation Notes</h3>
+          <textarea
+            className="w-full h-24 bg-gray-800 border border-gray-700 rounded p-2 text-white"
+            placeholder={isManager ? "Add tactical notes here..." : "No tactical notes yet."}
+            disabled={!isManager}
+            style={{
+              width: '100%',
+              height: '6rem',
+              backgroundColor: '#2d3748',
+              border: '1px solid #4a5568',
+              borderRadius: '0.375rem',
+              padding: '0.5rem',
+              color: 'white',
+              resize: 'vertical'
+            }}
+          />
         </div>
       </div>
-      
-      <SubsStrip 
-        subs={subs} 
-        draggable={isManager}
-        onDropOrSwap={handlePlayerDropOrSwap} // Pass unified handler
-        showPlaceholders={isManager && subs.length < 7} // Max 7 subs generally
-        isManager={isManager}
-      />
-      
-      <div className="formation-notes" style={{ marginTop: '1.5rem' }}>
-        <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Formation Notes</h3>
-        <textarea
-          className="w-full h-24 bg-gray-800 border border-gray-700 rounded p-2 text-white"
-          placeholder={isManager ? "Add tactical notes here..." : "No tactical notes yet."}
-          disabled={!isManager}
-          style={{
-            width: '100%',
-            height: '6rem',
-            backgroundColor: '#2d3748',
-            border: '1px solid #4a5568',
-            borderRadius: '0.375rem',
-            padding: '0.5rem',
-            color: 'white',
-            resize: 'vertical'
-          }}
-        />
-      </div>
-    </div>
+    </DndProvider>
   );
 };
 
