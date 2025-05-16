@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import apiClient from '../../../../services/apiClient';
+import { isUserManager } from '../../../../utils/permissions';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import './TeamSpace.css';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -27,76 +28,9 @@ const TeamSpace = () => {
         if (response && response.id) {
           setTeam(response);
 
-          // Enhanced function to determine manager status with detailed logging
-          const determineIsManager = (teamData, currentUser) => {
-            if (!teamData || !currentUser) {
-              console.log('TeamSpace: Missing team data or user data');
-              return false;
-            }
-            
-            // Additional check - if user created the team, they're automatically a manager
-            // Handle multiple potential creator fields (createdBy, creatorId, ownerId)
-            const creatorIds = [teamData.createdBy, teamData.creatorId, teamData.ownerId];
-            if (creatorIds.some(id => id === currentUser.id)) {
-              console.log(`TeamSpace: User is team creator/owner (creatorId match)`);
-              return true;
-            }
-            
-            const mgrRoles = ['manager', 'owner', 'admin'];
-            console.log(`TeamSpace: Checking if user ${currentUser.id} is a manager of team ${teamData.id}`);
-            
-            // Direct properties on user
-            if (teamData.userRole && mgrRoles.includes(teamData.userRole.toLowerCase())) {
-              console.log(`TeamSpace: User is manager through userRole: ${teamData.userRole}`);
-              return true;
-            }
-            
-            if (teamData.role && mgrRoles.includes(teamData.role.toLowerCase())) {
-              console.log(`TeamSpace: User is manager through role: ${teamData.role}`);
-              return true;
-            }
-
-            // Check UserTeam association if available
-            if (teamData.UserTeam && teamData.UserTeam.role && 
-                mgrRoles.includes(teamData.UserTeam.role.toLowerCase())) {
-              console.log(`TeamSpace: User is manager through UserTeam role: ${teamData.UserTeam.role}`);
-              return true;
-            }
-
-            // Check members array with nested role/userId
-            if (Array.isArray(teamData.members)) {
-              const membership = teamData.members.find(m => (m.userId || m.id) === currentUser.id);
-              if (membership && membership.role && mgrRoles.includes(membership.role.toLowerCase())) {
-                console.log(`TeamSpace: User is manager through members array with role: ${membership.role}`);
-                return true;
-              }
-            }
-
-            // Check Users array from team response
-            if (Array.isArray(teamData.Users)) {
-              const userEntry = teamData.Users.find(u => u.id === currentUser.id);
-              if (userEntry && userEntry.UserTeam && 
-                  mgrRoles.includes(userEntry.UserTeam.role.toLowerCase())) {
-                console.log(`TeamSpace: User is manager through Users array with role: ${userEntry.UserTeam.role}`);
-                return true;
-              }
-            }
-
-            // Separate managers array
-            if (Array.isArray(teamData.managers)) {
-              if (teamData.managers.some(mgr => (mgr.userId || mgr.id) === currentUser.id)) {
-                console.log(`TeamSpace: User is manager through managers array`);
-                return true;
-              }
-            }
-            
-            console.log('TeamSpace: User is NOT a manager of this team');
-            return false;
-          };
-
-          const isUserManager = determineIsManager(response, user);
-          console.log(`TeamSpace: Setting isManager to ${isUserManager} for user ${user?.id}`);
-          setIsManager(isUserManager);
+          const isUserManagerFlag = isUserManager(response, user);
+          console.log(`TeamSpace: Setting isManager to ${isUserManagerFlag} for user ${user?.id}`);
+          setIsManager(isUserManagerFlag);
         } else {
           console.error('Received unexpected data structure for team. Expected team object, got:', response);
           throw new Error('Team data not found in response or response format is incorrect.');
@@ -156,7 +90,7 @@ const TeamSpace = () => {
                 <img src={team.logoUrl} alt={`${team.name} logo`} />
               ) : (
                 <div className="team-logo-placeholder">
-                  {team?.name?.charAt(0) || 'T'}
+                  {team?.abbreviation || (team?.name ? team.name.substring(0, 3).toUpperCase() : 'T')}
                 </div>
               )}
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import apiClient from '../../../../../../services/apiClient';
+import { isUserManager } from '../../../../../../utils/permissions';
 import './Settings.css';
 
 const Settings = () => {
@@ -38,27 +39,11 @@ const Settings = () => {
           foundedYear: data.foundedYear || '',
           logoUrl: data.logoUrl || ''
         });
-        // Determine manager status
-        const mgrRoles = ['manager', 'owner', 'admin'];
-        const computeIsManager = (teamData) => {
-          if (!teamData || !user) return false;
-          if (teamData.userRole && mgrRoles.includes(teamData.userRole.toLowerCase())) return true;
-          if (teamData.role && mgrRoles.includes(teamData.role.toLowerCase())) return true;
-          if (Array.isArray(teamData.members)) {
-            const membership = teamData.members.find(m => (m.userId || m.id) === user.id);
-            if (membership && membership.role && mgrRoles.includes(membership.role.toLowerCase())) return true;
-          }
-          if (Array.isArray(teamData.managers)) {
-            if (teamData.managers.some(mgr => (mgr.userId || mgr.id) === user.id)) return true;
-          }
-          return false;
-        };
+        const resolvedIsManager = (outletCtx && outletCtx.isManager !== undefined)
+          ? outletCtx.isManager
+          : isUserManager(data, user);
 
-        if (!outletCtx || outletCtx.isManager === undefined) {
-          setIsManager(computeIsManager(data));
-        } else {
-          setIsManager(outletCtx.isManager);
-        }
+        setIsManager(resolvedIsManager);
       } catch (err) {
         console.error('Error loading team:', err);
         setStatusMsg({ type: 'error', text: err.message || 'Failed to load team.' });
@@ -197,7 +182,7 @@ const Settings = () => {
               {formData.logoUrl ? (
                 <img className="team-logo-img" src={formData.logoUrl} alt="team logo" />
               ) : (
-                <div className="logo-placeholder">{formData.name ? formData.name.charAt(0) : 'T'}</div>
+                <div className="logo-placeholder">{formData.abbreviation || formData.name.charAt(0)}</div>
               )}
             </div>
             {isManager && (
