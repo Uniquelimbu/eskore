@@ -48,6 +48,7 @@ const leagueRoutes = require('./routes/leagueRoutes'); // Restored
 const matchRoutes = require('./routes/matchRoutes'); // Restored
 const leaderboardRoutes = require('./routes/leaderboardRoutes'); // Restored
 const formationRoutes = require('./routes/formationRoutes'); // Add the new route
+const teamSearchRoutes = require('./routes/teamSearchRoutes'); // New route for /api/teams-search
 
 const app = express();
 
@@ -192,6 +193,7 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/leagues', leagueRoutes); 
 app.use('/api/matches', matchRoutes); 
 app.use('/api/leaderboards', leaderboardRoutes); 
+app.use('/api', teamSearchRoutes); // Mount standalone search route
 
 // Add debug log before registering formation routes
 logger.info('APP.JS: Registering formation routes at /api/formations'); 

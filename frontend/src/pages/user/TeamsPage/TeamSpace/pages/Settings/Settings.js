@@ -23,7 +23,10 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [isManager, setIsManager] = useState(outletCtx?.isManager || false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch team details on mount
   useEffect(() => {
@@ -54,6 +57,24 @@ const Settings = () => {
     if (teamId) fetchTeam();
   }, [teamId, user, outletCtx]);
 
+  // Additional effect to fetch team members
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        if (teamId) {
+          const response = await apiClient.get(`/api/teams/${teamId}/members`);
+          if (response && response.members) {
+            setTeamMembers(response.members);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching team members:', err);
+      }
+    };
+    
+    fetchTeamMembers();
+  }, [teamId]);
+
   const handleBack = () => navigate(`/teams/${teamId}/space`);
 
   const handleInputChange = (e) => {
@@ -74,24 +95,66 @@ const Settings = () => {
     }
   };
 
+  const handleLeaveTeamClick = () => {
+    setShowLeaveConfirm(true);
+  };
+
   const handleLeaveTeam = async () => {
-    if (!window.confirm('Are you sure you want to leave this team?')) return;
     try {
-      await apiClient.post(`/api/teams/${teamId}/leave`);
+      // Fix: Use user.id instead of user.userId 
+      // The correct URL should be /api/teams/${teamId}/members/${user.id}
+      await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
       navigate('/teams');
     } catch (err) {
       console.error('Leave team failed:', err);
-      setStatusMsg({ type: 'error', text: err.message || 'Failed to leave team.' });
+      
+      // Better error handling with specific messages for different cases
+      let errorMessage = 'Failed to leave team.';
+      
+      if (err.response) {
+        if (err.response.status === 403 && err.response.data?.code === 'FORBIDDEN_MANAGER_LEAVE') {
+          errorMessage = 'You need to transfer manager role before leaving the team.';
+        } else if (err.response.status === 404) {
+          errorMessage = 'Team member relationship not found.';
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
+      setStatusMsg({ type: 'error', text: errorMessage });
+      setShowLeaveConfirm(false); // Close the dialog on error
     }
   };
 
   const handleDeleteTeam = async () => {
     try {
+      setDeleteLoading(true);
+      setStatusMsg({ type: 'info', text: 'Deleting team...' });
+      
       await apiClient.delete(`/api/teams/${teamId}`);
-      navigate('/teams');
+      
+      // Show success message before navigating
+      setStatusMsg({ type: 'success', text: 'Team deleted successfully!' });
+      setTimeout(() => navigate('/teams'), 1000);
     } catch (err) {
       console.error('Delete team failed:', err);
-      setStatusMsg({ type: 'error', text: err.message || 'Failed to delete team.' });
+      setDeleteLoading(false);
+      
+      // More targeted error messages
+      let errorMessage = 'Failed to delete team.';
+      
+      if (err.status === 408 || (err.message && err.message.includes('timeout'))) {
+        errorMessage = 'The request timed out. Please try again or contact support.';
+      } else if (err.status === 403) {
+        errorMessage = 'You don\'t have permission to delete this team.';
+      } else if (err.status === 404) {
+        errorMessage = 'Team not found. It may have been already deleted.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setStatusMsg({ type: 'error', text: errorMessage });
+      setShowDeleteConfirm(false); // Close dialog on error
     }
   };
 
@@ -104,7 +167,7 @@ const Settings = () => {
     return (
       <div className="settings-page">
         <div className="settings-header">
-          <button className="back-button" onClick={handleBack}>&larr; Back to Team Space</button>
+          <button className="back-button" onClick={handleBack}>&larr; Back</button>
         </div>
         <p className="save-error-message">Team not found.</p>
       </div>
@@ -114,7 +177,7 @@ const Settings = () => {
   return (
     <div className="settings-page">
       <div className="settings-header">
-        <button className="back-button" onClick={handleBack}>&larr; Back to Team Space</button>
+        <button className="back-button" onClick={handleBack}>&larr; Back</button>
         <h2>Team Settings</h2>
       </div>
 
@@ -219,11 +282,11 @@ const Settings = () => {
           Leaving a team will remove you from its roster. Deleting a team is permanent.
         </p>
         <div className="delete-team-button-wrapper">
-          <button className="cancel-button" onClick={handleLeaveTeam}>
+          <button className="danger-button" onClick={handleLeaveTeamClick}>
             Leave Team
           </button>
           {isManager && (
-            <button className="danger-button" onClick={() => setShowDeleteConfirm(true)}>
+            <button className="danger-button" onClick={() => setShowDeleteConfirm(true)} style={{ marginLeft: '16px' }}>
               Delete Team
             </button>
           )}
@@ -239,8 +302,63 @@ const Settings = () => {
               This will permanently delete the team and all related data. Are you sure you want to proceed?
             </p>
             <div className="confirmation-buttons">
-              <button className="cancel-button" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-              <button className="danger-button" onClick={handleDeleteTeam}>Delete</button>
+              <button 
+                className="cancel-button" 
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className="danger-button" 
+                onClick={handleDeleteTeam}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM LEAVE POPUP */}
+      {showLeaveConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Leave Team</h3>
+            
+            {isManager && teamMembers.filter(m => m.role === 'manager' || m.role === 'assistant_manager').length <= 1 ? (
+              teamMembers.length > 1 ? (
+                // Case 1: Manager with team members but no other managers
+                <p>
+                  You are the only manager of this team. You need to appoint another team member as manager before you can leave.
+                </p>
+              ) : (
+                // Case 2: Manager is the only member
+                <p>
+                  You are the only member of this team. If you leave, the team will be permanently deleted.
+                </p>
+              )
+            ) : (
+              // Regular member or manager with other managers
+              <p>
+                Are you sure you want to leave this team? You will lose access to all team resources.
+              </p>
+            )}
+            
+            <div className="confirmation-buttons">
+              <button className="cancel-button" onClick={() => setShowLeaveConfirm(false)}>Cancel</button>
+              
+              {isManager && teamMembers.filter(m => m.role === 'manager' || m.role === 'assistant_manager').length <= 1 && teamMembers.length > 1 ? (
+                // Disabled for managers without other managers
+                <button className="danger-button" disabled>
+                  Leave Team
+                </button>
+              ) : (
+                <button className="danger-button" onClick={handleLeaveTeam}>
+                  {isManager && teamMembers.length <= 1 ? "Leave & Delete Team" : "Leave Team"}
+                </button>
+              )}
             </div>
           </div>
         </div>

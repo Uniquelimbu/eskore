@@ -201,11 +201,11 @@ const CreateTeam = () => {
         // First check team response structure
         console.log("Team response for navigation:", teamResponse);
 
-        // Navigate to the overview tab of the team space
+        // Navigate to the team space - fixed URL here
         if (teamId) {
           // Save the team ID to localStorage for consistent navigation
           localStorage.setItem('lastTeamId', teamId);
-          navigate(`/teams/${teamId}/space/overview`);
+          navigate(`/teams/${teamId}/space`); // Changed from /space/overview to /space
         } else {
           console.error("Team ID is missing in the response");
           setSubmitError("Team was created but navigation failed. Please go to Teams page.");

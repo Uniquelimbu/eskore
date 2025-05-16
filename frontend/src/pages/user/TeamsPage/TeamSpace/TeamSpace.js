@@ -82,45 +82,47 @@ const TeamSpace = () => {
         withPadding={true} 
         maxWidth="var(--content-max-width)"
       >
-        {/* Team Header */}
-        <div className="team-space-header">
-          <div className="team-identity-section">
-            <div className="team-logo">
-              {team?.logoUrl ? (
-                <img src={team.logoUrl} alt={`${team.name} logo`} />
-              ) : (
-                <div className="team-logo-placeholder">
-                  {team?.abbreviation || (team?.name ? team.name.substring(0, 3).toUpperCase() : 'T')}
+        {/* Team Header - Only show on dashboard (isBasePath) */}
+        {isBasePath && (
+          <div className="team-space-header">
+            <div className="team-identity-section">
+              <div className="team-logo">
+                {team?.logoUrl ? (
+                  <img src={team.logoUrl} alt={`${team.name} logo`} />
+                ) : (
+                  <div className="team-logo-placeholder">
+                    {team?.abbreviation || (team?.name ? team.name.substring(0, 3).toUpperCase() : 'T')}
+                  </div>
+                )}
+              </div>
+              <div className="team-details">
+                <h1>{team?.name || 'Team Name'}</h1>
+                {team?.nickname && <div className="team-nickname">{team.nickname}</div>}
+                <div className="team-meta">
+                  {team?.city && <span>{team.city}</span>}
+                  {team?.foundedYear && <span>Est. {team.foundedYear}</span>}
                 </div>
-              )}
-            </div>
-            <div className="team-details">
-              <h1>{team?.name || 'Team Name'}</h1>
-              {team?.nickname && <div className="team-nickname">{team.nickname}</div>}
-              <div className="team-meta">
-                {team?.city && <span>{team.city}</span>}
-                {team?.foundedYear && <span>Est. {team.foundedYear}</span>}
               </div>
             </div>
+            <div className="team-actions">
+              {/* Settings button removed */}
+            </div>
           </div>
-          <div className="team-actions">
-            {/* Settings button removed */}
-          </div>
-        </div>
+        )}
 
         {/* If a child route is active (e.g., squad, formation), render it via Outlet.
             Otherwise (on the base /teams/:teamId path), render the dashboard tiles. */}
         {isBasePath ? (
           <div className="container-layout">
-            <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
-              <h2>Squad</h2>
-              <p>Manage your team members</p>
+            <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
+              <h2>Formation</h2>
+              <p>Set up your team's formation</p>
             </div>
             
             <div className="container-right">
-              <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
-                <h2>Formation</h2>
-                <p>Set up your team's formation</p>
+              <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
+                <h2>Squad</h2>
+                <p>Manage your team members</p>
               </div>
               
               <div className="container-bottom-grid">

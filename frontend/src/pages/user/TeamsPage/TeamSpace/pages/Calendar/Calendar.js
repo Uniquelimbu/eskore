@@ -10,7 +10,7 @@ const Calendar = ({ team, members, isManager }) => {
   const [error, setError] = useState(null);
   
   const handleBackClick = () => {
-    navigate(`/teams/${teamId}`);
+    navigate(`/teams/${teamId}/space`);
   };
   
   useEffect(() => {
@@ -96,7 +96,7 @@ const Calendar = ({ team, members, isManager }) => {
     <div className="calendar-page">
       <div className="back-button-container">
         <button className="back-button" onClick={handleBackClick}>
-          &larr; Back to Team Space
+          &larr; Back
         </button>
       </div>
       

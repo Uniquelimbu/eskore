@@ -97,7 +97,7 @@ const Squad = () => {
     <div className="squad-page">
       <div className="squad-header">
         <button className="back-button" onClick={handleBack}>
-          &larr; Back to Team Space
+          &larr; Back
         </button>
         <h2>Squad</h2>
         {isManager && (

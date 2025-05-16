@@ -104,7 +104,7 @@ const Formation = () => {
     <div className="formation-page">
       <div className="page-header">
         <button className="back-button" onClick={handleBack}>
-          &larr; Back to Team Space
+          &larr; Back
         </button>
         <h1>Formation {isManager ? '(Manager View)' : '(Viewer)'}</h1>
       </div>

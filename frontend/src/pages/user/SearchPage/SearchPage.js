@@ -60,19 +60,33 @@ const SearchPage = () => {
         const controller = new AbortController();
         abortRef.current = controller;
         let combinedResults = [];
+        
         // If teams are part of the requested type, query backend search API
         if (currentType === 'all' || currentType === 'team') {
-          const res = await apiClient.get('/api/teams/search', { params: { q: currentQuery }, signal: controller.signal });
-          if (res && res.teams) {
-            const mappedTeams = res.teams.map(t => ({
-              id: t.id,
-              type: 'team',
-              name: t.name,
-              league: t.league || '', // placeholder if property exists later
-              country: t.city || '',
-              image: t.logoUrl || `${process.env.PUBLIC_URL}/images/default-team.png`
-            }));
-            combinedResults.push(...mappedTeams);
+          try {
+            // Use a different endpoint to avoid route conflict with /teams/:id
+            const res = await apiClient.get(`/api/teams-search`, {
+              params: {
+                q: currentQuery.trim(),
+                _t: Date.now() // Cache busting
+              },
+              signal: controller.signal 
+            });
+            
+            if (res && res.teams) {
+              const mappedTeams = res.teams.map(t => ({
+                id: t.id,
+                type: 'team',
+                name: t.name,
+                league: t.league || '', // placeholder if property exists later
+                country: t.city || '',
+                image: t.logoUrl || `${process.env.PUBLIC_URL}/images/default-team.png`
+              }));
+              combinedResults.push(...mappedTeams);
+            }
+          } catch (teamErr) {
+            console.error('Error searching teams:', teamErr);
+            // Continue with other search types even if team search fails
           }
         }
 

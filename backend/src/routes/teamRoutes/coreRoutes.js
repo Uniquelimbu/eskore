@@ -181,8 +181,72 @@ router.delete('/:id',
   requireAuth,
   validate(schemas.team.teamIdParam),
   catchAsync(async (req, res) => {
-    // Implementation of team deletion
-    // ...existing code...
+    const { id } = req.params;
+    log.info(`TEAMROUTES/CORE (DELETE /:id): Attempting to delete team with ID: ${id} by user: ${req.user.email}`);
+    
+    // Start a transaction for atomicity
+    const t = await sequelize.transaction();
+    
+    try {
+      // 1. Find the team
+      const team = await Team.findByPk(id, { transaction: t });
+      
+      if (!team) {
+        await t.rollback();
+        log.warn(`TEAMROUTES/CORE (DELETE /:id): Team with ID ${id} not found`);
+        throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // 2. Check ownership - only creator or managers can delete
+      const userTeam = await UserTeam.findOne({
+        where: {
+          teamId: id,
+          userId: req.user.userId,
+          role: 'manager'
+        },
+        transaction: t
+      });
+      
+      if (team.creatorId !== req.user.userId && !userTeam) {
+        await t.rollback();
+        log.warn(`TEAMROUTES/CORE (DELETE /:id): User ${req.user.email} (${req.user.userId}) attempted to delete team ${id} without permission`);
+        throw new ApiError('You do not have permission to delete this team', 403, 'FORBIDDEN');
+      }
+      
+      // 3. Delete all associated records (in correct order to avoid FK constraints)
+      
+      // 3.1 Delete formation records
+      const Formation = require('../../models/Formation');
+      await Formation.destroy({
+        where: { teamId: id },
+        transaction: t
+      });
+      log.info(`TEAMROUTES/CORE (DELETE /:id): Deleted formations for team ${id}`);
+      
+      // 3.2 Delete team members
+      await UserTeam.destroy({
+        where: { teamId: id },
+        transaction: t
+      });
+      log.info(`TEAMROUTES/CORE (DELETE /:id): Deleted team memberships for team ${id}`);
+      
+      // 3.3 Finally delete the team itself
+      await team.destroy({ transaction: t });
+      log.info(`TEAMROUTES/CORE (DELETE /:id): Successfully deleted team ${id}`);
+      
+      // 4. Commit the transaction
+      await t.commit();
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Team deleted successfully'
+      });
+    } catch (error) {
+      // Rollback the transaction on error
+      await t.rollback();
+      log.error(`TEAMROUTES/CORE (DELETE /:id): Error deleting team ${id}:`, error);
+      throw error; // Let the error handler take care of formatting the response
+    }
   })
 );
 
