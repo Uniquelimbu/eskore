@@ -104,14 +104,7 @@ const TeamSpace = () => {
             </div>
           </div>
           <div className="team-actions">
-            {isManager && (
-              <button 
-                className="settings-button"
-                onClick={() => navigate(`/teams/${teamId}/space/settings`)}
-              >
-                Settings
-              </button>
-            )}
+            {/* Settings button removed */}
           </div>
         </div>
 

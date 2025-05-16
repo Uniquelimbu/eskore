@@ -351,45 +351,33 @@
   background-color: transparent !important;
 }
 
-.team-details h1,
-.team-nickname,
-.team-founded,
+.team-details h1 {
+  margin: 0 0 4px 0; /* Reduced bottom margin from default */
+  background-color: transparent !important;
+  font-size: 1.6rem; /* Slightly smaller to allow for tighter spacing */
+  line-height: 1.2; /* Tighter line height */
+}
+
+.team-nickname {
+  background-color: transparent !important;
+  margin-bottom: 2px; /* Add small margin */
+  line-height: 1.1; /* Tighter line height */
+}
+
 .team-meta {
   background-color: transparent !important;
+  font-size: 0.9rem; /* Slightly smaller font */
+  line-height: 1.1; /* Tighter line height */
 }
 
-.team-logo {
-  width: 80px; /* Keep consistent size */
-  height: 80px; /* Ensure it's a perfect square */
-  overflow: hidden; 
-  border-radius: 8px; /* Add soft edges instead of 0 */
-  background-color: #2d3748; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+/* Adjust positioning of meta spans for better spacing */
+.team-meta span {
+  display: inline-block;
+  margin-right: 8px; /* Space between city and Est. year */
 }
 
-.team-logo img {
-  width: 90%; /* Slightly smaller than container to prevent edge touching */
-  height: 90%; /* Slightly smaller than container to prevent edge touching */
-  object-fit: contain; /* Changed from cover to maintain aspect ratio */
-  display: block; /* Removes any extra space below the image */
-}
-
-.team-logo-placeholder {
-  width: 80px; /* Match the .team-logo size */
-  height: 80px; /* Match the .team-logo size */
-  background-color: #4a5568;
-  color: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  border-radius: 8px; /* Match the .team-logo border-radius */
-  text-transform: uppercase;
-  line-height: 1;
+.team-meta span:last-child {
+  margin-right: 0;
 }
 
 /* Quick stats section */
