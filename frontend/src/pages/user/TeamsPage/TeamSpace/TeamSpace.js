@@ -116,13 +116,11 @@ const TeamSpace = () => {
           <div className="container-layout">
             <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
               <h2>Formation</h2>
-              <p>Set up your team's formation</p>
             </div>
             
             <div className="container-right">
               <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
                 <h2>Squad</h2>
-                <p>Manage your team members</p>
               </div>
               
               <div className="container-bottom-grid">

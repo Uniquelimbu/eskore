@@ -131,6 +131,45 @@
   box-shadow: none;
 }
 
+/* Header styles */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.formation-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--text-light);
+}
+
+.back-button {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--text-muted);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 1; /* Ensure button appears above the title */
+}
+
+.back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-spacer {
+  width: 85px; /* Approximately the same width as the back button */
+  height: 1px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .formation-page-header h2 {

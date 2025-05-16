@@ -106,7 +106,8 @@ const Formation = () => {
         <button className="back-button" onClick={handleBack}>
           &larr; Back
         </button>
-        <h1>Formation {isManager ? '(Manager View)' : '(Viewer)'}</h1>
+        <h1 className="formation-title">Formation {isManager ? '(Manager View)' : '(Viewer)'}</h1>
+        <div className="header-spacer"></div> {/* Empty div for flex alignment */}
       </div>
       <div className="formation-content">
         <FormationContainer 
