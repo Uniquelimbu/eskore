@@ -668,3 +668,27 @@
   border-radius: 4px;
   display: inline-block;
 }
+
+/* Position label styles for the formation layout - making more visible */
+.position-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2; /* Above pitch markings but below player chips */
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+.position-marker-label {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}

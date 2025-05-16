@@ -8,6 +8,15 @@ import SubsStrip from './SubsStrip';
 import Edit from './Tabs/Edit/Edit';
 import './FormationStyles.css';
 
+// Position marker component to show the preset position - updating to make it more visible
+const PositionMarker = ({ x, y, label }) => {
+  return (
+    <div className="position-marker" style={{ left: `${x}px`, top: `${y}px` }}>
+      <div className="position-marker-label">{label}</div>
+    </div>
+  );
+};
+
 const PitchMarkings = () => (
   <div className="pitch-markings" style={{
     position: 'absolute',
@@ -233,7 +242,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
           <PositionPlaceholder
             key={`placeholder-${pos.id}`}
             x={pixelPos.x}
-            y={pixelPos.y}
+            y={pixelPos.y - 15} // Move placeholder UP by 15px 
             label={pos.label}
             positionId={pos.id}
             isManager={isManager} // Pass isManager for canDrop
@@ -320,6 +329,25 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     setSelectedPlayer(null);
   }, [showEditTab, preset]);
   
+  // Render position markers for the preset formation - keep them at exact formation positions
+  const renderPositionMarkers = () => {
+    if (!PRESETS || !preset || !PRESETS[preset]) {
+      return null;
+    }
+    
+    return PRESETS[preset].map(pos => {
+      const pixelPos = normalizedToPixel(pos.xNorm, pos.yNorm);
+      return (
+        <PositionMarker
+          key={`marker-${pos.id}`}
+          x={pixelPos.x}
+          y={pixelPos.y + 45} // Keep label 45px DOWN (below where player chips will be)
+          label={pos.label}
+        />
+      );
+    });
+  };
+  
   console.log("Render FormationContainer", { starters: starters.length, subs: subs.length, isManager });
   
   return (
@@ -375,10 +403,13 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
               >
                 <PitchMarkings />
                 
+                {/* Render position markers for the preset formation */}
+                {renderPositionMarkers()}
+                
                 {/* Position placeholders - only render if isManager is true */}
                 {isManager && renderPlaceholders()}
                 
-                {/* Player chips */}
+                {/* Player chips - keep them at their original position (no offset) */}
                 {Array.isArray(starters) ? starters.map(player => {
                   if (!player) return null;
                   const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
@@ -387,7 +418,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                       key={player.id}
                       id={player.id}
                       x={pixelPos.x}
-                      y={pixelPos.y}
+                      y={pixelPos.y - 15} // Move player chips UP by 15px to match placeholder positions
                       label={player.position || player.label}
                       jerseyNumber={player.jerseyNumber}
                       playerName={player.playerName}
