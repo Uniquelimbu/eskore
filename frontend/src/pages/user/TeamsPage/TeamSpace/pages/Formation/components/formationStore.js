@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import apiClient from '../../../../../../services/apiClient';
+import apiClient from '../../../../../../../services/apiClient';
 
 // Formation presets with normalized coordinates (0-100 range)
 const PRESETS = {

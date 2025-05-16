@@ -110,7 +110,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     console.error('API Request Error:', error);
-    return Promise.reject(error);
+    throw new Error(`Request setup failed: ${error.message}`);
   }
 );
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { 
   FormationContainer 
-} from '../../components/formation';
+} from './components';
 import apiClient from '../../../../../../services/apiClient';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import { isUserManager } from '../../../../../../utils/permissions';
