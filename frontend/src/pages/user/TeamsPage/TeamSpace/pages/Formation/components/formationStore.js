@@ -42,6 +42,105 @@ const PRESETS = {
     { id: 'st1', label: 'ST', xNorm: 40, yNorm: 20 },
     { id: 'st2', label: 'ST', xNorm: 60, yNorm: 20 },
   ],
+  
+  // New formations:
+  '3-4-3': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'cb1', label: 'CB', xNorm: 30, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 50, yNorm: 70 },
+    { id: 'cb3', label: 'CB', xNorm: 70, yNorm: 70 },
+    { id: 'lm', label: 'LM', xNorm: 20, yNorm: 50 },
+    { id: 'cm1', label: 'CM', xNorm: 40, yNorm: 50 },
+    { id: 'cm2', label: 'CM', xNorm: 60, yNorm: 50 },
+    { id: 'rm', label: 'RM', xNorm: 80, yNorm: 50 },
+    { id: 'lw', label: 'LW', xNorm: 25, yNorm: 25 },
+    { id: 'st', label: 'ST', xNorm: 50, yNorm: 20 },
+    { id: 'rw', label: 'RW', xNorm: 75, yNorm: 25 },
+  ],
+  
+  '4-2-3-1': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lb', label: 'LB', xNorm: 20, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 40, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 60, yNorm: 70 },
+    { id: 'rb', label: 'RB', xNorm: 80, yNorm: 70 },
+    { id: 'cdm1', label: 'CDM', xNorm: 40, yNorm: 55 },
+    { id: 'cdm2', label: 'CDM', xNorm: 60, yNorm: 55 },
+    { id: 'cam1', label: 'CAM', xNorm: 30, yNorm: 35 },
+    { id: 'cam2', label: 'CAM', xNorm: 50, yNorm: 35 },
+    { id: 'cam3', label: 'CAM', xNorm: 70, yNorm: 35 },
+    { id: 'st', label: 'ST', xNorm: 50, yNorm: 20 },
+  ],
+  
+  '4-1-4-1': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lb', label: 'LB', xNorm: 20, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 40, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 60, yNorm: 70 },
+    { id: 'rb', label: 'RB', xNorm: 80, yNorm: 70 },
+    { id: 'cdm', label: 'CDM', xNorm: 50, yNorm: 55 },
+    { id: 'lm', label: 'LM', xNorm: 20, yNorm: 40 },
+    { id: 'cm1', label: 'CM', xNorm: 40, yNorm: 40 },
+    { id: 'cm2', label: 'CM', xNorm: 60, yNorm: 40 },
+    { id: 'rm', label: 'RM', xNorm: 80, yNorm: 40 },
+    { id: 'st', label: 'ST', xNorm: 50, yNorm: 20 },
+  ],
+  
+  '5-2-2-1': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lwb', label: 'LWB', xNorm: 10, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 30, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 50, yNorm: 70 },
+    { id: 'cb3', label: 'CB', xNorm: 70, yNorm: 70 },
+    { id: 'rwb', label: 'RWB', xNorm: 90, yNorm: 70 },
+    { id: 'cm1', label: 'CM', xNorm: 40, yNorm: 50 },
+    { id: 'cm2', label: 'CM', xNorm: 60, yNorm: 50 },
+    { id: 'cam1', label: 'CAM', xNorm: 35, yNorm: 35 },
+    { id: 'cam2', label: 'CAM', xNorm: 65, yNorm: 35 },
+    { id: 'st', label: 'ST', xNorm: 50, yNorm: 20 },
+  ],
+  
+  '4-1-2-1-2': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lb', label: 'LB', xNorm: 20, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 40, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 60, yNorm: 70 },
+    { id: 'rb', label: 'RB', xNorm: 80, yNorm: 70 },
+    { id: 'cdm', label: 'CDM', xNorm: 50, yNorm: 55 },
+    { id: 'lcm', label: 'CM', xNorm: 35, yNorm: 45 },
+    { id: 'rcm', label: 'CM', xNorm: 65, yNorm: 45 },
+    { id: 'cam', label: 'CAM', xNorm: 50, yNorm: 35 },
+    { id: 'lst', label: 'ST', xNorm: 40, yNorm: 20 },
+    { id: 'rst', label: 'ST', xNorm: 60, yNorm: 20 },
+  ],
+  
+  '4-5-1': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lb', label: 'LB', xNorm: 20, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 40, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 60, yNorm: 70 },
+    { id: 'rb', label: 'RB', xNorm: 80, yNorm: 70 },
+    { id: 'lm', label: 'LM', xNorm: 15, yNorm: 45 },
+    { id: 'lcm', label: 'CM', xNorm: 35, yNorm: 45 },
+    { id: 'cm', label: 'CM', xNorm: 50, yNorm: 45 },
+    { id: 'rcm', label: 'CM', xNorm: 65, yNorm: 45 },
+    { id: 'rm', label: 'RM', xNorm: 85, yNorm: 45 },
+    { id: 'st', label: 'ST', xNorm: 50, yNorm: 20 },
+  ],
+  
+  '4-2-2-2': [
+    { id: 'gk', label: 'GK', xNorm: 50, yNorm: 90 },
+    { id: 'lb', label: 'LB', xNorm: 20, yNorm: 70 },
+    { id: 'cb1', label: 'CB', xNorm: 40, yNorm: 70 },
+    { id: 'cb2', label: 'CB', xNorm: 60, yNorm: 70 },
+    { id: 'rb', label: 'RB', xNorm: 80, yNorm: 70 },
+    { id: 'cdm1', label: 'CDM', xNorm: 40, yNorm: 55 },
+    { id: 'cdm2', label: 'CDM', xNorm: 60, yNorm: 55 },
+    { id: 'lcam', label: 'CAM', xNorm: 35, yNorm: 40 },
+    { id: 'rcam', label: 'CAM', xNorm: 65, yNorm: 40 },
+    { id: 'lst', label: 'ST', xNorm: 40, yNorm: 20 },
+    { id: 'rst', label: 'ST', xNorm: 60, yNorm: 20 },
+  ],
 };
 
 // Initial dummy subs with sequential naming - add an 8th player as a placeholder
@@ -198,13 +297,13 @@ const useFormationStore = create((set, get) => ({
         
         // Ensure starters and subs are always arrays
         const starters = Array.isArray(defaultFormation.starters) ? defaultFormation.starters : [];
-        const subs = Array.isArray(defaultFormation.subs) ? defaultFormation.subs : DEFAULT_SUBS;
+        const subsArray = Array.isArray(defaultFormation.subs) ? defaultFormation.subs : DEFAULT_SUBS;
         
         // Update the local state with the default formation
         set({ 
           teamId,
           starters: starters,
-          subs: subs,
+          subs: subsArray,
           preset: defaultFormation.preset || '4-3-3',
           loading: false,
           saved: false // Mark as not saved
@@ -605,7 +704,7 @@ const useFormationStore = create((set, get) => ({
       set({ starters: newStarters, subs: newSubs });
     } else {
       // No real players assigned yet - do intelligent assignment
-      get().assignPlayersToFormation(players, preset);
+      get().assignPlayersToFormation(players, preset );
     }
   },
   

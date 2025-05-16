@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import useFormationStore from './formationStore';
 import PlayerChip from './PlayerChip';
 import PositionPlaceholder from './PositionPlaceholder';
 import SubsStrip from './SubsStrip';
+import Edit from './Tabs/Edit/Edit';
 import './FormationStyles.css';
 
 const PitchMarkings = () => (
@@ -119,6 +120,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   const containerRef = useRef(null);
   const pitchRef = useRef(null);
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 450 });
+  const [showEditTab, setShowEditTab] = useState(false);
   
   const {
     init,
@@ -131,6 +133,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     movePlayerToSubSlot,
     swapPlayersInFormation,
     moveStarterToSubsGeneral,
+    changePreset,
   } = useFormationStore();
   
   // Get PRESETS from the store
@@ -140,11 +143,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   useEffect(() => {
     console.log("Initializing formation data", { teamId });
     init(teamId);
-    
-    // The setDummyPlayers call here is redundant.
-    // init(teamId) from the store already handles setting dummy players if API data is missing or on error.
-    // The mapPlayersToPositions effect will handle mapping real player data when the `players` prop is available.
-  }, [teamId, init]); // Removed players.length and setDummyPlayers from dependencies
+  }, [teamId, init]);
   
   // Map real players when available
   useEffect(() => {
@@ -244,21 +243,9 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
       });
   };
   
-  // Add pitch container style
-  const pitchContainerStyle = {
-    width: '100%',
-    overflow: 'hidden',
-    borderRadius: '0.375rem',
-    position: 'relative',
-    backgroundColor: '#006341' // FIFA-style pitch color
-  };
-  
-  // Add pitch style
-  const pitchStyle = {
-    position: 'relative',
-    width: '100%',
-    height: `${dimensions.height}px`,
-    overflow: 'hidden'
+  const handlePresetChange = (newPreset) => {
+    changePreset(newPreset);
+    setShowEditTab(false);
   };
   
   // Add explicit debugging for manager status
@@ -272,88 +259,112 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '1rem', borderRadius: '0.5rem' }}>
-        {isManager ? (
-          <div className="manager-indicator" style={{ 
-            color: 'green', 
-            marginBottom: '10px', 
-            fontSize: '0.9rem' 
-          }}>
-            Manager View - You can edit this formation
-          </div>
-        ) : (
-          <div className="viewer-indicator" style={{ 
-            color: 'gray',
-            marginBottom: '10px',
-            fontSize: '0.9rem' 
-          }}>
-            View Only - Contact a team manager to make changes
-          </div>
-        )}
-        
-        <div 
-          ref={containerRef} 
-          style={pitchContainerStyle}
-        >
-          <div 
-            ref={pitchRef}
-            style={pitchStyle}
-          >
-            <PitchMarkings />
-            
-            {/* Position placeholders - only render if isManager is true */}
-            {isManager && renderPlaceholders()}
-            
-            {/* Player chips */}
-            {Array.isArray(starters) ? starters.map(player => {
-              if (!player) return null;
-              const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
-              return (
-                <PlayerChip
-                  key={player.id}
-                  id={player.id}
-                  x={pixelPos.x}
-                  y={pixelPos.y}
-                  label={player.position || player.label}
-                  jerseyNumber={player.jerseyNumber}
-                  playerName={player.playerName}
-                  isStarter={true}
-                  draggable={isManager}
-                  onDropOrSwap={handlePlayerDropOrSwap} // Unified handler
-                  isPlaceholder={false} // Starters are not placeholders
-                  positionId={player.positionId} // The slot this starter occupies
-                  indexInSubs={null} // Not a sub
-                />
-              );
-            }) : null}
-          </div>
-        </div>
-        
-        <SubsStrip 
-          subs={subs} 
-          draggable={isManager}
-          onDropOrSwap={handlePlayerDropOrSwap} // Pass unified handler
-          showPlaceholders={isManager && subs.length < 7} // Max 7 subs generally
-          isManager={isManager}
-        />
-        
-        <div className="formation-notes" style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Formation Notes</h3>
-          <textarea
-            className="w-full h-24 bg-gray-800 border border-gray-700 rounded p-2 text-white"
-            placeholder={isManager ? "Add tactical notes here..." : "No tactical notes yet."}
-            disabled={!isManager}
-            style={{
-              width: '100%',
-              height: '6rem',
-              backgroundColor: '#2d3748',
-              border: '1px solid #4a5568',
-              borderRadius: '0.375rem',
-              padding: '0.5rem',
-              color: 'white',
-              resize: 'vertical'
-            }}
+        {showEditTab ? (
+          <Edit 
+            onSelectPreset={handlePresetChange} 
+            currentPreset={preset}
+            onClose={() => setShowEditTab(false)}
+            isManager={isManager}
           />
-        </div>
+        ) : (
+          <>
+            <div className="formation-header-controls">
+              <div className="formation-current-preset">
+                <span className="preset-label">Formation:</span>
+                <span className="preset-value">{preset}</span>
+              </div>
+              
+              {isManager && (
+                <button 
+                  className="edit-formation-button"
+                  onClick={() => setShowEditTab(true)}
+                  disabled={!isManager}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                  </svg>
+                  Edit
+                </button>
+              )}
+            </div>
+            
+            <div 
+              ref={containerRef} 
+              style={{
+                width: '100%',
+                overflow: 'hidden',
+                borderRadius: '0.375rem',
+                position: 'relative',
+                backgroundColor: '#006341' // FIFA-style pitch color
+              }}
+            >
+              <div 
+                ref={pitchRef}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: `${dimensions.height}px`,
+                  overflow: 'hidden'
+                }}
+              >
+                <PitchMarkings />
+                
+                {/* Position placeholders - only render if isManager is true */}
+                {isManager && renderPlaceholders()}
+                
+                {/* Player chips */}
+                {Array.isArray(starters) ? starters.map(player => {
+                  if (!player) return null;
+                  const pixelPos = normalizedToPixel(player.xNorm, player.yNorm);
+                  return (
+                    <PlayerChip
+                      key={player.id}
+                      id={player.id}
+                      x={pixelPos.x}
+                      y={pixelPos.y}
+                      label={player.position || player.label}
+                      jerseyNumber={player.jerseyNumber}
+                      playerName={player.playerName}
+                      isStarter={true}
+                      draggable={isManager}
+                      onDropOrSwap={handlePlayerDropOrSwap} // Unified handler
+                      isPlaceholder={false} // Starters are not placeholders
+                      positionId={player.positionId} // The slot this starter occupies
+                      indexInSubs={null} // Not a sub
+                    />
+                  );
+                }) : null}
+              </div>
+            </div>
+            
+            <SubsStrip 
+              subs={subs} 
+              draggable={isManager}
+              onDropOrSwap={handlePlayerDropOrSwap} // Pass unified handler
+              showPlaceholders={isManager && subs.length < 7} // Max 7 subs generally
+              isManager={isManager}
+            />
+            
+            <div className="formation-notes" style={{ marginTop: '1.5rem' }}>
+              <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Formation Notes</h3>
+              <textarea
+                className="w-full h-24 bg-gray-800 border border-gray-700 rounded p-2 text-white"
+                placeholder={isManager ? "Add tactical notes here..." : "No tactical notes yet."}
+                disabled={!isManager}
+                style={{
+                  width: '100%',
+                  height: '6rem',
+                  backgroundColor: '#2d3748',
+                  border: '1px solid #4a5568',
+                  borderRadius: '0.375rem',
+                  padding: '0.5rem',
+                  color: 'white',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </DndProvider>
   );

@@ -138,6 +138,19 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Rename useCircuitBreaker to applyCircuitBreaker to avoid ESLint React Hooks rule violation
+const applyCircuitBreaker = (operation) => {
+  if (circuitBreaker.isCircuitOpen()) {
+    console.warn('Circuit breaker is open, request blocked');
+    return Promise.reject(new Error('Service unavailable, circuit breaker open'));
+  }
+  
+  return operation().catch(err => {
+    circuitBreaker.recordFailure();
+    throw err;
+  });
+};
+
 // Modify the existing delete method to handle team deletion specifically
 const originalDelete = apiClient.delete;
 apiClient.delete = function(url, config = {}) {
@@ -149,20 +162,18 @@ apiClient.delete = function(url, config = {}) {
     console.log(`Using standard timeout for team deletion: ${url}`);
   }
   
-  return originalDelete(url, { 
-    ...config, 
-    timeout 
-  }).catch(error => {
+  // Use circuit breaker for delete operations to prevent server overload
+  return applyCircuitBreaker(() => 
+    originalDelete(url, { 
+      ...config, 
+      timeout 
+    })
+  ).catch(error => {
     console.error(`Error in DELETE request to ${url}: `, error);
     
     // If it's a timeout, provide a more specific error
     if (error.code === 'ECONNABORTED' || (error.message && error.message.includes('timeout'))) {
-      throw {
-        status: 408,
-        message: 'Request timed out. The operation might still be processing on the server.',
-        code: 'REQUEST_TIMEOUT',
-        errors: undefined
-      };
+      throw new Error('Request timed out. The operation might still be processing on the server.');
     }
     
     throw error;
