@@ -254,6 +254,72 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     // If we're not a manager but should be (e.g., this is your team), log it for debugging
   }, [isManager]);
   
+  // Add state for tracking selected players and animations
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [swappingPlayers, setSwappingPlayers] = useState([]);
+  
+  // Get player elements and positions
+  const getPlayerRef = (id) => {
+    return document.querySelector(`[data-player-id="${id}"]`);
+  };
+  
+  // Function to handle player selection with animation
+  const handlePlayerSelect = (playerId, isStarter, positionId, indexInSubs) => {
+    if (!isManager || swappingPlayers.length > 0) return; // Prevent selection while animating
+
+    if (selectedPlayer === null) {
+      // First player selected
+      setSelectedPlayer({
+        id: playerId,
+        isStarter,
+        positionId,
+        indexInSubs
+      });
+    } else if (selectedPlayer.id === playerId) {
+      // Same player clicked again - deselect
+      setSelectedPlayer(null);
+    } else {
+      // Different player selected - perform swap with animation
+      
+      // Mark these players as swapping (for CSS class)
+      setSwappingPlayers([selectedPlayer.id, playerId]);
+      
+      // Update the store immediately to change positions
+      swapPlayersInFormation(selectedPlayer.id, playerId);
+      
+      // After animation duration, clear the animation state
+      setTimeout(() => {
+        setSwappingPlayers([]);
+        setSelectedPlayer(null); // Clear selection after swap
+      }, 500); // Duration should match CSS transition time
+    }
+  };
+  
+  // Check if a player is currently being swapped
+  const isPlayerSwapping = (playerId) => {
+    return swappingPlayers.includes(playerId);
+  };
+  
+  // Handle clicking outside of player chips to clear selection
+  useEffect(() => {
+    const handleDocumentClick = (e) => {
+      // If clicked element is not a player-chip, clear selection
+      if (!e.target.closest('.player-chip') && selectedPlayer) {
+        setSelectedPlayer(null);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+    };
+  }, [selectedPlayer]);
+  
+  // When tab changes or preset changes, clear selection
+  useEffect(() => {
+    setSelectedPlayer(null);
+  }, [showEditTab, preset]);
+  
   console.log("Render FormationContainer", { starters: starters.length, subs: subs.length, isManager });
   
   return (
@@ -326,11 +392,14 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                       jerseyNumber={player.jerseyNumber}
                       playerName={player.playerName}
                       isStarter={true}
-                      draggable={isManager}
-                      onDropOrSwap={handlePlayerDropOrSwap} // Unified handler
-                      isPlaceholder={false} // Starters are not placeholders
-                      positionId={player.positionId} // The slot this starter occupies
-                      indexInSubs={null} // Not a sub
+                      draggable={isManager && swappingPlayers.length === 0}
+                      onDropOrSwap={handlePlayerDropOrSwap}
+                      isPlaceholder={false}
+                      positionId={player.positionId}
+                      indexInSubs={null}
+                      isSelected={selectedPlayer?.id === player.id}
+                      onSelect={handlePlayerSelect}
+                      isSwapping={isPlayerSwapping(player.id)}
                     />
                   );
                 }) : null}
@@ -339,30 +408,14 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
             
             <SubsStrip 
               subs={subs} 
-              draggable={isManager}
-              onDropOrSwap={handlePlayerDropOrSwap} // Pass unified handler
-              showPlaceholders={isManager && subs.length < 7} // Max 7 subs generally
+              draggable={isManager && swappingPlayers.length === 0}
+              onDropOrSwap={handlePlayerDropOrSwap}
+              showPlaceholders={isManager && subs.length < 7}
               isManager={isManager}
+              selectedPlayer={selectedPlayer}
+              onPlayerSelect={handlePlayerSelect}
+              swappingPlayers={swappingPlayers}
             />
-            
-            <div className="formation-notes" style={{ marginTop: '1.5rem' }}>
-              <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Formation Notes</h3>
-              <textarea
-                className="w-full h-24 bg-gray-800 border border-gray-700 rounded p-2 text-white"
-                placeholder={isManager ? "Add tactical notes here..." : "No tactical notes yet."}
-                disabled={!isManager}
-                style={{
-                  width: '100%',
-                  height: '6rem',
-                  backgroundColor: '#2d3748',
-                  border: '1px solid #4a5568',
-                  borderRadius: '0.375rem',
-                  padding: '0.5rem',
-                  color: 'white',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
           </>
         )}
       </div>

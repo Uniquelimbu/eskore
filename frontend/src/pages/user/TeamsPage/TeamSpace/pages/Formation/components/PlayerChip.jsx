@@ -14,7 +14,10 @@ const PlayerChip = ({
   onDropOrSwap,
   isPlaceholder,
   positionId,
-  indexInSubs
+  indexInSubs,
+  isSelected,
+  onSelect,
+  isSwapping
 }) => {
   const playerChipRef = useRef(null);
 
@@ -72,21 +75,33 @@ const PlayerChip = ({
   // This is optional since by default the preview attaches to the same element as drag
   preview(playerChipRef);
 
+  // Handle click for selection
+  const handleClick = () => {
+    if (!isPlaceholder && onSelect && !isSwapping) {
+      onSelect(id, isStarter, positionId, indexInSubs);
+    }
+  };
+
   const chipStyles = {
     position: 'absolute',
     left: `${x}px`,
     top: `${y}px`,
     transform: 'translate(-50%, -50%)',
     opacity: isDragging ? 0.4 : 1,
-    cursor: draggable && !isPlaceholder ? 'grab' : 'default',
-    zIndex: isDragging ? 9999 : (isOverDropTarget ? 15 : 10), // Higher zIndex when being dragged or hovered over as target
+    cursor: draggable && !isPlaceholder ? 'grab' : isSwapping ? 'not-allowed' : 'pointer',
+    zIndex: isDragging ? 9999 : (isOverDropTarget || isSelected || isSwapping ? 15 : 10),
     width: '80px', // Ensure these are consistent
     height: '90px', // Ensure these are consistent
     transition: isDragging ? 'none' : 'transform 0.2s, opacity 0.2s, box-shadow 0.2s',
-    boxShadow: isOverDropTarget && canDropOnPlayer ? '0 0 10px 3px rgba(74, 108, 247, 0.7)' : (isDragging ? '0 5px 15px rgba(0,0,0,0.3)' : 'none'),
+    boxShadow: isSelected 
+      ? '0 0 10px 3px rgba(74, 108, 247, 0.7)' 
+      : (isOverDropTarget && canDropOnPlayer 
+        ? '0 0 10px 3px rgba(74, 108, 247, 0.7)' 
+        : (isDragging ? '0 5px 15px rgba(0,0,0,0.3)' : 'none')
+      ),
   };
   
-  const chipClasses = `player-chip ${isStarter ? 'starter' : 'substitute'} ${isPlaceholder ? 'placeholder' : ''} ${draggable && !isPlaceholder ? 'draggable' : ''} ${isDragging ? 'dragging' : ''}`;
+  const chipClasses = `player-chip ${isStarter ? 'starter' : 'substitute'} ${isPlaceholder ? 'placeholder' : ''} ${draggable && !isPlaceholder ? 'draggable' : ''} ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''} ${isSwapping ? 'swapping' : ''}`;
 
   return (
     <div
@@ -94,6 +109,7 @@ const PlayerChip = ({
       className={chipClasses}
       style={chipStyles}
       data-player-id={id}
+      onClick={handleClick}
     >
       <div className="player-card-content">
         {!isPlaceholder ? (

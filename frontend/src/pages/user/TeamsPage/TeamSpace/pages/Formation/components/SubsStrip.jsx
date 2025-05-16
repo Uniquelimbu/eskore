@@ -46,7 +46,16 @@ const SubPlaceholder = ({ x, y, index, isManager, onDropOrSwap }) => { // onDrop
   );
 };
 
-const SubsStrip = ({ subs, draggable, onDropOrSwap, showPlaceholders = false, isManager = true }) => { // onDrop, onSwap replaced
+const SubsStrip = ({ 
+  subs, 
+  draggable, 
+  onDropOrSwap, 
+  showPlaceholders = false, 
+  isManager = true,
+  selectedPlayer,
+  onPlayerSelect,
+  swappingPlayers = []
+}) => {
   const containerRef = useRef(null);
   const [stripDimensions, setStripDimensions] = React.useState({ width: 800, height: 140 });
   
@@ -128,6 +137,11 @@ const SubsStrip = ({ subs, draggable, onDropOrSwap, showPlaceholders = false, is
     transition: 'background-color 0.2s ease, box-shadow 0.2s ease'
   };
   
+  // Check if a player is currently being swapped
+  const isPlayerSwapping = (playerId) => {
+    return swappingPlayers.includes(playerId);
+  };
+  
   return (
     <div 
       ref={containerRef}
@@ -151,14 +165,14 @@ const SubsStrip = ({ subs, draggable, onDropOrSwap, showPlaceholders = false, is
       </div>
       
       <div 
-        ref={stripDropRef} // Apply drop ref to the strip itself
+        ref={stripDropRef}
         className={`subs-strip ${isOverStrip && canDropOnStrip ? 'strip-highlight' : ''}`}
         style={stripStyle}
       >
         {/* Actual player chips */}
         {subs.map((sub, index) => {
-          if (!sub) return null; // Guard against undefined subs
-          const pos = getChipPosition(index, Math.max(7, subs.length)); // Use actual number of subs or 7 for spacing
+          if (!sub) return null;
+          const pos = getChipPosition(index, Math.max(7, subs.length));
           return (
             <PlayerChip
               key={sub.id}
@@ -170,10 +184,13 @@ const SubsStrip = ({ subs, draggable, onDropOrSwap, showPlaceholders = false, is
               playerName={sub.playerName}
               isStarter={false}
               draggable={draggable && !sub.isPlaceholder && isManager}
-              onDropOrSwap={onDropOrSwap} // Pass the unified handler
+              onDropOrSwap={onDropOrSwap}
               isPlaceholder={sub.isPlaceholder}
-              indexInSubs={index} // Pass the index for subs
-              positionId={null} // Subs don't have a pitch positionId
+              indexInSubs={index}
+              positionId={null}
+              isSelected={selectedPlayer?.id === sub.id}
+              onSelect={onPlayerSelect}
+              isSwapping={isPlayerSwapping(sub.id)}
             />
           );
         })}
