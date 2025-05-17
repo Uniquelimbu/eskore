@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./public/images/logos/eskore-logo.png" alt="eSkore Frontend" width="120">
   <h1>eSkore Frontend</h1>
-  <p>Modern React application for esports performance analytics and team management</p>
+  <p>Modern React application for sports performance analytics and team management</p>
   
   <p>
     <img src="https://img.shields.io/badge/react-v18.2.0-61DAFB.svg" alt="React Version">
