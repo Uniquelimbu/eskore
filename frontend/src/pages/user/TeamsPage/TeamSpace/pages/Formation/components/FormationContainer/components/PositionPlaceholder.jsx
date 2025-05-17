@@ -1,13 +1,12 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
-import './FormationStyles.css';
+import '../../FormationBoard/styles/index.css'; // Corrected CSS import path
 
-const PositionPlaceholder = ({ x, y, label, positionId, isManager }) => { // onDrop removed
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({ // Updated to new react-dnd API
+const PositionPlaceholder = ({ x, y, label, positionId, isManager }) => {
+  const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'player',
     canDrop: () => isManager,
     drop: () => {
-      // console.log(`Dropped on PositionPlaceholder: ${positionId}`);
       return {
         type: 'positionPlaceholder',
         positionId: positionId,
@@ -29,7 +28,7 @@ const PositionPlaceholder = ({ x, y, label, positionId, isManager }) => { // onD
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: isOver && canDrop ? 5 : 1, // Ensure it's above pitch markings but below dragged chip
+    zIndex: isOver && canDrop ? 5 : 1,
   };
   
   const circleClass = `position-placeholder-circle ${isOver && canDrop ? 'active' : ''}`;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useFormationStore from '../../formationStore';
+import useFormationStore from '../../FormationBoard';
 import './Edit.css';
 
 const FormationPreview = ({ formation, positionData }) => {

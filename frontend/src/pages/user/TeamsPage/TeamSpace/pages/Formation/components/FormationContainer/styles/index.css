@@ -1,0 +1,154 @@
+/* FormationContainer specific styles */
+
+/* Header controls styling */
+.formation-header-controls {
+  display: flex;
+  justify-content: space-between; /* Changed from flex-end to space-between */
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.controls-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Save status styling */
+.save-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 500;
+}
+
+.save-status.saving {
+  color: #facc15; /* Yellow */
+}
+
+.save-status.saved {
+  color: #4ade80; /* Green */
+}
+
+.save-status.unsaved {
+  color: #f87171; /* Red */
+}
+
+.save-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spinner animation for saving state */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Formation label styling */
+.formation-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 5px 10px;
+  border-radius: 4px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.formation-label .preset-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.formation-label .preset-value {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Edit button styling */
+.edit-formation-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.edit-formation-button:hover {
+  background-color: #2563eb;
+}
+
+.edit-formation-button:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Export button styling */
+.export-formation-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.export-formation-button:hover {
+  background-color: #2563eb;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .formation-header-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .edit-formation-button,
+  .export-formation-button {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .formation-label {
+    top: 5px;
+    left: 5px;
+    padding: 3px 6px;
+  }
+  
+  .formation-label .preset-label,
+  .formation-label .preset-value {
+    font-size: 0.8rem;
+  }
+}

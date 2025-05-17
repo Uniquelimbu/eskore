@@ -1,6 +1,5 @@
 export { default as FormationContainer } from './FormationContainer';
-export { default as PlayerChip } from './PlayerChip';
-export { default as PositionPlaceholder } from './PositionPlaceholder';
-export { default as PresetSelector } from './PresetSelector';
-export { default as SubsStrip } from './SubsStrip';
-export { default as useFormationStore } from './formationStore';
+export { default as PlayerChip } from './PlayerChip/PlayerChip';
+export { default as PositionPlaceholder } from './FormationContainer/components/PositionPlaceholder';
+export { default as SubsStrip } from './FormationContainer/components/SubsStrip';
+export { default as useFormationStore } from './FormationBoard';

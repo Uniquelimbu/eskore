@@ -1,0 +1,122 @@
+/* Subs Strip */
+.subs-strip-container {
+  margin-top: 1rem;
+  background-color: #1a1a1a;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  border-top: 2px solid #2d2d2d;
+}
+
+.subs-strip-header {
+  background-color: #2d2d2d;
+  padding: 0.5rem 1rem;
+}
+
+.subs-strip-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.subs-strip {
+  position: relative;
+  width: 100%;
+  background-color: #1a1a1a;
+  min-height: 140px;
+  transition: background-color 0.2s ease;
+}
+
+.strip-highlight {
+  background-color: rgba(74, 108, 247, 0.1) !important;
+  box-shadow: inset 0 0 0 2px rgba(74, 108, 247, 0.5);
+}
+
+.sub-placeholder {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.sub-placeholder-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(45, 55, 72, 0.6);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.sub-hover .sub-placeholder-circle,
+.sub-placeholder-circle.active {
+  background-color: rgba(74, 108, 247, 0.3);
+  border: 2px solid rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.sub-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.empty-subs-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #777;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Subs hover states */
+.sub-placeholder-circle {
+  transition: all 0.2s ease;
+}
+
+.sub-hover .sub-placeholder-circle {
+  background-color: rgba(74, 108, 247, 0.3);
+  border-color: rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.sub-placeholder-circle.active {
+  background-color: rgba(74, 108, 247, 0.3);
+  border-color: rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.sub-placeholder.can-drop-hover .sub-placeholder-circle {
+  background-color: rgba(74, 108, 247, 0.4); /* More prominent hover */
+  border-color: rgba(74, 108, 247, 1);
+  transform: scale(1.15); /* Slightly larger */
+}
+
+/* Subs strip highlight state */
+.subs-strip.strip-highlight {
+  background-color: rgba(74, 108, 247, 0.2) !important; /* More visible highlight */
+  box-shadow: inset 0 0 8px rgba(74, 108, 247, 0.6);
+}
+
+.selection-indicator {
+  text-align: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.selection-indicator span {
+  background-color: rgba(74, 108, 247, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+}

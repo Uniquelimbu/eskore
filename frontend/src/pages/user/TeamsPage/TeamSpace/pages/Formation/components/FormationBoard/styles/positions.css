@@ -1,0 +1,92 @@
+/* Position placeholder and marker styles */
+.position-placeholder {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.position-placeholder-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(45, 55, 72, 0.6);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.position-hover .position-placeholder-circle,
+.position-placeholder-circle.active {
+  background-color: rgba(74, 108, 247, 0.3);
+  border: 2px solid rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.position-placeholder-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.position-placeholder-plus {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: -4px;
+}
+
+/* Position label styles for the formation layout */
+.position-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2; /* Above pitch markings but below player chips */
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+.position-marker-label {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Position hover states */
+.position-placeholder-circle {
+  transition: all 0.2s ease;
+}
+
+.position-hover .position-placeholder-circle {
+  background-color: rgba(74, 108, 247, 0.3);
+  border-color: rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.position-placeholder-circle.active {
+  background-color: rgba(74, 108, 247, 0.3);
+  border-color: rgba(74, 108, 247, 0.8);
+  transform: scale(1.1);
+}
+
+.position-placeholder.can-drop-hover .position-placeholder-circle {
+  background-color: rgba(74, 108, 247, 0.4); /* More prominent hover */
+  border-color: rgba(74, 108, 247, 1);
+  transform: scale(1.15); /* Slightly larger */
+}

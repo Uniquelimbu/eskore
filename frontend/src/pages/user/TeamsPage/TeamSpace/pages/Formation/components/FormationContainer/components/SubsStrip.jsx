@@ -1,15 +1,14 @@
 import React, { useRef } from 'react';
 import { useDrop } from 'react-dnd';
-import PlayerChip from './PlayerChip';
-import './FormationStyles.css';
+import PlayerChip from '../../PlayerChip/PlayerChip'; // Corrected PlayerChip import path
+import '../../FormationBoard/styles/index.css'; // Corrected CSS import path
 
 // Empty placeholder for subs slot
-const SubPlaceholder = ({ x, y, index, isManager, onDropOrSwap }) => { // onDrop replaced
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({ // Updated to new react-dnd API
+const SubPlaceholder = ({ x, y, index, isManager, onDropOrSwap }) => {
+  const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'player',
     canDrop: () => isManager,
     drop: (item) => {
-      // console.log(`Dropped on SubPlaceholder index: ${index}`);
       return { type: 'subSlot', index: index };
     },
     collect: (monitor) => ({
@@ -78,14 +77,11 @@ const SubsStrip = ({
   
   const [{ isOverStrip, canDropOnStrip }, stripDropRef] = useDrop(() => ({
     accept: 'player',
-    canDrop: (item) => isManager && draggable && item.isStarterAtDragStart, // Allow dropping starters onto the strip
+    canDrop: (item) => isManager && draggable && item.isStarterAtDragStart,
     drop: (item, monitor) => {
-      if (monitor.didDrop()) { // Check if already handled by a child drop target
+      if (monitor.didDrop()) {
         return;
       }
-      // console.log('Dropped on general SubsStrip area');
-      // Determine index based on drop coordinates if needed, or -1 for append
-      // For simplicity, let's use -1 to signify dropping on the strip generally (append logic)
       return { type: 'subsStrip', index: -1 }; 
     },
     collect: (monitor) => ({
@@ -96,7 +92,6 @@ const SubsStrip = ({
   
   // Calculate chip positions in the strip
   const getChipPosition = (index, totalSlots = 8) => {
-    // Adjust spacing to fit all slots evenly
     const spacing = Math.min(100, (stripDimensions.width - 40) / (totalSlots + 1));
     
     return {
@@ -121,7 +116,6 @@ const SubsStrip = ({
           y={pos.y} 
           index={placeholderIndex}
           isManager={isManager}
-          // onDropOrSwap is not needed here as SubPlaceholder itself is a drop target
         />
       );
     });

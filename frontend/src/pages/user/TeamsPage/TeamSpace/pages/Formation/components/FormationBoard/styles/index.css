@@ -1,0 +1,7 @@
+/* Import all style modules */
+@import './general.css';
+@import './pitch.css';
+@import './positions.css';
+@import './players.css';
+@import './substitutes.css';
+@import './interactions.css';

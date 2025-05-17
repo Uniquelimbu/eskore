@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import './FormationStyles.css';
+import '../FormationBoard/styles/index.css'; // Updated CSS import path
 
 const PlayerChip = ({ 
   id, 
