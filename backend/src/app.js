@@ -82,7 +82,7 @@ logger.info('APP.JS: Configuring CORS...'); // Restored
 
 // Read CORS settings from environment variables
 const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000';
-const allowedMethodsEnv = process.env.ALLOWED_METHODS || 'GET,POST,PUT,DELETE,OPTIONS';
+const allowedMethodsEnv = process.env.ALLOWED_METHODS || 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
 const allowedHeadersEnv = process.env.ALLOWED_HEADERS || 'Content-Type,Authorization';
 
 const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim());

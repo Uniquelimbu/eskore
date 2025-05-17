@@ -4,6 +4,7 @@ import PageLayout from '../../../components/layout/PageLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import RecentActivity from '../DashboardPage/components/RecentActivity'; // Reuse RecentActivity
 import dashboardService from '../../../services/dashboardService'; // For fetching activity
+import profileService from '../../../services/profileService'; // For fetching user profile
 import './ProfilePage.css'; // Import the CSS
 
 // Placeholder Stats Component (Replace with actual data fetching later)
@@ -38,10 +39,30 @@ const ProfileStats = ({ user }) => (
 
 const ProfilePage = () => {
   const { user } = useAuth();
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate();
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
-  const [error, setError] = useState(null); // Add error state
+  const [error, setError] = useState(null);
+  const [refreshedUser, setRefreshedUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  // Fetch fresh user data when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoadingUser(true);
+        const userData = await profileService.getUserProfile();
+        setRefreshedUser(userData);
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+        // Fall back to context user data if fetch fails
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Fetch recent activity for the profile page
   useEffect(() => {
@@ -65,7 +86,7 @@ const ProfilePage = () => {
   }, []); // Fetch on component mount
 
   // Fallback for missing user data
-  const profileUser = user || {};
+  const profileUser = refreshedUser || user || {};
   // More robust country mapping or use a library
   const countryMap = { us: 'United States', ca: 'Canada', np: 'Nepal' }; // Example mapping
   const displayCountry = profileUser.country ? (countryMap[profileUser.country.toLowerCase()] || profileUser.country) : 'Location Unknown';

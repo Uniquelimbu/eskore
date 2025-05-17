@@ -12,7 +12,6 @@ const profileService = {
 
       // If userId is provided, get that user's public profile
       // Otherwise get the current authenticated user's profile
-      // The endpoint structure appears to be incorrect - let's fix it
       const endpoint = userId ? 
         `/api/users/${userId}` : 
         `/api/auth/me`; // Use /api/auth/me for the current user's profile
@@ -46,9 +45,51 @@ const profileService = {
   // Update current authenticated user's profile
   updateUserProfile: async (profileData) => {
     try {
-      // Regular profile update (non-image data)
-      const response = await apiClient.put('/api/users/profile', profileData);
-      return response.data;
+      // Get the current user's ID from localStorage or context
+      const userData = localStorage.getItem('user');
+      let userId;
+      
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          userId = parsedUser.id;
+        } catch (e) {
+          console.error('Error parsing user data from localStorage:', e);
+        }
+      }
+      
+      if (!userId) {
+        // Fallback: try to get user ID from profile data
+        userId = profileData.id;
+      }
+      
+      if (!userId) {
+        // If we still don't have a user ID, try to fetch it
+        const currentUser = await apiClient.get('/api/auth/me');
+        userId = currentUser?.id;
+      }
+      
+      if (!userId) {
+        throw new Error('User ID not found. Please log in again.');
+      }
+      
+      console.log(`Updating profile for user ${userId} with data:`, profileData);
+      
+      // Use PATCH method on the correct endpoint with user ID
+      const response = await apiClient.patch(`/api/users/${userId}`, profileData);
+      
+      // After successful update, update the user in localStorage to keep it in sync
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          const updatedUser = { ...parsedUser, ...profileData };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        } catch (e) {
+          console.error('Error updating user data in localStorage:', e);
+        }
+      }
+      
+      return response.data || response;
     } catch (error) {
       console.error('Error updating user profile:', error.response?.data || error.message);
       throw error.response?.data || error;
@@ -58,12 +99,12 @@ const profileService = {
   // Update current authenticated user's profile image
   updateProfileImage: async (formData) => { // formData should contain the image file
     try {
-      const response = await apiClient.put('/api/users/profile/image', formData, {
+      const responseData = await apiClient.put('/api/users/profile/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      return response.data;
+      return responseData; // apiClient.put() returns data directly
     } catch (error) {
       console.error('Error updating profile image:', error.response?.data || error.message);
       throw error.response?.data || error;

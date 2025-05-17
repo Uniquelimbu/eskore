@@ -224,3 +224,51 @@
   opacity: 0.7;
   margin-right: 6px;
 }
+
+/* Override any global styles that might be hiding date inputs */
+.edit-profile-form input[type="date"] {
+  display: block !important;
+  position: static !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #e2e8f0;
+  transition: border-color 0.3s;
+  background-color: #1a202c;
+}
+
+.edit-profile-form input[type="date"]:focus {
+  outline: none;
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 0.2rem rgba(74, 108, 247, 0.25);
+  background-color: #232b3a;
+}
+
+/* Style the date picker calendar icon */
+.edit-profile-form input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Make the calendar icon white */
+  cursor: pointer;
+}
+
+/* Additional styling for form elements if needed */
+.edit-profile-form .form-group {
+  margin-bottom: 24px;
+}
+
+.edit-profile-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #a0aec0;
+}
+
+.date-format-hint {
+  font-size: 0.8rem;
+  color: #a0aec0;
+  font-weight: normal;
+  margin-left: 5px;
+}

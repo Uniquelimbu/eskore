@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageLayout from '../../../../../components/PageLayout/PageLayout';
 import profileService from '../../../../../services/profileService';
+import { formatDateForInput } from '../../../../../utils/dateUtils';
 import './EditProfilePage.css';
 
 const EditProfilePage = () => {
@@ -27,7 +28,17 @@ const EditProfilePage = () => {
         const userData = await profileService.getUserProfile();
         setFullProfileData(userData);
         
-        // Set form data with user profile data
+        const dobFromApi = userData.dob;
+        const formattedDobValue = formatDateForInput(dobFromApi);
+
+        // Only log on initial fetch, not during typing
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('EditProfilePage (useEffect): Fetched user profile data:', userData);
+          console.log('EditProfilePage (useEffect): DOB from API:', dobFromApi);
+          console.log('EditProfilePage (useEffect): Value from formatDateForInput:', formattedDobValue);
+        }
+        
+        // Set form data with DOB given higher priority
         setFormData({
           firstName: userData.firstName || '',
           lastName: userData.lastName || '',
@@ -35,7 +46,7 @@ const EditProfilePage = () => {
           position: userData.position || '',
           height: userData.height || '',
           country: userData.country || '',
-          dob: userData.dob || ''
+          dob: formattedDobValue || '' // Ensure this is set correctly
         });
       } catch (err) {
         setError('Failed to load profile data. Please try again later.');
@@ -59,12 +70,20 @@ const EditProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Sanitize data: remove empty strings before submitting
+    const sanitizedData = { ...formData };
+    Object.keys(sanitizedData).forEach((key) => {
+      if (sanitizedData[key] === '') {
+        delete sanitizedData[key];
+      }
+    });
+
     try {
       setSaving(true);
       setError(null);
       
       // Call the API to update the profile
-      await profileService.updateUserProfile(formData);
+      await profileService.updateUserProfile(sanitizedData);
       
       // Navigate back to profile page on success
       navigate('/profile');
@@ -79,6 +98,25 @@ const EditProfilePage = () => {
   const handleCancel = () => {
     navigate('/profile');
   };
+
+  // Remove the console logs that were here:
+  // console.log('EditProfilePage (render): Current formData state:', formData);
+  // console.log('EditProfilePage (render): formData.dob value:', formData.dob, 'Type:', typeof formData.dob);
+
+  // Update the date input to force proper rendering
+  const dateInputRef = useRef(null);
+  
+  useEffect(() => {
+    // After form data is set and component is rendered, ensure the date input has the correct value
+    if (dateInputRef.current && formData.dob) {
+      dateInputRef.current.value = formData.dob;
+      
+      // Only log in development, not in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Set date input value directly:', formData.dob);
+      }
+    }
+  }, [formData.dob]);
 
   if (loading) {
     return (
@@ -97,6 +135,8 @@ const EditProfilePage = () => {
         <div className="edit-profile-header">
           <h1>Edit Your Profile</h1>
           <p>Update your personal information and preferences</p>
+          {/* You can add a temporary debug line here as well if needed: */}
+          {/* <p style={{ color: 'red' }}>Debug DOB: "{formData.dob}" (Type: {typeof formData.dob})</p> */}
         </div>
         
         {error && <div className="error-banner">{error}</div>}
@@ -164,15 +204,17 @@ const EditProfilePage = () => {
           <div className="form-section">
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="dob">Date of Birth</label>
+                <label htmlFor="dob">Date of Birth <span className="date-format-hint">(YYYY-MM-DD)</span></label>
                 <input
                   type="date"
                   id="dob"
                   name="dob"
                   value={formData.dob}
+                  ref={dateInputRef}
                   onChange={handleChange}
                   max={new Date().toISOString().split('T')[0]}
                 />
+                <small style={{ display: 'none' }}>Current DOB value: {formData.dob}</small>
               </div>
               
               <div className="form-group">
@@ -232,6 +274,7 @@ const EditProfilePage = () => {
           </div>
         </form>
       </div>
+      
     </PageLayout>
   );
 };
