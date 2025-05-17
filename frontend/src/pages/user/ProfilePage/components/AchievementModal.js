@@ -166,6 +166,18 @@ const AchievementModal = ({ achievement, onClose, onSave }) => {
       </div>
       
       <style jsx>{`
+        .profile-modal {
+          width: 90% !important;
+          max-width: 700px !important;
+          margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+          .profile-modal {
+            width: 80% !important;
+          }
+        }
+        
         .achievement-suggestions {
           margin-bottom: 20px;
           padding-bottom: 16px;

@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import EditProfileModal from './EditProfileModal';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import { positionMapping } from '../../../../utils/soccerUtils';
 
 const ProfileHeader = ({ profileData, onProfileUpdate }) => {
-  const [showEditModal, setShowEditModal] = useState(false);
+  const navigate = useNavigate(); // Add this hook
   const fileInputRef = useRef(null);
   const defaultProfileImage = `${process.env.PUBLIC_URL}/images/default-profile.png`;
 
@@ -41,6 +41,10 @@ const ProfileHeader = ({ profileData, onProfileUpdate }) => {
     return positionMapping[position] || position;
   };
 
+  const handleEditProfile = () => {
+    navigate('/profile/edit');
+  };
+
   if (!profileData) return null;
 
   return (
@@ -66,7 +70,7 @@ const ProfileHeader = ({ profileData, onProfileUpdate }) => {
       <div className="profile-info">
         <div className="profile-title">
           <h1 className="profile-name">{`${profileData.firstName} ${profileData.lastName}`}</h1>
-          <button className="profile-edit-btn" onClick={() => setShowEditModal(true)}>
+          <button className="profile-edit-btn" onClick={handleEditProfile}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M16.862 4.487L18.549 2.799C18.9207 2.42778 19.4201 2.21783 19.9417 2.21783C20.4633 2.21783 20.9627 2.42778 21.3344 2.799C21.7061 3.17022 21.916 3.66959 21.916 4.19121C21.916 4.71284 21.7061 5.2122 21.3344 5.58343L10.582 16.3358C10.0248 16.8932 9.3595 17.3263 8.62937 17.6083L6 18.5L6.89116 15.8706C7.17326 15.1407 7.60636 14.4756 8.16357 13.9187L16.862 5.22043C16.8623 5.22014 16.8627 5.21986 16.863 5.21957C16.8633 5.21928 16.8637 5.21899 16.864 5.2187L16.862 4.487Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -93,14 +97,6 @@ const ProfileHeader = ({ profileData, onProfileUpdate }) => {
           )}
         </div>
       </div>
-      
-      {showEditModal && (
-        <EditProfileModal
-          profileData={profileData}
-          onClose={() => setShowEditModal(false)}
-          onSave={onProfileUpdate}
-        />
-      )}
     </div>
   );
 };

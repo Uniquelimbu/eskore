@@ -75,12 +75,14 @@ const ProfileDetails = ({ profileData }) => {
           </div>
         )}
         
-        {profileData.team && (
-          <div className="profile-detail-item">
-            <span className="detail-label">Current Team</span>
-            <span className="detail-value">{profileData.team}</span>
-          </div>
-        )}
+        <div className="profile-detail-item">
+          <span className="detail-label">Current Team</span>
+          <span className="detail-value">
+            {profileData.teams && profileData.teams.length > 0 
+              ? profileData.teams[0].name 
+              : "You are not in any team right now"}
+          </span>
+        </div>
       </div>
       
       {profileData.bio && (

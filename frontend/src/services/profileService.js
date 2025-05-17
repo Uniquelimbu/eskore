@@ -4,17 +4,42 @@ const profileService = {
   // Get user profile (either current authenticated user or by ID)
   getUserProfile: async (userId) => {
     try {
+      // Check for token first to prevent unnecessary API calls
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       // If userId is provided, get that user's public profile
       // Otherwise get the current authenticated user's profile
+      // The endpoint structure appears to be incorrect - let's fix it
       const endpoint = userId ? 
-        `/api/users/${userId}/profile` : 
-        `/api/users/profile`; // Endpoint for authenticated user's own profile
+        `/api/users/${userId}` : 
+        `/api/auth/me`; // Use /api/auth/me for the current user's profile
+      
+      console.log(`Fetching user profile from: ${endpoint}`);
       
       const response = await apiClient.get(endpoint);
-      return response.data; // Assuming backend sends data directly or under a 'data' key
+      
+      // The response structure might be different than expected
+      if (!response) {
+        throw new Error('Invalid response format from server');
+      }
+      
+      return response; // Return the complete response
     } catch (error) {
-      console.error('Error fetching user profile:', error.response?.data || error.message);
-      throw error.response?.data || error;
+      console.error('Error fetching user profile:', error.status, error.message);
+      
+      // Enhanced error handling with specific messages based on status codes
+      if (error.status === 400) {
+        throw new Error('Invalid request. Please check your credentials and try again.');
+      } else if (error.status === 401) {
+        throw new Error('Your session has expired. Please log in again.');
+      } else if (error.status === 404) {
+        throw new Error('User profile not found.');
+      }
+      
+      throw error;
     }
   },
   

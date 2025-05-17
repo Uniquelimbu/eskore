@@ -14,9 +14,16 @@ const DashboardPage = () => {
   
   const { user } = useAuth();
   
-  // Extract first name for welcome message
+  // Extract first name for welcome message with better fallback handling
   const firstName = user?.firstName || '';
+  
+  // Use firstName if available, fall back to username, then to "Athlete"
   const displayName = firstName || user?.username || 'Athlete';
+  
+  // Log user data for debugging
+  useEffect(() => {
+    console.log('DashboardPage: Current user data:', user);
+  }, [user]);
   
   // Fetch activity data
   useEffect(() => {

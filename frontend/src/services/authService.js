@@ -53,6 +53,10 @@ const authService = {
           if (!response.redirectUrl) {
             response.redirectUrl = '/dashboard';
           }
+          // Ensure firstName is present in the user object
+          if (!response.user.firstName) {
+            response.user.firstName = 'Guest'; // Default value or handle as needed
+          }
           return response;
         }
         

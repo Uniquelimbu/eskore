@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import PageLayout from '../../../components/layout/PageLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import RecentActivity from '../DashboardPage/components/RecentActivity'; // Reuse RecentActivity
@@ -37,6 +38,7 @@ const ProfileStats = ({ user }) => (
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); // Add this hook
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [error, setError] = useState(null); // Add error state
@@ -69,6 +71,10 @@ const ProfilePage = () => {
   const displayCountry = profileUser.country ? (countryMap[profileUser.country.toLowerCase()] || profileUser.country) : 'Location Unknown';
   const joinDate = profileUser.createdAt ? new Date(profileUser.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A';
 
+  // Add navigation handler
+  const handleEditProfile = () => {
+    navigate('/profile/edit');
+  };
 
   return (
     <PageLayout className="profile-page-content" maxWidth="1200px" withPadding={true}>
@@ -91,7 +97,7 @@ const ProfilePage = () => {
             <span>🎂 Joined {joinDate}</span>
           </div>
         </div>
-        <button className="edit-profile-button">Edit Profile</button>
+        <button className="edit-profile-button" onClick={handleEditProfile}>Edit Profile</button>
       </div>
 
       <div className="profile-body-grid">

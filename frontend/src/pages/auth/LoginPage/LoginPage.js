@@ -58,6 +58,17 @@ const LoginPage = () => {
           console.log("Login successful, navigating to dashboard");
           navigate('/dashboard');
         }
+        
+        // Log the login result to see if it includes firstName
+        console.log('Login successful, user data:', result.user);
+        
+        // If user data doesn't include necessary fields, consider making an additional request
+        if (result.success && (!result.user.firstName || !result.user.lastName)) {
+          console.log('Login successful but user profile incomplete, fetching full profile...');
+          // Fetch user profile if needed
+          // const profile = await someService.getUserProfile();
+          // updateUser(profile);
+        }
       } catch (err) {
         console.error('Login error details:', err);
         // Error is handled by context

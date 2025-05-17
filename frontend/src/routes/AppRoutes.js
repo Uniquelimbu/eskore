@@ -22,6 +22,7 @@ import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings'
 import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad'; // Import Squad component
 import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation'; // Import Formation component
 import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar'; // Import Calendar component
+import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfilePage.js'; // Import EditProfilePage
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -73,6 +74,7 @@ const AppRoutes = () => {
       }>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/edit" element={<EditProfilePage />} /> {/* Add the new route for editing profile */}
         <Route path="/search" element={<SearchPage />} />
         
         {/* Team related routes */}
