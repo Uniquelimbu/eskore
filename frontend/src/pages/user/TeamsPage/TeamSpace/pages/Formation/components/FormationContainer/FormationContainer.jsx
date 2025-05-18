@@ -19,12 +19,12 @@ import '../FormationBoard/styles/index.css';
 import './styles/index.css';
 
 const FormationContainer = ({ teamId, isManager, players = [] }) => {
-  const containerRef = useRef(null);
   const pitchRef = useRef(null);
+  const containerRef = useRef(null); // Added missing ref
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 450 });
   const [showEditTab, setShowEditTab] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
+  // const [isSaving, setIsSaving] = useState(false); // Local isSaving is no longer primary for display
+
   // Get store actions and state
   const {
     init,
@@ -71,18 +71,88 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   
   // Save changes when formation is updated
   useEffect(() => {
+    // Use store's `loading` state to prevent concurrent saves triggered by this effect
     if (!saved && !loading && teamId) {
       const saveChanges = async () => {
-        setIsSaving(true);
-        await saveFormation();
-        // Add a small delay before turning off the saving indicator for UX
-        setTimeout(() => {
-          setIsSaving(false);
-        }, 500);
+        // setIsSaving(true); // Not needed if UI relies on store.loading
+        try {
+          console.log("Formation container: Detected unsaved changes, triggering save (useEffect [saved, loading, teamId])");
+          
+          const result = await saveFormation(); // Calls store's saveFormation -> forceSave
+          
+          if (result && result.success) {
+            console.log("Formation container: Formation saved successfully (useEffect [saved, loading, teamId])");
+          } else {
+            console.error("Formation container: Error saving formation (useEffect [saved, loading, teamId]):", 
+              result ? result.error : "No result returned from save operation");
+          }
+        } catch (error) {
+          console.error("Formation container: Exception during save (useEffect [saved, loading, teamId]):", error);
+        } finally {
+          // setIsSaving(false); // Not needed if UI relies on store.loading
+        }
       };
       
       saveChanges();
     }
+  }, [saved, loading, teamId, saveFormation, preset, starters, subs]); // Added starters, subs to dependency array for completeness
+  
+  // Add a new useEffect for manual saving after player swaps
+  useEffect(() => {
+    if (swappingPlayers.length > 0) {
+      console.log("Formation container: Players are being swapped, will save once complete", swappingPlayers);
+      // After the swap animation completes, ensure changes are saved
+      const saveTimer = setTimeout(() => {
+        console.log("Formation container: Swap animation complete, ensuring changes are saved");
+        // Force a save after swapping animation completes
+        saveFormation().catch(err => {
+          console.error("Formation container: Failed to save after swap animation:", err);
+        });
+      }, 600); // Slightly longer than the animation duration (500ms)
+      
+      return () => clearTimeout(saveTimer);
+    }
+  }, [swappingPlayers, saveFormation]);
+  
+  // Add an additional useEffect to ensure changes are saved when exiting the page
+  useEffect(() => {
+    // Create a function to force save on unmount or page leave
+    const handlePageLeave = () => {
+      if (!saved && !loading && teamId) {
+        console.log("Formation container: Page exit detected, forcing save");
+        // Force a synchronous save attempt
+        try {
+          useFormationStore.getState().forceSave();
+        } catch (error) {
+          console.error("Formation container: Failed to save on page exit:", error);
+        }
+      }
+    };
+
+    // Add a beforeunload event to catch page reloads/navigation
+    window.addEventListener('beforeunload', handlePageLeave);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('beforeunload', handlePageLeave);
+      // Also try to save when component unmounts
+      handlePageLeave();
+    };
+  }, [saved, loading, teamId]);
+  
+  // Periodic auto-save to prevent data loss
+  useEffect(() => {
+    // Auto-save every 15 seconds if there are unsaved changes
+    const autoSaveInterval = setInterval(() => {
+      if (!saved && !loading && teamId) {
+        console.log("Formation container: Auto-save triggered");
+        saveFormation().catch(err => {
+          console.error("Formation container: Auto-save failed:", err);
+        });
+      }
+    }, 15000);
+    
+    return () => clearInterval(autoSaveInterval);
   }, [saved, loading, teamId, saveFormation]);
   
   // Handle resize for responsive pitch
@@ -174,9 +244,9 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   const positionMarkers = createPositionMarkers(PRESETS, preset, dimensions);
   const positionPlaceholders = isManager ? createPositionPlaceholders(PRESETS, preset, starters, dimensions, isManager) : [];
   
-  // Determine save status message
-  const saveStatus = isSaving ? "Saving..." : (saved ? "Saved" : "Unsaved Changes");
-  const saveStatusClass = `save-status ${isSaving ? 'saving' : (saved ? 'saved' : 'unsaved')}`;
+  // Determine save status message using store's `loading` state
+  const saveStatusText = loading ? "Saving..." : (saved ? "Saved" : "Unsaved Changes");
+  const saveStatusClass = `save-status ${loading ? 'saving' : (saved ? 'saved' : 'unsaved')}`;
   
   return (
     <DndProvider backend={HTML5Backend}>
@@ -193,7 +263,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
             <div className="formation-header-controls">
               <div className={saveStatusClass}>
                 <span className="save-status-icon">
-                  {isSaving ? (
+                  {loading ? ( // Use store's `loading` state
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="spinner">
                       <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                       <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
@@ -208,7 +278,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                     </svg>
                   )}
                 </span>
-                {saveStatus}
+                {saveStatusText}
               </div>
               
               <div className="controls-right">

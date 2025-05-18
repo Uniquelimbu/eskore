@@ -4,6 +4,8 @@
 export const handlePlayerSelect = (playerId, isStarter, positionId, indexInSubs, selectedPlayer, swappingPlayers, setSelectedPlayer, setSwappingPlayers, swapPlayersInFormation, isManager) => {
   if (!isManager || swappingPlayers.length > 0) return; // Prevent selection while animating
 
+  console.log('Player selected:', playerId, 'Current selected:', selectedPlayer?.id);
+
   if (selectedPlayer === null) {
     // First player selected
     setSelectedPlayer({
@@ -17,11 +19,12 @@ export const handlePlayerSelect = (playerId, isStarter, positionId, indexInSubs,
     setSelectedPlayer(null);
   } else {
     // Different player selected - perform swap with animation
+    console.log('Swapping players:', selectedPlayer.id, playerId);
     
     // Mark these players as swapping (for CSS class)
     setSwappingPlayers([selectedPlayer.id, playerId]);
     
-    // Update the store immediately to change positions
+    // Update the store immediately to change positions 
     swapPlayersInFormation(selectedPlayer.id, playerId);
     
     // After animation duration, clear the animation state
@@ -41,17 +44,28 @@ export const handlePlayerDropOrSwap = (draggedItemInfo, dropTargetInfo, isManage
 
   const { id: draggedPlayerId, isStarterAtDragStart, originalPositionId, originalSubIndex } = draggedItemInfo;
 
+  console.log('Player dropped:', { 
+    draggedPlayerId, 
+    targetType: dropTargetInfo.type,
+    isStarterAtDragStart, 
+    originalPositionId
+  });
+
   if (dropTargetInfo.type === 'positionPlaceholder') {
     const targetPositionId = dropTargetInfo.positionId;
+    console.log('Moving player to position:', targetPositionId);
     movePlayerToPosition(draggedPlayerId, targetPositionId, isStarterAtDragStart, originalPositionId, originalSubIndex);
   } else if (dropTargetInfo.type === 'subSlot') {
     const targetSubIndex = dropTargetInfo.index;
+    console.log('Moving player to sub slot:', targetSubIndex);
     movePlayerToSubSlot(draggedPlayerId, targetSubIndex, isStarterAtDragStart, originalPositionId, originalSubIndex);
   } else if (dropTargetInfo.type === 'playerSwapTarget') {
     const targetPlayerId = dropTargetInfo.targetPlayerId;
+    console.log('Swapping players:', draggedPlayerId, targetPlayerId);
     swapPlayersInFormation(draggedPlayerId, targetPlayerId);
   } else if (dropTargetInfo.type === 'subsStrip') {
     // Player (likely a starter) was dropped onto the general subs bench area
+    console.log('Moving starter to subs strip:', draggedPlayerId);
     moveStarterToSubsGeneral(draggedPlayerId, originalPositionId);
   }
 };

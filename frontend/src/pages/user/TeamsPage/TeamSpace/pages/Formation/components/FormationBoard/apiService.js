@@ -2,6 +2,30 @@ import apiClient from '../../../../../../../../services/apiClient';
 import { DEFAULT_SUBS } from './constants';
 import { generateDefaultStarters } from './playerManagement';
 
+// Local storage key for formation backup
+const getFormationStorageKey = (teamId) => `formation_backup_${teamId}`;
+
+/**
+ * Load formation from local storage backup
+ */
+const loadFormationFromLocalStorage = (teamId) => {
+  if (!teamId) return null;
+  
+  try {
+    const key = getFormationStorageKey(teamId);
+    const storedData = localStorage.getItem(key);
+    
+    if (!storedData) return null;
+    
+    const parsedData = JSON.parse(storedData);
+    console.log(`Found formation backup in localStorage for team ${teamId}, saved at ${parsedData.savedAt}`);
+    return parsedData;
+  } catch (error) {
+    console.warn('Failed to load formation backup from localStorage:', error);
+    return null;
+  }
+};
+
 /**
  * Initialize formation with team ID and load data
  */
@@ -14,93 +38,133 @@ export const initFormation = async (teamId, get, set) => {
   }
   
   set({ teamId, loading: true });
+  
+  // First, try to load from server
+  let serverFormation = null;
+  let serverLoadFailed = false;
+  
   try {
-    // Try to load existing formation from API
-    console.log(`Attempting to fetch formation for team ${teamId}`);
-    let response;
-    try {
-      response = await apiClient.get(`/api/formations/${teamId}`);
-      console.log(`Formation API response received for team ${teamId}:`, 
-        response.status === 200 ? 'Success' : `Unexpected status: ${response.status}`);
-    } catch (error) {
-      // If 404, the formation doesn't exist yet - we'll create one
-      if (error.response && error.response.status === 404) {
-        console.log('Formation API endpoint not found (404), creating default formation');
-        // Create a default formation in the backend
-        const defaultCreated = await get().createDefaultFormation(teamId);
+    console.log(`Attempting to fetch formation for team ${teamId} from server`);
+    const response = await apiClient.get(`/api/formations/${teamId}`);
+    console.log(`Formation API response received:`, response);
+    
+    // Enhanced response validation
+    if (response) {
+      // Extract data correctly depending on response structure
+      const formationData = response.data || response;
+      
+      // Check if schema_json exists and extract it properly
+      if (formationData) {
+        // Handle different schema_json formats - could be direct or nested
+        let schemaJson = null;
         
-        if (defaultCreated) {
-          // Try to fetch again after creating
+        if (typeof formationData.schema_json === 'object' && formationData.schema_json !== null) {
+          // Direct schema_json object
+          schemaJson = formationData.schema_json;
+        } else if (typeof formationData.schema_json === 'string') {
+          // JSON string that needs parsing
           try {
-            response = await apiClient.get(`/api/formations/${teamId}`);
-            console.log(`Retrieved newly created formation for team ${teamId}`);
-          } catch (secondFetchError) {
-            console.error('Failed to fetch newly created formation:', secondFetchError);
-            // Fall back to dummy players
-            get().setDummyPlayers();
-            set({ loading: false, saved: true });
-            return;
+            schemaJson = JSON.parse(formationData.schema_json);
+          } catch (e) {
+            console.error('Failed to parse schema_json string:', e);
           }
-        } else {
-          // Fall back to dummy players if creation failed
-          get().setDummyPlayers();
-          set({ loading: false, saved: true });
-          return;
         }
-      } else {
-        // Log detailed error information
-        console.error('Error fetching formation:', error);
-        if (error.response) {
-          console.error('Response data:', error.response.data);
-          console.error('Response status:', error.response.status);
-          console.error('Response headers:', error.response.headers);
-        } else if (error.request) {
-          console.error('Request made but no response received');
-        } else {
-          console.error('Error message:', error.message);
-        }
-        // Fall back to dummy players on error
-        get().setDummyPlayers();
-        set({ loading: false, saved: true });
-        return;
-      }
-    }
-    
-    if (response && response.data && response.data.schema_json) {
-      const { preset, starters, subs } = response.data.schema_json;
-      
-      // Check if starters and subs exist and have content, otherwise use default data
-      const hasValidStarters = starters && Array.isArray(starters) && starters.length > 0;
-      const hasValidSubs = subs && Array.isArray(subs) && subs.length > 0;
-      
-      if (hasValidStarters || hasValidSubs) {
-        // Ensure we don't exceed 11 starters (handle historic bugs)
-        const validStarters = hasValidStarters ? starters.slice(0, 11) : [];
         
-        set({ 
-          preset: preset || '4-3-3',
-          starters: validStarters,
-          subs: hasValidSubs ? subs : DEFAULT_SUBS,
-          loading: false,
-          saved: true
-        });
-        return;
+        console.log('Extracted schema_json:', schemaJson);
+        
+        if (schemaJson) {
+          serverFormation = schemaJson;
+        }
       }
     }
-    
-    // If no valid data exists, initialize with dummy players
-    console.log('No valid formation data found, using dummy players');
-    get().setDummyPlayers();
-    // And also create a default formation in the backend
-    await get().createDefaultFormation(teamId);
-    set({ loading: false, saved: true });
   } catch (error) {
-    console.error('Failed to load formation:', error);
-    // Initialize with dummy players on error
-    console.log('Error loading formation, using dummy players instead');
-    get().setDummyPlayers();
-    set({ loading: false });
+    console.error('Error fetching formation from server:', error);
+    serverLoadFailed = true;
   }
+  
+  // Try to load backup from localStorage if server load failed or returned invalid data
+  const localBackup = loadFormationFromLocalStorage(teamId);
+  
+  // Check if server formation has valid starters and subs
+  const hasValidServerData = serverFormation && 
+    Array.isArray(serverFormation.starters) && 
+    serverFormation.starters.length > 0 &&
+    Array.isArray(serverFormation.subs);
+  
+  // Check if local backup has valid starters and subs
+  const hasValidLocalData = localBackup && 
+    Array.isArray(localBackup.starters) && 
+    localBackup.starters.length > 0 &&
+    Array.isArray(localBackup.subs);
+  
+  console.log('Formation data validation:', {
+    hasValidServerData,
+    hasValidLocalData,
+    serverFormation: serverFormation ? 'present' : 'missing',
+    localBackup: localBackup ? 'present' : 'missing'
+  });
+  
+  // Decide which data source to use
+  let dataToUse = null;
+  let source = 'unknown';
+  
+  if (hasValidServerData) {
+    dataToUse = serverFormation;
+    source = 'server';
+  } else if (hasValidLocalData) {
+    dataToUse = localBackup;
+    source = 'localStorage';
+    console.log('Using localStorage backup as server data was invalid');
+  }
+  
+  if (dataToUse) {
+    console.log(`Setting formation data from ${source}`);
+    
+    // Ensure we don't exceed 11 starters
+    const validStarters = dataToUse.starters.slice(0, 11);
+    const validSubs = Array.isArray(dataToUse.subs) ? dataToUse.subs : DEFAULT_SUBS;
+    
+    // Update state with the loaded formation
+    set({ 
+      preset: dataToUse.preset || '4-3-3',
+      starters: validStarters,
+      subs: validSubs,
+      loading: false,
+      saved: true
+    });
+    
+    // If we loaded from localStorage backup but server load failed,
+    // trigger a save to sync back to server
+    if (source === 'localStorage' && serverLoadFailed) {
+      console.log('Server load failed but using valid localStorage backup. Syncing back to server...');
+      setTimeout(() => {
+        try {
+          get().forceSave();
+        } catch (e) {
+          console.error('Failed to sync localStorage backup to server:', e);
+        }
+      }, 1000);
+    }
+    
+    return;
+  }
+  
+  // If we reach here, no valid data was found anywhere
+  console.log('No valid formation data found, using dummy players');
+  get().setDummyPlayers();
+  
+  // Create a proper formation in the backend for future requests
+  try {
+    console.log('Attempting to save proper formation after loading dummy players');
+    // Ensure forceSave is awaited if it's async and we care about its completion before proceeding
+    await get().forceSave(); // Assuming forceSave is async and returns a promise
+    console.log('Force save after dummy players result obtained.'); // Log after completion
+  } catch (saveError) {
+    console.error('Failed to save default formation after loading dummy players:', saveError);
+  }
+  
+  set({ loading: false, saved: true }); // This saved: true might be premature if forceSave failed.
+                                      // forceSave should ideally update 'saved' state itself.
 };
 
 /**
@@ -200,75 +264,74 @@ export const createDefaultFormation = async (teamId, get, set) => {
   }
 };
 
-// Debounce timer for save operations
-let saveTimer = null;
-
 /**
- * Save formation to server
+ * Perform the API call to save formation to server.
+ * This function does NOT interact with the Zustand store's set method directly.
  */
-export const saveFormation = async (get, set) => {
-  const { teamId, starters, subs, preset } = get();
-  
+export const performSaveFormationAPI = async (teamId, formationData) => {
   if (!teamId) {
-    console.error('Cannot save formation: teamId is missing');
+    console.error('performSaveFormationAPI: Cannot save formation: teamId is missing');
     return { error: 'Missing teamId', success: false };
   }
   
-  // Clear any existing save timer
-  if (saveTimer) {
-    clearTimeout(saveTimer);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('performSaveFormationAPI: Cannot save formation: No authentication token found');
+    return { error: 'Missing authentication token', success: false };
   }
   
-  // Set saving state
-  set({ saved: false, loading: true });
-  
-  // Debounce the save operation to avoid too many API calls
-  return new Promise((resolve) => {
-    saveTimer = setTimeout(async () => {
+  try {
+    console.log('performSaveFormationAPI: Sending data to server for team:', teamId);
+    console.log('performSaveFormationAPI payload:', formationData);
+    
+    const response = await apiClient.put(`/api/formations/${teamId}`, { 
+      schema_json: formationData 
+    });
+    
+    console.log('performSaveFormationAPI: Server response:', response);
+    
+    if (!response) {
+      throw new Error('Empty response from server');
+    }
+    
+    const isSuccess = response.success !== false;
+    
+    if (isSuccess) {
+      console.log('performSaveFormationAPI: Save completed successfully');
       try {
-        const schemaJson = {
-          preset,
-          starters,
-          subs,
-          updated_at: new Date().toISOString()
-        };
-        
-        console.log('Saving formation for team:', teamId);
-        
-        // Use apiClient for consistent error handling across the app
-        const response = await apiClient.put(`/api/formations/${teamId}`, { 
-          schema_json: schemaJson 
-        });
-        
-        console.log('Formation saved successfully:', response);
-        set({ saved: true, loading: false });
-        resolve({ success: true });
-      } catch (error) {
-        console.error('Failed to save formation:', error);
-        
-        // Enhanced error logging for debugging
-        let errorMessage = 'Unknown error saving formation';
-        
-        if (error.response) {
-          errorMessage = `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
-        } else if (error.request) {
-          errorMessage = 'No response received from server. Check if backend is running.';
-        } else {
-          errorMessage = `Error setting up request: ${error.message}`;
+        const verifyResponse = await apiClient.get(`/api/formations/${teamId}`);
+        console.log('performSaveFormationAPI: Verification response:', verifyResponse);
+        const savedData = verifyResponse.data?.schema_json || verifyResponse.schema_json;
+        if (savedData) {
+          console.log('performSaveFormationAPI: Data verified on server');
         }
-        
-        console.error(errorMessage);
-        
-        // Continue with local state rather than failing completely
-        set({ loading: false, saved: false });
-        
-        // Return the error so it can be handled by the calling component 
-        resolve({ 
-          error: errorMessage, 
-          originalError: error,
-          success: false
-        });
+      } catch (verifyError) {
+        console.warn('performSaveFormationAPI: Verification failed but original save was successful:', verifyError);
       }
-    }, 500); // 500ms debounce delay
-  });
+      return { success: true };
+    } else {
+      console.error('performSaveFormationAPI: Server indicated failure:', response);
+      return { 
+        error: response.message || 'Server indicated failure without details', 
+        success: false 
+      };
+    }
+  } catch (error) {
+    console.error('performSaveFormationAPI: Failed to save formation:', error);
+    
+    let errorMessage = 'Unknown error saving formation';
+    if (error.response) {
+      errorMessage = `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
+    } else if (error.request) {
+      errorMessage = 'No response received from server. Check if backend is running.';
+    } else {
+      errorMessage = `Error setting up request: ${error.message}`;
+    }
+    console.error(`performSaveFormationAPI: ${errorMessage}`);
+    return { 
+      error: errorMessage, 
+      originalError: error,
+      success: false
+    };
+  }
 };
