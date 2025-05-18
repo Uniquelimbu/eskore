@@ -7,23 +7,31 @@ import PageLayout from '../../../components/PageLayout/PageLayout';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
+  const { user, isAuthenticated, loading, verifyUserData } = useAuth();
+  const [userLoading, setUserLoading] = useState(true);
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   // eslint-disable-next-line no-unused-vars
   const [error, _setError] = useState(null);
   
-  const { user } = useAuth();
-  
-  // Extract first name for welcome message with better fallback handling
-  const firstName = user?.firstName || '';
-  
-  // Use firstName if available, fall back to username, then to "Athlete"
-  const displayName = firstName || user?.username || 'Athlete';
-  
-  // Log user data for debugging
+  // Ensure we have complete user data when the dashboard loads
   useEffect(() => {
-    console.log('DashboardPage: Current user data:', user);
-  }, [user]);
+    const ensureUserData = async () => {
+      if (isAuthenticated && (!user || !user.firstName || !user.lastName)) {
+        console.log('Dashboard: User data incomplete, verifying user data');
+        try {
+          await verifyUserData(true); // Force refresh of user data
+        } catch (error) {
+          console.error('Dashboard: Error refreshing user data:', error);
+        }
+      }
+      setUserLoading(false);
+    };
+    
+    if (!loading) {
+      ensureUserData();
+    }
+  }, [isAuthenticated, user, loading, verifyUserData]);
   
   // Fetch activity data
   useEffect(() => {
@@ -51,13 +59,20 @@ const DashboardPage = () => {
     fetchActivities();
   }, []);
 
+  // Get user's name with proper fallback
+  const getUserName = () => {
+    if (userLoading || loading) return 'loading...';
+    if (!user) return 'Guest';
+    return user.firstName ? `${user.firstName}` : 'Athlete';
+  };
+  
   return (
     <PageLayout className="dashboard-main-content">
       {error && <div className="error-banner">{error}</div>}
 
       <div className="dashboard-content-grid">
         <div className="dashboard-welcome-section">
-          <h1>Welcome, {displayName}!</h1>
+          <h1>Welcome, {getUserName()}!</h1>
           <p>Track your performance, view upcoming matches, and manage your soccer career all in one place.</p>
           
           <div className="dashboard-quicklinks">
@@ -78,6 +93,11 @@ const DashboardPage = () => {
           loading={loadingActivities}
         />
       </div>
+
+      {/* Show a loading indicator if we're still loading user data */}
+      {(userLoading || loading) && (
+        <div className="loading-indicator">Loading your dashboard data...</div>
+      )}
     </PageLayout>
   );
 };

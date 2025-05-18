@@ -49,29 +49,35 @@ const LoginPage = () => {
     if (validateForm()) {
       console.log("Form validation passed, attempting login with:", credentials.email);
       try {
-        // Add explicit try/catch with better logging
+        // Set loading state immediately to prevent multiple submissions
+        setFormErrors({});
+        
+        // Call login function with credentials
         console.log("Calling login function with credentials");
         const result = await login(credentials.email, credentials.password);
         console.log("Login result:", result);
         
         if (result && result.success) {
-          console.log("Login successful, navigating to dashboard");
-          navigate('/dashboard');
-        }
-        
-        // Log the login result to see if it includes firstName
-        console.log('Login successful, user data:', result.user);
-        
-        // If user data doesn't include necessary fields, consider making an additional request
-        if (result.success && (!result.user.firstName || !result.user.lastName)) {
-          console.log('Login successful but user profile incomplete, fetching full profile...');
-          // Fetch user profile if needed
-          // const profile = await someService.getUserProfile();
-          // updateUser(profile);
+          // Verify we have complete user data before navigating
+          if (result.user && result.user.firstName && result.user.lastName) {
+            console.log("Login successful with complete profile, navigating to dashboard");
+            navigate('/dashboard');
+          } else {
+            console.log('Login successful but user profile incomplete, fetching full profile...');
+            
+            // The AuthContext should have already attempted to fetch the complete profile
+            // We'll add a small delay to ensure state is updated before navigating
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 300);
+          }
+        } else {
+          console.warn("Login returned success: false");
+          setFormErrors({ general: 'Login failed. Please try again.' });
         }
       } catch (err) {
         console.error('Login error details:', err);
-        // Error is handled by context
+        setFormErrors({ general: err.message || 'An error occurred during login' });
       }
     } else {
       console.warn("Form validation failed. Errors:", formErrors);

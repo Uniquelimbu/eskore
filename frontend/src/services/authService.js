@@ -35,43 +35,50 @@ const authService = {
   // Login with email and password
   login: async (credentials) => {
     console.log("Auth service: login called with:", credentials.email);
-    return withRetry(async () => {
-      try {
-        console.log("Auth service: sending login request to API");
-        const response = await apiClient.post('/api/auth/login', credentials);
-        console.log("Auth service: received login response:", response);
-        
-        // Validate response structure
-        if (!response) {
-          console.error("Auth service: Empty response received");
-          throw new Error('Empty response received from server');
-        }
-        
-        if (response && response.success && response.user) {
-          console.log("Auth service: Login successful");
-          // Add redirectUrl to response if not present
-          if (!response.redirectUrl) {
-            response.redirectUrl = '/dashboard';
-          }
-          // Ensure firstName is present in the user object
-          if (!response.user.firstName) {
-            response.user.firstName = 'Guest'; // Default value or handle as needed
-          }
-          return response;
-        }
-        
-        console.error("Auth service: Invalid response format:", response);
-        throw new Error(response?.message || 'Login failed: Invalid response from server');
-      } catch (error) {
-        console.error("Auth service: Login error:", error);
-        if (error.status === 401 || error.code === 'INVALID_CREDENTIALS') {
-          throw new Error("Invalid email or password.");
-        } else if (error.status === 429 || error.code === 'RATE_LIMIT_EXCEEDED') {
-          throw new Error("Too many login attempts. Please try again later.");
-        }
-        throw error instanceof Error ? error : new Error(error.message || 'Login failed');
+    
+    try {
+      // Call the login API
+      const response = await apiClient.post('/api/auth/login', {
+        email: credentials.email,
+        password: credentials.password
+      });
+      
+      // Verify we received proper user data with essential fields
+      if (!response.user || !response.token) {
+        throw new Error('Invalid response from authentication server');
       }
-    });
+      
+      // If user data is incomplete, make a follow-up request for complete data
+      if (!response.user.firstName || !response.user.lastName) {
+        console.log('Auth service: User profile incomplete, fetching complete profile');
+        
+        // Set the token first so the request is authenticated
+        localStorage.setItem('token', response.token);
+        
+        try {
+          const profileResponse = await apiClient.get('/api/auth/me');
+          
+          if (profileResponse && profileResponse.id) {
+            // Combine the responses, preferring the more complete data
+            response.user = {
+              ...response.user,
+              ...profileResponse
+            };
+            
+            // Update localStorage with complete user data
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
+        } catch (profileError) {
+          console.error('Auth service: Error fetching complete profile:', profileError);
+          // Continue with incomplete data
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Auth service: Login error:', error);
+      throw error;
+    }
   },
 
   // Register a user with the unified user system
@@ -122,67 +129,48 @@ const authService = {
 
   // Improved getCurrentUser with better error handling
   getCurrentUser: async (quietMode = false) => {
-    // Always add a cache-busting parameter for auth requests
-    const cacheParam = `_nocache=${Date.now()}`;
-    
-    // Check if token exists first to avoid unnecessary API calls
-    const token = localStorage.getItem('token');
-    if (!token) {
-      if (!quietMode) {
-        console.log('Auth Service: No authentication token found, skipping getCurrentUser API call');
-      }
-      return null;
-    }
-    
     try {
-      // Using cache-busting to ensure we don't get cached responses
-      const response = await apiClient.get(`/api/auth/me?${cacheParam}`);
-      
-      // Log the actual response data for debugging
-      console.log('Auth Service: /auth/me response data:', response);
-      
-      // Verify response has a valid user with ID
-      if (!response || typeof response !== 'object') {
-        console.error('Auth Service: Invalid response format from /auth/me:', response);
-        return null;
-      }
-      
-      // Check for user ID directly
-      if (!response.id) {
-        console.warn('Auth Service: User ID missing in /auth/me response:', response);
-        
-        // Fallback: If we don't have a proper user but the server accepted our token,
-        // try to get stored user data from localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            if (parsedUser && parsedUser.id) {
-              console.warn('Auth Service: Using localStorage user data as fallback');
-              return parsedUser;
-            }
-          } catch (parseError) {
-            console.error('Auth Service: Error parsing stored user:', parseError);
+      // First check localStorage for cached user data
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          
+          // If we have complete user data in localStorage, use it initially
+          // to prevent flickering, but still refresh in the background
+          if (user && user.id && user.firstName && user.lastName) {
+            // Make a background request to refresh the data
+            apiClient.get('/api/auth/me')
+              .then(updatedUser => {
+                if (updatedUser && updatedUser.id) {
+                  localStorage.setItem('user', JSON.stringify(updatedUser));
+                }
+              })
+              .catch(err => {
+                console.error('Background user refresh failed:', err);
+              });
+            
+            return user;
           }
+        } catch (e) {
+          console.error('Error parsing user data from localStorage:', e);
         }
-        return null;
       }
       
-      // Store the user data in localStorage
-      localStorage.setItem('user', JSON.stringify(response));
+      // If we don't have valid cached data, make a fresh request
+      const response = await apiClient.get('/api/auth/me');
       
-      return response;
+      if (response && response.id) {
+        // Cache the user data for next time
+        localStorage.setItem('user', JSON.stringify(response));
+        return response;
+      }
+      
+      return null;
     } catch (error) {
-      // Log the error for debugging
       if (!quietMode) {
-        console.error('Auth Service: Error getting current user:', error);
-        
-        // Add specific logging for token issues
-        if (error.status === 401) {
-          console.warn('Auth Service: Invalid or expired token. Status 401 Unauthorized');
-        }
+        console.error('Error getting current user:', error);
       }
-      
       return null;
     }
   },

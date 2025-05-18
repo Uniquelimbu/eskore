@@ -182,23 +182,50 @@ export const AuthProvider = ({ children }) => {
       const response = await apiClient.post('/api/auth/login', { email, password });
       const { token, user } = response;
       
+      // Validate that we received proper user data
+      if (!user || !user.id) {
+        throw new Error('Invalid user data received from server');
+      }
+      
+      // Ensure we have complete user profile data
+      let completeUserData = user;
+      
+      // If user data is missing essential fields, fetch the complete profile
+      if (!user.firstName || !user.lastName) {
+        console.log('AuthContext: User data incomplete, fetching complete profile');
+        try {
+          // Set token first so the request is authenticated
+          localStorage.setItem('token', token);
+          
+          // Fetch complete user data
+          const userResponse = await apiClient.get('/api/auth/me');
+          
+          if (userResponse && userResponse.id) {
+            completeUserData = userResponse;
+            console.log('AuthContext: Successfully fetched complete user data');
+          } else {
+            console.warn('AuthContext: Failed to fetch complete user data');
+          }
+        } catch (profileError) {
+          console.error('AuthContext: Error fetching complete profile:', profileError);
+          // Continue with the limited user data we have
+        }
+      }
+      
       // Set token in localStorage
       localStorage.setItem('token', token);
       
-      // Always ensure we store the full user object including firstName
-      localStorage.setItem('user', JSON.stringify(user)); 
-      
-      // Log the user data to help debug firstName issues
-      console.log('AuthContext: User data received:', user);
+      // Always store the most complete user object we have
+      localStorage.setItem('user', JSON.stringify(completeUserData)); 
       
       // Update state with SUCCESS action
-      dispatch({ type: AUTH_SUCCESS, payload: user });
+      dispatch({ type: AUTH_SUCCESS, payload: completeUserData });
       
       // After login, make a separate call to get user teams
       try {
-        if (user && user.id) {
-          console.log(`AuthContext: Fetching teams for newly logged in user ${user.id}`);
-          const teamsResponse = await apiClient.get(`/api/teams/user/${user.id}`);
+        if (completeUserData && completeUserData.id) {
+          console.log(`AuthContext: Fetching teams for newly logged in user ${completeUserData.id}`);
+          const teamsResponse = await apiClient.get(`/api/teams/user/${completeUserData.id}`);
           
           if (teamsResponse && teamsResponse.teams && teamsResponse.teams.length > 0) {
             const firstTeam = teamsResponse.teams[0];
@@ -213,7 +240,7 @@ export const AuthProvider = ({ children }) => {
         // Non-fatal error, continue with login
       }
       
-      return { success: true, user };
+      return { success: true, user: completeUserData };
     } catch (err) {
       // err may come from apiClient interceptor and already be normalized {status, message, code}
       // Fall back to nested axios error shape if not.
