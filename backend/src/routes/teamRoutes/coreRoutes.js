@@ -168,8 +168,46 @@ router.patch('/:id',
     ...schemas.team.teamSchema
   ]), 
   catchAsync(async (req, res) => {
-    // Implementation of team update
-    // ...existing code...
+    const { id } = req.params;
+    const { name, abbreviation, foundedYear, city, nickname } = req.body;
+    
+    log.info(`TEAMROUTES/CORE (PATCH /:id): Updating team with ID: ${id}, User: ${req.user?.email}`);
+    
+    // Find the team
+    const team = await Team.findByPk(id);
+    if (!team) {
+      throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    // Check if user has permission (team manager or assistant_manager)
+    const userTeam = await UserTeam.findOne({
+      where: {
+        userId: req.user.userId,
+        teamId: id,
+        role: { [Op.in]: ['manager', 'assistant_manager'] }
+      }
+    });
+    
+    if (!userTeam) {
+      throw new ApiError('Forbidden - You must be a team manager or assistant manager to update it', 403, 'FORBIDDEN');
+    }
+    
+    // Apply updates
+    if (name) team.name = name;
+    if (abbreviation !== undefined) team.abbreviation = abbreviation?.toUpperCase() || null;
+    if (foundedYear !== undefined) team.foundedYear = foundedYear || null;
+    if (city !== undefined) team.city = city || null;
+    if (nickname !== undefined) team.nickname = nickname || null;
+    
+    // Save changes
+    await team.save();
+    
+    log.info(`TEAMROUTES/CORE (PATCH /:id): Successfully updated team ${id}`);
+    
+    return sendSafeJson(res, {
+      success: true,
+      team
+    });
   })
 );
 

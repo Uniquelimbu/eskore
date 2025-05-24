@@ -115,4 +115,60 @@ router.patch('/:id/logo',
   })
 );
 
+/**
+ * DELETE /api/teams/:id/logo
+ * Removes a team's logo
+ */
+router.delete('/:id/logo', 
+  requireAuth, 
+  validate(schemas.team.teamIdParam),
+  catchAsync(async (req, res, next) => {
+    log.info(`TEAMROUTES/MEDIA (DELETE /:id/logo): Removing logo for team ID ${req.params.id} by user ${req.user?.email}`);
+    const { id } = req.params;
+  
+    const team = await Team.findByPk(id);
+    if (!team) {
+      throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    // Check if user is team manager or assistant manager
+    const userTeam = await UserTeam.findOne({
+      where: {
+        userId: req.user.userId,
+        teamId: id,
+        role: { [Op.in]: ['manager', 'assistant_manager'] }
+      }
+    });
+    
+    if (!userTeam) {
+      throw new ApiError('Forbidden - You must be a team manager or assistant manager to update it', 403, 'FORBIDDEN');
+    }
+    
+    // If the team has a logo, clear it
+    if (team.logoUrl) {
+      // Optionally: delete the actual file from the server
+      try {
+        const logoPath = path.join(__dirname, '../../../', team.logoUrl.replace(/^\//, ''));
+        if (fs.existsSync(logoPath)) {
+          fs.unlinkSync(logoPath);
+          log.info(`TEAMROUTES/MEDIA (DELETE /:id/logo): Deleted logo file at ${logoPath}`);
+        }
+      } catch (fileError) {
+        log.warn(`TEAMROUTES/MEDIA (DELETE /:id/logo): Failed to delete logo file: ${fileError.message}`);
+        // Continue with the operation even if file deletion fails
+      }
+      
+      // Clear the logoUrl in the database
+      team.logoUrl = null;
+      await team.save();
+      log.info(`TEAMROUTES/MEDIA (DELETE /:id/logo): Removed logo URL for team ${id}`);
+    }
+    
+    return sendSafeJson(res, {
+      success: true,
+      team
+    });
+  })
+);
+
 module.exports = router;
