@@ -10,7 +10,7 @@ const { sendSafeJson } = require('../utils/safeSerializer');
 const User = require('../models/User');
 const Team = require('../models/Team');
 const Role = require('../models/Role');
-const UserRole = require('../models/userRole');
+const UserRole = require('../models/UserRole');
 
 // Helper function to generate JWT token with improved security
 const generateToken = (userId, role) => {
