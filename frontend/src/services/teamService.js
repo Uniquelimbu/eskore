@@ -66,7 +66,30 @@ export const teamService = {
   updateTeam: async (id, data) => {
     try {
       console.log(`Updating team ${id} with data:`, data);
-      const response = await apiClient.patch(`/teams/${id}`, data);
+      
+      // Add a retry mechanism for team updates
+      let attempts = 0;
+      const maxAttempts = 3;
+      let response;
+      
+      while (attempts < maxAttempts) {
+        try {
+          response = await apiClient.patch(`/teams/${id}`, data);
+          // If successful, break out of retry loop
+          break;
+        } catch (retryError) {
+          attempts++;
+          console.warn(`Team update attempt ${attempts} failed:`, retryError.message);
+          
+          // If we've reached max attempts, throw the error
+          if (attempts >= maxAttempts) {
+            throw retryError;
+          }
+          
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        }
+      }
       
       // Log success and invalidate cache to ensure fresh data on next fetch
       console.log(`Team ${id} updated successfully:`, response);

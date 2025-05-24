@@ -31,13 +31,98 @@ const CreateTeam = () => {
       [name]: value
     });
     
-    // Clear error for this field if it exists
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      });
+    // Perform validation immediately when the field changes
+    validateField(name, value);
+  };
+
+  // New function for real-time field validation
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    const currentYear = new Date().getFullYear();
+    
+    switch (name) {
+      case 'abbreviation':
+        if (!value.trim()) {
+          newErrors.abbreviation = 'Abbreviation is required';
+        } else if (value.length < 2 || value.length > 3) {
+          newErrors.abbreviation = 'Abbreviation must be 2-3 characters';
+        } else if (!/^[a-zA-Z0-9]+$/.test(value)) {
+          newErrors.abbreviation = 'Abbreviation can only contain letters and numbers';
+        } else {
+          delete newErrors.abbreviation;
+        }
+        break;
+      
+      case 'clubName':
+        if (!value.trim()) {
+          newErrors.clubName = 'Club name is required';
+        } else if (value.length < 3 || value.length > 30) {
+          newErrors.clubName = 'Club name must be between 3 and 30 characters';
+        } else if (!/^[a-zA-Z0-9\s\-_.&'()]+$/.test(value)) {
+          newErrors.clubName = 'Club name can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
+        } else {
+          delete newErrors.clubName;
+        }
+        break;
+      
+      case 'foundedYear':
+        if (value && (parseInt(value) < 1850 || parseInt(value) > currentYear)) {
+          newErrors.foundedYear = `Year must be between 1850 and ${currentYear}`;
+        } else {
+          delete newErrors.foundedYear;
+        }
+        break;
+      
+      case 'city':
+        if (!value) {
+          newErrors.city = 'City is required';
+        } else if (!/^[a-zA-Z0-9\s\-_.&'()áéíóúÁÉÍÓÚñÑçÇâêîôûÂÊÎÔÛäëïöüÄËÏÖÜàèìòùÀÈÌÒÙ]+$/.test(value)) {
+          newErrors.city = 'City name can only contain letters, numbers, spaces, accented characters, and basic symbols (-, _, ., &, \', (, ))';
+        } else {
+          delete newErrors.city;
+        }
+        break;
+      
+      case 'nickname':
+        if (value && !/^[a-zA-Z0-9\s\-_.&'()]+$/.test(value)) {
+          newErrors.nickname = 'Nickname can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
+        } else {
+          delete newErrors.nickname;
+        }
+        break;
+      
+      default:
+        break;
     }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep1 = () => {
+    const fieldsToValidate = ['clubName', 'abbreviation'];
+    let isValid = true;
+    
+    fieldsToValidate.forEach(field => {
+      if (!validateField(field, formData[field])) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
+  };
+
+  const validateStep2 = () => {
+    const fieldsToValidate = ['foundedYear', 'city', 'nickname'];
+    let isValid = true;
+    
+    fieldsToValidate.forEach(field => {
+      if (!validateField(field, formData[field])) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
   };
 
   const handleLogoChange = (e) => {
@@ -58,51 +143,7 @@ const CreateTeam = () => {
   const handleLogoClick = () => {
     fileInputRef.current.click();
   };
-  const validateStep1 = () => {
-    const newErrors = {};
-    
-    if (!formData.clubName.trim()) {
-      newErrors.clubName = 'Club name is required';
-    } else if (formData.clubName.length < 3 || formData.clubName.length > 30) {
-      newErrors.clubName = 'Club name must be between 3 and 30 characters';
-    } else if (!/^[a-zA-Z0-9\s\-_.&'()]+$/.test(formData.clubName)) {
-      newErrors.clubName = 'Club name can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
-    }
-    
-    if (!formData.abbreviation.trim()) {
-      newErrors.abbreviation = 'Abbreviation is required';
-    } else if (formData.abbreviation.length < 2 || formData.abbreviation.length > 4) {
-      newErrors.abbreviation = 'Abbreviation should be 2-4 characters';
-    } else if (!/^[a-zA-Z0-9]+$/.test(formData.abbreviation)) {
-      newErrors.abbreviation = 'Abbreviation can only contain letters and numbers';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const newErrors = {};
-      if (!formData.foundedYear) {
-      newErrors.foundedYear = 'Founded year is required';
-    } else if (parseInt(formData.foundedYear) < 1850 || parseInt(formData.foundedYear) > new Date().getFullYear()) {
-      newErrors.foundedYear = `Year must be between 1850 and ${new Date().getFullYear()}`;
-    }
-    
-    if (!formData.city) {
-      newErrors.city = 'City is required';
-    } else if (!/^[a-zA-Z0-9\s\-_.&'()áéíóúÁÉÍÓÚñÑçÇâêîôûÂÊÎÔÛäëïöüÄËÏÖÜàèìòùÀÈÌÒÙ]+$/.test(formData.city)) {
-      newErrors.city = 'City name can only contain letters, numbers, spaces, accented characters, and basic symbols (-, _, ., &, \', (, ))';
-    }
-    
-    if (formData.nickname && !/^[a-zA-Z0-9\s\-_.&'()]+$/.test(formData.nickname)) {
-      newErrors.nickname = 'Nickname can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  
   const handleNextStep = () => {
     if (activeStep === 1 && validateStep1()) {
       setActiveStep(2);
@@ -283,11 +324,11 @@ const CreateTeam = () => {
                   onChange={handleChange}
                   className={errors.abbreviation ? 'input-error' : ''}
                   placeholder="e.g. MUN"
-                  maxLength={4}
+                  maxLength={3}  // Updated max length to 3
                   style={{textTransform: 'uppercase'}}
                 />
                 {errors.abbreviation && <div className="error-message">{errors.abbreviation}</div>}
-                <small className="form-hint">2-4 letter code (e.g. MUN, EFC)</small>
+                <small className="form-hint">2-3 letter code (e.g. MUN, BAR)</small>
               </div>
             </div>
           </div>

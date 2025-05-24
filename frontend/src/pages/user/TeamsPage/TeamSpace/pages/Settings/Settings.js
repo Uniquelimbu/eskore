@@ -18,7 +18,7 @@ const Settings = () => {
     name: '',
     nickname: '',
     city: '',
-    abbreviation: '', // Added abbreviation field
+    abbreviation: '', 
     foundedYear: '',
     logoUrl: ''
   });
@@ -32,6 +32,7 @@ const Settings = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [isManager, setIsManager] = useState(outletCtx?.isManager || false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({}); // Added validation errors state
 
   // Fetch team details on mount
   useEffect(() => {
@@ -89,12 +90,91 @@ const Settings = () => {
 
   const handleBack = () => navigate(`/teams/${teamId}/space`);
 
+  // Enhanced input change handler with validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Validate the field immediately
+    validateField(name, value);
   };
 
-  // Handle logo file selection
+  // Field validation function
+  const validateField = (name, value) => {
+    const newErrors = { ...validationErrors };
+    const currentYear = new Date().getFullYear();
+    
+    switch (name) {
+      case 'abbreviation':
+        if (!value || !value.trim()) {
+          newErrors.abbreviation = 'Abbreviation is required';
+        } else if (value.length < 2 || value.length > 3) {
+          newErrors.abbreviation = 'Abbreviation must be 2-3 characters';
+        } else if (!/^[a-zA-Z0-9]+$/.test(value)) {
+          newErrors.abbreviation = 'Abbreviation can only contain letters and numbers';
+        } else {
+          delete newErrors.abbreviation;
+        }
+        break;
+      
+      case 'foundedYear':
+        if (value && (parseInt(value) > currentYear)) {
+          newErrors.foundedYear = `Year cannot be greater than ${currentYear}`;
+        } else if (value && parseInt(value) < 1800) {
+          newErrors.foundedYear = 'Year cannot be earlier than 1800';
+        } else {
+          delete newErrors.foundedYear;
+        }
+        break;
+        
+      case 'name':
+        if (!value.trim()) {
+          newErrors.name = 'Team name is required';
+        } else if (value.length < 2 || value.length > 100) {
+          newErrors.name = 'Team name must be between 2 and 100 characters';
+        } else {
+          delete newErrors.name;
+        }
+        break;
+        
+      case 'city':
+        if (value && !/^[a-zA-Z0-9\s\-_.&'()áéíóúÁÉÍÓÚñÑçÇâêîôûÂÊÎÔÛäëïöüÄËÏÖÜàèìòùÀÈÌÒÙ]+$/.test(value)) {
+          newErrors.city = 'City name can only contain letters, numbers, spaces, accented characters, and basic symbols';
+        } else {
+          delete newErrors.city;
+        }
+        break;
+        
+      case 'nickname':
+        if (value && !/^[a-zA-Z0-9\s\-_.&'()]+$/.test(value)) {
+          newErrors.nickname = 'Nickname can only contain letters, numbers, spaces, and basic symbols';
+        } else {
+          delete newErrors.nickname;
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setValidationErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate all fields before submission
+  const validateForm = () => {
+    const fieldsToValidate = ['name', 'abbreviation', 'foundedYear', 'city', 'nickname'];
+    let isValid = true;
+    
+    fieldsToValidate.forEach(field => {
+      if (!validateField(field, formData[field])) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
+  };
+
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -123,26 +203,61 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
+    // Validate all fields first
+    if (!validateForm()) {
+      setStatusMsg({ 
+        type: 'error', 
+        text: 'Please correct the errors in the form before saving.' 
+      });
+      return;
+    }
+    
     try {
       setSaving(true);
       setStatusMsg(null); // Clear previous messages
       
       // First, update the team basic info
-      await teamService.updateTeam(teamId, formData);
+      const updateResponse = await teamService.updateTeam(teamId, formData);
 
       // If there's a new logo, upload it separately
       if (logoFile) {
-        await teamService.updateTeamLogo(teamId, logoFile);
+        try {
+          await teamService.updateTeamLogo(teamId, logoFile);
+        } catch (logoError) {
+          console.error('Logo upload failed but team data was updated:', logoError);
+          setStatusMsg({ 
+            type: 'warning', 
+            text: 'Team information updated but logo upload failed. Please try uploading the logo again.' 
+          });
+          
+          // Still consider this a partial success - refresh team data
+          if (outletCtx && outletCtx.refreshTeam) {
+            await outletCtx.refreshTeam();
+          }
+          
+          // Navigate back after short delay despite the logo error
+          setTimeout(() => {
+            navigate(`/teams/${teamId}/space`);
+          }, 2000);
+          return;
+        }
       } 
       // Handle logo removal via the new service method
       else if (formData.logoUrl === '' && !logoPreview) {
-        await teamService.deleteTeamLogo(teamId);
+        try {
+          await teamService.deleteTeamLogo(teamId);
+        } catch (logoDeleteError) {
+          console.error('Logo removal failed but team data was updated:', logoDeleteError);
+          // Non-critical error, can continue
+        }
       }
       
       // Refresh team data in parent components
       if (outletCtx && outletCtx.refreshTeam) {
         await outletCtx.refreshTeam();
       }
+      
+      setStatusMsg({ type: 'success', text: 'Team updated successfully.' });
       
       // Navigate immediately without delay - this fixes the glitchy transition
       navigate(`/teams/${teamId}/space`);
@@ -161,6 +276,8 @@ const Settings = () => {
         } else if (err.response.data && err.response.data.message) {
           errorMessage = err.response.data.message;
         }
+      } else if (err.message && err.message.includes('timeout')) {
+        errorMessage = 'The server took too long to respond. Your changes may still be saved - please check after a few moments.';
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -277,7 +394,11 @@ const Settings = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 disabled={!isManager}
+                className={validationErrors.name ? 'input-error' : ''}
               />
+              {validationErrors.name && (
+                <div className="error-message">{validationErrors.name}</div>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="abbreviation">Abbreviation</label>
@@ -288,10 +409,14 @@ const Settings = () => {
                 value={formData.abbreviation}
                 onChange={handleInputChange}
                 disabled={!isManager}
-                maxLength={4}
+                maxLength={3} // Update maxLength to 3
                 style={{textTransform: 'uppercase'}}
                 placeholder="e.g. MUN"
+                className={validationErrors.abbreviation ? 'input-error' : ''}
               />
+              {validationErrors.abbreviation && (
+                <div className="error-message">{validationErrors.abbreviation}</div>
+              )}
             </div>
           </div>
           <div className="form-row">
@@ -304,7 +429,11 @@ const Settings = () => {
                 value={formData.nickname}
                 onChange={handleInputChange}
                 disabled={!isManager}
+                className={validationErrors.nickname ? 'input-error' : ''}
               />
+              {validationErrors.nickname && (
+                <div className="error-message">{validationErrors.nickname}</div>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="city">City</label>
@@ -315,7 +444,11 @@ const Settings = () => {
                 value={formData.city}
                 onChange={handleInputChange}
                 disabled={!isManager}
+                className={validationErrors.city ? 'input-error' : ''}
               />
+              {validationErrors.city && (
+                <div className="error-message">{validationErrors.city}</div>
+              )}
             </div>
           </div>
           <div className="form-row">
@@ -328,9 +461,16 @@ const Settings = () => {
                 value={formData.foundedYear}
                 onChange={handleInputChange}
                 disabled={!isManager}
+                className={validationErrors.foundedYear ? 'input-error' : ''}
+                min="1800"
+                max={new Date().getFullYear()}
               />
+              {validationErrors.foundedYear && (
+                <div className="error-message">{validationErrors.foundedYear}</div>
+              )}
             </div>
           </div>
+          
           {/* Logo Upload (functional) */}
           <div className="logo-section">
             <div className="current-logo">
@@ -373,7 +513,7 @@ const Settings = () => {
                 className="save-button"
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || Object.keys(validationErrors).length > 0}
               >
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>

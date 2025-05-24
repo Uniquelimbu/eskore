@@ -124,6 +124,19 @@
   resize: vertical;
 }
 
+/* Validation error styling */
+.input-error {
+  border-color: var(--danger-color) !important;
+  background-color: rgba(229, 62, 62, 0.05) !important;
+}
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
 /* Form actions */
 .form-actions {
   display: flex;
