@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import apiClient from '../../../../../../services/apiClient';
+import teamService from '../../../../../../services/teamService';
 import { isUserManager } from '../../../../../../utils/permissions';
 import './Settings.css';
 
@@ -10,15 +11,19 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const outletCtx = useOutletContext(); // {team, isManager}
+  const fileInputRef = useRef(null);
 
   const [team, setTeam] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     nickname: '',
     city: '',
+    abbreviation: '', // Added abbreviation field
     foundedYear: '',
     logoUrl: ''
   });
+  const [logoFile, setLogoFile] = useState(null); // Added state for logo file
+  const [logoPreview, setLogoPreview] = useState(null); // Added state for logo preview
   const [statusMsg, setStatusMsg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,9 +44,16 @@ const Settings = () => {
           name: data.name || '',
           nickname: data.nickname || '',
           city: data.city || '',
+          abbreviation: data.abbreviation || '', // Set abbreviation from data
           foundedYear: data.foundedYear || '',
           logoUrl: data.logoUrl || ''
         });
+
+        // Set logo preview if logo exists
+        if (data.logoUrl) {
+          setLogoPreview(data.logoUrl.startsWith('http') ? data.logoUrl : `${process.env.REACT_APP_API_URL || ''}${data.logoUrl}`);
+        }
+        
         const resolvedIsManager = (outletCtx && outletCtx.isManager !== undefined)
           ? outletCtx.isManager
           : isUserManager(data, user);
@@ -82,14 +94,78 @@ const Settings = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle logo file selection
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      
+      setLogoFile(file);
+    }
+  };
+
+  // Trigger file input click
+  const handleLogoClick = () => {
+    fileInputRef.current.click();
+  };
+
+  // Handle logo removal
+  const handleLogoRemove = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    // Set the logoUrl to empty string to indicate logo removal
+    setFormData(prev => ({ ...prev, logoUrl: '' }));
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
-      await apiClient.put(`/teams/${teamId}`, formData);
-      setStatusMsg({ type: 'success', text: 'Team updated successfully.' });
+      setStatusMsg(null); // Clear previous messages
+      
+      // First, update the team basic info
+      await teamService.updateTeam(teamId, formData);
+
+      // If there's a new logo, upload it separately
+      if (logoFile) {
+        await teamService.updateTeamLogo(teamId, logoFile);
+      } 
+      // Handle logo removal via the new service method
+      else if (formData.logoUrl === '' && !logoPreview) {
+        await teamService.deleteTeamLogo(teamId);
+      }
+      
+      // Refresh team data in parent components
+      if (outletCtx && outletCtx.refreshTeam) {
+        await outletCtx.refreshTeam();
+      }
+      
+      // Navigate immediately without delay - this fixes the glitchy transition
+      navigate(`/teams/${teamId}/space`);
+      
     } catch (err) {
       console.error('Save failed:', err);
-      setStatusMsg({ type: 'error', text: err.message || 'Failed to save changes.' });
+      
+      let errorMessage = 'Failed to save changes.';
+      
+      if (err.response) {
+        // Handle specific error cases from API
+        if (err.response.status === 403) {
+          errorMessage = 'You do not have permission to update this team.';
+        } else if (err.response.status === 404) {
+          errorMessage = 'Team not found.';
+        } else if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setStatusMsg({ type: 'error', text: errorMessage });
     } finally {
       setSaving(false);
     }
@@ -204,6 +280,22 @@ const Settings = () => {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="abbreviation">Abbreviation</label>
+              <input
+                id="abbreviation"
+                name="abbreviation"
+                type="text"
+                value={formData.abbreviation}
+                onChange={handleInputChange}
+                disabled={!isManager}
+                maxLength={4}
+                style={{textTransform: 'uppercase'}}
+                placeholder="e.g. MUN"
+              />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
               <label htmlFor="nickname">Nickname</label>
               <input
                 id="nickname"
@@ -214,8 +306,6 @@ const Settings = () => {
                 disabled={!isManager}
               />
             </div>
-          </div>
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="city">City</label>
               <input
@@ -227,6 +317,8 @@ const Settings = () => {
                 disabled={!isManager}
               />
             </div>
+          </div>
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="foundedYear">Founded</label>
               <input
@@ -239,22 +331,37 @@ const Settings = () => {
               />
             </div>
           </div>
-          {/* Logo Upload (simplified) */}
+          {/* Logo Upload (functional) */}
           <div className="logo-section">
             <div className="current-logo">
-              {formData.logoUrl ? (
-                <img className="team-logo-img" src={formData.logoUrl} alt="team logo" />
+              {logoPreview ? (
+                <img className="team-logo-img" src={logoPreview} alt="team logo" />
               ) : (
                 <div className="logo-placeholder">{formData.abbreviation || formData.name.charAt(0)}</div>
               )}
             </div>
             {isManager && (
               <div className="logo-actions">
-                {/* TODO: Implement actual upload */}
-                <button className="upload-logo-button" type="button" disabled>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                />
+                <button 
+                  className="upload-logo-button" 
+                  type="button" 
+                  onClick={handleLogoClick}
+                >
                   Upload New Logo
                 </button>
-                <button className="remove-logo-button" type="button" disabled={!formData.logoUrl}>
+                <button 
+                  className="remove-logo-button" 
+                  type="button" 
+                  disabled={!logoPreview}
+                  onClick={handleLogoRemove}
+                >
                   Remove Logo
                 </button>
               </div>

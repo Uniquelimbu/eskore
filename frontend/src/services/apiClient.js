@@ -279,4 +279,35 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Add a specialized patch method for team updates
+const originalPatch = apiClient.patch;
+apiClient.patch = function(url, data, config = {}) {
+  // Special handling for team updates
+  if (url.startsWith('/teams/') && url.split('/').length === 3) {
+    return originalPatch.call(this, url, data, { 
+      ...config, 
+      timeout: 15000, // 15 second timeout for team updates
+      headers: {
+        ...config.headers,
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure token is sent
+      }
+    }).catch(error => {
+      console.error(`Error in PATCH request to ${url}:`, error);
+      
+      // Check for specific errors
+      if (error.response?.status === 401) {
+        console.error('Authorization failed when updating team - token may be invalid');
+      } else if (error.response?.status === 403) {
+        console.error('Forbidden - You may not have permission to update this team');
+      } else if (error.response?.status === 500) {
+        console.error('Server error during team update:', error.response.data);
+      }
+      
+      // Rethrow the error for the caller to handle
+      throw error;
+    });
+  }
+  return originalPatch.call(this, url, data, config);
+};
+
 export default apiClient;

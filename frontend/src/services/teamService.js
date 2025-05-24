@@ -63,7 +63,24 @@ export const teamService = {
   // FIXED: Removed duplicate /api prefixes from all methods
   getTeam: (id) => apiClient.get(`/teams/${id}`),
   createTeam: (data) => apiClient.post('/teams', data),
-  updateTeam: (id, data) => apiClient.put(`/teams/${id}`, data),
+  updateTeam: async (id, data) => {
+    try {
+      console.log(`Updating team ${id} with data:`, data);
+      const response = await apiClient.patch(`/teams/${id}`, data);
+      
+      // Log success and invalidate cache to ensure fresh data on next fetch
+      console.log(`Team ${id} updated successfully:`, response);
+      if (teamsCache.data) {
+        teamsCache.timestamp = 0; // Invalidate cache
+      }
+      
+      return response;
+    } catch (error) {
+      console.error(`Error updating team ${id}:`, error);
+      // Rethrow for the component to handle
+      throw error;
+    }
+  },
   deleteTeam: (id) => apiClient.delete(`/teams/${id}`),
   
   // Force refresh the teams data
@@ -81,7 +98,52 @@ export const teamService = {
       console.error('Error refreshing teams:', error);
       return [];
     }
-  }
+  },
+  
+  // Add specific function for logo update
+  updateTeamLogo: async (id, logoFile) => {
+    try {
+      console.log(`Updating logo for team ${id}`);
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+      
+      const response = await apiClient.patch(`/teams/${id}/logo`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Invalidate cache
+      if (teamsCache.data) {
+        teamsCache.timestamp = 0;
+      }
+      
+      console.log(`Team ${id} logo updated successfully:`, response);
+      return response;
+    } catch (error) {
+      console.error(`Error updating team ${id} logo:`, error);
+      throw error;
+    }
+  },
+  
+  // Add method to delete team logo
+  deleteTeamLogo: async (id) => {
+    try {
+      console.log(`Deleting logo for team ${id}`);
+      const response = await apiClient.delete(`/teams/${id}/logo`);
+      
+      // Invalidate cache
+      if (teamsCache.data) {
+        teamsCache.timestamp = 0;
+      }
+      
+      console.log(`Team ${id} logo deleted successfully:`, response);
+      return response;
+    } catch (error) {
+      console.error(`Error deleting team ${id} logo:`, error);
+      throw error;
+    }
+  },
 };
 
 export default teamService;

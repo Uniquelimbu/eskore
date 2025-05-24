@@ -18,36 +18,34 @@ const TeamSpace = () => {
 
   const isBasePath = location.pathname === `/teams/${teamId}/space`;
 
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await apiClient.get(`/teams/${teamId}`);
-        console.log('TeamSpace: Team data received:', response);
+  // Function to refresh team data
+  const refreshTeam = async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiClient.get(`/teams/${teamId}`);
+      console.log('TeamSpace: Team data received:', response);
 
-        if (response && response.id) {
-          setTeam(response);
+      if (response && response.id) {
+        setTeam(response);
 
-          const isUserManagerFlag = isUserManager(response, user);
-          console.log(`TeamSpace: Setting isManager to ${isUserManagerFlag} for user ${user?.id}`);
-          setIsManager(isUserManagerFlag);
-        } else {
-          console.error('Received unexpected data structure for team. Expected team object, got:', response);
-          throw new Error('Team data not found in response or response format is incorrect.');
-        }
-      } catch (err) {
-        console.error('Error fetching team data:', err);
-        setError('Failed to load team information. Please try again later.');
-      } finally {
-        setIsLoading(false);
+        const isUserManagerFlag = isUserManager(response, user);
+        console.log(`TeamSpace: Setting isManager to ${isUserManagerFlag} for user ${user?.id}`);
+        setIsManager(isUserManagerFlag);
+      } else {
+        console.error('Received unexpected data structure for team. Expected team object, got:', response);
+        throw new Error('Team data not found in response or response format is incorrect.');
       }
-    };
-
-    if (teamId && user) {
-      fetchTeamData();
-    } else {
-      console.log('TeamSpace: Missing teamId or user, cannot fetch team data');
+    } catch (err) {
+      console.error('Error fetching team data:', err);
+      setError('Failed to load team information. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Initial load
+  useEffect(() => {
+    refreshTeam();
   }, [teamId, user]);
 
   const handleBackClick = () => {
@@ -75,13 +73,16 @@ const TeamSpace = () => {
     );
   }
 
+  // Context value with refreshTeam function
+  const contextValue = {
+    team,
+    isManager,
+    refreshTeam
+  };
+
   return (
     <div className="team-space-layout">
-      <PageLayout 
-        className="team-space-content-wrapper" 
-        withPadding={true} 
-        maxWidth="var(--content-max-width)"
-      >
+      <div className="team-space-container">
         {/* Team Header - Only show on dashboard (isBasePath) */}
         {isBasePath && (
           <div className="team-space-header">
@@ -110,41 +111,36 @@ const TeamSpace = () => {
           </div>
         )}
 
-        {/* If a child route is active (e.g., squad, formation), render it via Outlet.
-            Otherwise (on the base /teams/:teamId path), render the dashboard tiles. */}
-        {isBasePath ? (
-          <div className="container-layout">
-            <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
-              <h2>Formation</h2>
-            </div>
-            
-            <div className="container-right">
-              <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
-                <h2>Squad</h2>
+        <div className="team-space-main-content">
+          {/* If a child route is active (e.g., squad, formation), render it via Outlet.
+              Otherwise (on the base /teams/:teamId path), render the dashboard tiles. */}
+          {isBasePath ? (
+            <div className="container-layout">
+              <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
+                <h2>Formation</h2>
               </div>
               
-              <div className="container-bottom-grid">
-                <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/calendar`)}>
-                  <h3>Calendar</h3>
+              <div className="container-right">
+                <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
+                  <h2>Squad</h2>
                 </div>
                 
-                <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/settings`)}>
-                  <h3>Settings</h3>
+                <div className="container-bottom-grid">
+                  <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/calendar`)}>
+                    <h3>Calendar</h3>
+                  </div>
+                  
+                  <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/settings`)}>
+                    <h3>Settings</h3>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <Outlet context={{ 
-            team, 
-            isManager, 
-            userId: user?.id,
-            // Add explicit flags to help debug
-            isTeamLoaded: !!team,
-            managerStatus: isManager
-          }} />
-        )}
-      </PageLayout>
+          ) : (
+            <Outlet context={contextValue} />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

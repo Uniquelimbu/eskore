@@ -164,11 +164,13 @@
   box-shadow: none;
 }
 
-/* Logo section */
+/* Enhanced logo section styling */
 .logo-section {
   display: flex;
   gap: 30px;
   align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .current-logo {
@@ -178,15 +180,17 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #1a202c;
+  border: 1px solid #2d3748;
 }
 
 .team-logo-img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  border-radius: 8px;
-  background-color: #1a202c;
-  padding: 10px;
+  display: block;
 }
 
 .logo-placeholder {
@@ -198,8 +202,8 @@
   background-color: var(--primary-color);
   color: white;
   font-weight: bold;
-  font-size: 1.8rem;
-  border-radius: 8px;
+  font-size: 2rem;
+  text-transform: uppercase;
 }
 
 .logo-actions {
@@ -231,6 +235,7 @@
 .upload-logo-button:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .remove-logo-button {
@@ -239,9 +244,16 @@
   border: 1px solid var(--danger-color);
 }
 
-.remove-logo-button:hover {
+.remove-logo-button:hover:not(:disabled) {
   background-color: rgba(229, 62, 62, 0.1);
   transform: translateY(-2px);
+}
+
+.remove-logo-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #4a5568;
+  border-color: #4a5568;
 }
 
 /* Danger zone section */

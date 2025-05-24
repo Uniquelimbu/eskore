@@ -81,4 +81,4 @@ export function isUserManager(teamData, currentUser) {
   }
 
   return false;
-} 
+}
