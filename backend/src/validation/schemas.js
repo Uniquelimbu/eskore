@@ -214,10 +214,11 @@ const teamRules = [
     .matches(/^[a-zA-Z0-9\s\-_.&'()]+$/)
     .withMessage('Team name can only contain letters, numbers, spaces, and basic symbols (-, _, ., &, \', (, ))'),
   body('abbreviation')
-    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage('Abbreviation is required')
     .trim()
-    .isLength({ min: 2, max: 4 })
-    .withMessage('Abbreviation must be 2-4 characters')
+    .isLength({ min: 2, max: 3 })
+    .withMessage('Abbreviation must be 2-3 characters')
     .matches(/^[a-zA-Z0-9]+$/)
     .withMessage('Abbreviation can only contain letters and numbers')
     .toUpperCase(),
