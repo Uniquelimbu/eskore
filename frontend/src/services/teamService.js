@@ -35,6 +35,7 @@ export const teamService = {
     pendingPromise = new Promise((resolve) => {
       fetchTeamsTimeout = setTimeout(async () => {
         try {
+          // FIXED: Removed duplicate /api prefix
           const response = await apiClient.get('/teams');
           
           // Update cache
@@ -59,6 +60,7 @@ export const teamService = {
   },
   
   // Other team-related methods...
+  // FIXED: Removed duplicate /api prefixes from all methods
   getTeam: (id) => apiClient.get(`/teams/${id}`),
   createTeam: (data) => apiClient.post('/teams', data),
   updateTeam: (id, data) => apiClient.put(`/teams/${id}`, data),
@@ -67,6 +69,7 @@ export const teamService = {
   // Force refresh the teams data
   refreshTeams: async () => {
     try {
+      // FIXED: Removed duplicate /api prefix
       const response = await apiClient.get('/teams?refresh=true');
       
       // Update cache

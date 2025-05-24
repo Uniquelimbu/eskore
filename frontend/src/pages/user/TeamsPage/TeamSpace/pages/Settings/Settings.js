@@ -33,7 +33,7 @@ const Settings = () => {
     const fetchTeam = async () => {
       try {
         setLoading(true);
-        const data = await apiClient.get(`/api/teams/${teamId}`);
+        const data = await apiClient.get(`/teams/${teamId}`);
         setTeam(data);
         setFormData({
           name: data.name || '',
@@ -62,7 +62,7 @@ const Settings = () => {
     const fetchTeamMembers = async () => {
       try {
         if (teamId) {
-          const response = await apiClient.get(`/api/teams/${teamId}/members`);
+          const response = await apiClient.get(`/teams/${teamId}/members`);
           if (response && response.members) {
             setTeamMembers(response.members);
           }
@@ -85,7 +85,7 @@ const Settings = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await apiClient.put(`/api/teams/${teamId}`, formData);
+      await apiClient.put(`/teams/${teamId}`, formData);
       setStatusMsg({ type: 'success', text: 'Team updated successfully.' });
     } catch (err) {
       console.error('Save failed:', err);
@@ -102,8 +102,8 @@ const Settings = () => {
   const handleLeaveTeam = async () => {
     try {
       // Fix: Use user.id instead of user.userId 
-      // The correct URL should be /api/teams/${teamId}/members/${user.id}
-      await apiClient.delete(`/api/teams/${teamId}/members/${user.id}`);
+      // The correct URL should be /teams/${teamId}/members/${user.id}
+      await apiClient.delete(`/teams/${teamId}/members/${user.id}`);
       navigate('/teams');
     } catch (err) {
       console.error('Leave team failed:', err);
@@ -131,7 +131,7 @@ const Settings = () => {
       setDeleteLoading(true);
       setStatusMsg({ type: 'info', text: 'Deleting team...' });
       
-      await apiClient.delete(`/api/teams/${teamId}`);
+      await apiClient.delete(`/teams/${teamId}`);
       
       // Show success message before navigating
       setStatusMsg({ type: 'success', text: 'Team deleted successfully!' });

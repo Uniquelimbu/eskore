@@ -29,7 +29,7 @@ const TeamsPage = () => {
       try {
         // Skip cache and directly fetch teams from server for the most up-to-date data
         console.log('TeamsPage: Fetching teams for user', user.id);
-        const response = await apiClient.get(`/api/teams/user/${user.id}`, { 
+        const response = await apiClient.get(`/teams/user/${user.id}`, { 
           timeout: TEAM_API_TIMEOUT 
         });
         

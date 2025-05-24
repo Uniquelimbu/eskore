@@ -167,8 +167,8 @@ const CreateTeam = () => {
           return;
         }
 
-        // First, create team without logo
-        const teamResponse = await apiClient.post('/api/teams', teamPayload);
+        // FIXED: Removed duplicate /api prefix
+        const teamResponse = await apiClient.post('/teams', teamPayload);
         
         console.log("Team creation API response:", teamResponse);
         
@@ -185,7 +185,8 @@ const CreateTeam = () => {
           logoData.append('logo', formData.teamLogo);
           
           try {
-            const logoResponse = await apiClient.patch(`/api/teams/${teamId}/logo`, logoData, {
+            // FIXED: Removed duplicate /api prefix
+            const logoResponse = await apiClient.patch(`/teams/${teamId}/logo`, logoData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
               }
@@ -234,7 +235,7 @@ const CreateTeam = () => {
       }
     }
   };
-
+  
   const renderStepContent = () => {
     switch(activeStep) {
       case 1:

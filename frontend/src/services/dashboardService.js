@@ -5,7 +5,7 @@ const dashboardService = {
   getStatsSummary: async (timeframe = 'all-time') => {
     try {
       // Uses the authenticated user's context on the backend
-      const response = await apiClient.get(`/api/users/stats?timeframe=${timeframe}`);
+      const response = await apiClient.get(`/users/stats?timeframe=${timeframe}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching stats summary:', error.response?.data || error.message);
@@ -20,7 +20,7 @@ const dashboardService = {
       const safeLimit = Math.max(1, Math.min(50, parseInt(limit) || 10));
       
       // Uses the authenticated user's context on the backend
-      const response = await apiClient.get(`/api/users/activity`, {
+      const response = await apiClient.get(`/users/activity`, {
         params: { limit: safeLimit }
       });
       
@@ -35,8 +35,8 @@ const dashboardService = {
   // Get upcoming matches for the current user
   getUpcomingMatches: async () => {
     try {
-      // Uses the authenticated user's context on the backend
-      const response = await apiClient.get('/api/users/matches/upcoming');
+      // FIXED: Removed duplicate /api prefix
+      const response = await apiClient.get('/users/matches/upcoming');
       return response.data;
     } catch (error) {
       console.error('Error fetching upcoming matches:', error.response?.data || error.message);
@@ -47,8 +47,8 @@ const dashboardService = {
   // Get game performance data for the current user
   getGamePerformance: async (gameId) => {
     try {
-      // Uses the authenticated user's context on the backend
-      const response = await apiClient.get(`/api/users/games/${gameId}/performance`);
+      // FIXED: Removed duplicate /api prefix
+      const response = await apiClient.get(`/users/games/${gameId}/performance`);
       return response.data;
     } catch (error) {
       console.error('Error fetching game performance:', error.response?.data || error.message);
@@ -59,7 +59,8 @@ const dashboardService = {
   // Get leaderboard data 
   getLeaderboard: async (gameId, metric = 'winRate', limit = 10) => {
     try {
-      const response = await apiClient.get(`/api/leaderboard`, {
+      // FIXED: Removed duplicate /api prefix
+      const response = await apiClient.get(`/leaderboard`, {
         params: { gameId, metric, limit }
       });
       return response;
@@ -72,7 +73,8 @@ const dashboardService = {
   // Get athlete profile
   getAthleteProfile: async (athleteId) => {
     try {
-      const response = await apiClient.get(`/api/athletes/${athleteId}/profile`);
+      // FIXED: Removed duplicate /api prefix
+      const response = await apiClient.get(`/athletes/${athleteId}/profile`);
       return response;
     } catch (error) {
       console.error('Error fetching athlete profile:', error.response?.data || error.message);
@@ -83,7 +85,8 @@ const dashboardService = {
   // Update athlete profile
   updateAthleteProfile: async (profileData) => {
     try {
-      return await apiClient.put('/api/athletes/profile', profileData);
+      // FIXED: Removed duplicate /api prefix
+      return await apiClient.put('/athletes/profile', profileData);
     } catch (error) {
       throw error;
     }
@@ -92,7 +95,7 @@ const dashboardService = {
   // Submit match result
   submitMatchResult: async (matchData) => {
     try {
-      return await apiClient.post('/api/matches', matchData);
+      return await apiClient.post('/matches', matchData);
     } catch (error) {
       throw error;
     }

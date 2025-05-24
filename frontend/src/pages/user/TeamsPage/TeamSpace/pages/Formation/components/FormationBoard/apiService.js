@@ -45,7 +45,7 @@ export const initFormation = async (teamId, get, set) => {
   
   try {
     console.log(`Attempting to fetch formation for team ${teamId} from server`);
-    const response = await apiClient.get(`/api/formations/${teamId}`);
+    const response = await apiClient.get(`/formations/${teamId}`);
     console.log(`Formation API response received:`, response);
     
     // Enhanced response validation
@@ -176,7 +176,7 @@ export const createDefaultFormation = async (teamId, get, set) => {
     console.log('Creating default formation for team', teamId);
     
     // First try to GET the formation - the backend will return a default if it doesn't exist
-    const response = await apiClient.get(`/api/formations/${teamId}`);
+    const response = await apiClient.get(`/formations/${teamId}`);
     
     // Check if we got a formation that's not saved (marked by the backend)
     if (response && response.notSaved) {
@@ -284,7 +284,7 @@ export const performSaveFormationAPI = async (teamId, formationData) => {
     console.log('performSaveFormationAPI: Sending data to server for team:', teamId);
     console.log('performSaveFormationAPI payload:', formationData);
     
-    const response = await apiClient.put(`/api/formations/${teamId}`, { 
+    const response = await apiClient.put(`/formations/${teamId}`, { 
       schema_json: formationData 
     });
     
@@ -299,7 +299,7 @@ export const performSaveFormationAPI = async (teamId, formationData) => {
     if (isSuccess) {
       console.log('performSaveFormationAPI: Save completed successfully');
       try {
-        const verifyResponse = await apiClient.get(`/api/formations/${teamId}`);
+        const verifyResponse = await apiClient.get(`/formations/${teamId}`);
         console.log('performSaveFormationAPI: Verification response:', verifyResponse);
         const savedData = verifyResponse.data?.schema_json || verifyResponse.schema_json;
         if (savedData) {

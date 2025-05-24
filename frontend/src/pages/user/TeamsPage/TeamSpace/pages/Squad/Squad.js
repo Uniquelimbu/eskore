@@ -24,7 +24,7 @@ const Squad = () => {
       try {
         setLoading(true);
         // API calls should go here instead of mock data
-        const membersResponse = await apiClient.get(`/api/teams/${teamId}/members`);
+        const membersResponse = await apiClient.get(`/teams/${teamId}/members`);
         console.log('Squad: Members fetched:', membersResponse);
         
         if (membersResponse && membersResponse.members && Array.isArray(membersResponse.members)) {

@@ -22,7 +22,7 @@ const TeamSpace = () => {
     const fetchTeamData = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get(`/api/teams/${teamId}`);
+        const response = await apiClient.get(`/teams/${teamId}`);
         console.log('TeamSpace: Team data received:', response);
 
         if (response && response.id) {

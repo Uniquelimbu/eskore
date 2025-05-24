@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Define the base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Add this line for debugging:
 console.log('🚀 apiClient: API_BASE_URL is set to:', API_BASE_URL);
@@ -82,7 +82,7 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('token');
     
     // Enhanced debugging for auth issues
-    if (DEBUG_AUTH && config.url.includes('/auth/me')) {
+    if (DEBUG_AUTH && (config.url.includes('/auth/me') || config.url.includes('/auth/login'))) {
       console.log('🔒 Auth Debug: Sending request to', config.url);
       console.log('🔒 Auth Debug: Token in localStorage:', token ? `${token.substring(0, 15)}...` : 'NO TOKEN');
     }
@@ -154,8 +154,8 @@ const applyCircuitBreaker = (operation) => {
 // Modify the existing delete method to handle team deletion specifically
 const originalDelete = apiClient.delete;
 apiClient.delete = function(url, config = {}) {
+  const isTeamDeletion = url.startsWith('/teams/') && url.split('/').length === 4;
   // Set a shorter timeout for delete operations, especially for team deletion
-  const isTeamDeletion = url.startsWith('/api/teams/') && url.split('/').length === 3;
   const timeout = isTeamDeletion ? 15000 : 30000; // 15 seconds for team deletion, 30 seconds for others
   
   if (isTeamDeletion) {
@@ -184,7 +184,7 @@ apiClient.delete = function(url, config = {}) {
 const originalPost = apiClient.post;
 apiClient.post = function(url, data, config = {}) {
   // Add special handling for team creation
-  if (url === '/api/teams') {
+  if (url === '/teams') {
     return originalPost.call(this, url, data, { 
       ...config, 
       timeout: 30000, // Increase to 30 seconds for team creation
@@ -219,11 +219,64 @@ apiClient.getTeam = async function(teamId, options = {}) {
     teamClient.interceptors.request = this.interceptors.request;
     teamClient.interceptors.response = this.interceptors.response;
     
-    return await teamClient.get(`/api/teams/${teamId}`);
+    return await teamClient.get(`/teams/${teamId}`);
   } catch (error) {
     console.warn(`Team request timed out after ${timeoutMs}ms:`, error);
     throw error;
   }
 };
+
+// Add a new method to check server connectivity
+apiClient.checkConnectivity = async function() {
+  try {
+    console.log('Checking API server connectivity...');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout for health check
+    
+    const response = await this.get('/health', { 
+      signal: controller.signal,
+      skipRetry: true, // Don't retry this specific request
+      skipCache: true  // Don't cache health checks
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response && response.status === 'ok') {
+      console.log('API server is reachable and healthy');
+      return true;
+    } else {
+      console.warn('API server responded but may not be fully operational', response);
+      return false;
+    }
+  } catch (error) {
+    console.error('API server connectivity check failed:', error);
+    circuitBreaker.recordFailure();
+    return false;
+  }
+};
+
+// Log configuration for debugging
+console.log('API Client Configuration:', {
+  baseURL: apiClient.defaults.baseURL,
+  timeout: apiClient.defaults.timeout, 
+  withCredentials: apiClient.defaults.withCredentials
+});
+
+// Add request interceptor to log requests
+apiClient.interceptors.request.use(
+  config => {
+    // Log the actual full URL that will be requested 
+    const fullUrl = config.baseURL 
+      ? `${config.baseURL.replace(/\/$/, '')}${config.url}`
+      : config.url;
+    
+    console.log(`API Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+    return config;
+  },
+  error => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

@@ -179,7 +179,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       console.log('AuthContext: Logging in user', { email });
-      const response = await apiClient.post('/api/auth/login', { email, password });
+      const response = await apiClient.post('/auth/login', { email, password });
       const { token, user } = response;
       
       // Validate that we received proper user data
@@ -198,7 +198,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('token', token);
           
           // Fetch complete user data
-          const userResponse = await apiClient.get('/api/auth/me');
+          const userResponse = await apiClient.get('/auth/me');
           
           if (userResponse && userResponse.id) {
             completeUserData = userResponse;
@@ -225,7 +225,8 @@ export const AuthProvider = ({ children }) => {
       try {
         if (completeUserData && completeUserData.id) {
           console.log(`AuthContext: Fetching teams for newly logged in user ${completeUserData.id}`);
-          const teamsResponse = await apiClient.get(`/api/teams/user/${completeUserData.id}`);
+          // FIXED: Removed duplicate /api prefix
+          const teamsResponse = await apiClient.get(`/teams/user/${completeUserData.id}`);
           
           if (teamsResponse && teamsResponse.teams && teamsResponse.teams.length > 0) {
             const firstTeam = teamsResponse.teams[0];
@@ -320,7 +321,8 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log(`AuthContext: Refreshing teams for user ${state.user.id}`);
-      const teamsResponse = await apiClient.get(`/api/teams/user/${state.user.id}`);
+      // FIXED: Removed duplicate /api prefix
+      const teamsResponse = await apiClient.get(`/teams/user/${state.user.id}`);
       
       if (teamsResponse && teamsResponse.teams) {
         if (teamsResponse.teams.length > 0) {
@@ -338,7 +340,7 @@ export const AuthProvider = ({ children }) => {
       return [];
     }
   };
-
+  
   // Add an improved version of verifyUserData that can force a refresh
   const verifyUserData = async (forceRefresh = false) => {
     // If user data exists and is valid and we're not forcing refresh, return it
@@ -359,7 +361,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Try to get current user data from API
-      const response = await apiClient.get('/api/auth/me');
+      const response = await apiClient.get('/auth/me');
       
       if (response && response.id) {
         console.log('AuthContext: Successfully refreshed user data:', response);

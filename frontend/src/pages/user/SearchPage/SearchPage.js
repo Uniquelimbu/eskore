@@ -65,7 +65,7 @@ const SearchPage = () => {
         if (currentType === 'all' || currentType === 'team') {
           try {
             // Use a different endpoint to avoid route conflict with /teams/:id
-            const res = await apiClient.get(`/api/teams-search`, {
+            const res = await apiClient.get(`/teams-search`, {
               params: {
                 q: currentQuery.trim(),
                 _t: Date.now() // Cache busting

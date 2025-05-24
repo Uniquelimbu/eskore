@@ -38,7 +38,7 @@ const authService = {
     
     try {
       // Call the login API
-      const response = await apiClient.post('/api/auth/login', {
+      const response = await apiClient.post('/auth/login', {
         email: credentials.email,
         password: credentials.password
       });
@@ -56,7 +56,7 @@ const authService = {
         localStorage.setItem('token', response.token);
         
         try {
-          const profileResponse = await apiClient.get('/api/auth/me');
+          const profileResponse = await apiClient.get('/auth/me');
           
           if (profileResponse && profileResponse.id) {
             // Combine the responses, preferring the more complete data
@@ -85,7 +85,7 @@ const authService = {
   registerUser: async (userData) => {
     return withRetry(async () => {
       try {
-        const response = await apiClient.post('/api/auth/register', userData);
+        const response = await apiClient.post('/auth/register', userData);
         if (response && response.success && response.user) {
           // Store token in localStorage if it's included in the response
           if (response.token) {
@@ -115,7 +115,8 @@ const authService = {
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2-second timeout
       
       // Send an empty object as the body instead of null
-      const response = await apiClient.post('/api/auth/logout', {}, { 
+      // FIXED: Removed duplicate /api prefix
+      const response = await apiClient.post('/auth/logout', {}, { 
         signal: controller.signal 
       });
       
@@ -140,7 +141,7 @@ const authService = {
           // to prevent flickering, but still refresh in the background
           if (user && user.id && user.firstName && user.lastName) {
             // Make a background request to refresh the data
-            apiClient.get('/api/auth/me')
+            apiClient.get('/auth/me')
               .then(updatedUser => {
                 if (updatedUser && updatedUser.id) {
                   localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -158,7 +159,7 @@ const authService = {
       }
       
       // If we don't have valid cached data, make a fresh request
-      const response = await apiClient.get('/api/auth/me');
+      const response = await apiClient.get('/auth/me');
       
       if (response && response.id) {
         // Cache the user data for next time
@@ -178,7 +179,7 @@ const authService = {
   // Check if an email is already registered
   checkEmailExists: async (email) => {
     try {
-      const response = await apiClient.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+      const response = await apiClient.get(`/auth/check-email?email=${encodeURIComponent(email)}`);
       return response.exists;
     } catch (error) {
       console.error('Email check error:', error);
@@ -188,18 +189,18 @@ const authService = {
 
   // Update user profile
   updateProfile: async (userId, profileData) => {
-    return apiClient.patch(`/api/users/${userId}`, profileData);
+    return apiClient.patch(`/users/${userId}`, profileData);
   },
 
   // Change password
   changePassword: async (userId, passwordData) => {
-    return apiClient.post(`/api/users/${userId}/change-password`, passwordData);
+    return apiClient.post(`/users/${userId}/change-password`, passwordData);
   },
 
   // Reset password request
   requestPasswordReset: async (email) => {
     try {
-      return await apiClient.post('/api/auth/reset-password-request', { email });
+      return await apiClient.post('/auth/reset-password-request', { email });
     } catch (error) {
       if (error.status === 404) {
         return { success: true, message: "If your email exists, you'll receive reset instructions" };
@@ -211,7 +212,7 @@ const authService = {
   // Complete password reset
   resetPassword: async (token, newPassword) => {
     try {
-      return await apiClient.post('/api/auth/reset-password', { token, newPassword });
+      return await apiClient.post('/auth/reset-password', { token, newPassword });
     } catch (error) {
       if (error.status === 400) {
         throw new Error("Invalid or expired reset token");

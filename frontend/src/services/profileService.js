@@ -13,8 +13,8 @@ const profileService = {
       // If userId is provided, get that user's public profile
       // Otherwise get the current authenticated user's profile
       const endpoint = userId ? 
-        `/api/users/${userId}` : 
-        `/api/auth/me`; // Use /api/auth/me for the current user's profile
+        `/users/${userId}` : 
+        `/auth/me`; // Fix: remove /api prefix
       
       console.log(`Fetching user profile from: ${endpoint}`);
       
@@ -65,7 +65,7 @@ const profileService = {
       
       if (!userId) {
         // If we still don't have a user ID, try to fetch it
-        const currentUser = await apiClient.get('/api/auth/me');
+        const currentUser = await apiClient.get('/auth/me');
         userId = currentUser?.id;
       }
       
@@ -76,7 +76,7 @@ const profileService = {
       console.log(`Updating profile for user ${userId} with data:`, profileData);
       
       // Use PATCH method on the correct endpoint with user ID
-      const response = await apiClient.patch(`/api/users/${userId}`, profileData);
+      const response = await apiClient.patch(`/users/${userId}`, profileData);
       
       // After successful update, update the user in localStorage to keep it in sync
       if (userData) {
@@ -99,7 +99,7 @@ const profileService = {
   // Update current authenticated user's profile image
   updateProfileImage: async (formData) => { // formData should contain the image file
     try {
-      const responseData = await apiClient.put('/api/users/profile/image', formData, {
+      const responseData = await apiClient.put('/users/profile/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
