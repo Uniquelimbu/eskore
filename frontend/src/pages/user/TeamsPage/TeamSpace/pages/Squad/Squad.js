@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import apiClient from '../../../../../../services/apiClient';
-import JoinTeamDialog from '../../../../../../components/dialogs/JoinTeamDialog';
+import { JoinTeamDialog } from '../../../JoinTeam/components';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import './Squad.css';
 

@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
-import ManagerRegistrationForm from '../../../../components/forms/ManagerRegistrationForm';
+import ManagerRegistrationForm from './ManagerDetails';
 import './CreateTeam.css';
 
 const CreateTeam = () => {
@@ -20,6 +20,7 @@ const CreateTeam = () => {
     city: '',
     teamLogo: null
   });
+  // eslint-disable-next-line no-unused-vars
   const [managerData, setManagerData] = useState(null);
   const [showManagerForm, setShowManagerForm] = useState(false);
   const [createdTeamId, setCreatedTeamId] = useState(null);

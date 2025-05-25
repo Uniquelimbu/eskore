@@ -1,28 +1,21 @@
 import React, { useState } from 'react';
-import PlayerRegistrationForm from '../forms/PlayerRegistrationForm';
+import PlayerRegistrationForm from '../../../../../components/forms/PlayerRegistrationForm';
 import './JoinTeamDialog.css';
 
 const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
   const [joinMode, setJoinMode] = useState(null); // null, 'player', 'staff'
-  const [playerData, setPlayerData] = useState(null);
   
   const handleJoinModeSelect = (mode) => {
     setJoinMode(mode);
   };
   
   const handlePlayerRegistrationSubmit = (data) => {
-    setPlayerData(data);
-    // Submit both the join request and player data together
+    // Submit join request with player data
     onJoin({
       teamId: team.id,
       role: 'athlete',
       playerData: data
     });
-  };
-
-  const handleStaffJoinSubmit = () => {
-    // For now, we're not implementing this as per requirements
-    alert("Staff joining functionality is not implemented yet");
   };
 
   // Initial join options selector

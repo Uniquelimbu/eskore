@@ -108,7 +108,7 @@
 @media (max-width: 576px) {
   .manager-registration-form {
     padding: 20px 15px;
-    width: 100%;
+    width: 90%;
   }
   
   .manager-registration-form .form-actions {
