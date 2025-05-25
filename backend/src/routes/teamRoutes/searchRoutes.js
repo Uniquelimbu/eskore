@@ -10,7 +10,7 @@ const { validate } = require('../../validation'); // Add this import
 
 /**
  * GET /api/teams/search
- * Search for teams by name or abbreviation
+ * Search for teams by name, abbreviation, or teamIdentifier
  */
 router.get('/search', 
   // Add validation rules but make the query optional with default behavior
@@ -33,7 +33,8 @@ router.get('/search',
       where: {
         [Op.or]: [
           { name: { [likeOp]: `%${query}%` } },
-          { abbreviation: { [likeOp]: `%${query}%` } }
+          { abbreviation: { [likeOp]: `%${query}%` } },
+          { teamIdentifier: { [likeOp]: `%${query}%` } } // Add search by teamIdentifier
         ]
       },
       limit: 20,

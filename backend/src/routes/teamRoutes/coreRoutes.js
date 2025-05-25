@@ -10,6 +10,7 @@ const { sendSafeJson } = require('../../utils/safeSerializer');
 const log = require('../../utils/log');
 const sequelize = require('../../config/db');
 const { Op } = require('sequelize');
+const { generateTeamIdentifier } = require('../../utils/teamIdentifierGenerator');
 
 /**
  * GET /api/teams
@@ -119,7 +120,11 @@ router.post('/',
         creatorId: userId  // Make sure both fields are set
       }, { transaction: t });
       
-      // 2. Associate the user with the team as manager
+      // 2. Generate and set team identifier
+      team.teamIdentifier = generateTeamIdentifier(team.name, team.id);
+      await team.save({ transaction: t });
+      
+      // 3. Associate the user with the team as manager
       await UserTeam.create({
         userId: userId, // Use the extracted userId
         teamId: team.id,
@@ -129,7 +134,7 @@ router.post('/',
       // Commit the transaction
       await t.commit();
       
-      log.info(`TEAMROUTES/CORE (POST /): Team created successfully. ID: ${team.id}, Name: ${team.name}, CreatorID: ${userId}`);
+      log.info(`TEAMROUTES/CORE (POST /): Team created successfully. ID: ${team.id}, Name: ${team.name}, TeamIdentifier: ${team.teamIdentifier}, CreatorID: ${userId}`);
       
       return sendSafeJson(res, {
         success: true,

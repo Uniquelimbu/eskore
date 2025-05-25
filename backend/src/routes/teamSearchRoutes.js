@@ -36,7 +36,8 @@ router.get('/teams-search',
       where: {
         [Op.or]: [
           { name: { [likeOp]: `%${searchTerm}%` } },
-          { abbreviation: { [likeOp]: `%${searchTerm}%` } }
+          { abbreviation: { [likeOp]: `%${searchTerm}%` } },
+          { teamIdentifier: { [likeOp]: `%${searchTerm}%` } } // Add search by teamIdentifier
         ]
       },
       limit: 20,
@@ -47,4 +48,4 @@ router.get('/teams-search',
   })
 );
 
-module.exports = router; 
+module.exports = router;

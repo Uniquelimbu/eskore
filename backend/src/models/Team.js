@@ -81,6 +81,11 @@ Team.init({
     type: DataTypes.STRING,
     allowNull: true
   },
+  teamIdentifier: {
+    type: DataTypes.STRING(7),  // Format: AAA-NNN (7 characters)
+    allowNull: true,
+    unique: true
+  },
   // Identifies the user that originally created the team. This mirrors the NOT NULL
   // `creatorId` column that already exists in the database migration.
   creatorId: {

@@ -16,56 +16,65 @@ const { body, param } = require('express-validator');
  * GET /api/teams/:id/members
  * Fetches all members of a specific team
  */
-router.get('/:id/members', requireAuth, validate(schemas.team.teamIdParam), catchAsync(async (req, res) => {
-  const { id: teamId } = req.params;
-  log.info(`TEAMROUTES/MEMBER (GET /:id/members): Fetching members for team ID ${teamId}`);
+router.get('/:id/members', 
+  validate(schemas.team.teamIdParam),
+  catchAsync(async (req, res) => {
+    log.info(`TEAMROUTES/MEMBERS (GET /:id/members): Fetching members for team ${req.params.id}`);
+    const { id } = req.params;
 
-  const teamExists = await Team.findByPk(teamId);
-  if (!teamExists) {
-    // Log this specific case for clarity, though the frontend might show a generic error
-    log.warn(`TEAMROUTES/MEMBER (GET /:id/members): Team with ID ${teamId} not found when trying to fetch members.`);
-    throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-  }
-
-  // Fetch UserTeam entries which link Users to this Team, including the role
-  const userTeamEntries = await UserTeam.findAll({
-    where: { teamId },
-    include: [{
-      model: User,
-      attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl'] // Specify user attributes
-    }],
-    attributes: ['role'] // Specify attributes from UserTeam model (role)
-  });
-
-  // Format the members list as expected by the frontend
-  const formattedMembers = userTeamEntries.map(utEntry => {
-    if (!utEntry.User) {
-      // This case should ideally not happen with a successful include if the data is consistent
-      log.warn(`TEAMROUTES.JS (GET /:id/members): UserTeam entry found without a corresponding User. UserTeam ID: ${utEntry.id}, UserID: ${utEntry.userId}, TeamID: ${utEntry.teamId}`);
-      return null;
+    const team = await Team.findByPk(id);
+    if (!team) {
+      throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
     }
-    const userJson = utEntry.User.toJSON();
-    return {
-      id: userJson.id,
-      firstName: userJson.firstName,
-      lastName: userJson.lastName,
-      email: userJson.email,
-      avatar: userJson.profileImageUrl, // Map profileImageUrl to avatar for frontend consistency
-      role: utEntry.role,
-      // position and jerseyNumber are not currently in User or UserTeam models.
-      // Frontend Squad.js uses placeholders if these are null/undefined.
-      position: utEntry.position || null, // If position was added to UserTeam
-      jerseyNumber: utEntry.jerseyNumber || null // If jerseyNumber was added to UserTeam
-    };
-  }).filter(member => member !== null); // Filter out any nulls from inconsistent data
 
-  log.info(`TEAMROUTES/MEMBER (GET /:id/members): Successfully fetched ${formattedMembers.length} members for team ID ${teamId}.`);
-  return sendSafeJson(res, {
-    success: true,
-    count: formattedMembers.length,
-    members: formattedMembers
-  });
-}));
+    // Get all team members with their player and manager profiles
+    const members = await User.findAll({
+      attributes: ['id', 'firstName', 'lastName', 'email'],
+      include: [
+        {
+          model: UserTeam,
+          as: 'userTeams',
+          where: { teamId: id },
+          attributes: ['role', 'joinedAt', 'status']
+        },
+        {
+          model: Player,
+          as: 'Player',
+          attributes: ['id', 'position', 'height', 'weight', 'preferredFoot', 'jerseyNumber', 'nationality', 'profileImageUrl']
+        },
+        {
+          model: Manager,
+          as: 'Manager',
+          attributes: ['id', 'playingStyle', 'preferredFormation', 'experience', 'profileImageUrl']
+        }
+      ]
+    });
+
+    // Format response
+    const formattedMembers = members.map(member => {
+      const memberData = member.toJSON();
+      const userTeam = memberData.userTeams[0];
+      
+      return {
+        id: memberData.id,
+        firstName: memberData.firstName,
+        lastName: memberData.lastName,
+        email: memberData.email,
+        role: userTeam.role,
+        joinedAt: userTeam.joinedAt,
+        status: userTeam.status,
+        Player: memberData.Player,
+        Manager: memberData.Manager
+      };
+    });
+
+    return sendSafeJson(res, {
+      teamId: id,
+      teamName: team.name,
+      members: formattedMembers
+    });
+  })
+);
 
 /**
  * POST /api/teams/:id/members

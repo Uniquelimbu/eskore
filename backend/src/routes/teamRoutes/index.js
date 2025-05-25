@@ -8,6 +8,7 @@ const memberRoutes = require('./memberRoutes');
 const mediaRoutes = require('./mediaRoutes');
 const managementRoutes = require('./managementRoutes');
 const searchRoutes = require('./searchRoutes');
+const playerRoutes = require('./playerRoutes');
 
 // Middleware for all routes in this router, skip excessive logging
 router.use((req, res, next) => {
@@ -24,5 +25,6 @@ router.use('/', memberRoutes);       // Team membership operations
 router.use('/', mediaRoutes);        // Logo and media handling
 router.use('/', managementRoutes);   // Role transfers and team management
 router.use('/', searchRoutes);       // Search functionality
+router.use('/', playerRoutes);       // Player-related operations
 
 module.exports = router;
