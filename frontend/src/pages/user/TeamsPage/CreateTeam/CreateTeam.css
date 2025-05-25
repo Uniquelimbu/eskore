@@ -811,31 +811,14 @@ html, body {
 }
 Let's keep the existing one for now. */
 
-.manager-form-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  overflow-y: auto;
-  backdrop-filter: blur(5px);
-}
-
-/* Add styles to ensure manager form is fully visible */
-.manager-form-overlay .manager-registration-form {
-  max-width: 600px;
-  width: 100%;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+.manager-registration-form {
+  background-color: #232b3a;
   border-radius: 10px;
-  margin: auto;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+  padding: 24px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   animation: fadeInScale 0.3s ease-out forwards;
 }
 
@@ -850,13 +833,10 @@ Let's keep the existing one for now. */
   }
 }
 
-/* Responsive styles for the form overlay */
+/* Responsive styles for the form */
 @media (max-width: 768px) {
-  .manager-form-overlay {
-    padding: 15px;
-  }
-  
-  .manager-form-overlay .manager-registration-form {
+  .manager-registration-form {
     max-width: 100%;
+    padding: 15px;
   }
 }

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import apiClient from '../../../../services/apiClient';
 import { isUserManager } from '../../../../utils/permissions';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
-import './TeamSpace.css';
+import './styles/index.css'; // Updated import to use the new modular CSS
 import { useAuth } from '../../../../contexts/AuthContext';
 
 const TeamSpace = () => {

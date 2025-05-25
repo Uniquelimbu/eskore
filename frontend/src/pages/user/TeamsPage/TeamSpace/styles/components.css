@@ -1,0 +1,183 @@
+/* Button styling */
+.back-button {
+  background-color: transparent;
+  color: var(--text-light);
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  margin-right: 15px;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: var(--primary-color);
+}
+
+.settings-button, .leave-button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.settings-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.leave-button {
+  background-color: var(--secondary-color);
+  color: var(--text-light);
+}
+
+/* Action buttons */
+.team-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.action-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.action-button.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.action-button.primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.action-button.secondary {
+  background-color: #2d3748;
+  color: var(--text-light);
+}
+
+.action-button.secondary:hover {
+  background-color: #4a5568;
+  transform: translateY(-2px);
+}
+
+/* Settings button */
+.settings-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 15px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.settings-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* Team logo/image styles */
+.team-logo {
+  width: 80px;
+  height: 80px;
+  overflow: hidden; 
+  border-radius: 8px;
+  background-color: #2d3748; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.team-logo img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  display: block;
+}
+
+.team-logo-placeholder {
+  width: 80px;
+  height: 80px;
+  background-color: var(--primary-color); /* Changed from #4a5568 to use the blue primary color variable */
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  border-radius: 8px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* Clickable tile generic styles */
+.clickable-tile {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  text-align: center;
+  user-select: none;
+  border: 2px solid rgba(255,255,255,0.1);
+  transition: background-color .25s, transform .15s, box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  background-color: #2d3748;
+}
+
+.clickable-tile h2,
+.clickable-tile h3 {
+  color: var(--text-light);
+  margin: 0;
+  font-weight: 600;
+}
+
+.clickable-tile h2 {
+  font-size: 1.8rem;
+}
+
+.clickable-tile h3 {
+  font-size: 1.5rem;
+}
+
+/* Placeholder tile keeps grid alignment when settings hidden */
+.placeholder-tile {
+  background: transparent;
+  border: none;
+  background-color: #1e2533;
+  opacity: 0.5;
+  border-radius: 10px;
+}

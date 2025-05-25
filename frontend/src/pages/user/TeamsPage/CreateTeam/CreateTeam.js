@@ -486,12 +486,10 @@ const CreateTeam = () => {
       <Sidebar />
       <PageLayout className="create-team-page-content" maxWidth="1200px" withPadding={true}>
         {showManagerForm ? (
-          <div className="manager-form-overlay">
-            <ManagerRegistrationForm
-              onSubmit={handleManagerFormSubmit}
-              onCancel={handleManagerFormCancel}
-            />
-          </div>
+          <ManagerRegistrationForm
+            onSubmit={handleManagerFormSubmit}
+            onCancel={handleManagerFormCancel}
+          />
         ) : (
           <>
             <div className="create-team-header">

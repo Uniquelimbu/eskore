@@ -1,0 +1,82 @@
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .team-space-header {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  
+  .team-quick-stats {
+    flex-direction: row;
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid #2d3748;
+    padding-top: 16px;
+    justify-content: space-between;
+  }
+  
+  .team-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+  }
+  
+  .action-button {
+    width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-space-content {
+    padding: 20px;
+  }
+  
+  .team-navigation-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .navigation-button {
+    height: 80px;
+    font-size: 0.9rem;
+  }
+  
+  .navigation-button i {
+    font-size: 1.5rem;
+  }
+
+  .container-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .container-main,
+  .container-top {
+    aspect-ratio: 16/9; /* Maintain a reasonable aspect ratio on mobile */
+  }
+
+  .container-bottom-grid {
+    gap: 16px;
+  }
+  
+  .container-small {
+    aspect-ratio: 1/1; /* Keep squares */
+  }
+
+  .team-space-main-content {
+    height: auto;
+    min-height: 500px;
+  }
+  
+  .team-space-tab-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  .team-space-layout {
+    padding-left: var(--sidebar-collapsed-main-width);
+  }
+}

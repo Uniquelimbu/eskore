@@ -1,0 +1,151 @@
+/* Team header styles */
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--secondary-color);
+}
+
+.team-header h1 {
+  margin: 0;
+  color: var(--text-light);
+}
+
+/* TeamSpace header styling */
+.team-space-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px; /* Confirmed: This ensures 30px padding on all sides */
+  margin-left: 0; /* Remove the left margin to allow it to follow container width */
+  margin-right: 0; /* Remove the right margin to allow it to follow container width */
+  background-color: var(--secondary-color);
+  border-radius: 10px;
+  margin-bottom: 30px; /* Increased from 16px for better spacing */
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 100%; /* Ensure it takes full container width */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.team-space-header-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #2d3748;
+  margin-right: 20px;
+  border: 3px solid var(--primary-color);
+}
+
+.team-space-header-info h1 {
+  font-size: 1.8rem;
+  color: var(--text-light);
+  margin: 0 0 5px 0;
+}
+
+.team-space-header-info p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.team-space-header-actions {
+  margin-left: auto;
+}
+
+/* Team identity section */
+.team-identity-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: transparent !important;
+}
+
+.team-details {
+  background-color: transparent !important;
+}
+
+.team-details h1 {
+  margin: 0 0 4px 0;
+  background-color: transparent !important;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.team-nickname {
+  background-color: transparent !important;
+  margin-bottom: 2px;
+  line-height: 1.1;
+}
+
+.team-meta {
+  background-color: transparent !important;
+  font-size: 0.9rem;
+  line-height: 1.1;
+}
+
+/* Adjust positioning of meta spans for better spacing */
+.team-meta span {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.team-meta span:last-child {
+  margin-right: 0;
+}
+
+/* Team identifier styling */
+.team-identifier {
+  display: inline-block;
+  background-color: var(--secondary-dark);
+  color: var(--primary-color);
+  font-family: monospace;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 10px;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+}
+
+/* Quick stats section */
+.team-quick-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  border-left: 1px solid #2d3748;
+  gap: 8px;
+}
+
+.stat-item {
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-light);
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* TeamSpace Header Logo Specific Styles */
+.team-space-header .team-logo {
+  width: 80px !important;
+  height: 80px !important;
+  flex-shrink: 0;
+}
+
+.team-space-header .team-logo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}

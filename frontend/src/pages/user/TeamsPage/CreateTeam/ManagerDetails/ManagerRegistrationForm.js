@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './ManagerRegistrationForm.css';
+import './ManagerRegistrationForm.css'; // Make sure to import the CSS
 
 const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
   const [formData, setFormData] = useState({

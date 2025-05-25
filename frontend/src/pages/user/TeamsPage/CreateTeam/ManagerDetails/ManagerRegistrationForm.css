@@ -1,16 +1,18 @@
 .manager-registration-form {
   background-color: #232b3a;
   border-radius: 10px;
-  padding: 25px;
+  padding: 30px;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  color: #e2e8f0;
+  margin: 0 auto;
 }
 
 .manager-registration-form h2 {
   color: #e2e8f0;
   font-size: 1.8rem;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   border-bottom: 1px solid #2d3748;
   padding-bottom: 15px;
   text-align: center;
@@ -32,7 +34,8 @@
   display: block;
   font-weight: 600;
   color: #e2e8f0;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-size: 1rem;
 }
 
 .manager-registration-form select,
@@ -62,7 +65,7 @@
 .manager-registration-form .error-message {
   color: #e53e3e;
   font-size: 0.85rem;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .manager-registration-form .form-actions {
@@ -73,7 +76,7 @@
 }
 
 .manager-registration-form .cancel-button {
-  padding: 12px 20px;
+  padding: 14px 24px;
   background-color: #2d3748;
   color: #e2e8f0;
   border: none;
@@ -82,10 +85,11 @@
   cursor: pointer;
   transition: all 0.2s;
   flex: 1;
+  font-size: 1rem;
 }
 
 .manager-registration-form .submit-button {
-  padding: 12px 20px;
+  padding: 14px 24px;
   background-color: #4a6cf7;
   color: white;
   border: none;
@@ -94,6 +98,7 @@
   cursor: pointer;
   transition: all 0.2s;
   flex: 1;
+  font-size: 1rem;
 }
 
 .manager-registration-form .cancel-button:hover {
@@ -108,7 +113,6 @@
 @media (max-width: 576px) {
   .manager-registration-form {
     padding: 20px 15px;
-    width: 90%;
   }
   
   .manager-registration-form .form-actions {
@@ -122,5 +126,16 @@
   
   .manager-registration-form h2 {
     font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .manager-registration-form select,
+  .manager-registration-form input {
+    padding: 10px 12px;
+  }
+
+  .manager-registration-form .cancel-button,
+  .manager-registration-form .submit-button {
+    padding: 12px 20px;
   }
 }
