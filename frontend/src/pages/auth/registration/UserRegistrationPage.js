@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext'; // Add this import
+import { useAuth } from '../../../contexts/AuthContext'; 
 import SingleStepForm from './components/SingleStepForm';
 import './UserRegistrationPage.css';
 
@@ -8,7 +8,9 @@ const UserRegistrationPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
-  const { registerUser } = useAuth(); // Use auth context
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [redirectProgress, setRedirectProgress] = useState(0);
+  const { registerUser } = useAuth();
   
   // Initial form state - removed height, position, and country
   const initialFormData = {
@@ -42,14 +44,27 @@ const UserRegistrationPage = () => {
       delete formattedData.dobDay;
       delete formattedData.confirmPassword;
       
-      // Use the auth context registerUser method instead of apiClient directly
-      const user = await registerUser(formattedData);
+      // Use the auth context registerUser method
+      const response = await registerUser(formattedData);
       
-      // If successful, the auth context will update with the new user
-      // and we can navigate directly to the dashboard
-      if (user) {
-        navigate('/dashboard');
-      }
+      // Set registration success state
+      setRegistrationSuccess(true);
+      
+      // Show progress bar for redirection
+      const redirectDelay = 2000; // 2 seconds
+      const updateInterval = 50; // Update every 50ms
+      const steps = redirectDelay / updateInterval;
+      let currentStep = 0;
+      
+      const progressInterval = setInterval(() => {
+        currentStep++;
+        setRedirectProgress(Math.min((currentStep / steps) * 100, 100));
+        
+        if (currentStep >= steps) {
+          clearInterval(progressInterval);
+          navigate('/login');
+        }
+      }, updateInterval);
     } catch (error) {
       console.error('Registration error:', error);
       setServerError(
@@ -62,36 +77,54 @@ const UserRegistrationPage = () => {
   };
 
   return (
-    <div className="user-registration-page-container"> {/* Changed from page-bg-light */}
-      <div className="registration-page"> {/* This class can remain if it serves other layout purposes */}
-        <div className="registration-form-container"> {/* Changed from user-registration-page */}
-          <h1>Create Your Account</h1>
-          <SingleStepForm 
-            initialFormData={initialFormData}
-            onSubmit={handleSubmit}
-            loading={loading}
-            serverError={serverError}
-          />
-          
-          <div className="login-redirect">
-            <button 
-              type="button" 
-              className="login-redirect-btn"
-              onClick={() => navigate('/login')}
-            >
-              Already have an account?
-            </button>
-          </div>
+    <div className="user-registration-page-container">
+      <div className="registration-page">
+        <div className="registration-form-container">
+          {registrationSuccess ? (
+            <div className="registration-success">
+              <div className="success-icon">✓</div>
+              <h2>Registration Successful!</h2>
+              <p>Your account has been created successfully.</p>
+              <p>Redirecting to login page...</p>
+              <div className="redirect-progress-container">
+                <div 
+                  className="redirect-progress-bar" 
+                  style={{ width: `${redirectProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1>Create Your Account</h1>
+              <SingleStepForm 
+                initialFormData={initialFormData}
+                onSubmit={handleSubmit}
+                loading={loading}
+                serverError={serverError}
+              />
+              
+              <div className="login-redirect">
+                <button 
+                  type="button" 
+                  className="login-redirect-btn"
+                  onClick={() => navigate('/login')}
+                >
+                  Already have an account?
+                </button>
+              </div>
+            </>
+          )}
         </div>
         
-        {/* Back to Home button outside the registration card */}
-        <button
-          type="button"
-          className="back-to-home-btn"
-          onClick={() => navigate('/')}
-        >
-          ← Back to Home
-        </button>
+        {!registrationSuccess && (
+          <button
+            type="button"
+            className="back-to-home-btn"
+            onClick={() => navigate('/')}
+          >
+            ← Back to Home
+          </button>
+        )}
       </div>
     </div>
   );

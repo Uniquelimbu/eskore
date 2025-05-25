@@ -23,6 +23,8 @@ export function roleIsManager(role) {
  * 4. team.Users   →  [{ id, UserTeam: { role } }, …]
  * 5. team.members →  [{ userId (or id), role }, …]
  * 6. team.managers→  [{ userId (or id) }, …]
+ * 7. team.Player  →  Check if user has associated Player record
+ * 8. team.Manager →  Check if user has associated Manager record
  *
  * @param {object} teamData – raw object returned from /api/teams/:id
  * @param {object} currentUser – authenticated user object
@@ -79,6 +81,43 @@ export function isUserManager(teamData, currentUser) {
   ) {
     return true;
   }
+  
+  // 7. Check if user has a Manager record associated with this team
+  if (teamData.Manager && teamData.Manager.userId === currentUser.id) {
+    return true;
+  }
+  
+  // Not a manager
+  return false;
+}
 
+/**
+ * Determines if the user is a player on the team (has a Player record)
+ * @param {object} teamData - team data object
+ * @param {object} currentUser - current user object
+ * @returns {boolean}
+ */
+export function isUserPlayer(teamData, currentUser) {
+  if (!teamData || !currentUser) return false;
+  
+  // Check team members for player role
+  if (
+    Array.isArray(teamData.members) &&
+    teamData.members.some(m => 
+      (m?.userId ?? m?.id) === currentUser.id && 
+      m.role === 'athlete'
+    )
+  ) {
+    return true;
+  }
+  
+  // Check if user has Player record for this team
+  if (
+    Array.isArray(teamData.Players) &&
+    teamData.Players.some(p => p.userId === currentUser.id)
+  ) {
+    return true;
+  }
+  
   return false;
 }

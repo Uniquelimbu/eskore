@@ -269,14 +269,28 @@ export const AuthProvider = ({ children }) => {
       // Call the unified register API endpoint
       const registerResponse = await authService.registerUser(userData);
 
-      if (registerResponse && registerResponse.success && registerResponse.user) {
-        // Use the user data from registration response
-        dispatch({ type: AUTH_SUCCESS, payload: registerResponse.user });
-        return registerResponse.user; // Return the registered user data
+      // If the registration was successful
+      if (registerResponse && registerResponse.success) {
+        const userObject = registerResponse.user;
+        
+        // If we have valid user data with ID, update auth state
+        if (userObject && userObject.id) {
+          console.log('AuthContext: Registration successful with complete user data');
+          dispatch({ type: AUTH_SUCCESS, payload: userObject });
+        } else {
+          console.log('AuthContext: Registration successful but no complete user data returned');
+          // Just clear loading state without updating auth state
+          dispatch({ type: AUTH_INIT });
+        }
+        
+        // Return the response regardless of user data completeness
+        return registerResponse;
       } else {
+        console.error('AuthContext: Registration response not successful:', registerResponse);
         throw new Error(registerResponse?.message || 'Registration failed');
       }
     } catch (error) {
+      console.error('AuthContext: Registration error:', error);
       dispatch({
         type: AUTH_ERROR,
         payload: error.message || 'Registration failed'

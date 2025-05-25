@@ -593,15 +593,6 @@ input[type="checkbox"].custom-checkbox:checked::after {
   line-height: 1.4;
 }
 
-.consent-link {
-  color: #4a6cf7;
-  text-decoration: none;
-}
-
-.consent-link:hover {
-  text-decoration: underline;
-}
-
 /* Add/update styles for the form row layout */
 .form-row {
   display: flex;
@@ -934,6 +925,66 @@ input[type="date"],
   border-radius: 4px;
   margin-bottom: 20px;
   font-size: 0.9rem;
+}
+
+/* Registration success styling */
+.registration-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.success-icon {
+  background-color: #48BB78;
+  color: white;
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.registration-success h2 {
+  color: #e2e8f0;
+  margin-bottom: 15px;
+}
+
+.registration-success p {
+  color: #a0aec0;
+  margin-bottom: 10px;
+}
+
+/* Redirect progress bar */
+.redirect-progress-container {
+  width: 100%;
+  height: 4px;
+  background-color: #2d3748;
+  border-radius: 2px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.redirect-progress-bar {
+  height: 100%;
+  background-color: #4a6cf7;
+  border-radius: 2px;
+  transition: width 0.05s ease-out;
+}
+
+/* Animate the success icon appearance */
+@keyframes success-appear {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-icon {
+  animation: success-appear 0.5s ease-out forwards;
 }
 
 /* Adjust responsive breakpoint to maintain form integrity on smaller screens */

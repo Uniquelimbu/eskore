@@ -57,6 +57,9 @@ const SearchResults = ({ results, query, type }) => {
         <h3 className="result-title">{highlightMatch(team.name)}</h3>
         <div className="result-details">
           <span className="result-tag team-tag">Team</span>
+          {team.teamIdentifier && (
+            <span className="result-id">{highlightMatch(team.teamIdentifier)}</span>
+          )}
           {team.league && (
             <span className="result-info">{highlightMatch(team.league)}</span>
           )}

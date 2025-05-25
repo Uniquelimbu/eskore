@@ -86,14 +86,35 @@ const authService = {
     return withRetry(async () => {
       try {
         const response = await apiClient.post('/auth/register', userData);
-        if (response && response.success && response.user) {
-          // Store token in localStorage if it's included in the response
+        
+        // Consider registration successful if the server says it was successful,
+        // even if complete user data isn't returned
+        if (response && response.success) {
+          // Extract and sanitize user data if available
+          let userObject = null;
+          if (response.user && response.user.id) {
+            userObject = response.user;
+          }
+          
+          // Store token in localStorage if it's included
           if (response.token) {
             localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(response.user));
+            
+            // Only store user if we have valid data
+            if (userObject) {
+              localStorage.setItem('user', JSON.stringify(userObject));
+            }
           }
-          return response;
+          
+          // Even if user data is incomplete, return success for proper UI flow
+          return {
+            success: true,
+            user: userObject,
+            token: response.token,
+            message: response.message || 'Registration successful!'
+          };
         }
+        
         throw new Error(response?.message || 'Registration failed: Invalid response from server');
       } catch (error) {
         if (error.status === 409 || error.code === 'EMAIL_IN_USE') {

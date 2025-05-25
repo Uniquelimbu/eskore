@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Add missing toast import
+import { toast } from 'react-toastify';
 import apiClient from '../../../../services/apiClient';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
+import ManagerRegistrationForm from '../../../../components/forms/ManagerRegistrationForm';
 import './CreateTeam.css';
 
 const CreateTeam = () => {
@@ -19,6 +20,9 @@ const CreateTeam = () => {
     city: '',
     teamLogo: null
   });
+  const [managerData, setManagerData] = useState(null);
+  const [showManagerForm, setShowManagerForm] = useState(false);
+  const [createdTeamId, setCreatedTeamId] = useState(null);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -179,6 +183,49 @@ const CreateTeam = () => {
     console.error('Error Config:', error.config);
   };
 
+  const handleManagerFormSubmit = async (managerFormData) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Save manager profile data
+      const response = await apiClient.post('/managers', {
+        ...managerFormData,
+        teamId: createdTeamId
+      });
+      
+      if (response && response.success) {
+        toast.success("Manager profile created successfully!");
+        setManagerData(managerFormData);
+        navigateToTeamSpace();
+      } else {
+        console.error('Error creating manager profile:', response);
+        toast.warn("Team created but manager profile couldn't be saved");
+        navigateToTeamSpace();
+      }
+    } catch (error) {
+      console.error('Error saving manager profile:', error);
+      toast.warn("Team created but manager profile couldn't be saved");
+      navigateToTeamSpace();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleManagerFormCancel = () => {
+    // Skip manager profile creation but still navigate to team space
+    navigateToTeamSpace();
+  };
+  
+  const navigateToTeamSpace = () => {
+    if (createdTeamId) {
+      localStorage.setItem('lastTeamId', createdTeamId);
+      navigate(`/teams/${createdTeamId}/space`);
+    } else {
+      console.error("Team ID is missing");
+      setSubmitError("Team was created but navigation failed. Please go to Teams page.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -190,7 +237,7 @@ const CreateTeam = () => {
       setSubmitError(null);
       
       const teamPayload = {
-        name: formData.clubName, // Backend expects 'name'
+        name: formData.clubName,
         abbreviation: formData.abbreviation,
         foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
         city: formData.city,
@@ -208,7 +255,6 @@ const CreateTeam = () => {
           return;
         }
 
-        // FIXED: Removed duplicate /api prefix
         const teamResponse = await apiClient.post('/teams', teamPayload);
         
         console.log("Team creation API response:", teamResponse);
@@ -218,6 +264,7 @@ const CreateTeam = () => {
         }
         
         const teamId = teamResponse.team.id;
+        setCreatedTeamId(teamId);
         
         // If there's a logo, upload it in a separate request
         if (formData.teamLogo) {
@@ -226,7 +273,6 @@ const CreateTeam = () => {
           logoData.append('logo', formData.teamLogo);
           
           try {
-            // FIXED: Removed duplicate /api prefix
             const logoResponse = await apiClient.patch(`/teams/${teamId}/logo`, logoData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
@@ -234,25 +280,15 @@ const CreateTeam = () => {
             });
             console.log("Logo upload API response:", logoResponse);
           } catch (logoError) {
-            // Just log logo upload errors, but continue with team creation
             console.error("Error uploading team logo:", logoError);
             toast.warn("Team created but logo upload failed. You can add a logo later.");
           }
         }
         
-        // First check team response structure
-        console.log("Team response for navigation:", teamResponse);
-
-        // Navigate to the team space - fixed URL here
-        if (teamId) {
-          // Save the team ID to localStorage for consistent navigation
-          localStorage.setItem('lastTeamId', teamId);
-          navigate(`/teams/${teamId}/space`); // Changed from /space/overview to /space
-        } else {
-          console.error("Team ID is missing in the response");
-          setSubmitError("Team was created but navigation failed. Please go to Teams page.");
-          setIsSubmitting(false);
-        }
+        // Show manager registration form instead of directly navigating
+        setShowManagerForm(true);
+        setIsSubmitting(false);
+        
       } catch (error) {
         logErrorDetails(error, formData.teamLogo ? 'team creation or logo upload' : 'team creation');
         
@@ -448,103 +484,114 @@ const CreateTeam = () => {
     <div className="create-team-page-layout">
       <Sidebar />
       <PageLayout className="create-team-page-content" maxWidth="1200px" withPadding={true}>
-        <div className="create-team-header">
-          <h1>Create New Team</h1>
-          <p className="create-team-subtitle">Build your own club from the ground up</p>
-        </div>
-        
-        <div className="create-team-form-container">
-          <div className="stepper">
-            <div className={`step ${activeStep >= 1 ? 'active' : ''} ${activeStep > 1 ? 'completed' : ''}`}>
-              <div className="step-number">1</div>
-              <div className="step-label">Team Identity</div>
-            </div>
-            <div className="step-line step-line-1"></div>
-            <div className={`step ${activeStep >= 2 ? 'active' : ''} ${activeStep > 2 ? 'completed' : ''}`}>
-              <div className="step-number">2</div>
-              <div className="step-label">Team Details</div>
-            </div>
-            <div className="step-line step-line-2"></div>
-            <div className={`step ${activeStep >= 3 ? 'active' : ''}`}>
-              <div className="step-number">3</div>
-              <div className="step-label">Review</div>
-            </div>
+        {showManagerForm ? (
+          <div className="manager-form-overlay">
+            <ManagerRegistrationForm
+              onSubmit={handleManagerFormSubmit}
+              onCancel={handleManagerFormCancel}
+            />
           </div>
-          
-          <form className="create-team-form" onSubmit={handleSubmit}>
-            {renderStepContent()}
-            
-            {submitError && (
-              <div className="submission-error">
-                {submitError}
-              </div>
-            )}
-            
-            <div className="form-actions">
-              {activeStep === 1 && (
-                <>
-                  <div className="spacer">
-                    <button
-                      type="button"
-                      className="btn-prev-step"
-                      onClick={() => navigate('/teams')}
-                    >
-                      Back
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-next-step"
-                    onClick={handleNextStep}
-                  >
-                    Next
-                  </button>
-                </>
-              )}
-              {activeStep > 1 && activeStep < 3 && (
-                <>
-                  <div className="spacer">
-                    <button
-                      type="button"
-                      className="btn-prev-step"
-                      onClick={handlePreviousStep}
-                    >
-                      Back
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-next-step"
-                    onClick={handleNextStep}
-                  >
-                    Next
-                  </button>
-                </>
-              )}
-              {activeStep === 3 && (
-                <>
-                  <div className="spacer">
-                    <button
-                      type="button"
-                      className="btn-prev-step"
-                      onClick={handlePreviousStep}
-                      disabled={isSubmitting}
-                    >
-                      Back
-                    </button>
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn-create-team"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Team'}
-                  </button>
-                </>
-              )}
+        ) : (
+          <>
+            <div className="create-team-header">
+              <h1>Create New Team</h1>
+              <p className="create-team-subtitle">Build your own club from the ground up</p>
             </div>
-          </form>
-        </div>
+            
+            <div className="create-team-form-container">
+              <div className="stepper">
+                <div className={`step ${activeStep >= 1 ? 'active' : ''} ${activeStep > 1 ? 'completed' : ''}`}>
+                  <div className="step-number">1</div>
+                  <div className="step-label">Team Identity</div>
+                </div>
+                <div className="step-line step-line-1"></div>
+                <div className={`step ${activeStep >= 2 ? 'active' : ''} ${activeStep > 2 ? 'completed' : ''}`}>
+                  <div className="step-number">2</div>
+                  <div className="step-label">Team Details</div>
+                </div>
+                <div className="step-line step-line-2"></div>
+                <div className={`step ${activeStep >= 3 ? 'active' : ''}`}>
+                  <div className="step-number">3</div>
+                  <div className="step-label">Review</div>
+                </div>
+              </div>
+              
+              <form className="create-team-form" onSubmit={handleSubmit}>
+                {renderStepContent()}
+                
+                {submitError && (
+                  <div className="submission-error">
+                    {submitError}
+                  </div>
+                )}
+                
+                <div className="form-actions">
+                  {activeStep === 1 && (
+                    <>
+                      <div className="spacer">
+                        <button
+                          type="button"
+                          className="btn-prev-step"
+                          onClick={() => navigate('/teams')}
+                        >
+                          Back
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-next-step"
+                        onClick={handleNextStep}
+                      >
+                        Next
+                      </button>
+                    </>
+                  )}
+                  {activeStep > 1 && activeStep < 3 && (
+                    <>
+                      <div className="spacer">
+                        <button
+                          type="button"
+                          className="btn-prev-step"
+                          onClick={handlePreviousStep}
+                        >
+                          Back
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-next-step"
+                        onClick={handleNextStep}
+                      >
+                        Next
+                      </button>
+                    </>
+                  )}
+                  {activeStep === 3 && (
+                    <>
+                      <div className="spacer">
+                        <button
+                          type="button"
+                          className="btn-prev-step"
+                          onClick={handlePreviousStep}
+                          disabled={isSubmitting}
+                        >
+                          Back
+                        </button>
+                      </div>
+                      <button
+                        type="submit"
+                        className="btn-create-team"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Creating...' : 'Create Team'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </div>
+          </>
+        )}
       </PageLayout>
     </div>
   );

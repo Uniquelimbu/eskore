@@ -100,6 +100,17 @@
   font-size: 0.85rem;
 }
 
+.result-id {
+  background-color: #1a202c;
+  color: #4a6cf7;
+  font-family: monospace;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-right: 5px;
+}
+
 .highlight {
   background-color: rgba(74, 108, 247, 0.2);
   color: #4a6cf7;

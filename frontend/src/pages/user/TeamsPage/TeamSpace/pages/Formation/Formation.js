@@ -3,7 +3,7 @@ import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import FormationContainer from './components/FormationContainer';
 import apiClient from '../../../../../../services/apiClient';
 import { useAuth } from '../../../../../../contexts/AuthContext';
-import { isUserManager } from '../../../../../../utils/permissions';
+import { isUserManager, isUserPlayer } from '../../../../../../utils/permissions';
 import './Formation.css';
 
 const Formation = () => {
@@ -13,6 +13,7 @@ const Formation = () => {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isManager, setIsManager] = useState(contextIsManager || false);
+  const [isPlayer, setIsPlayer] = useState(false);
   const { user } = useAuth();
   
   console.log('Formation: Initial context values:', { 
@@ -21,41 +22,48 @@ const Formation = () => {
     userId: user?.id
   });
 
-  // Double check manager status
+  // Verify user roles
   useEffect(() => {
-    const verifyManagerStatus = async () => {
+    const verifyUserRoles = async () => {
       try {
         if (user && teamId) {
-          console.log('Formation: Verifying manager status for team', teamId);
+          console.log('Formation: Verifying user roles for team', teamId);
           
           // Get team data directly if not provided in context
+          let isMgr = contextIsManager;
+          let isPlyr = false;
+          
           if (!contextTeam || contextIsManager === undefined) {
             const teamResponse = await apiClient.get(`/api/teams/${teamId}`);
             
             if (teamResponse && teamResponse.id) {
-              const isMgr = isUserManager(teamResponse, user);
-              console.log(`Formation: Determined manager status: ${isMgr}`);
+              isMgr = isUserManager(teamResponse, user);
+              isPlyr = isUserPlayer(teamResponse, user);
+              
+              console.log(`Formation: Determined roles - manager: ${isMgr}, player: ${isPlyr}`);
               setIsManager(isMgr);
+              setIsPlayer(isPlyr);
             }
           } else {
-            // Use the context value if available
+            // Use the context values if available but also check player status
             setIsManager(!!contextIsManager);
-            console.log(`Formation: Using context manager status: ${contextIsManager}`);
+            
+            // Determine if user is a player
+            const isPlayerInTeam = isUserPlayer(contextTeam, user);
+            setIsPlayer(isPlayerInTeam);
+            
+            console.log(`Formation: Using context/check - manager: ${contextIsManager}, player: ${isPlayerInTeam}`);
           }
         }
       } catch (error) {
-        console.error('Error verifying manager status:', error);
-        // If we can't verify, we'll fall back to the context value
+        console.error('Error verifying user roles:', error);
+        // If we can't verify, we'll fall back to the context value for manager
+        // and assume not a player
+        setIsPlayer(false);
       }
     };
     
-    // If team creator or already have manager status, set it directly
-    if (contextIsManager) {
-      setIsManager(true);
-      console.log('Formation: Using manager status from context:', contextIsManager);
-    } else {
-      verifyManagerStatus();
-    }
+    verifyUserRoles();
   }, [teamId, user, contextTeam, contextIsManager]);
 
   useEffect(() => {
@@ -63,15 +71,19 @@ const Formation = () => {
     const fetchPlayers = async () => {
       try {
         setLoading(true);
-        // API call should go here instead of mock data
-        // Example:
-        // const response = await apiClient.get(`/api/teams/${teamId}/players`);
-        // setPlayers(response.data);
+        // Get players with their associated player details
+        const response = await apiClient.get(`/teams/${teamId}/players`);
         
-        // Temporary empty array until API integration
-        setPlayers([]);
+        if (response && Array.isArray(response.players)) {
+          setPlayers(response.players);
+          console.log('Formation: Fetched player data:', response.players.length);
+        } else {
+          setPlayers([]);
+          console.warn('Formation: Invalid or empty player response');
+        }
       } catch (error) {
         console.error('Error fetching player data:', error);
+        setPlayers([]);
       } finally {
         setLoading(false);
       }
@@ -92,11 +104,16 @@ const Formation = () => {
     }
   }, [user, contextTeam, isManager]);
 
-  console.log('Formation: Final manager status before render:', isManager);
+  console.log('Formation: Final roles before render - manager:', isManager, 'player:', isPlayer);
 
   if (loading) {
     return <div className="formation-loading">Loading formation...</div>;
   }
+
+  // View mode - either manager, player, or viewer
+  let viewMode = 'viewer';
+  if (isManager) viewMode = 'manager';
+  else if (isPlayer) viewMode = 'player';
 
   return (
     <div className="formation-page">
@@ -104,13 +121,19 @@ const Formation = () => {
         <button className="back-button" onClick={handleBack}>
           &larr; Back
         </button>
-        <h1 className="formation-title">Formation {isManager ? '(Manager View)' : '(Viewer)'}</h1>
+        <h1 className="formation-title">
+          Formation 
+          {viewMode === 'manager' && ' (Manager View)'}
+          {viewMode === 'player' && ' (Player View)'}
+          {viewMode === 'viewer' && ' (Viewer)'}
+        </h1>
         <div className="header-spacer"></div> {/* Empty div for flex alignment */}
       </div>
       <div className="formation-content">
         <FormationContainer 
           teamId={teamId} 
-          isManager={isManager} 
+          isManager={isManager}
+          viewMode={viewMode}
           players={players} 
         />
       </div>

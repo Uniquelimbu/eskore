@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import apiClient from '../../../../../../services/apiClient';
+import JoinTeamDialog from '../../../../../../components/dialogs/JoinTeamDialog';
+import { useAuth } from '../../../../../../contexts/AuthContext';
 import './Squad.css';
 
 const Squad = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { isManager } = useOutletContext() || {}; // Get isManager from outlet context
+  const { user } = useAuth();
   
   const [managers, setManagers] = useState([]);
   const [athletes, setAthletes] = useState([]);
@@ -16,8 +19,25 @@ const Squad = () => {
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('athlete');
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [team, setTeam] = useState(null);
   
   console.log('Squad: Is user a manager?', isManager);
+  
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const teamResponse = await apiClient.get(`/teams/${teamId}`);
+        setTeam(teamResponse);
+      } catch (err) {
+        console.error('Error fetching team:', err);
+        setError('Failed to load team information');
+      }
+    };
+    
+    fetchTeam();
+  }, [teamId]);
   
   useEffect(() => {
     const fetchSquad = async () => {
@@ -27,7 +47,13 @@ const Squad = () => {
         const membersResponse = await apiClient.get(`/teams/${teamId}/members`);
         console.log('Squad: Members fetched:', membersResponse);
         
+        // Check if current user is a member
         if (membersResponse && membersResponse.members && Array.isArray(membersResponse.members)) {
+          const userIsMember = membersResponse.members.some(
+            member => member.userId === user.id || member.id === user.id
+          );
+          setIsMember(userIsMember);
+          
           // Categorize members by role
           const managerMembers = membersResponse.members.filter(m => 
             m.role === 'manager' || m.role === 'assistant_manager');
@@ -57,10 +83,48 @@ const Squad = () => {
     };
     
     fetchSquad();
-  }, [teamId]);
+  }, [teamId, user.id]);
   
   const handleAddMember = () => {
     setShowAddMemberForm(true);
+  };
+  
+  const handleJoinTeamClick = () => {
+    setShowJoinModal(true);
+  };
+  
+  const handleJoinTeamSubmit = async (joinData) => {
+    try {
+      // First, join the team
+      const joinResponse = await apiClient.post(`/teams/${teamId}/members`, {
+        role: joinData.role
+      });
+      
+      if (joinResponse && joinResponse.success) {
+        // If player data was provided, create player profile
+        if (joinData.playerData) {
+          const playerResponse = await apiClient.post('/players', {
+            ...joinData.playerData,
+            teamId
+          });
+          
+          if (!playerResponse || !playerResponse.success) {
+            console.error('Player profile creation failed:', playerResponse);
+            // Continue anyway as the team join was successful
+          }
+        }
+        
+        // Close the dialog and refresh the page
+        setShowJoinModal(false);
+        window.location.reload(); // Refresh to show updated UI
+      } else {
+        console.error('Team join failed:', joinResponse);
+        setError('Failed to join team. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error joining team:', err);
+      setError('Failed to join team: ' + (err.message || 'Unknown error'));
+    }
   };
   
   const handleRemoveMember = (memberId) => {
@@ -100,11 +164,18 @@ const Squad = () => {
           &larr; Back
         </button>
         <h2>Squad</h2>
-        {isManager && (
-          <button className="add-member-btn" onClick={handleAddMember}>
-            Add Member
-          </button>
-        )}
+        <div className="squad-actions">
+          {isManager && (
+            <button className="add-member-btn" onClick={handleAddMember}>
+              Add Member
+            </button>
+          )}
+          {!isMember && !isManager && (
+            <button className="join-team-btn" onClick={handleJoinTeamClick}>
+              Join Team
+            </button>
+          )}
+        </div>
       </div>
       
       {showAddMemberForm && (
@@ -143,6 +214,14 @@ const Squad = () => {
         </div>
       )}
       
+      {showJoinModal && team && (
+        <JoinTeamDialog
+          team={team}
+          onJoin={handleJoinTeamSubmit}
+          onCancel={() => setShowJoinModal(false)}
+        />
+      )}
+      
       <div className="squad-container">
         {managers.length > 0 && (
           <div className="squad-section">
@@ -151,11 +230,14 @@ const Squad = () => {
               {managers.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || member.Player?.profileImageUrl || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
                     <p className="member-role">{member.role}</p>
+                    {member.Manager?.playingStyle && (
+                      <p className="member-style">Style: {member.Manager.playingStyle}</p>
+                    )}
                   </div>
                   {isManager && member.role !== 'manager' && (
                     <button 
@@ -178,12 +260,13 @@ const Squad = () => {
               {athletes.map((member) => (
                 <div key={member.id} className="member-card">
                   <div className="member-avatar">
-                    <img src={member.avatar || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
+                    <img src={member.avatar || member.Player?.profileImageUrl || '/images/default-avatar.png'} alt={`${member.firstName} ${member.lastName}`} />
                   </div>
                   <div className="member-info">
                     <h4>{member.firstName} {member.lastName}</h4>
-                    <p className="member-position">{member.position || 'No position'}</p>
-                    {member.jerseyNumber && <p className="member-jersey">#{member.jerseyNumber}</p>}
+                    <p className="member-position">{member.Player?.position || 'No position'}</p>
+                    {member.Player?.jerseyNumber && <p className="member-jersey">#{member.Player.jerseyNumber}</p>}
+                    {member.Player?.nationality && <p className="member-nationality">{member.Player.nationality}</p>}
                   </div>
                   {isManager && (
                     <button 

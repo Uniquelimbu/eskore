@@ -185,6 +185,19 @@
   background-color: #3a5bd9;
 }
 
+.team-identifier {
+  display: inline-block;
+  background-color: #1a202c;
+  color: #4a6cf7;
+  font-family: monospace;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
 @media (max-width: 992px) {
   .teams-page-layout {
     padding-left: 90px;

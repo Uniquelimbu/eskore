@@ -102,6 +102,7 @@ const TeamSpace = () => {
                 <div className="team-meta">
                   {team?.city && <span>{team.city}</span>}
                   {team?.foundedYear && <span>Est. {team.foundedYear}</span>}
+                  {team?.teamIdentifier && <span className="team-identifier">{team.teamIdentifier}</span>}
                 </div>
               </div>
             </div>

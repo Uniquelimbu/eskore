@@ -121,6 +121,7 @@ const TeamsPage = () => {
                   )}
                 </div>
                 <h3>{team.name}</h3>
+                {team.teamIdentifier && <div className="team-identifier">{team.teamIdentifier}</div>}
                 <p className="team-role">{team.role || 'Member'}</p>
               </div>
             ))}

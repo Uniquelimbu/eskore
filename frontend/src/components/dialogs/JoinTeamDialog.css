@@ -1,0 +1,160 @@
+.join-team-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.join-team-dialog {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  animation: dialogFadeIn 0.3s ease-out;
+}
+
+.join-team-dialog.wide {
+  max-width: 800px;
+}
+
+.join-team-dialog h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.join-team-dialog p {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #666;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.join-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.join-option {
+  flex: 1;
+  background-color: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.join-option:hover {
+  border-color: #4a6cf7;
+  background-color: #f0f4ff;
+  transform: translateY(-4px);
+}
+
+.join-option.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  filter: grayscale(0.5);
+}
+
+.join-option.disabled:hover {
+  transform: none;
+  border-color: #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.option-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+  display: inline-block;
+  background-color: #e0e7ff;
+  width: 72px;
+  height: 72px;
+  line-height: 72px;
+  border-radius: 50%;
+  color: #4a6cf7;
+}
+
+.player-icon {
+  background-color: #e0f2fe;
+  color: #0ea5e9;
+}
+
+.staff-icon {
+  background-color: #f3e8ff;
+  color: #9333ea;
+}
+
+.join-option h3 {
+  margin: 0;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.join-option p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: 12px;
+  right: 0px;
+  background-color: #9333ea;
+  color: white;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 12px 0 0 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

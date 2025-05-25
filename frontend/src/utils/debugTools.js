@@ -37,6 +37,7 @@ export const checkApiEndpoints = () => {
 
 // Test authentication status
 export const checkAuthStatus = async () => {
+  // Get token and user from localStorage
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
   
@@ -90,4 +91,23 @@ export const checkAuthStatus = async () => {
     hasToken: Boolean(token),
     hasUserData: Boolean(user)
   };
+};
+
+// Add a new utility function to validate user data structure
+export const validateUserData = (userData) => {
+  if (!userData) return { valid: false, reason: 'No user data provided' };
+  
+  // Check required fields
+  const requiredFields = ['id', 'email'];
+  const missingFields = requiredFields.filter(field => !userData[field]);
+  
+  if (missingFields.length > 0) {
+    return { 
+      valid: false, 
+      reason: `Missing required fields: ${missingFields.join(', ')}`,
+      userData
+    };
+  }
+  
+  return { valid: true, userData };
 };

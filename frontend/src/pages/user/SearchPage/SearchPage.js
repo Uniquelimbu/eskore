@@ -80,6 +80,7 @@ const SearchPage = () => {
                 name: t.name,
                 league: t.league || '', // placeholder if property exists later
                 country: t.city || '',
+                teamIdentifier: t.teamIdentifier || '', // Add team identifier
                 image: t.logoUrl || `${process.env.PUBLIC_URL}/images/default-team.png`
               }));
               combinedResults.push(...mappedTeams);

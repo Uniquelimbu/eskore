@@ -7,8 +7,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Notifications from './components/ui/Notifications/Notifications';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
-import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [appReady, setAppReady] = useState(false);
@@ -50,12 +50,22 @@ function App() {
               <div className={`App ${appReady ? 'app-ready' : ''}`}>
                 <AppRoutes />
                 <Notifications />
+                <ToastContainer 
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                />
               </div>
             </AuthProvider>
           </NotificationProvider>
         </ThemeProvider>
       </Router>
-      <ToastContainer position="top-right" autoClose={5000} />
     </ErrorBoundary>
   );
 }
