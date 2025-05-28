@@ -1,0 +1,308 @@
+.search-results {
+  margin-top: 20px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.results-header h2 {
+  font-size: 1.4rem;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.results-count {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+/* Change from grid to vertical column layout */
+.results-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Update result card to be a horizontal bar */
+.result-card {
+  display: flex;
+  padding: 10px 16px;  /* Slightly reduced vertical padding */
+  background-color: #232b3a;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: #e2e8f0;
+  border: 1px solid rgba(45, 55, 72, 0.6);
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin-bottom: 2px;
+  height: 52px;  /* Fixed height for consistent row size */
+  box-sizing: border-box;
+}
+
+.result-card:hover {
+  background-color: #2d3748;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* REMOVE this redundant general selector - it's causing conflicts */
+/* DELETE THIS ENTIRE BLOCK
+.team-abbr-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #4a6cf7;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+*/
+
+/* Team logo/image styles just for search results */
+.search-results .result-card .result-image,
+.search-results .result-card .team-image {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-right: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Override any background color settings specifically for search results */
+.search-results .result-card .team-image {
+  background-color: #1a202c !important;
+}
+
+/* Image styling for search results */
+.search-results .result-card .result-image img,
+.search-results .result-card .team-image img {
+  width: 70% !important;
+  height: 70% !important;
+  max-width: 70% !important;
+  max-height: 70% !important;
+  object-fit: contain !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Team abbreviation placeholder styling for SEARCH RESULTS ONLY */
+.search-results .result-card .team-abbr-fallback {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #4a6cf7 !important; /* Primary blue - always override this color */
+  color: #fff !important;
+  font-weight: bold !important;
+  font-size: 0.7rem !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-transform: uppercase !important;
+}
+
+/* General team-abbr-fallback style for consistency across the app */
+.team-abbr-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #4a6cf7; /* Primary blue background */
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Restructure content for improved bar layout */
+.result-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: 0;
+  height: 100%;
+}
+
+.result-title {
+  font-size: 1rem; /* Slightly smaller */
+  font-weight: 600;
+  flex: 1;
+  padding-right: 8px; /* Ensure space between title and details */
+}
+
+.result-details {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Slightly reduced */
+  margin-left: auto;
+  padding-left: 16px; /* Slightly reduced */
+}
+
+.result-tag {
+  background-color: #4a6cf7;
+  color: white;
+  padding: 3px 8px; /* Reduced padding */
+  border-radius: 4px;
+  font-size: 0.75rem; /* Smaller font */
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.team-tag {
+  background-color: #805ad5;
+}
+
+.result-info {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+
+.result-id {
+  background-color: #1a202c;
+  color: #4a6cf7;
+  font-family: monospace;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.highlight {
+  background-color: rgba(74, 108, 247, 0.2);
+  color: #4a6cf7;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .result-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .result-details {
+    margin-left: 0;
+    padding-left: 0;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .result-title {
+    margin-bottom: 4px;
+  }
+  
+  .no-results, .search-empty-state {
+    padding: 30px 20px;
+  }
+}
+
+.no-results {
+  padding: 40px;
+  text-align: center;
+  background-color: #283046;
+  border-radius: 8px;
+  color: #e2e8f0;
+}
+
+.no-results-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.no-results h3 {
+  font-size: 1.4rem;
+  margin-bottom: 5px;
+}
+
+.no-results p {
+  color: #a0aec0;
+  margin-bottom: 20px;
+}
+
+.search-suggestions {
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.search-suggestions p {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.search-suggestions ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  color: #a0aec0;
+}
+
+.search-empty-state {
+  padding: 60px 40px;
+  text-align: center;
+  background-color: #283046;
+  border-radius: 8px;
+}
+
+.empty-state-icon {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.search-empty-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.search-empty-state p {
+  color: #a0aec0;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Team abbreviation fallback display */
+.team-abbr-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #4a6cf7; /* Primary blue background */
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.8rem; /* Smaller font */
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+}

@@ -48,28 +48,47 @@ const SearchResults = ({ results, query, type }) => {
   );
   
   // Render a single team result card
-  const renderTeamCard = (team) => (
-    <Link to={`/team/${team.id}`} className="result-card" key={`team-${team.id}`}>
-      <div className="result-image team-image">
-        <img src={team.image} alt={team.name} />
-      </div>
-      <div className="result-content">
-        <h3 className="result-title">{highlightMatch(team.name)}</h3>
-        <div className="result-details">
-          <span className="result-tag team-tag">Team</span>
-          {team.teamIdentifier && (
-            <span className="result-id">{highlightMatch(team.teamIdentifier)}</span>
-          )}
-          {team.league && (
-            <span className="result-info">{highlightMatch(team.league)}</span>
-          )}
-          {team.country && (
-            <span className="result-info">{highlightMatch(team.country)}</span>
+  const renderTeamCard = (team) => {
+    // Create abbreviation display fallback for when image is missing
+    const hasValidImage = team.image && !team.image.includes('undefined') && !team.image.endsWith('/null');
+    const abbr = team.abbreviation || team.name?.substring(0, 3).toUpperCase() || 'TM';
+    
+    return (
+      // Changed the link to go to the team overview page instead of directly to team space
+      <Link to={`/team-overview/${team.id}`} className="result-card" key={`team-${team.id}`}>
+        <div className="result-image team-image">
+          {hasValidImage ? (
+            <img 
+              src={team.image} 
+              alt={team.name} 
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentNode.classList.add('team-abbr-fallback');
+                e.target.parentNode.innerText = abbr;
+              }} 
+            />
+          ) : (
+            <div className="team-abbr-fallback">{abbr}</div>
           )}
         </div>
-      </div>
-    </Link>
-  );
+        <div className="result-content">
+          <h3 className="result-title">{highlightMatch(team.name)}</h3>
+          <div className="result-details">
+            <span className="result-tag team-tag">Team</span>
+            {team.abbreviation && (
+              <span className="result-id">{highlightMatch(team.abbreviation)}</span>
+            )}
+            {team.league && (
+              <span className="result-info">{highlightMatch(team.league)}</span>
+            )}
+            {team.city && (
+              <span className="result-info">{highlightMatch(team.city)}</span>
+            )}
+          </div>
+        </div>
+      </Link>
+    );
+  };
   
   // Determine what to render based on results
   if (results.length === 0 && query) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import SearchFilters from './components/SearchFilters';
-import SearchResults from './components/SearchResults';
+import SearchFilters from './components/SearchFilters/SearchFilters'; // Updated path
+import SearchResults from './components/SearchResults/SearchResults'; // Updated path
 import Loading from '../../../components/ui/Loading/Loading';
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import './SearchPage.css';
@@ -64,7 +64,6 @@ const SearchPage = () => {
         // If teams are part of the requested type, query backend search API
         if (currentType === 'all' || currentType === 'team') {
           try {
-            // Use a different endpoint to avoid route conflict with /teams/:id
             const res = await apiClient.get(`/teams-search`, {
               params: {
                 q: currentQuery.trim(),
@@ -78,15 +77,19 @@ const SearchPage = () => {
                 id: t.id,
                 type: 'team',
                 name: t.name,
-                league: t.league || '', // placeholder if property exists later
-                country: t.city || '',
-                teamIdentifier: t.teamIdentifier || '', // Add team identifier
-                image: t.logoUrl || `${process.env.PUBLIC_URL}/images/default-team.png`
+                league: t.league || '',
+                city: t.city || '',
+                abbreviation: t.abbreviation || '',
+                teamIdentifier: t.teamIdentifier || '',
+                image: t.logoUrl || `${process.env.PUBLIC_URL}/images/team-placeholder.png`
               }));
               combinedResults.push(...mappedTeams);
             }
           } catch (teamErr) {
-            console.error('Error searching teams:', teamErr);
+            // Only log canceled requests, don't display error to user
+            if (teamErr.message !== 'canceled') {
+              console.error('Error searching teams:', teamErr);
+            }
             // Continue with other search types even if team search fails
           }
         }
@@ -96,10 +99,31 @@ const SearchPage = () => {
           combinedResults.push(...generateMockAthleteResults(currentQuery));
         }
 
+        // Sort results by relevance (exact name matches first, then contains name)
+        combinedResults.sort((a, b) => {
+          const aName = a.name.toLowerCase();
+          const bName = b.name.toLowerCase();
+          const query = currentQuery.toLowerCase();
+          
+          // Exact matches come first
+          if (aName === query && bName !== query) return -1;
+          if (bName === query && aName !== query) return 1;
+          
+          // Starts with query comes next
+          if (aName.startsWith(query) && !bName.startsWith(query)) return -1;
+          if (bName.startsWith(query) && !aName.startsWith(query)) return 1;
+          
+          // Default to alphabetical
+          return aName.localeCompare(bName);
+        });
+
         setSearchResults(combinedResults);
       } catch (err) {
-        console.error('Error fetching search results:', err);
-        setError('Failed to fetch search results. Please try again.');
+        // Don't show error for canceled requests
+        if (err.message !== 'canceled') {
+          console.error('Error fetching search results:', err);
+          setError('Failed to fetch search results. Please try again.');
+        }
         setSearchResults([]);
       } finally {
         abortRef.current = null;

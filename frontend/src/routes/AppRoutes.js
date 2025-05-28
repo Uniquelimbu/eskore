@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import HomePage from '../pages/public/HomePage/HomePage';
 import LoginPage from '../pages/auth/LoginPage/LoginPage';
 import UserRegistrationPage from '../pages/auth/registration/UserRegistrationPage';
-import NotFoundPage from '../pages/public/NotFoundPage/NotFoundPage'; // Fixed path
+import NotFoundPage from '../pages/public/NotFoundPage/NotFoundPage'; 
 import DashboardPage from '../pages/user/DashboardPage/DashboardPage';
 import ProfilePage from '../pages/user/ProfilePage/ProfilePage';
 import SearchPage from '../pages/user/SearchPage/SearchPage';
@@ -12,17 +12,17 @@ import TeamsPage from '../pages/user/TeamsPage/TeamsPage';
 import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
 import TournamentPage from '../pages/user/TournamentPage/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/TournamentDetailsPage';
-// Fix import path for AdminDashboard
 import AdminDashboard from '../pages/admin/Dashboard/index.js';
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
 import NewsPage from '../pages/user/NewsPage';
 import AboutPage from '../pages/public/AboutPage';
-import TeamSpace from '../pages/user/TeamsPage/TeamSpace/TeamSpace'; // Import TeamSpace
-import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings'; // Import Settings component
-import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad'; // Import Squad component
-import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation'; // Import Formation component
-import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar'; // Import Calendar component
-import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfilePage.js'; // Import EditProfilePage
+import TeamSpace from '../pages/user/TeamsPage/TeamSpace/TeamSpace'; 
+import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings'; 
+import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad'; 
+import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation'; 
+import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar';
+import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfilePage.js';
+import TeamOverviewPage from '../pages/user/TeamOverviewPage'; // Import TeamOverviewPage
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -94,6 +94,9 @@ const AppRoutes = () => {
         <Route path="/tournaments" element={<TournamentPage />} />
         <Route path="/tournaments/:id" element={<TournamentDetailsPage />} />
         <Route path="/news" element={<NewsPage />} /> {/* Add the News route */}
+        
+        {/* Add the TeamOverviewPage route */}
+        <Route path="/team-overview/:teamId" element={<TeamOverviewPage />} />
       </Route>
 
       {/* Admin routes */}

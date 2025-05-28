@@ -1,16 +1,24 @@
+/* Add CSS variables for consistency */
+:root {
+  --teams-bg-color: #1a202c;
+  --teams-card-bg: #232b3a;
+  --teams-text-light: #e2e8f0;
+  --teams-text-muted: #a0aec0;
+  --teams-primary: #4a6cf7;
+  --teams-primary-dark: #3a5bd9;
+}
+
 .teams-page-layout {
   display: flex;
   width: 100%;
   min-height: 100vh;
-  background-color: #1a202c;
-  /* Remove padding-left: 260px; - now handled by AuthenticatedLayout */
+  background-color: var(--teams-bg-color);
   box-sizing: border-box;
 }
 
 .teams-page-content {
   flex: 1;
-  /* Remove padding - now handled by PageLayout */
-  color: #e2e8f0;
+  color: var(--teams-text-light);
   box-sizing: border-box;
   min-width: 0;
 }
@@ -81,8 +89,9 @@
   gap: 20px;
 }
 
+/* Rename to be more specific: team-card → teams-team-card */
 .team-card {
-  background-color: #232b3a;
+  background-color: var(--teams-card-bg);
   border-radius: 10px;
   overflow: hidden;
   text-decoration: none;
@@ -95,19 +104,29 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Rename to be more specific: team-image → teams-card-image */
 .team-image {
   height: 160px;
-  background-color: #1a202c;
+  background-color: var(--teams-bg-color);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.team-image img {
-  max-width: 100%;
-  max-height: 100%;
+/* Add more specificity to avoid conflicts with search results */
+.teams-grid .team-image {
+  height: 160px;
+  background-color: var(--teams-bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teams-grid .team-image img {
+  max-width: 80%;  /* Reduced from 100% for better appearance */
+  max-height: 80%;  /* Reduced from 100% for better appearance */
   object-fit: contain;
-  padding: 20px;
+  padding: 10px;  /* Reduced from 20px */
 }
 
 .team-info {
@@ -117,13 +136,13 @@
 .team-info h3 {
   margin: 0 0 12px 0;
   font-size: 1.3rem;
-  color: #e2e8f0;
+  color: var(--teams-text-light);
 }
 
 .team-meta {
   display: flex;
   justify-content: space-between;
-  color: #a0aec0;
+  color: var(--teams-text-muted);
   font-size: 0.9rem;
 }
 
@@ -187,8 +206,8 @@
 
 .team-identifier {
   display: inline-block;
-  background-color: #1a202c;
-  color: #4a6cf7;
+  background-color: var(--teams-bg-color);
+  color: var(--teams-primary);
   font-family: monospace;
   font-weight: bold;
   padding: 2px 6px;
@@ -196,6 +215,52 @@
   margin-top: 5px;
   margin-bottom: 5px;
   font-size: 0.9em;
+}
+
+/* REMOVE these conflicting styles */
+/* DELETE THIS ENTIRE BLOCK 
+.search-results .team-image,
+.result-card .team-image {
+  height: auto !important;
+  background-color: #1a202c !important;
+}
+
+.search-results .team-image img,
+.result-card .team-image img {
+  padding: 0 !important;
+  max-width: 70% !important;
+  max-height: 70% !important;
+}
+*/
+
+/* Add a more specific selector for team cards in the teams grid */
+.teams-grid .team-card .team-image {
+  height: 160px;
+  background-color: var(--teams-bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teams-grid .team-card .team-image img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  padding: 10px;
+}
+
+/* Define the team abbreviation fallback ONLY for team cards */
+.teams-grid .team-card .team-abbr-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #4a6cf7; /* Primary blue background */
+  color: #fff;
+  font-weight: bold;
+  font-size: 2rem; /* Larger for team grid view */
+  text-transform: uppercase;
 }
 
 @media (max-width: 992px) {
