@@ -305,7 +305,8 @@ exports.login = async (req, res) => {
 exports.registerUser = async (req, res) => {
   let {
     firstName, lastName, middleName, email, password, dob,
-    country, height, position, roles = []
+    country, roles = []
+    // Removed height and position from destructuring
   } = req.body;
   
   // Normalize email
@@ -333,8 +334,7 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       dob,
       country,
-      height,
-      position,
+      // Removed height and position fields
       role: 'user' // Default role
     });
     

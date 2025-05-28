@@ -91,14 +91,6 @@ User.init({
     type: DataTypes.STRING,
     allowNull: true
   },
-  height: {
-    type: DataTypes.FLOAT,
-    allowNull: true
-  },
-  position: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
   role: {
     type: DataTypes.STRING,
     defaultValue: 'user'
@@ -118,14 +110,6 @@ User.init({
   },
   bio: {
     type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  socialLinks: { // Store as JSON: e.g., { twitter: 'url', facebook: 'url' }
-    type: DataTypes.JSONB, // Or DataTypes.JSON if JSONB is not supported
-    allowNull: true,
-  },
-  gameSpecificStats: { // Store as JSON: e.g., { valorant: { rank: 'Diamond', mainAgent: 'Jett' } }
-    type: DataTypes.JSONB, // Or DataTypes.JSON
     allowNull: true,
   },
 }, {

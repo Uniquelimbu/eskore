@@ -6,6 +6,7 @@ const { validate, schemas } = require('../../validation');
 const Team = require('../../models/Team');
 const UserTeam = require('../../models/UserTeam');
 const User = require('../../models/User');
+const Manager = require('../../models/Manager'); // Add Manager model import
 const { sendSafeJson } = require('../../utils/safeSerializer');
 const log = require('../../utils/log');
 const sequelize = require('../../config/db');
@@ -130,6 +131,10 @@ router.post('/',
         teamId: team.id,
         role: 'manager'
       }, { transaction: t });
+      
+      // 4. MODIFIED: Don't create a default Manager record here
+      // Leave manager record creation to the dedicated manager form
+      // This prevents duplicates and allows the user to enter proper data
       
       // Commit the transaction
       await t.commit();

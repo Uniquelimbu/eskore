@@ -54,8 +54,6 @@ async function createUsers() {
       firstName: 'Alex',
       lastName: 'Johnson',
       dob: '2000-03-20',
-      position: 'FW',
-      height: 180,
       country: 'Canada',
       role: 'user',
       status: 'active'
@@ -66,8 +64,6 @@ async function createUsers() {
       firstName: 'Sam',
       lastName: 'Wilson',
       dob: '2001-07-12',
-      position: 'MF',
-      height: 175,
       country: 'Australia',
       role: 'user',
       status: 'active'
@@ -78,8 +74,6 @@ async function createUsers() {
       firstName: 'Jamie',
       lastName: 'Taylor',
       dob: '1999-11-05',
-      position: 'DF',
-      height: 185,
       country: 'United States',
       role: 'user',
       status: 'active'
@@ -90,8 +84,6 @@ async function createUsers() {
       firstName: 'Morgan',
       lastName: 'Lee',
       dob: '2002-02-28',
-      position: 'GK',
-      height: 190,
       country: 'South Korea',
       role: 'user',
       status: 'active'

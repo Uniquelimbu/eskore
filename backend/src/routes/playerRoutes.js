@@ -37,21 +37,13 @@ router.post('/',
     body('jerseyNumber')
       .optional()
       .isString()
-      .withMessage('Jersey number must be a string'),
-    body('dateOfBirth')
-      .optional()
-      .isDate()
-      .withMessage('Date of birth must be a valid date'),
-    body('nationality')
-      .optional()
-      .isString()
-      .withMessage('Nationality must be a string')
+      .withMessage('Jersey number must be a string')
   ]),
   catchAsync(async (req, res) => {
     log.info(`PLAYER (POST /): Creating player profile for user ${req.user.userId}`);
     const { 
       position, height, weight, preferredFoot, 
-      teamId, jerseyNumber, dateOfBirth, nationality 
+      teamId, jerseyNumber 
     } = req.body;
     
     // Check if player profile already exists for this user
@@ -97,9 +89,7 @@ router.post('/',
       height: height || null,
       weight: weight || null,
       preferredFoot: preferredFoot || null,
-      jerseyNumber: jerseyNumber || null,
-      dateOfBirth: dateOfBirth || null,
-      nationality: nationality || null
+      jerseyNumber: jerseyNumber || null
     });
     
     return sendSafeJson(res, {
@@ -197,22 +187,13 @@ router.put('/:id',
     body('jerseyNumber')
       .optional()
       .isString()
-      .withMessage('Jersey number must be a string'),
-    body('dateOfBirth')
-      .optional()
-      .isDate()
-      .withMessage('Date of birth must be a valid date'),
-    body('nationality')
-      .optional()
-      .isString()
-      .withMessage('Nationality must be a string')
+      .withMessage('Jersey number must be a string')
   ]),
   catchAsync(async (req, res) => {
     log.info(`PLAYER (PUT /:id): Updating player profile ${req.params.id}`);
     const { id } = req.params;
     const { 
-      position, height, weight, preferredFoot,
-      jerseyNumber, dateOfBirth, nationality 
+      position, height, weight, preferredFoot, jerseyNumber 
     } = req.body;
     
     const player = await Player.findByPk(id);
@@ -232,9 +213,7 @@ router.put('/:id',
       height: height !== undefined ? height : player.height,
       weight: weight !== undefined ? weight : player.weight,
       preferredFoot: preferredFoot || player.preferredFoot,
-      jerseyNumber: jerseyNumber || player.jerseyNumber,
-      dateOfBirth: dateOfBirth || player.dateOfBirth,
-      nationality: nationality || player.nationality
+      jerseyNumber: jerseyNumber || player.jerseyNumber
     });
     
     return sendSafeJson(res, {

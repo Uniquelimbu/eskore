@@ -44,8 +44,8 @@ router.get('/:id/players',
           required: true, // Only include users who have player profiles
           attributes: [
             'id', 'position', 'height', 'weight', 
-            'preferredFoot', 'jerseyNumber', 
-            'dateOfBirth', 'nationality', 'profileImageUrl'
+            'preferredFoot', 'jerseyNumber'
+            // Removed 'dateOfBirth', 'nationality', 'profileImageUrl' fields
           ]
         }
       ]
@@ -64,10 +64,8 @@ router.get('/:id/players',
         height: playerData.Player.height,
         weight: playerData.Player.weight,
         preferredFoot: playerData.Player.preferredFoot,
-        jerseyNumber: playerData.Player.jerseyNumber,
-        dateOfBirth: playerData.Player.dateOfBirth,
-        nationality: playerData.Player.nationality,
-        profileImageUrl: playerData.Player.profileImageUrl
+        jerseyNumber: playerData.Player.jerseyNumber
+        // Removed dateOfBirth, nationality, profileImageUrl fields
       };
     });
 

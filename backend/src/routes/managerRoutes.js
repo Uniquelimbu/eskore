@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
-const { validate } = require('../validation');
-const { body, param } = require('express-validator');
-const { Manager, User, Team } = require('../models');
+const { validate } = require('../validation'); // Add missing import for validate function
+const { body, param } = require('express-validator'); // Add missing import for express-validator
+const Manager = require('../models/Manager');
+const User = require('../models/User');
+const Team = require('../models/Team');
+const UserTeam = require('../models/UserTeam');
 const log = require('../utils/log');
 const { sendSafeJson } = require('../utils/safeSerializer');
+const sequelize = require('../config/db');
+const { Op } = require('sequelize');
 
 /**
  * POST /api/managers
@@ -14,63 +19,101 @@ const { sendSafeJson } = require('../utils/safeSerializer');
  */
 router.post('/',
   requireAuth,
-  validate([
-    body('playingStyle')
-      .isIn(['possession', 'counter-attack', 'high-press', 'defensive', 'balanced'])
-      .withMessage('Playing style must be valid'),
-    body('preferredFormation')
-      .isString()
-      .withMessage('Preferred formation must be a string'),
-    body('experience')
-      .optional()
-      .isInt({ min: 0, max: 50 })
-      .withMessage('Experience must be between 0 and 50 years'),
-    body('teamId')
-      .optional()
-      .isInt()
-      .withMessage('Team ID must be an integer')
-  ]),
   catchAsync(async (req, res) => {
-    log.info(`MANAGER (POST /): Creating manager profile for user ${req.user.userId}`);
-    const { playingStyle, preferredFormation, experience, teamId } = req.body;
-    
-    // Check if manager profile already exists for this user
-    const existingManager = await Manager.findOne({
-      where: { userId: req.user.userId }
-    });
-    
-    if (existingManager) {
-      throw new ApiError('Manager profile already exists for this user', 409, 'RESOURCE_EXISTS');
-    }
-    
-    // If teamId is provided, verify the user is a manager of this team
-    if (teamId) {
-      const userTeam = await UserTeam.findOne({
-        where: {
-          userId: req.user.userId,
-          teamId,
-          role: 'manager'
-        }
+    // Start transaction
+    const t = await sequelize.transaction();
+
+    try {
+      // Log incoming request for debugging
+      log.info('Manager POST request received:', { 
+        user: req.user ? req.user.userId || req.user.id : 'unknown',
+        body: req.body
       });
       
-      if (!userTeam) {
-        throw new ApiError('You are not a manager of this team', 403, 'FORBIDDEN');
+      // Extract data from request
+      const { playingStyle, preferredFormation, teamId } = req.body;
+      const userId = req.user ? req.user.userId || req.user.id : null;
+      
+      // Check if user is authenticated
+      if (!userId) {
+        await t.rollback();
+        throw new ApiError('User not authenticated', 401, 'UNAUTHORIZED');
       }
+
+      // Normalize experience to a number
+      const experience = typeof req.body.experience === 'number' ? 
+                        req.body.experience : 
+                        (req.body.experience ? parseInt(req.body.experience, 10) || 0 : 0);
+      
+      // Verify team membership if teamId is provided
+      if (teamId) {
+        const userTeam = await UserTeam.findOne({
+          where: { userId, teamId },
+          transaction: t
+        });
+        
+        if (!userTeam) {
+          await t.rollback();
+          throw new ApiError('You are not a member of this team', 403, 'FORBIDDEN');
+        }
+      }
+      
+      // Check for existing manager for this user
+      const existingManager = await Manager.findOne({
+        where: { userId },
+        transaction: t
+      });
+      
+      let manager;
+      if (existingManager) {
+        // Enhance logging to track the pattern
+        log.info(`Found existing manager record ID ${existingManager.id} for user ${userId}`);
+        
+        try {
+          // Update existing manager
+          log.info(`Updating existing manager record for user ${userId}`);
+          await existingManager.update({
+            playingStyle: playingStyle || existingManager.playingStyle,
+            preferredFormation: preferredFormation || existingManager.preferredFormation,
+            experience,
+            teamId: teamId || existingManager.teamId
+          }, { transaction: t });
+          
+          manager = existingManager;
+        } catch (updateError) {
+          log.error(`Error updating manager record: ${updateError.message}`, updateError);
+          throw updateError;
+        }
+      } else {
+        // Create new manager
+        log.info(`Creating new manager record for user ${userId}`);
+        manager = await Manager.create({
+          userId,
+          teamId: teamId || null,
+          playingStyle: playingStyle || 'balanced',
+          preferredFormation: preferredFormation || '4-3-3',
+          experience
+        }, { transaction: t });
+      }
+      
+      // Commit the transaction
+      await t.commit();
+      
+      // Return the result
+      return sendSafeJson(res, {
+        success: true,
+        manager
+      });
+    } catch (error) {
+      // Rollback transaction on error
+      await t.rollback();
+      
+      // Log the error
+      log.error('Error in manager creation:', error);
+      
+      // Rethrow to be handled by error middleware
+      throw error;
     }
-    
-    // Create manager profile
-    const manager = await Manager.create({
-      userId: req.user.userId,
-      teamId: teamId || null,
-      playingStyle,
-      preferredFormation,
-      experience: experience || null
-    });
-    
-    return sendSafeJson(res, {
-      success: true,
-      manager
-    });
   })
 );
 

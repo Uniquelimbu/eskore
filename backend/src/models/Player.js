@@ -27,10 +27,7 @@ module.exports = (sequelize, DataTypes) => {
     height: DataTypes.DECIMAL(5, 2),
     weight: DataTypes.DECIMAL(5, 2),
     preferredFoot: DataTypes.ENUM('left', 'right', 'both'),
-    jerseyNumber: DataTypes.STRING(10),
-    dateOfBirth: DataTypes.DATE,
-    nationality: DataTypes.STRING(100),
-    profileImageUrl: DataTypes.STRING
+    jerseyNumber: DataTypes.STRING(10)
   }, {
     sequelize,
     modelName: 'Player',

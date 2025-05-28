@@ -43,11 +43,6 @@ module.exports = {
           lastLogin: null,
           profileImageUrl: null,
           bio: 'Regular user account for testing basic user functionality',
-          socialLinks: JSON.stringify({
-            twitter: 'https://twitter.com/eskoredemo',
-            instagram: 'https://instagram.com/eskoredemo'
-          }),
-          gameSpecificStats: JSON.stringify({}),
           createdAt: currentDate,
           updatedAt: currentDate
         },
@@ -61,17 +56,6 @@ module.exports = {
           lastLogin: new Date(currentDate.getTime() - 86400000), // yesterday
           profileImageUrl: 'https://i.pravatar.cc/150?u=test',
           bio: 'Test user account with complete profile for UI testing',
-          socialLinks: JSON.stringify({
-            twitter: 'https://twitter.com/eskoretest',
-            twitch: 'https://twitch.tv/eskoretest'
-          }),
-          gameSpecificStats: JSON.stringify({
-            valorant: {
-              rank: 'Diamond',
-              kd: 1.5,
-              winRate: 0.55
-            }
-          }),
           createdAt: currentDate,
           updatedAt: currentDate
         },
@@ -85,8 +69,6 @@ module.exports = {
           lastLogin: null,
           profileImageUrl: 'https://i.pravatar.cc/150?u=coach',
           bio: 'Coach test account for testing team management features',
-          socialLinks: JSON.stringify({}),
-          gameSpecificStats: JSON.stringify({}),
           createdAt: currentDate,
           updatedAt: currentDate
         },
@@ -95,26 +77,13 @@ module.exports = {
           password: hashedPassword,
           firstName: 'Athlete',
           lastName: 'Player',
+          dob: '1995-06-15',
+          country: 'United States',
           role: 'user',
           status: 'active',
           lastLogin: null,
           profileImageUrl: 'https://i.pravatar.cc/150?u=athlete',
           bio: 'Athlete test account for performance tracking features',
-          socialLinks: JSON.stringify({
-            twitch: 'https://twitch.tv/eskoreathlete'
-          }),
-          gameSpecificStats: JSON.stringify({
-            csgo: {
-              rank: 'Gold Nova',
-              kd: 1.2,
-              accuracy: 0.68
-            },
-            leagueOfLegends: {
-              rank: 'Platinum',
-              winRate: 0.52,
-              mainRole: 'Mid'
-            }
-          }),
           createdAt: currentDate,
           updatedAt: currentDate
         }

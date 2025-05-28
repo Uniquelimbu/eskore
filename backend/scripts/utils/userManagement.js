@@ -27,7 +27,10 @@ async function createTestUser() {
 
     if (existingUser) {
       console.log('Test user exists - updating password...');
-      await existingUser.update({ password: passwordHash });
+      await existingUser.update({ 
+        password: passwordHash,
+        status: 'active' // Ensure account is active
+      });
       console.log('✅ Test user updated successfully!');
       console.log('ID:', existingUser.id);
       console.log('Email: test@example.com');
@@ -35,24 +38,24 @@ async function createTestUser() {
       return;
     }
 
-    // Create a new test user
+    // Create new test user
     const user = await User.create({
-      firstName: 'Test',
-      lastName: 'User',
       email: 'test@example.com',
       password: passwordHash,
+      firstName: 'Test',
+      lastName: 'User',
       dob: '2000-01-01',
-      height: 175,
-      position: 'FW',
       country: 'Canada',
-      role: 'user', // Ensure default role is set
-      status: 'active' // Ensure status is set
+      role: 'user',
+      status: 'active'
     });
 
     console.log('✅ Test user created successfully!');
     console.log('ID:', user.id);
     console.log('Email: test@example.com');
     console.log('Password: testpass123');
+    console.log('\nYou can now log in with these credentials for testing.');
+
   } catch (error) {
     console.error('Error creating/updating test user:', error);
   }
