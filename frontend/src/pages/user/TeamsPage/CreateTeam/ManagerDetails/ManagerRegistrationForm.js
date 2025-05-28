@@ -3,9 +3,9 @@ import './ManagerRegistrationForm.css'; // Make sure to import the CSS
 
 const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
   const [formData, setFormData] = useState({
-    playingStyle: initialValues.playingStyle || '',
-    preferredFormation: initialValues.preferredFormation || '',
-    experience: initialValues.experience || '',
+    playingStyle: initialValues.playingStyle || 'balanced',
+    preferredFormation: initialValues.preferredFormation || '4-3-3',
+    experience: initialValues.experience !== undefined ? initialValues.experience : '',
     ...initialValues
   });
   
@@ -59,8 +59,8 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
       newErrors.preferredFormation = 'Preferred formation is required';
     }
     
-    if (formData.experience) {
-      const exp = parseInt(formData.experience);
+    if (formData.experience !== '') {
+      const exp = parseInt(formData.experience, 10);
       if (isNaN(exp) || exp < 0 || exp > 50) {
         newErrors.experience = 'Experience must be between 0-50 years';
       }
@@ -74,7 +74,13 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      // Convert experience to integer or null if empty
+      const submittedData = {
+        ...formData,
+        experience: formData.experience !== '' ? parseInt(formData.experience, 10) : 0
+      };
+      
+      onSubmit(submittedData);
     }
   };
 

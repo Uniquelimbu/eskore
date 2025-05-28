@@ -167,6 +167,36 @@ export const teamService = {
       throw error;
     }
   },
+  
+  /**
+   * Update or create manager profile for a team
+   * @param {Object} managerData - Manager profile data
+   * @returns {Promise<Object>} The updated manager profile
+   */
+  updateManagerProfile: async (managerData) => {
+    try {
+      // Format the data to ensure consistency
+      const formattedData = {
+        playingStyle: managerData.playingStyle || 'balanced',
+        preferredFormation: managerData.preferredFormation || '4-3-3',
+        experience: managerData.experience !== undefined && managerData.experience !== '' ? 
+                   parseInt(managerData.experience, 10) : 0
+      };
+      
+      // Add teamId if provided
+      if (managerData.teamId) {
+        formattedData.teamId = managerData.teamId;
+      }
+      
+      // Use apiClient instead of direct axios
+      const response = await apiClient.post('/managers', formattedData);
+      
+      return response;
+    } catch (error) {
+      console.error('Error updating manager profile:', error);
+      throw error;
+    }
+  },
 };
 
 export default teamService;

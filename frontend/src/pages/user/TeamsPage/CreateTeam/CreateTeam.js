@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import apiClient from '../../../../services/apiClient';
+import axios from 'axios';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
 import ManagerRegistrationForm from './ManagerDetails';
@@ -187,24 +188,42 @@ const CreateTeam = () => {
   const handleManagerFormSubmit = async (managerFormData) => {
     try {
       setIsSubmitting(true);
+      console.log('Original manager form data:', managerFormData);
       
-      // Save manager profile data
-      const response = await apiClient.post('/managers', {
-        ...managerFormData,
+      // Format data properly
+      const formattedData = {
+        playingStyle: managerFormData.playingStyle || 'balanced',
+        preferredFormation: managerFormData.preferredFormation || '4-3-3',
+        experience: managerFormData.experience !== undefined && managerFormData.experience !== '' ? 
+                    parseInt(managerFormData.experience, 10) : 0,
         teamId: createdTeamId
-      });
+      };
+      
+      console.log('Submitting manager profile with:', formattedData);
+      
+      // Use apiClient instead of direct axios call
+      const response = await apiClient.post('/managers', formattedData);
+      
+      console.log('Manager profile API response:', response);
       
       if (response && response.success) {
         toast.success("Manager profile created successfully!");
-        setManagerData(managerFormData);
-        navigateToTeamSpace();
+        setManagerData(response.manager);
       } else {
-        console.error('Error creating manager profile:', response);
-        toast.warn("Team created but manager profile couldn't be saved");
-        navigateToTeamSpace();
+        console.error('Unexpected response format:', response);
+        toast.warn("Team created but manager profile save was incomplete");
       }
+      navigateToTeamSpace();
     } catch (error) {
       console.error('Error saving manager profile:', error);
+      
+      // Log more detailed error information
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error response headers:', error.response.headers);
+      }
+      
       toast.warn("Team created but manager profile couldn't be saved");
       navigateToTeamSpace();
     } finally {
