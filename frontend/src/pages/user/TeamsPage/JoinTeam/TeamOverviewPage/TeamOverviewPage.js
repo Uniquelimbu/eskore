@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { JoinTeamDialog } from '../TeamsPage/JoinTeam/components';
-import apiClient from '../../../services/apiClient';
-import PageLayout from '../../../components/layout/PageLayout';
-import Loading from '../../../components/ui/Loading/Loading';
+import { JoinTeamDialog } from '../components';
+import apiClient from '../../../../../services/apiClient';
+import PageLayout from '../../../../../components/layout/PageLayout';
+import Loading from '../../../../../components/ui/Loading/Loading';
 import './TeamOverviewPage.css';
 
 const TeamOverviewPage = () => {

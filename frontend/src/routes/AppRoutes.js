@@ -22,7 +22,7 @@ import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad';
 import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation'; 
 import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar';
 import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfilePage.js';
-import TeamOverviewPage from '../pages/user/TeamOverviewPage'; // Import TeamOverviewPage
+import TeamOverviewPage from '../pages/user/TeamsPage/JoinTeam/TeamOverviewPage'; // Fixed import path
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
