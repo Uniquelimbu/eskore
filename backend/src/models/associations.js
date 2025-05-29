@@ -13,6 +13,7 @@ const UserTournament = require('./UserTournament');
 const TeamTournament = require('./TeamTournament');
 const UserMatch = require('./UserMatch');
 const Formation = require('./Formation');
+const Manager = require('./Manager'); // <-- Require Manager model
 
 function setupAssociations() {
   // Existing associations
@@ -114,6 +115,68 @@ function setupAssociations() {
       // Don't throw error to prevent blocking team creation
     }
   });
+
+  // Team associations
+  Team.hasMany(Formation, { foreignKey: 'teamId', as: 'formations' });
+  Formation.belongsTo(Team, { foreignKey: 'teamId' });
+
+  // Handle team-formation afterCreate hook properly
+  Team.addHook('afterCreate', async (team, options) => {
+    try {
+      // Only attempt to create a formation if the team has been fully committed
+      const teamId = team.id;
+      console.log(`Team afterCreate hook triggered for team ID: ${teamId}`);
+      
+      // Use the same transaction from team creation if available
+      const transaction = options.transaction;
+      
+      if (transaction) {
+        // If we're in a transaction, register an after commit hook
+        transaction.afterCommit(async () => {
+          try {
+            // Wait a bit to ensure the team is fully committed to the database
+            setTimeout(async () => {
+              try {
+                await Formation.createDefaultFormation(teamId);
+                console.log(`Successfully created default formation for team ${teamId} after transaction commit`);
+              } catch (formationError) {
+                console.error(`Delayed formation creation failed for team ${teamId}:`, formationError);
+              }
+            }, 1000);
+          } catch (error) {
+            console.error(`After-commit formation creation failed for team ${teamId}:`, error);
+          }
+        });
+      } else {
+        // If no transaction, wait for next tick to ensure team is committed
+        process.nextTick(async () => {
+          try {
+            // Add a delay to ensure team is fully committed
+            setTimeout(async () => {
+              try {
+                await Formation.createDefaultFormation(teamId);
+              } catch (formationError) {
+                console.error(`Deferred formation creation failed for team ${teamId}:`, formationError);
+              }
+            }, 500);
+          } catch (error) {
+            console.error(`Deferred formation creation failed for team ${teamId}:`, error);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error in Team afterCreate hook:', error);
+      // Don't throw - we don't want team creation to fail because of formation issues
+    }
+  });
+
+  // Manager association
+  User.hasOne(Manager, { foreignKey: 'userId', as: 'Manager' });
+  Manager.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  
+  // Team-Manager association
+  Team.hasMany(Manager, { foreignKey: 'teamId', as: 'managers' });
+  Manager.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
 }
 
 module.exports = { setupAssociations };

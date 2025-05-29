@@ -29,7 +29,7 @@ const Formation = sequelize.define('Formation', {
 });
 
 // Add a class method to create default 4-3-3 formation
-Formation.createDefaultFormation = async (teamId) => {
+Formation.createDefaultFormation = async (teamId, options = {}) => {
   if (!teamId) {
     log.error('Formation.createDefaultFormation called without teamId');
     throw new Error('TeamId is required to create a default formation');
@@ -37,6 +37,52 @@ Formation.createDefaultFormation = async (teamId) => {
 
   log.info(`Creating default 4-3-3 formation for team ID: ${teamId}`);
   
+  // Make multiple attempts to verify team exists, with exponential backoff
+  let teamExists = null;
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  while (!teamExists && attempts < maxAttempts) {
+    try {
+      attempts++;
+      const Team = Formation.sequelize.models.Team;
+      teamExists = await Team.findByPk(teamId);
+      
+      if (!teamExists) {
+        log.warn(`Team with ID ${teamId} not found on attempt ${attempts}/${maxAttempts}, waiting before retry`);
+        // If team doesn't exist but we have retries left, wait and try again
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempts)));
+        }
+      } else {
+        log.info(`Found team with ID ${teamId} on attempt ${attempts}`);
+        break;
+      }
+    } catch (error) {
+      log.error(`Error checking if team ${teamId} exists (attempt ${attempts}/${maxAttempts}):`, error);
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempts)));
+      }
+    }
+  }
+
+  if (!teamExists) {
+    log.error(`Cannot create formation: Team with ID ${teamId} does not exist after ${maxAttempts} attempts`);
+    throw new Error(`Team with ID ${teamId} does not exist`);
+  }
+  
+  // Check if formation already exists to avoid duplicates
+  try {
+    const existingFormation = await Formation.findOne({ where: { teamId } });
+    if (existingFormation) {
+      log.info(`Formation already exists for team ${teamId}, skipping creation`);
+      return existingFormation;
+    }
+  } catch (error) {
+    log.warn(`Error checking for existing formation for team ${teamId}:`, error);
+    // Continue with creation attempt
+  }
+    
   const defaultFormation = {
     preset: '4-3-3',
     starters: [
@@ -68,11 +114,12 @@ Formation.createDefaultFormation = async (teamId) => {
     const newFormation = await Formation.create({
       teamId,
       schema_json: defaultFormation
-    });
+    }, options);
+    
     log.info(`Successfully created default formation for team ${teamId}`);
     return newFormation;
   } catch (error) {
-    log.error(`Failed to create default formation for team ${teamId}:`, error);
+    log.error(`Failed to create formation for team ${teamId}:`, error);
     throw error;
   }
 };

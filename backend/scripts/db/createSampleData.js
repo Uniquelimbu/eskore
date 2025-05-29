@@ -181,7 +181,7 @@ async function createUserTeams(users, teams) {
   const cosmos = teams.find(t => t.name === 'Cosmos United');
   
   if (!thunderbolts || !cosmos) {
-    console.error(`${colors.red}Teams not found. Cannot create associations.${colors.reset}`);
+    console.error(`${colors.red}Teams not found. Cannot create matches.${colors.reset}`);
     return;
   }
   

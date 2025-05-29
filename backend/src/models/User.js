@@ -133,4 +133,21 @@ User.init({
   }
 });
 
+// Add the hasOne association for Manager
+User.associate = function(models) {
+  User.hasOne(models.Manager, {
+    foreignKey: 'userId',
+    as: 'Manager'
+  });
+  
+  // Make sure existing associations remain
+  if (User.belongsToMany && models.Role) {
+    User.belongsToMany(models.Role, { 
+      through: 'UserRole', 
+      foreignKey: 'userId', 
+      otherKey: 'roleId' 
+    });
+  }
+};
+
 module.exports = User;

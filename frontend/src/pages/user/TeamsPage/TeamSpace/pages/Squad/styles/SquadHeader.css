@@ -1,0 +1,63 @@
+.squad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.squad-header h2 {
+  color: var(--text-light);
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.back-button {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.add-member-btn, .join-team-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-member-btn:hover, .join-team-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .squad-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .squad-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .squad-actions {
+    display: flex;
+    width: 100%;
+  }
+  
+  .add-member-btn, .join-team-btn {
+    flex-grow: 1;
+  }
+}

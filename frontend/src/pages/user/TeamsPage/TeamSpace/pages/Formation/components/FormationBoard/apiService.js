@@ -39,6 +39,9 @@ export const initFormation = async (teamId, get, set) => {
   
   set({ teamId, loading: true });
   
+  // Get current preset (potentially set by manager preference before this is called)
+  const currentPreset = get().preset || '4-3-3';
+  
   // First, try to load from server
   let serverFormation = null;
   let serverLoadFailed = false;
@@ -124,9 +127,10 @@ export const initFormation = async (teamId, get, set) => {
     const validStarters = dataToUse.starters.slice(0, 11);
     const validSubs = Array.isArray(dataToUse.subs) ? dataToUse.subs : DEFAULT_SUBS;
     
-    // Update state with the loaded formation
+    // Update state with the loaded formation - maintain the preset that was
+    // potentially set from manager preferences if server didn't provide one
     set({ 
-      preset: dataToUse.preset || '4-3-3',
+      preset: dataToUse.preset || currentPreset,
       starters: validStarters,
       subs: validSubs,
       loading: false,
@@ -150,7 +154,10 @@ export const initFormation = async (teamId, get, set) => {
   }
   
   // If we reach here, no valid data was found anywhere
-  console.log('No valid formation data found, using dummy players');
+  console.log('No valid formation data found, using default with preset:', currentPreset);
+  
+  // Use the currentPreset (which may have been set from manager preferences)
+  set({ preset: currentPreset });
   get().setDummyPlayers();
   
   // Create a proper formation in the backend for future requests

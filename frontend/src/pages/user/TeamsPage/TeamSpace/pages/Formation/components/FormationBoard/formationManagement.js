@@ -3,15 +3,27 @@ import { generateDefaultStarters } from './playerManagement';
 
 /**
  * Set dummy players for demo or initial state
+ * @param {Function} get - Store's get function
+ * @param {Function} set - Store's set function
+ * @param {String} specificPreset - Optional specific preset to use
  */
-export const setDummyPlayers = (get, set) => {
-  const { preset } = get();
+export const setDummyPlayers = (get, set, specificPreset = null) => {
+  // Use the provided specific preset, otherwise use current preset, or default to 4-3-3
+  let actualPreset = specificPreset || get().preset || '4-3-3';
+  
+  // Check if preset is valid
+  if (!PRESETS[actualPreset]) {
+    console.warn(`Invalid preset: ${actualPreset}, falling back to 4-3-3`);
+    actualPreset = '4-3-3';
+  }
+  
+  console.log(`Creating dummy players with formation ${actualPreset}`);
   
   // Create dummy starters based on current formation with sequential naming
-  const dummyStarters = generateDefaultStarters(preset || '4-3-3');
+  const dummyStarters = generateDefaultStarters(actualPreset);
   
   set({ 
-    preset: preset || '4-3-3',
+    preset: actualPreset,
     starters: dummyStarters,
     subs: DEFAULT_SUBS,
     saved: true

@@ -8,8 +8,6 @@ const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
     weight: initialValues.weight || '',
     preferredFoot: initialValues.preferredFoot || '',
     jerseyNumber: initialValues.jerseyNumber || '',
-    dateOfBirth: initialValues.dateOfBirth || '',
-    nationality: initialValues.nationality || '',
     ...initialValues
   });
   
@@ -84,7 +82,21 @@ const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      // Convert height and weight to numbers if they exist
+      const formattedData = {
+        ...formData,
+        height: formData.height ? parseFloat(formData.height) : undefined,
+        weight: formData.weight ? parseFloat(formData.weight) : undefined
+      };
+      
+      // Remove empty string values to avoid validation errors
+      Object.keys(formattedData).forEach(key => {
+        if (formattedData[key] === '') {
+          delete formattedData[key];
+        }
+      });
+      
+      onSubmit(formattedData);
     }
   };
 
@@ -170,31 +182,6 @@ const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
               <option value="left">Left</option>
               <option value="both">Both</option>
             </select>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="dateOfBirth">Date of Birth</label>
-            <input
-              id="dateOfBirth"
-              name="dateOfBirth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="nationality">Nationality</label>
-            <input
-              id="nationality"
-              name="nationality"
-              type="text"
-              value={formData.nationality}
-              onChange={handleChange}
-              placeholder="Country of origin"
-            />
           </div>
         </div>
         

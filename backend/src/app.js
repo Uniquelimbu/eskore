@@ -40,9 +40,12 @@ const corsErrorHandler = require('./middleware/corsErrorHandler'); // Added for 
 const bodyParserErrorHandler = require('./middleware/bodyParserErrorHandler'); // Import the new middleware
 
 // --- Route requires ---
-const authRoutes = require('./routes/authRoutes'); // Restored
-const userRoutes = require('./routes/userRoutes'); // Restored
-const teamRoutes = require('./routes/teamRoutes'); // Now imports the index.js from teamRoutes folder
+const authRoutes = require('./routes/authRoutes'); 
+const userRoutes = require('./routes/userRoutes'); // Add this missing import
+// Use the specific file for team routes (not the folder)
+const teamRoutes = require('./routes/teamRoutes'); 
+// If needed, also import the structured team routes
+const teamRoutesStructured = require('./routes/teamRoutes/index');
 const tournamentRoutes = require('./routes/tournamentRoutes'); // Restored
 const leagueRoutes = require('./routes/leagueRoutes'); // Restored
 const matchRoutes = require('./routes/matchRoutes'); // Restored
@@ -188,9 +191,9 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/auth', authRoutes); 
-app.use('/api/users', userRoutes); 
-app.use('/api/teams', teamRoutes); 
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/teams', teamRoutes); // This will now use our fixed teamRoutes.js
 app.use('/api/tournaments', tournamentRoutes); 
 app.use('/api/leagues', leagueRoutes); 
 app.use('/api/matches', matchRoutes); 

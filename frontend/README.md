@@ -262,7 +262,7 @@ export function useMatchData(matchId) {
     async function fetchMatch() {
       try {
         setLoading(true);
-        const data = await apiClient.get(`/matches/${matchId}`);
+        const data = await apiClient.get(`matches/${matchId}`);
         setMatch(data);
         setError(null);
       } catch (err) {

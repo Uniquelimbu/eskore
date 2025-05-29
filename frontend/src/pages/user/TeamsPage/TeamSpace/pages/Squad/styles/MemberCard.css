@@ -1,0 +1,201 @@
+.member-card {
+  display: flex;
+  flex-direction: row; /* Explicitly set to row to ensure horizontal layout */
+  align-items: center;
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.member-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a6cf7, #3a5bd9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.member-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  height: 20px;
+  margin-left: auto; /* Push to right */
+  margin-right: 16px; /* Space between badge and actions/jersey number */
+}
+
+.role-badge.athlete {
+  background-color: #1e5bb0;
+  color: white;
+}
+
+.role-badge.manager {
+  background-color: #805ad5;
+  color: white;
+}
+
+.role-badge.coach {
+  background-color: #38a169;
+  color: white;
+}
+
+.jersey-number {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-light);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.member-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  padding-left: 16px;
+}
+
+.remove-member-btn {
+  background-color: transparent;
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.remove-member-btn:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+@media (max-width: 480px) {
+  .member-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .member-info h4 {
+    font-size: 1rem;
+  }
+  
+  .member-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .role-badge {
+    margin-left: auto; /* Keep on right side */
+    margin-right: 8px; /* Less space on mobile */
+  }
+  
+  .jersey-number {
+    position: static;
+    margin-top: 8px;
+    align-self: flex-start;
+  }
+  
+  .remove-member-btn {
+    position: static;
+    margin-top: 12px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Remove the flex-direction: column to keep horizontal layout */
+  .member-card {
+    /* flex-direction: column; - Removed */
+    align-items: center; /* Keep items centered vertically */
+    padding: 10px; /* Slightly reduce padding on mobile */
+  }
+  
+  .member-avatar {
+    margin-bottom: 0; /* Remove bottom margin to maintain horizontal layout */
+    margin-right: 12px; /* Keep some right margin for spacing */
+  }
+  
+  .member-actions {
+    width: auto; /* Don't force full width */
+    padding-left: 8px;
+    margin-top: 0;
+  }
+}
+
+/* Media query for medium screens to keep horizontal but adjust spacing */
+@media (min-width: 481px) and (max-width: 768px) {
+  .jersey-number {
+    position: static;
+    margin-left: 8px;
+  }
+  
+  .member-actions {
+    margin-top: 8px;
+  }
+  
+  .remove-member-btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+}

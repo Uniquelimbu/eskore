@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 
 const teamsSeederContent = `'use strict';
-const bcrypt = require('bcrypt');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -33,17 +32,13 @@ module.exports = {
         }
       );
       const existingEmails = existingTeams.map(team => team.email);
-
-      // Generate password hash
-      const passwordHash = await bcrypt.hash('password123', 10);    
       
-      // Prepare teams data
+      // Prepare teams data - removed password fields
       const teams = [
         {
           name: 'Barcelona FC',
           logoUrl: 'https://via.placeholder.com/150?text=Barcelona',
           email: 'barca@example.com',
-          password: passwordHash,
           abbreviation: 'BAR',
           foundedYear: 1899,
           city: 'Barcelona',
@@ -55,7 +50,6 @@ module.exports = {
           name: 'Real Madrid',
           logoUrl: 'https://via.placeholder.com/150?text=Real+Madrid',
           email: 'madrid@example.com',
-          password: passwordHash,
           abbreviation: 'RMA',
           foundedYear: 1902,
           city: 'Madrid',
@@ -67,7 +61,6 @@ module.exports = {
           name: 'Atletico Madrid',
           logoUrl: 'https://via.placeholder.com/150?text=Atletico+Madrid',
           email: 'atletico@example.com',
-          password: passwordHash,
           abbreviation: 'ATM',
           foundedYear: 1903,
           city: 'Madrid',

@@ -1,0 +1,42 @@
+/* Squad Page Specific Styles */
+.squad-page {
+  width: 100%;
+  background-color: transparent;
+  color: var(--text-light);
+  padding-bottom: 2rem;
+}
+
+.squad-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Empty state */
+.empty-state {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Loading state */
+.squad-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+/* Error state */
+.squad-error {
+  background-color: rgba(229, 62, 62, 0.1);
+  border-left: 4px solid var(--danger-color);
+  padding: 16px;
+  border-radius: 4px;
+  color: var(--danger-color);
+  margin: 20px 0;
+}

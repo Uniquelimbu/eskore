@@ -6,17 +6,20 @@ const { validate, schemas } = require('../../validation');
 const Team = require('../../models/Team');
 const User = require('../../models/User');
 const UserTeam = require('../../models/UserTeam');
+const Manager = require('../../models/Manager');
 const { sendSafeJson } = require('../../utils/safeSerializer');
 const log = require('../../utils/log');
+const { Op } = require('sequelize');
+const sequelize = require('../../config/db');
 
 /**
- * GET /api/teams/:id/players
- * Get all players for a team
+ * GET /api/teams/:id/managers
+ * Get all managers for a team
  */
-router.get('/:id/players',
+router.get('/:id/managers',
   validate(schemas.team.teamIdParam),
   catchAsync(async (req, res) => {
-    log.info(`TEAMROUTES/PLAYERS (GET /:id/players): Fetching players for team ${req.params.id}`);
+    log.info(`TEAMROUTES/MANAGERS (GET /:id/managers): Fetching managers for team ${req.params.id}`);
     const { id } = req.params;
 
     const team = await Team.findByPk(id);
@@ -24,11 +27,11 @@ router.get('/:id/players',
       throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
     }
 
-    // Get users with athlete role in this team
-    const teamPlayers = await UserTeam.findAll({
-      where: { 
+    // Find team members with manager roles
+    const teamManagers = await UserTeam.findAll({
+      where: {
         teamId: id,
-        role: 'athlete'
+        role: { [Op.in]: ['manager', 'assistant_manager'] }
       },
       include: [
         {
@@ -38,35 +41,35 @@ router.get('/:id/players',
       ]
     });
 
-    // Get player data (if any)
-    const playerData = [];
-    for (const teamPlayer of teamPlayers) {
-      const user = teamPlayer.User;
-      if (!user) continue;
+    // Get manager data with their profiles
+    const managers = [];
+    for (const teamManager of teamManagers) {
+      if (!teamManager.User) continue;
       
-      // Find player profile if it exists
-      const playerProfile = await sequelize.models.Player.findOne({
+      const user = teamManager.User;
+      
+      // Get manager profile data
+      const managerProfile = await Manager.findOne({
         where: { userId: user.id },
-        attributes: ['id', 'position', 'height', 'weight', 'preferredFoot', 'jerseyNumber']
+        attributes: ['id', 'playingStyle', 'preferredFormation', 'experience']
       });
       
-      playerData.push({
+      managers.push({
         userId: user.id,
-        id: playerProfile?.id,
         firstName: user.firstName,
         lastName: user.lastName,
-        position: playerProfile?.position || 'Unassigned',
-        height: playerProfile?.height,
-        weight: playerProfile?.weight,
-        preferredFoot: playerProfile?.preferredFoot || 'Right',
-        jerseyNumber: playerProfile?.jerseyNumber || ''
+        email: user.email,
+        role: teamManager.role,
+        playingStyle: managerProfile?.playingStyle || 'balanced',
+        preferredFormation: managerProfile?.preferredFormation || '4-3-3',
+        experience: managerProfile?.experience || 0
       });
     }
 
     return sendSafeJson(res, {
       teamId: id,
       teamName: team.name,
-      players: playerData
+      managers
     });
   })
 );

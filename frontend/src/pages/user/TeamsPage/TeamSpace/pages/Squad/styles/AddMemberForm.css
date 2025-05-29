@@ -1,0 +1,70 @@
+.add-member-form {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.add-member-form h3 {
+  color: var(--text-light);
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.add-member-form .form-group {
+  margin-bottom: 16px;
+}
+
+.add-member-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.add-member-form input,
+.add-member-form select {
+  width: 100%;
+  padding: 12px;
+  background-color: #1a202c;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.submit-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: var(--primary-dark);
+}

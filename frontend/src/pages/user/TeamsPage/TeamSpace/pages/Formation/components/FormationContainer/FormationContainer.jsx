@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import apiClient from '../../../../../../../../services/apiClient';
 
 // Import store and components
 import useFormationStore from '../FormationBoard'; 
@@ -49,11 +50,44 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   // Add state for tracking selected players and animations
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [swappingPlayers, setSwappingPlayers] = useState([]);
+  const [managerPreferredFormation, setManagerPreferredFormation] = useState(null);
   
   // Initialize formation data
   useEffect(() => {
     console.log("Initializing formation data", { teamId });
-    init(teamId);
+    
+    // First, try to get manager's preferred formation if available
+    const fetchManagerPreferences = async () => {
+      try {
+        // Get team managers information
+        const managersResponse = await apiClient.get(`/teams/${teamId}/managers`);
+        
+        if (managersResponse && Array.isArray(managersResponse.managers) && managersResponse.managers.length > 0) {
+          // Find the first active manager with a preferred formation
+          const managerWithFormation = managersResponse.managers.find(m => m.preferredFormation);
+          
+          if (managerWithFormation && managerWithFormation.preferredFormation) {
+            const preferredPreset = typeof managerWithFormation.preferredFormation === 'string' 
+              ? managerWithFormation.preferredFormation 
+              : (managerWithFormation.preferredFormation.preset || '4-3-3');
+              
+            console.log("Using manager's preferred formation:", preferredPreset);
+            setManagerPreferredFormation(preferredPreset);
+            
+            // Set the preferred formation as the preset before initializing
+            useFormationStore.setState({ preset: preferredPreset });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch manager preferences:", err);
+      } finally {
+        // Continue with normal initialization regardless of whether we found 
+        // manager preferences or not
+        init(teamId);
+      }
+    };
+    
+    fetchManagerPreferences();
   }, [teamId, init]);
   
   // Map real players when available
@@ -65,9 +99,14 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
       // If we still have no starters after the initial load (and no real players),
       // populate the pitch with dummy players so the UI is never blank.
       console.log("No players and no starters – inserting dummy players for display");
-      useFormationStore.getState().setDummyPlayers();
+      
+      // Use the manager's preferred formation if available, otherwise use default
+      const formationToUse = managerPreferredFormation || preset || '4-3-3';
+      console.log(`Using formation preset: ${formationToUse} for dummy players`);
+      
+      useFormationStore.getState().setDummyPlayers(formationToUse);
     }
-  }, [players, mapPlayersToPositions, starters.length, loading]);
+  }, [players, mapPlayersToPositions, starters.length, loading, managerPreferredFormation]);
   
   // Save changes when formation is updated
   useEffect(() => {

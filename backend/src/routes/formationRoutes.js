@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { Formation, UserTeam } = require('../models');
+const { Formation, UserTeam, Manager } = require('../models');
 const { requireAuth } = require('../middleware/auth');
 const { catchAsync, ApiError } = require('../middleware/errorHandler');
 const { validate } = require('../validation');
 const { param } = require('express-validator');
 const log = require('../utils/log');
+const sequelize = require('../config/db'); // Fixed: changed from '../config/sequelize' to '../config/db'
 
 // Debug route for testing
 router.get('/test', (req, res) => {
@@ -49,6 +50,22 @@ router.get('/:teamId',
     log.info(`GET formation for team ${teamId}`);
     
     try {
+      // First check if the team exists
+      const teamExists = await sequelize.models.Team.findByPk(teamId);
+      
+      if (!teamExists) {
+        log.warn(`Team with ID ${teamId} does not exist in database`);
+        // Return a default formation without trying to save it
+        const defaultFormation = Formation.getDefaultFormationData();
+        return res.json({
+          teamId: parseInt(teamId),
+          schema_json: defaultFormation,
+          isDefault: true,
+          notSaved: true,
+          teamNotFound: true
+        });
+      }
+      
       let formation = await Formation.findOne({ 
         where: { teamId } 
       });
@@ -153,6 +170,14 @@ router.put('/:teamId',
     log.info(`PUT formation for team ${teamId}`);
     
     try {
+      // First check if the team exists
+      const teamExists = await sequelize.models.Team.findByPk(teamId);
+      
+      if (!teamExists) {
+        log.warn(`Team with ID ${teamId} does not exist in database`);
+        throw new ApiError('Team not found', 404, 'NOT_FOUND');
+      }
+
       // Check if user has permission (is a manager of this team)
       if (req.user && req.user.userId) {
         const userTeam = await UserTeam.findOne({
@@ -197,6 +222,129 @@ router.put('/:teamId',
     }
   })
 );
+
+// Create a new formation for a team
+router.post('/', async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const { teamId, name, matchId } = req.body;
+    
+    // Verify the team exists first
+    const teamExists = await sequelize.models.Team.findByPk(teamId, { transaction });
+    
+    if (!teamExists) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'Team not found' });
+    }
+    
+    // Find manager's preferred formation to use as template
+    const manager = await Manager.findOne({ 
+      where: { teamId },
+      attributes: ['preferredFormation'],
+      transaction
+    });
+    
+    // Default formation preset if no manager preference exists
+    let formationData = {
+      preset: "4-4-2",
+      positions: [] // Default positions will be set based on preset
+    };
+    
+    // Use manager's preferred formation if available
+    if (manager && manager.preferredFormation) {
+      formationData = {
+        preset: manager.preferredFormation.preset || "4-4-2",
+        positions: manager.preferredFormation.positions || []
+      };
+    }
+    
+    // Create the new formation
+    const formation = await Formation.create({
+      teamId,
+      name: name || `Formation for ${new Date().toLocaleDateString()}`,
+      matchId: matchId || null,
+      formationData
+    }, { transaction });
+    
+    await transaction.commit();
+    return res.status(201).json({ formation });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error creating formation:', error);
+    return res.status(500).json({ error: 'Failed to create formation' });
+  }
+});
+
+// Update formation with player assignments
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { preset, positions } = req.body;
+    
+    const formation = await Formation.findByPk(id);
+    
+    if (!formation) {
+      return res.status(404).json({ error: 'Formation not found' });
+    }
+    
+    // Update formation data
+    const updatedFormationData = {
+      preset: preset || formation.formationData.preset,
+      positions: positions || formation.formationData.positions
+    };
+    
+    // If preset changed but we have existing players, remap players to new positions
+    if (preset && preset !== formation.formationData.preset && formation.formationData.positions.some(pos => pos.playerId)) {
+      updatedFormationData.positions = mapPlayersToPositions(
+        formation.formationData.positions.filter(pos => pos.playerId),
+        updatedFormationData.positions
+      );
+    }
+    
+    await formation.update({ formationData: updatedFormationData });
+    
+    return res.json({ formation });
+  } catch (error) {
+    console.error('Error updating formation:', error);
+    return res.status(500).json({ error: 'Failed to update formation' });
+  }
+});
+
+// Helper function to map players to new positions intelligently
+function mapPlayersToPositions(existingPositions, newPositions) {
+  // Create a copy of new positions
+  const mappedPositions = JSON.parse(JSON.stringify(newPositions));
+  
+  // For each position with a player in the existing formation
+  existingPositions.forEach(existingPos => {
+    if (!existingPos.playerId) return;
+    
+    // Try to find the same position in new formation
+    const samePosition = mappedPositions.find(p => 
+      p.role === existingPos.role && !p.playerId
+    );
+    
+    // If found, assign player to the same position
+    if (samePosition) {
+      samePosition.playerId = existingPos.playerId;
+      samePosition.playerName = existingPos.playerName;
+      return;
+    }
+    
+    // If not found, find a similar position (same zone)
+    const similarPosition = mappedPositions.find(p => 
+      p.role.charAt(0) === existingPos.role.charAt(0) && !p.playerId
+    );
+    
+    if (similarPosition) {
+      similarPosition.playerId = existingPos.playerId;
+      similarPosition.playerName = existingPos.playerName;
+    }
+  });
+  
+  return mappedPositions;
+}
 
 // Log that formation routes are loaded
 log.info('Formation routes loaded successfully');

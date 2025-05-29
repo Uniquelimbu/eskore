@@ -10,11 +10,22 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
   };
   
   const handlePlayerRegistrationSubmit = (data) => {
-    // Submit join request with player data
+    // Prepare player data for submission
+    const playerData = {
+      position: data.position,
+      teamId: team.id // Ensure teamId is included
+    };
+
+    // Only include optional fields if they have values
+    if (data.height) playerData.height = parseFloat(data.height);
+    if (data.weight) playerData.weight = parseFloat(data.weight);
+    if (data.preferredFoot) playerData.preferredFoot = data.preferredFoot;
+    if (data.jerseyNumber) playerData.jerseyNumber = data.jerseyNumber;
+    
+    // Submit join request with properly structured data
     onJoin({
-      teamId: team.id,
-      role: 'athlete',
-      playerData: data
+      role: 'athlete', // Use athlete role as required by the API
+      playerData: playerData
     });
   };
 

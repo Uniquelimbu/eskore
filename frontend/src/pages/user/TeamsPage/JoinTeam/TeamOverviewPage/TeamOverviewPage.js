@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { JoinTeamDialog } from '../components';
 import apiClient from '../../../../../services/apiClient';
 import PageLayout from '../../../../../components/layout/PageLayout';
@@ -42,18 +43,18 @@ const TeamOverviewPage = () => {
 
   const handleJoinSubmit = async (joinData) => {
     try {
-      const joinResponse = await apiClient.post(`/teams/${teamId}/members`, {
-        role: joinData.role
-      });
+      // For joining a team, we must have player data
+      if (!joinData.playerData) {
+        setError('Player information is required to join a team.');
+        return;
+      }
+      
+      // Use the dedicated joinTeam method which now handles player creation
+      const joinResponse = await apiClient.joinTeam(teamId, joinData);
       
       if (joinResponse && joinResponse.success) {
-        // If player data was provided, create player profile
-        if (joinData.playerData) {
-          await apiClient.post('/players', {
-            ...joinData.playerData,
-            teamId
-          });
-        }
+        // Success message
+        toast.success('You have successfully joined the team!');
         
         // Close dialog and navigate to team space
         setShowJoinDialog(false);

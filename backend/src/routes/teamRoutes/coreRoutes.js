@@ -110,7 +110,7 @@ router.post('/',
     const t = await sequelize.transaction();
     
     try {
-      // 1. Create the team with the extracted userId
+      // 1. Create the team with the extracted userId - removed passwordHash
       const team = await Team.create({
         name,
         abbreviation: abbreviation?.toUpperCase() || null,
