@@ -28,11 +28,15 @@ const loadFormationFromLocalStorage = (teamId) => {
 
 /**
  * Initialize formation with team ID and load data
+ * @param {number} teamId - The team ID
+ * @param {string} preferredPreset - Optional preferred formation preset from manager
+ * @param {Function} get - Store's get method
+ * @param {Function} set - Store's set method
  */
-export const initFormation = async (teamId, get, set) => {
+export const initFormation = async (teamId, preferredPreset, get, set) => {
   if (!teamId) {
     console.warn('Formation init called without teamId, using default preset');
-    get().setDummyPlayers();
+    get().setDummyPlayers(preferredPreset);
     set({ loading: false });
     return;
   }
@@ -40,7 +44,9 @@ export const initFormation = async (teamId, get, set) => {
   set({ teamId, loading: true });
   
   // Get current preset (potentially set by manager preference before this is called)
-  const currentPreset = get().preset || '4-3-3';
+  const currentPreset = preferredPreset || get().preset || '4-3-3';
+  console.log(`Formation initFormation: using currentPreset ${currentPreset}`, 
+    preferredPreset ? '(from manager preference)' : '(from default)');
   
   // First, try to load from server
   let serverFormation = null;
@@ -104,7 +110,8 @@ export const initFormation = async (teamId, get, set) => {
     hasValidServerData,
     hasValidLocalData,
     serverFormation: serverFormation ? 'present' : 'missing',
-    localBackup: localBackup ? 'present' : 'missing'
+    localBackup: localBackup ? 'present' : 'missing',
+    currentPreset
   });
   
   // Decide which data source to use
@@ -127,10 +134,13 @@ export const initFormation = async (teamId, get, set) => {
     const validStarters = dataToUse.starters.slice(0, 11);
     const validSubs = Array.isArray(dataToUse.subs) ? dataToUse.subs : DEFAULT_SUBS;
     
-    // Update state with the loaded formation - maintain the preset that was
-    // potentially set from manager preferences if server didn't provide one
+    // When using manager's preferred formation but data exists, we should ensure preset matches
+    // If we have manager's preference, update the preset but keep player positions
+    const finalPreset = preferredPreset || dataToUse.preset || currentPreset;
+    
+    // Update state with the loaded formation
     set({ 
-      preset: dataToUse.preset || currentPreset,
+      preset: finalPreset, // Use manager preference if available
       starters: validStarters,
       subs: validSubs,
       loading: false,
@@ -138,14 +148,20 @@ export const initFormation = async (teamId, get, set) => {
     });
     
     // If we loaded from localStorage backup but server load failed,
+    // or if we're using manager's preferred formation that differs from stored data,
     // trigger a save to sync back to server
-    if (source === 'localStorage' && serverLoadFailed) {
-      console.log('Server load failed but using valid localStorage backup. Syncing back to server...');
+    if ((source === 'localStorage' && serverLoadFailed) || 
+        (preferredPreset && preferredPreset !== dataToUse.preset)) {
+      console.log('Need to sync data back to server:', {
+        reason: source === 'localStorage' ? 'Using localStorage backup' : 'Manager preference differs',
+        preferredPreset,
+        dataPreset: dataToUse.preset
+      });
       setTimeout(() => {
         try {
           get().forceSave();
         } catch (e) {
-          console.error('Failed to sync localStorage backup to server:', e);
+          console.error('Failed to sync data to server:', e);
         }
       }, 1000);
     }
@@ -156,22 +172,21 @@ export const initFormation = async (teamId, get, set) => {
   // If we reach here, no valid data was found anywhere
   console.log('No valid formation data found, using default with preset:', currentPreset);
   
-  // Use the currentPreset (which may have been set from manager preferences)
+  // Always use the currentPreset (which may have been set from manager preferences)
   set({ preset: currentPreset });
-  get().setDummyPlayers();
+  get().setDummyPlayers(currentPreset); // Use the correct preset for dummy players
   
   // Create a proper formation in the backend for future requests
   try {
-    console.log('Attempting to save proper formation after loading dummy players');
+    console.log(`Attempting to save formation with preset: ${currentPreset} after loading dummy players`);
     // Ensure forceSave is awaited if it's async and we care about its completion before proceeding
-    await get().forceSave(); // Assuming forceSave is async and returns a promise
-    console.log('Force save after dummy players result obtained.'); // Log after completion
+    await get().forceSave();
+    console.log('Force save after dummy players completed.');
   } catch (saveError) {
-    console.error('Failed to save default formation after loading dummy players:', saveError);
+    console.error('Failed to save formation after loading dummy players:', saveError);
   }
   
-  set({ loading: false, saved: true }); // This saved: true might be premature if forceSave failed.
-                                      // forceSave should ideally update 'saved' state itself.
+  set({ loading: false, saved: true });
 };
 
 /**

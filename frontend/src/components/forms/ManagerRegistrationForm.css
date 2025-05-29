@@ -1,0 +1,44 @@
+/* ...existing code... */
+
+/* Add styles for field validation hints */
+.manager-registration-form .field-hint {
+  display: block;
+  color: #a0aec0;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+/* Improve the error message styles */
+.manager-registration-form .error-message {
+  color: #e53e3e;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  font-weight: 500;
+  background-color: rgba(229, 62, 62, 0.1);
+  padding: 5px 8px;
+  border-radius: 4px;
+  display: block;
+}
+
+/* Style for required fields */
+.manager-registration-form label::after {
+  content: attr(data-required);
+  color: #e53e3e;
+  margin-left: 4px;
+}
+
+/* Disable state for submit button */
+.manager-registration-form .submit-button:disabled {
+  background-color: #718096;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Override the focus styles for invalid fields */
+.manager-registration-form select.error:focus,
+.manager-registration-form input.error:focus {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.2);
+}
+
+/* ...existing code... */

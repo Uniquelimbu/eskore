@@ -51,7 +51,8 @@ const useFormationStore = create((set, get) => ({
   PRESETS,
   
   // Initialize store with team ID and load data
-  init: async (teamId) => await initFormation(teamId, get, set),
+  // Modified to accept preferredPreset parameter
+  init: async (teamId, preferredPreset) => await initFormation(teamId, preferredPreset, get, set),
   
   // Create default formation in the backend
   createDefaultFormation: async (teamId) => await createDefaultFormation(teamId, get, set),
@@ -60,7 +61,8 @@ const useFormationStore = create((set, get) => ({
   generateDefaultStarters,
   
   // Add dummy player data for demo purposes
-  setDummyPlayers: () => setDummyPlayers(get, set),
+  // Modified to accept a specific preset
+  setDummyPlayers: (specificPreset = null) => setDummyPlayers(get, set, specificPreset),
   
   // Change formation preset
   changePreset: (newPreset) => changePreset(newPreset, get, set),

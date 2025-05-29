@@ -19,6 +19,23 @@ const { Op } = require('sequelize');
  */
 router.post('/',
   requireAuth,
+  validate([
+    body('playingStyle')
+      .notEmpty().withMessage('Playing style is required')
+      .isIn(['possession', 'counter-attack', 'high-press', 'defensive', 'balanced'])
+      .withMessage('Playing style must be valid'),
+    body('preferredFormation')
+      .notEmpty().withMessage('Preferred formation is required')
+      .isIn(['4-3-3', '4-4-2', '3-5-2', '3-4-3', '4-2-3-1', '4-1-4-1', '5-2-2-1', '4-1-2-1-2', '4-5-1', '4-2-2-2'])
+      .withMessage('Preferred formation must be valid'),
+    body('experience')
+      .optional()
+      .isInt({ min: 0, max: 50 })
+      .withMessage('Experience must be between 0 and 50 years'),
+    body('teamId')
+      .notEmpty().withMessage('Team ID is required')
+      .isInt().withMessage('Team ID must be an integer')
+  ]),
   catchAsync(async (req, res) => {
     // Start transaction
     const t = await sequelize.transaction();

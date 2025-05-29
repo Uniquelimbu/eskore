@@ -76,13 +76,18 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
             
             // Set the preferred formation as the preset before initializing
             useFormationStore.setState({ preset: preferredPreset });
+            
+            // Pass the preferred formation to init so it knows what to default to
+            init(teamId, preferredPreset);
+            return; // Exit early since we've initialized with the preferred preset
           }
         }
+        
+        // If we get here, no manager preferences were found, use default initialization
+        init(teamId);
       } catch (err) {
         console.warn("Could not fetch manager preferences:", err);
-      } finally {
-        // Continue with normal initialization regardless of whether we found 
-        // manager preferences or not
+        // Continue with normal initialization on error
         init(teamId);
       }
     };
@@ -106,7 +111,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
       
       useFormationStore.getState().setDummyPlayers(formationToUse);
     }
-  }, [players, mapPlayersToPositions, starters.length, loading, managerPreferredFormation]);
+  }, [players, mapPlayersToPositions, starters.length, loading, managerPreferredFormation, preset]);
   
   // Save changes when formation is updated
   useEffect(() => {

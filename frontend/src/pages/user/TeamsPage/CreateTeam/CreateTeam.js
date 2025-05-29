@@ -223,16 +223,9 @@ const CreateTeam = () => {
         console.error('Error response headers:', error.response.headers);
       }
       
-      toast.warn("Team created but manager profile couldn't be saved");
-      navigateToTeamSpace();
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Failed to save manager profile. Please try again.");
+      setIsSubmitting(false); // Allow retry by not navigating away
     }
-  };
-  
-  const handleManagerFormCancel = () => {
-    // Skip manager profile creation but still navigate to team space
-    navigateToTeamSpace();
   };
   
   const navigateToTeamSpace = () => {
@@ -504,10 +497,11 @@ const CreateTeam = () => {
       <Sidebar />
       <PageLayout className="create-team-page-content" maxWidth="1200px" withPadding={true}>
         {showManagerForm ? (
-          <ManagerRegistrationForm
-            onSubmit={handleManagerFormSubmit}
-            onCancel={handleManagerFormCancel}
-          />
+          <div className="manager-profile-container">
+            <ManagerRegistrationForm
+              onSubmit={handleManagerFormSubmit}
+            />
+          </div>
         ) : (
           <>
             <div className="create-team-header">

@@ -70,9 +70,8 @@
 
 .manager-registration-form .form-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin-top: 30px;
-  gap: 15px;
 }
 
 .manager-registration-form .cancel-button {
@@ -97,7 +96,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  flex: 1;
+  min-width: 200px;
   font-size: 1rem;
 }
 
@@ -107,6 +106,19 @@
 
 .manager-registration-form .submit-button:hover {
   background-color: #3a5bd9;
+}
+
+.manager-registration-form .form-description {
+  color: #a0aec0;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.manager-registration-form .required-indicator {
+  color: #4a6cf7;
+  font-weight: bold;
+  margin-left: 5px;
 }
 
 /* Responsive styles */
@@ -138,4 +150,23 @@
   .manager-registration-form .submit-button {
     padding: 12px 20px;
   }
+}
+
+.manager-profile-required-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.required-title {
+  text-align: center;
+  color: #e2e8f0;
+  margin-bottom: 10px;
+}
+
+.required-description {
+  text-align: center;
+  color: #a0aec0;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+  line-height: 1.6;
 }

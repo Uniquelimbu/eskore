@@ -59,9 +59,10 @@ Manager.init({
     defaultValue: 'balanced'
   },
   preferredFormation: {
-    type: DataTypes.JSON,
+    type: DataTypes.STRING(50), // Changed from JSON to STRING for simpler storage
     allowNull: true,
-    comment: 'JSON object containing the manager\'s preferred formation preset'
+    defaultValue: '4-3-3',
+    comment: 'Manager\'s preferred formation preset (e.g. "4-3-3", "4-4-2")'
   },
   experience: {
     type: DataTypes.INTEGER,

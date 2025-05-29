@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './ManagerRegistrationForm.css'; // Make sure to import the CSS
+import './ManagerRegistrationForm.css';
 
 const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
   const [formData, setFormData] = useState({
@@ -10,6 +10,7 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
   });
   
   const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
 
   const playingStyles = [
     { value: '', label: 'Select Playing Style' },
@@ -39,18 +40,72 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
       [name]: value
     }));
     
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors(prevErrors => ({
-        ...prevErrors,
-        [name]: null
-      }));
+    // Mark field as touched
+    setTouchedFields(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    
+    // Validate the field immediately
+    validateField(name, value);
+  };
+
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'playingStyle':
+        if (!value) {
+          newErrors.playingStyle = 'Playing style is required';
+        } else {
+          delete newErrors.playingStyle;
+        }
+        break;
+      
+      case 'preferredFormation':
+        if (!value) {
+          newErrors.preferredFormation = 'Preferred formation is required';
+        } else {
+          delete newErrors.preferredFormation;
+        }
+        break;
+      
+      case 'experience':
+        if (value === '') {
+          // Empty is allowed, will default to 0
+          delete newErrors.experience;
+        } else {
+          const exp = parseInt(value, 10);
+          if (isNaN(exp)) {
+            newErrors.experience = 'Experience must be a number';
+          } else if (exp < 0 || exp > 50) {
+            newErrors.experience = 'Experience must be between 0-50 years';
+          } else {
+            delete newErrors.experience;
+          }
+        }
+        break;
+      
+      default:
+        break;
     }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const validateForm = () => {
+    // Touch all fields to show all errors
+    const allFields = {
+      playingStyle: true,
+      preferredFormation: true,
+      experience: true
+    };
+    setTouchedFields(allFields);
+    
     const newErrors = {};
     
+    // Validate all fields
     if (!formData.playingStyle) {
       newErrors.playingStyle = 'Playing style is required';
     }
@@ -61,7 +116,9 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
     
     if (formData.experience !== '') {
       const exp = parseInt(formData.experience, 10);
-      if (isNaN(exp) || exp < 0 || exp > 50) {
+      if (isNaN(exp)) {
+        newErrors.experience = 'Experience must be a number';
+      } else if (exp < 0 || exp > 50) {
         newErrors.experience = 'Experience must be between 0-50 years';
       }
     }
@@ -74,7 +131,7 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
     e.preventDefault();
     
     if (validateForm()) {
-      // Convert experience to integer or null if empty
+      // Convert experience to integer or 0 if empty
       const submittedData = {
         ...formData,
         experience: formData.experience !== '' ? parseInt(formData.experience, 10) : 0
@@ -84,13 +141,18 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
     }
   };
 
+  // Helper function to determine if a field has an error and should be highlighted
+  const hasError = (fieldName) => {
+    return touchedFields[fieldName] && errors[fieldName];
+  };
+
   return (
     <div className="manager-registration-form">
       <h2>Manager Profile</h2>
       <p className="form-description">
         Please complete your manager profile to continue. This information is required for team setup.
       </p>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="playingStyle">Playing Style *</label>
@@ -99,14 +161,14 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
               name="playingStyle"
               value={formData.playingStyle}
               onChange={handleChange}
-              className={errors.playingStyle ? 'error' : ''}
+              className={hasError('playingStyle') ? 'error' : ''}
               required
             >
               {playingStyles.map(style => (
                 <option key={style.value} value={style.value}>{style.label}</option>
               ))}
             </select>
-            {errors.playingStyle && <div className="error-message">{errors.playingStyle}</div>}
+            {hasError('playingStyle') && <div className="error-message">{errors.playingStyle}</div>}
           </div>
           
           <div className="form-group">
@@ -116,14 +178,14 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
               name="preferredFormation"
               value={formData.preferredFormation}
               onChange={handleChange}
-              className={errors.preferredFormation ? 'error' : ''}
+              className={hasError('preferredFormation') ? 'error' : ''}
               required
             >
               {formations.map(formation => (
                 <option key={formation.value} value={formation.value}>{formation.label}</option>
               ))}
             </select>
-            {errors.preferredFormation && <div className="error-message">{errors.preferredFormation}</div>}
+            {hasError('preferredFormation') && <div className="error-message">{errors.preferredFormation}</div>}
           </div>
         </div>
         
@@ -136,15 +198,22 @@ const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => 
               type="number"
               value={formData.experience}
               onChange={handleChange}
-              className={errors.experience ? 'error' : ''}
-              placeholder="Years of experience"
+              className={hasError('experience') ? 'error' : ''}
+              placeholder="Years of experience (0-50)"
+              min="0"
+              max="50"
             />
-            {errors.experience && <div className="error-message">{errors.experience}</div>}
+            {hasError('experience') && <div className="error-message">{errors.experience}</div>}
+            <small className="field-hint">Enter a number between 0 and 50</small>
           </div>
         </div>
         
         <div className="form-actions">
-          <button type="submit" className="submit-button">
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={Object.keys(errors).length > 0}
+          >
             Complete Manager Profile
           </button>
         </div>
