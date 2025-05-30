@@ -139,6 +139,21 @@ router.post('/',
       // Commit the transaction
       await t.commit();
       
+      // After transaction is committed, create formation with a delay
+      // This ensures the team is fully available in the database
+      setTimeout(async () => {
+        try {
+          const Formation = require('../../models/Formation');
+          const formation = await Formation.createDefaultFormation(team.id);
+          if (formation) {
+            log.info(`Successfully created default formation for new team ${team.id}`);
+          }
+        } catch (formationError) {
+          log.error(`Formation creation for team ${team.id} failed:`, formationError);
+          // No need to notify client, this is a background task
+        }
+      }, 1000);
+      
       log.info(`TEAMROUTES/CORE (POST /): Team created successfully. ID: ${team.id}, Name: ${team.name}, TeamIdentifier: ${team.teamIdentifier}, CreatorID: ${userId}`);
       
       return sendSafeJson(res, {

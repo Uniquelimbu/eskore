@@ -2,7 +2,12 @@ import React from 'react';
 import MemberCard from './MemberCard';
 import '../styles/MemberList.css';
 
-const MemberList = ({ title, members, isManager, onRemoveMember, categoryFilter }) => {
+const MemberList = ({ title, members, isManager, onRemoveMember, category, categoryFilter }) => {
+  if (!Array.isArray(members)) {
+    console.error('MemberList: members is not an array', members);
+    return null;
+  }
+  
   // Filter members if a categoryFilter is provided
   const filteredMembers = categoryFilter 
     ? members.filter(member => {
@@ -24,20 +29,25 @@ const MemberList = ({ title, members, isManager, onRemoveMember, categoryFilter 
 
   return (
     <div className="squad-section">
-      <h3>{title}</h3>
+      <h3>{title} ({filteredMembers.length})</h3>
       <div className="squad-members">
-        {filteredMembers.map((member) => (
-          <MemberCard
-            key={member.id || `member-${member.firstName}-${member.lastName}`}
-            member={member}
-            onRemove={onRemoveMember}
-            isManager={isManager}
-            category={
-              member.role === 'athlete' ? 'athlete' :
-              ['manager', 'assistant_manager'].includes(member.role) ? 'manager' : 'coach'
-            }
-          />
-        ))}
+        {filteredMembers.map((member) => {
+          // Ensure we have a valid ID for the key
+          const memberId = member.id || member.userId || `member-${Date.now()}-${Math.random()}`;
+          
+          return (
+            <MemberCard
+              key={memberId}
+              member={member}
+              onRemove={onRemoveMember}
+              isManager={isManager}
+              category={
+                member.role === 'athlete' ? 'athlete' :
+                ['manager', 'assistant_manager'].includes(member.role) ? 'manager' : 'coach'
+              }
+            />
+          );
+        })}
       </div>
     </div>
   );

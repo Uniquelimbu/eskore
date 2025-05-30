@@ -136,57 +136,84 @@ export const initFormation = async (teamId, preferredPreset, get, set) => {
     
     // When using manager's preferred formation but data exists, we should ensure preset matches
     // If we have manager's preference, update the preset but keep player positions
-    const finalPreset = preferredPreset || dataToUse.preset || currentPreset;
+    const finalPreset = preferredPreset || dataToUse?.preset || currentPreset;
     
-    // Update state with the loaded formation
-    set({ 
-      preset: finalPreset, // Use manager preference if available
-      starters: validStarters,
-      subs: validSubs,
-      loading: false,
-      saved: true
-    });
-    
-    // If we loaded from localStorage backup but server load failed,
-    // or if we're using manager's preferred formation that differs from stored data,
-    // trigger a save to sync back to server
-    if ((source === 'localStorage' && serverLoadFailed) || 
-        (preferredPreset && preferredPreset !== dataToUse.preset)) {
-      console.log('Need to sync data back to server:', {
-        reason: source === 'localStorage' ? 'Using localStorage backup' : 'Manager preference differs',
-        preferredPreset,
-        dataPreset: dataToUse.preset
-      });
-      setTimeout(() => {
-        try {
-          get().forceSave();
-        } catch (e) {
-          console.error('Failed to sync data to server:', e);
-        }
-      }, 1000);
+    if (dataToUse) {
+      console.log(`Setting formation data from ${source}`);
+      
+      // Ensure we don't exceed 11 starters
+      const validStarters = dataToUse.starters.slice(0, 11);
+      const validSubs = Array.isArray(dataToUse.subs) ? dataToUse.subs : DEFAULT_SUBS;
+      
+      // If preferred preset differs from stored one, remap player positions
+      if (preferredPreset && preferredPreset !== dataToUse.preset) {
+        console.log(`Formation preset changed from ${dataToUse.preset} to ${preferredPreset} - remapping positions`);
+        
+        // Call changePreset to remap players to new positions
+        set({ 
+          teamId,
+          preset: dataToUse.preset, 
+          starters: validStarters,
+          subs: validSubs,
+          loading: false,
+          saved: true
+        });
+        
+        // Use the changePreset function to properly remap players
+        get().changePreset(finalPreset);
+      } else {
+        // Update state with the loaded formation without remapping
+        set({ 
+          teamId,
+          preset: finalPreset,
+          starters: validStarters,
+          subs: validSubs,
+          loading: false,
+          saved: true
+        });
+      }
+      
+      // If we loaded from localStorage backup but server load failed,
+      // or if we're using manager's preferred formation that differs from stored data,
+      // trigger a save to sync back to server
+      if ((source === 'localStorage' && serverLoadFailed) || 
+          (preferredPreset && preferredPreset !== dataToUse.preset)) {
+        console.log('Need to sync data back to server:', {
+          reason: source === 'localStorage' ? 'Using localStorage backup' : 'Manager preference differs',
+          preferredPreset,
+          dataPreset: dataToUse.preset
+        });
+        setTimeout(() => {
+          try {
+            get().forceSave();
+          } catch (e) {
+            console.error('Failed to sync data to server:', e);
+          }
+        }, 1000);
+      }
+      
+      return;
     }
     
-    return;
+    // If we reach here, no valid data was found anywhere
+    console.log('No valid formation data found, using default with preset:', currentPreset);
+    
+    // Always use the currentPreset (which may have been set from manager preferences)
+    set({ preset: currentPreset });
+    get().setDummyPlayers(currentPreset); // Use the correct preset for dummy players
+    
+    // Create a proper formation in the backend for future requests
+    try {
+      console.log(`Attempting to save formation with preset: ${currentPreset} after loading dummy players`);
+      // Ensure forceSave is awaited if it's async and we care about its completion before proceeding
+      await get().forceSave();
+      console.log('Force save after dummy players completed.');
+    } catch (saveError) {
+      console.error('Failed to save formation after loading dummy players:', saveError);
+    }
+    
+    set({ loading: false, saved: true });
   }
-  
-  // If we reach here, no valid data was found anywhere
-  console.log('No valid formation data found, using default with preset:', currentPreset);
-  
-  // Always use the currentPreset (which may have been set from manager preferences)
-  set({ preset: currentPreset });
-  get().setDummyPlayers(currentPreset); // Use the correct preset for dummy players
-  
-  // Create a proper formation in the backend for future requests
-  try {
-    console.log(`Attempting to save formation with preset: ${currentPreset} after loading dummy players`);
-    // Ensure forceSave is awaited if it's async and we care about its completion before proceeding
-    await get().forceSave();
-    console.log('Force save after dummy players completed.');
-  } catch (saveError) {
-    console.error('Failed to save formation after loading dummy players:', saveError);
-  }
-  
-  set({ loading: false, saved: true });
 };
 
 /**

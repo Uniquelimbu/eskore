@@ -4,6 +4,7 @@
   background-color: transparent;
   color: var(--text-light);
   padding-bottom: 2rem;
+  position: relative;
 }
 
 .squad-container {
@@ -29,6 +30,30 @@
   height: 300px;
   font-size: 1.1rem;
   color: var(--text-muted);
+}
+
+/* Loading overlay for updates */
+.squad-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(26, 32, 44, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+  border-radius: 8px;
+}
+
+.squad-loading-content {
+  background-color: #2d3748;
+  color: var(--text-light);
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Error state */

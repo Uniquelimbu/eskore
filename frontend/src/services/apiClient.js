@@ -226,6 +226,35 @@ apiClient.getTeam = async function(teamId, options = {}) {
   }
 };
 
+// Add a specific method for team member requests with appropriate timeout and error handling
+apiClient.getTeamMembers = async function(teamId, options = {}) {
+  const timeoutMs = options.timeout || 10000; // 10 second default for team member requests
+  
+  try {
+    console.log(`Fetching members for team ${teamId}...`);
+    const teamMembersClient = this.withTimeout(timeoutMs);
+    // Copy interceptors from main instance
+    teamMembersClient.interceptors.request = this.interceptors.request;
+    teamMembersClient.interceptors.response = this.interceptors.response;
+    
+    // Use the circuit breaker pattern
+    return await applyCircuitBreaker(() => 
+      teamMembersClient.get(`/teams/${teamId}/members`)
+    );
+  } catch (error) {
+    console.error(`Failed to fetch members for team ${teamId}:`, error);
+    
+    // Provide a more user-friendly error
+    const errorMessage = {
+      status: error.status || 500,
+      message: error.message || 'Failed to load team members. Please try again later.',
+      originalError: error
+    };
+    
+    throw errorMessage;
+  }
+};
+
 // Add a new method to check server connectivity
 apiClient.checkConnectivity = async function() {
   try {

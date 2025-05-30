@@ -106,12 +106,11 @@ function setupAssociations() {
   // Team hooks with better error handling
   Team.afterCreate(async (team, options) => {
     try {
-      // Create default 4-3-3 formation for the new team
+      // Instead of trying to create here, just log the intent
       console.log(`Team afterCreate hook triggered for team ID: ${team.id}`);
-      await Formation.createDefaultFormation(team.id);
-      console.log(`Created default 4-3-3 formation for team ID: ${team.id}`);
+      // Don't create formation here - it will be created in the afterCommit hook
     } catch (error) {
-      console.error(`Failed to create default formation for team ${team.id}:`, error);
+      console.error(`Failed to log team creation ${team.id}:`, error);
       // Don't throw error to prevent blocking team creation
     }
   });
@@ -120,12 +119,10 @@ function setupAssociations() {
   Team.hasMany(Formation, { foreignKey: 'teamId', as: 'formations' });
   Formation.belongsTo(Team, { foreignKey: 'teamId' });
 
-  // Handle team-formation afterCreate hook properly
+  // Enhanced and consolidated team-formation afterCreate hook
   Team.addHook('afterCreate', async (team, options) => {
     try {
-      // Only attempt to create a formation if the team has been fully committed
       const teamId = team.id;
-      console.log(`Team afterCreate hook triggered for team ID: ${teamId}`);
       
       // Use the same transaction from team creation if available
       const transaction = options.transaction;
@@ -134,39 +131,38 @@ function setupAssociations() {
         // If we're in a transaction, register an after commit hook
         transaction.afterCommit(async () => {
           try {
-            // Wait a bit to ensure the team is fully committed to the database
+            // Increase the delay to ensure team is committed and consistent across database
             setTimeout(async () => {
               try {
-                await Formation.createDefaultFormation(teamId);
-                console.log(`Successfully created default formation for team ${teamId} after transaction commit`);
+                const result = await Formation.createDefaultFormation(teamId);
+                if (result) {
+                  console.log(`Successfully created default formation for team ${teamId} after transaction commit`);
+                } else {
+                  console.log(`Skipped formation creation for team ${teamId} - team may have been deleted`);
+                }
               } catch (formationError) {
                 console.error(`Delayed formation creation failed for team ${teamId}:`, formationError);
               }
-            }, 1000);
+            }, 2000); // Increased delay to ensure transaction is fully committed
           } catch (error) {
             console.error(`After-commit formation creation failed for team ${teamId}:`, error);
           }
         });
       } else {
-        // If no transaction, wait for next tick to ensure team is committed
-        process.nextTick(async () => {
+        // If no transaction, handle it immediately but with delay
+        setTimeout(async () => {
           try {
-            // Add a delay to ensure team is fully committed
-            setTimeout(async () => {
-              try {
-                await Formation.createDefaultFormation(teamId);
-              } catch (formationError) {
-                console.error(`Deferred formation creation failed for team ${teamId}:`, formationError);
-              }
-            }, 500);
-          } catch (error) {
-            console.error(`Deferred formation creation failed for team ${teamId}:`, error);
+            const result = await Formation.createDefaultFormation(teamId);
+            if (result) {
+              console.log(`Successfully created default formation for team ${teamId} with no transaction`);
+            }
+          } catch (formationError) {
+            console.error(`Deferred formation creation failed for team ${teamId}:`, formationError);
           }
-        });
+        }, 1000);
       }
     } catch (error) {
       console.error('Error in Team afterCreate hook:', error);
-      // Don't throw - we don't want team creation to fail because of formation issues
     }
   });
 

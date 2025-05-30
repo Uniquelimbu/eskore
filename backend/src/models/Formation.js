@@ -67,8 +67,9 @@ Formation.createDefaultFormation = async (teamId, options = {}) => {
   }
 
   if (!teamExists) {
-    log.error(`Cannot create formation: Team with ID ${teamId} does not exist after ${maxAttempts} attempts`);
-    throw new Error(`Team with ID ${teamId} does not exist`);
+    // Instead of throwing an error, log a warning and return null to fail gracefully
+    log.warn(`Team with ID ${teamId} does not exist after ${maxAttempts} attempts - skipping formation creation`);
+    return null;
   }
   
   // Check if formation already exists to avoid duplicates

@@ -15,6 +15,7 @@ const Squad = () => {
   
   const {
     isLoading,
+    initialLoad,
     error,
     team,
     managers,
@@ -39,7 +40,7 @@ const Squad = () => {
     setShowJoinModal(true);
   };
 
-  if (isLoading) {
+  if (initialLoad && isLoading) {
     return <div className="squad-loading">Loading squad information...</div>;
   }
   
@@ -47,7 +48,8 @@ const Squad = () => {
     return <div className="squad-error">{error}</div>;
   }
 
-  const teamHasMembers = managers.length > 0 || athletes.length > 0 || coaches.length > 0;
+  // Check if we have any members at all
+  const teamHasMembers = (managers?.length > 0 || athletes?.length > 0 || coaches?.length > 0);
 
   return (
     <div className="squad-page">
@@ -57,7 +59,14 @@ const Squad = () => {
         onJoinTeam={handleJoinTeamClick}
         isManager={isManager}
         isMember={isMember}
+        team={team}
       />
+      
+      {isLoading && !initialLoad && (
+        <div className="squad-loading-overlay">
+          <div className="squad-loading-content">Updating squad information...</div>
+        </div>
+      )}
       
       {showAddMemberForm && (
         <AddMemberForm
@@ -78,7 +87,7 @@ const Squad = () => {
       <div className="squad-container">
         {teamHasMembers ? (
           <>
-            {managers.length > 0 && (
+            {Array.isArray(managers) && managers.length > 0 && (
               <MemberList 
                 title="Managers"
                 members={managers}
@@ -88,7 +97,7 @@ const Squad = () => {
               />
             )}
             
-            {athletes.length > 0 && (
+            {Array.isArray(athletes) && athletes.length > 0 && (
               <MemberList 
                 title="Athletes"
                 members={athletes}
@@ -98,7 +107,7 @@ const Squad = () => {
               />
             )}
             
-            {coaches.length > 0 && (
+            {Array.isArray(coaches) && coaches.length > 0 && (
               <MemberList 
                 title="Coaches"
                 members={coaches}
@@ -110,7 +119,7 @@ const Squad = () => {
           </>
         ) : (
           <div className="empty-state">
-            <p>This team has no members yet. Add members to get started!</p>
+            <p>This team has no members yet. {isManager ? 'Add members to get started!' : 'Join the team to get started!'}</p>
           </div>
         )}
       </div>

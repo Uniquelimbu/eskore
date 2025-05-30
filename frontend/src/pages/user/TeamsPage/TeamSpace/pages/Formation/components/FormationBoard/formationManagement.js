@@ -38,26 +38,75 @@ export const changePreset = (newPreset, get, set) => {
 
   // Keep player assignments when changing formation
   const { starters } = get(); // Removed unused 'subs' variable
-  const currentPlayerMap = {};
   
+  // Create a map of player info (by position type where possible)
+  const playerInfoMap = {};
+  const playersByPosition = {};
+  
+  // First, collect all player information by position type
   starters.forEach(player => {
     if (player.playerId || player.playerName) {
-      currentPlayerMap[player.id] = {
+      // Store player by position type (like CB, ST, GK) for better mapping
+      const posType = player.label || 'UNKNOWN';
+      
+      if (!playersByPosition[posType]) {
+        playersByPosition[posType] = [];
+      }
+      
+      playersByPosition[posType].push({
+        playerId: player.playerId,
+        jerseyNumber: player.jerseyNumber,
+        playerName: player.playerName
+      });
+      
+      // Also store by ID as fallback
+      playerInfoMap[player.id] = {
         playerId: player.playerId,
         jerseyNumber: player.jerseyNumber,
         playerName: player.playerName
       };
     }
   });
-  
+
   // Apply the new preset positions
   const newStarters = PRESETS[newPreset].map((pos, index) => {
-    // Preserve player data if this position existed in the old formation
-    const playerData = currentPlayerMap[pos.id] || {};
+    let playerData = null;
     
+    // First try to find a player with the same position type
+    if (playersByPosition[pos.label] && playersByPosition[pos.label].length > 0) {
+      playerData = playersByPosition[pos.label].shift();
+    } 
+    // If no exact position match, try to use existing position data when available
+    else if (playerInfoMap[pos.id]) {
+      playerData = playerInfoMap[pos.id];
+      delete playerInfoMap[pos.id]; // Use it only once
+    }
+    // Otherwise, use the next available player of any type
+    else {
+      // Look for players in any remaining position
+      for (const position in playersByPosition) {
+        if (playersByPosition[position].length > 0) {
+          playerData = playersByPosition[position].shift();
+          break;
+        }
+      }
+    }
+    
+    // If no player data found, use placeholder
+    if (!playerData) {
+      return {
+        ...pos,
+        position: pos.label,
+        jerseyNumber: String(index + 1),
+        playerName: `Player ${index + 1}`,
+        playerId: null,
+        positionId: pos.id
+      };
+    }
+    
+    // Return complete player with new position data
     return {
       ...pos,
-      ...playerData,
       playerId: playerData.playerId || null,
       position: pos.label,
       jerseyNumber: playerData.jerseyNumber || String(index + 1),
@@ -68,10 +117,10 @@ export const changePreset = (newPreset, get, set) => {
   
   set({ 
     preset: newPreset, 
-    starters: newStarters, 
+    starters: newStarters,
     saved: false 
   });
   
-  // Save the updated formation
+  // Save the updated formation to persist the changes
   get().saveFormation();
 };

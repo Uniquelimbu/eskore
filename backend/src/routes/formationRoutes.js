@@ -62,7 +62,8 @@ router.get('/:teamId',
           schema_json: defaultFormation,
           isDefault: true,
           notSaved: true,
-          teamNotFound: true
+          teamNotFound: true,
+          message: "Team not found - showing default formation only" 
         });
       }
       
