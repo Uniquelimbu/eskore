@@ -847,10 +847,3 @@ Let's keep the existing one for now. */
   margin: 0 auto;
   padding-top: 20px;
 }
-
-/* Remove these redundant classes since they're no longer needed */
-.manager-profile-required-container,
-.required-title,
-.required-description {
-  /* These can be removed completely */
-}
