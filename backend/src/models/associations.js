@@ -14,6 +14,7 @@ const TeamTournament = require('./TeamTournament');
 const UserMatch = require('./UserMatch');
 const Formation = require('./Formation');
 const Manager = require('./Manager'); // <-- Require Manager model
+const Player = require('./Player'); // Add this import
 
 function setupAssociations() {
   // Existing associations
@@ -23,6 +24,10 @@ function setupAssociations() {
   Match.belongsTo(Team, { as: 'awayTeam', foreignKey: 'awayTeamId' });
   Team.hasMany(Match, { as: 'homeMatches', foreignKey: 'homeTeamId' });
   Team.hasMany(Match, { as: 'awayMatches', foreignKey: 'awayTeamId' });
+  
+  // Add Player associations here if needed
+  User.hasOne(Player, { foreignKey: 'userId', as: 'Player' });
+  Player.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   
   // New associations
   // User - Role (many-to-many)

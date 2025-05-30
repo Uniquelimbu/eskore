@@ -14,6 +14,7 @@ const TeamTournament = require('./TeamTournament');
 const UserMatch = require('./UserMatch');
 const Formation = require('./Formation');
 const Manager = require('./Manager'); // Add this import
+const Player = require('./Player'); // Add this import
 
 // Then set up associations
 const { setupAssociations } = require('./associations');
@@ -32,5 +33,6 @@ module.exports = {
   TeamTournament,
   UserMatch,
   Formation,
-  Manager  // Add this export
+  Manager,  // Add this export
+  Player
 };
