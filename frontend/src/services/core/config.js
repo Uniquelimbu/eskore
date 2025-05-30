@@ -28,11 +28,36 @@ export const CIRCUIT_BREAKER_CONFIG = {
   RESET_TIMEOUT: 30000      // 30 seconds before attempting to reset circuit
 };
 
+// Error handling configuration
+export const ERROR_HANDLING_CONFIG = {
+  ENABLE_MOCK_FALLBACKS: true,
+  CACHE_EXPIRY_MS: 60000, // 1 minute
+  MAX_SERVER_ERROR_RETRIES: 3,
+  DEFAULT_RETRY_STRATEGY: 'exponential',
+  SERVER_ERROR_REPORTING: true,
+  CRITICAL_ENDPOINTS: [
+    '/members', 
+    '/users',
+    '/teams'
+  ]
+};
+
+// CORS and headers configuration
+export const CORS_CONFIG = {
+  // Flag to control whether custom diagnostic headers are sent
+  // Set to false to avoid CORS preflight issues
+  USE_CUSTOM_HEADERS: false, 
+  // List of safe headers that won't trigger CORS preflight
+  SAFE_HEADERS: ['accept', 'content-type', 'authorization']
+};
+
 // Export combined configuration object for convenience
 export const API_CONFIG = {
   API_BASE_URL,
   DEFAULT_TIMEOUT: TIMEOUT_CONFIG.DEFAULT,
   DEBUG_AUTH,
   TIMEOUT_CONFIG,
-  CIRCUIT_BREAKER_CONFIG
+  CIRCUIT_BREAKER_CONFIG,
+  ERROR_HANDLING_CONFIG,
+  CORS_CONFIG
 };
