@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { JoinTeamDialog } from '../components';
-import apiClient from '../../../../../services/apiClient';
+import { apiClient } from '../../../../../services'; // Updated import path
 import PageLayout from '../../../../../components/layout/PageLayout';
 import Loading from '../../../../../components/ui/Loading/Loading';
 import './TeamOverviewPage.css';

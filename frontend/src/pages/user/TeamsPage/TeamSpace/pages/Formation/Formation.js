@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import FormationContainer from './components/FormationContainer';
-import apiClient from '../../../../../../services/apiClient';
+import { apiClient } from '../../../../../../services'; // Updated import path
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import { isUserManager, isUserPlayer } from '../../../../../../utils/permissions';
 import './Formation.css';

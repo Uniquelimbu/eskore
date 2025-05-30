@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 const profileService = {
   // Get user profile (either current authenticated user or by ID)

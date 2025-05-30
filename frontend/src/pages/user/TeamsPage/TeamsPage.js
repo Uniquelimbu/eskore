@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import apiClient from '../../../services/apiClient';
+import { apiClient } from '../../../services'; // Updated import path
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import './TeamsPage.css';
 

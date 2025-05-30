@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import apiClient from '../../../../../../../../services/apiClient';
+import { apiClient } from '../../../../../../../../services'; // Updated import path
 
 // Import store and components
 import useFormationStore from '../FormationBoard'; 

@@ -1,5 +1,5 @@
 import ManagerRegistrationForm from './ManagerRegistrationForm';
-import apiClient from '../../../../../services/apiClient';
+import { apiClient } from '../../../../../services'; // Updated import path
 
 // Updated function to submit manager data to backend
 export const submitManagerProfile = async (managerData, teamId) => {

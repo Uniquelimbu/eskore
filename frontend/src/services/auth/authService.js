@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 // Helper for retry logic (keep as is or refine if needed)
 const withRetry = async (fn, maxRetries = 2, delay = 1000) => {

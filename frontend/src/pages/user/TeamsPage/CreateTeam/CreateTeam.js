@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import apiClient from '../../../../services/apiClient';
+import { apiClient } from '../../../../services'; // Updated import path
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PageLayout from '../../../../components/layout/PageLayout';
 import ManagerRegistrationForm from './ManagerDetails';

@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'; // Add this import
 import PageLayout from '../../../components/layout/PageLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import RecentActivity from '../DashboardPage/components/RecentActivity'; // Reuse RecentActivity
-import dashboardService from '../../../services/dashboardService'; // For fetching activity
-import profileService from '../../../services/profileService'; // For fetching user profile
+import { dashboardService, profileService } from '../../../services'; // Updated import paths
 import './ProfilePage.css'; // Import the CSS
 
 // Placeholder Stats Component (Replace with actual data fetching later)

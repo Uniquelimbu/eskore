@@ -5,7 +5,7 @@ import SearchResults from './components/SearchResults/SearchResults'; // Updated
 import Loading from '../../../components/ui/Loading/Loading';
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import './SearchPage.css';
-import apiClient from '../../../services/apiClient';
+import { apiClient } from '../../../services'; // Updated import path
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import authService from '../services/authService';
-import apiClient from '../services/apiClient'; // Add this import
+import { authService, apiClient } from '../services'; // Updated import path
 
 // Define action types
 const AUTH_INIT = 'AUTH_INIT';

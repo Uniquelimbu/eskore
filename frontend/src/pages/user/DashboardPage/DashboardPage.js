@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import RecentActivity from './components/RecentActivity';
 import { useAuth } from '../../../contexts/AuthContext';
-import dashboardService from '../../../services/dashboardService';
+import { dashboardService } from '../../../services'; // Updated import path
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import './DashboardPage.css';
 

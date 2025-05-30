@@ -111,3 +111,28 @@ export const validateUserData = (userData) => {
   
   return { valid: true, userData };
 };
+
+// Add a new utility to check API client configuration
+export const checkApiClientConfig = () => {
+  // Import from the updated path structure
+  const { apiClient, API_CONFIG } = require('../services/core');
+  
+  console.log('🔍 API Client Configuration Check');
+  console.log('===============================');
+  console.log(`Base URL: ${apiClient.defaults.baseURL || 'Not set'}`);
+  console.log(`Timeout: ${apiClient.defaults.timeout || 'Default'} ms`);
+  console.log(`With Credentials: ${apiClient.defaults.withCredentials ? 'Yes' : 'No'}`);
+  
+  // Show API configuration
+  console.log('\nAPI Configuration:');
+  console.log(`Default Timeout: ${API_CONFIG.DEFAULT_TIMEOUT} ms`);
+  console.log(`Team Request Timeout: ${API_CONFIG.TIMEOUT_CONFIG.TEAM_REQUEST} ms`);
+  console.log(`Team Members Timeout: ${API_CONFIG.TIMEOUT_CONFIG.TEAM_MEMBERS} ms`);
+  
+  // Check for any custom headers
+  const headers = apiClient.defaults.headers || {};
+  console.log('\nDefault Headers:');
+  Object.entries(headers).forEach(([key, value]) => {
+    console.log(`- ${key}: ${value}`);
+  });
+}

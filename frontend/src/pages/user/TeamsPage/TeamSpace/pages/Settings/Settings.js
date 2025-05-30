@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../../../../../contexts/AuthContext';
-import apiClient from '../../../../../../services/apiClient';
-import teamService from '../../../../../../services/teamService';
+import { apiClient, teamService } from '../../../../../../services'; // Updated import paths
 import { isUserManager } from '../../../../../../utils/permissions';
 import './Settings.css';
 

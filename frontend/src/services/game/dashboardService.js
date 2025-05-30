@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 const dashboardService = {
   // Get the current user's stats summary

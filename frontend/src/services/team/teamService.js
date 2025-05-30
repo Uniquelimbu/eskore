@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 // Cache for teams data
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -86,8 +86,11 @@ export const teamService = {
             throw retryError;
           }
           
+          // Fix: Capture the current attempts value in a constant before using in Promise
+          const delayTime = 1000 * attempts;
+          
           // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          await new Promise(resolve => setTimeout(resolve, delayTime));
         }
       }
       
