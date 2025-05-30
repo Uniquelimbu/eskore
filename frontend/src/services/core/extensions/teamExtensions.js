@@ -137,10 +137,9 @@ export const applyTeamExtensions = (apiClient) => {
     
     // Enhanced options with more granular configuration
     const timeoutMs = options.timeout || TIMEOUT_CONFIG.TEAM_MEMBERS;
-    const maxAttempts = options.maxRetries || 3; // Increased default retries
+    const maxAttempts = options.maxRetries || 1; // Reduced to just 1 retry (total of 2 attempts)
     const retryStrategy = options.retryStrategy || RETRY_STRATEGIES.EXPONENTIAL_BACKOFF;
     const bailOnServerError = options.bailOnServerError !== undefined ? options.bailOnServerError : false;
-    // Set mock data to false by default - we don't want mock data
     const useMockOnFailure = options.useMockOnFailure !== undefined ? options.useMockOnFailure : false;
     
     // Create a dedicated client instance for member requests
@@ -164,32 +163,24 @@ export const applyTeamExtensions = (apiClient) => {
       timings: []
     };
     
-    // Prepare endpoints - try alternative paths if main one fails
-    // First, try without /api prefix to fix potential double-prefix issues
-    const endpoints = [
-      `/teams/${normalizedTeamId}/members`,           // Primary endpoint WITHOUT /api prefix
-      `/teams/${normalizedTeamId}/users`,             // Alternative endpoint
-      `/teams/${normalizedTeamId}/roster`,            // Another possible endpoint
-      `/api/teams/${normalizedTeamId}/members`,       // With /api prefix as fallback
-    ];
+    // MODIFIED: Use only one endpoint - the correct API endpoint
+    // Remove all alternative endpoints that were causing issues
+    const endpoint = `/teams/${normalizedTeamId}/members`;
     
     try {
-      console.log(`TeamMembers[${requestId}]: Fetching members for team ${normalizedTeamId}...`);
+      console.log(`TeamMembers[${requestId}]: Fetching members for team ${normalizedTeamId} using endpoint: ${endpoint}`);
       
       let attempts = 0;
       let lastError = null;
       
-      // Enhanced retry loop with multiple fallback strategies
+      // Simplified retry logic with just the one correct endpoint
       while (attempts <= maxAttempts) {
         const attemptStart = Date.now();
         
         try {
-          // For first attempt use primary endpoint, for retries try alternatives
-          const endpointIndex = Math.min(attempts, endpoints.length - 1);
-          const endpoint = endpoints[endpointIndex];
           metrics.endpoints.push(endpoint);
           
-          console.log(`TeamMembers[${requestId}]: Attempt ${attempts + 1}/${maxAttempts + 1} using endpoint: ${endpoint}`);
+          console.log(`TeamMembers[${requestId}]: Attempt ${attempts + 1}/${maxAttempts + 1}`);
           
           // Use params-only configuration to avoid CORS issues
           const requestConfig = {
@@ -243,15 +234,31 @@ export const applyTeamExtensions = (apiClient) => {
             timestamp: Date.now()
           });
           
+          // Log performance metrics
+          metrics.timings.push(Date.now() - attemptStart);
+          const totalTime = Date.now() - startTime;
+          console.log(`TeamMembers[${requestId}]: Total operation took ${totalTime}ms with ${attempts + 1} attempt(s)`);
+          
           return normalizedResponse;
         } catch (retryError) {
           attempts++;
           metrics.attempts = attempts;
           lastError = retryError;
           
+          // Enhanced error logging
+          const errorDetails = {
+            status: retryError.status || retryError.response?.status,
+            message: retryError.message || 'Unknown error',
+            code: retryError.code || retryError.name || 'UnknownError'
+          };
+          
+          metrics.errors.push(errorDetails);
+          
+          console.warn(`TeamMembers[${requestId}]: Attempt ${attempts}/${maxAttempts + 1} failed:`, errorDetails);
+          
           // Check if we should bail early
           const shouldBailEarly = 
-            (bailOnServerError && retryError.status === 500) || 
+            (bailOnServerError && errorDetails.status === 500) || 
             attempts > maxAttempts;
             
           if (shouldBailEarly) {

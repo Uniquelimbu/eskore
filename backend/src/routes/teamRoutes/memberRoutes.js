@@ -3,21 +3,20 @@ const router = express.Router();
 const { requireAuth } = require('../../middleware/auth');
 const { catchAsync, ApiError } = require('../../middleware/errorHandler');
 const { validate, schemas } = require('../../validation');
-const Team = require('../../models/Team');
-const UserTeam = require('../../models/UserTeam');
-const User = require('../../models/User');
-const Player = require('../../models/Player'); // Add missing Player model import
-const Manager = require('../../models/Manager'); // Add Manager model import for completeness
-const { sendSafeJson } = require('../../utils/safeSerializer');
-const log = require('../../utils/log');
 const sequelize = require('../../config/db');
 const { Op } = require('sequelize');
 const { body, param } = require('express-validator');
 
-/**
- * GET /api/teams/:id/members
- * Fetches all members of a specific team
- */
+// Import models through sequelize instance to ensure they're properly initialized
+const User = sequelize.models.User;
+const Team = sequelize.models.Team;
+const UserTeam = sequelize.models.UserTeam;
+const Player = sequelize.models.Player;
+const Manager = sequelize.models.Manager;
+
+const { sendSafeJson } = require('../../utils/safeSerializer');
+const log = require('../../utils/log');
+
 router.get('/:id/members', 
   validate(schemas.team.teamIdParam),
   catchAsync(async (req, res) => {
@@ -29,52 +28,91 @@ router.get('/:id/members',
       throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
     }
 
-    // Get all team members with their player and manager profiles
-    const members = await User.findAll({
-      attributes: ['id', 'firstName', 'lastName', 'email'],
-      include: [
-        {
-          model: UserTeam,
-          as: 'userTeams',
-          where: { teamId: id },
-          attributes: ['role', 'joinedAt', 'status']
-        },
-        {
-          model: Player,
-          as: 'Player',
-          attributes: ['id', 'position', 'height', 'weight', 'preferredFoot', 'jerseyNumber', 'nationality', 'profileImageUrl']
-        },
-        {
-          model: Manager,
-          as: 'Manager',
-          attributes: ['id', 'playingStyle', 'preferredFormation', 'experience', 'profileImageUrl']
-        }
-      ]
-    });
+    // Log for debugging
+    log.info(`Using models from sequelize instance: User: ${!!User}, Team: ${!!Team}, UserTeam: ${!!UserTeam}, Player: ${!!Player}, Manager: ${!!Manager}`);
 
-    // Format response
-    const formattedMembers = members.map(member => {
-      const memberData = member.toJSON();
-      const userTeam = memberData.userTeams[0];
+    try {
+      // Use a more reliable query approach that doesn't depend on associations
+      const userTeams = await UserTeam.findAll({
+        where: { teamId: id },
+        include: [{
+          model: User,
+          attributes: ['id', 'firstName', 'lastName', 'email']
+        }]
+      });
       
-      return {
-        id: memberData.id,
-        firstName: memberData.firstName,
-        lastName: memberData.lastName,
-        email: memberData.email,
-        role: userTeam.role,
-        joinedAt: userTeam.joinedAt,
-        status: userTeam.status,
-        Player: memberData.Player,
-        Manager: memberData.Manager
-      };
-    });
+      // Get user IDs to fetch related profiles
+      const userIds = userTeams.map(ut => ut.User?.id).filter(Boolean);
+      
+      // Verify userIds array
+      log.info(`Found ${userIds.length} user IDs for team ${id}`);
+      
+      // Safe approach - use try/catch for each model query
+      let players = [];
+      let managers = [];
+      
+      try {
+        if (userIds.length > 0) {
+          players = await Player.findAll({
+            where: { userId: { [Op.in]: userIds } }
+          });
+          log.info(`Found ${players.length} player profiles`);
+        }
+      } catch (playerErr) {
+        log.error(`Error fetching players: ${playerErr.message}`);
+        players = []; // Ensure it's an empty array on error
+      }
+      
+      try {
+        if (userIds.length > 0) {
+          managers = await Manager.findAll({
+            where: { userId: { [Op.in]: userIds } }
+          });
+          log.info(`Found ${managers.length} manager profiles`);
+        }
+      } catch (managerErr) {
+        log.error(`Error fetching managers: ${managerErr.message}`);
+        managers = []; // Ensure it's an empty array on error
+      }
+      
+      // Map player and manager data by userId for quick lookup
+      const playerMap = players.reduce((map, player) => {
+        map[player.userId] = player;
+        return map;
+      }, {});
+      
+      const managerMap = managers.reduce((map, manager) => {
+        map[manager.userId] = manager;
+        return map;
+      }, {});
+      
+      // Build response with combined data
+      const formattedMembers = userTeams.map(userTeam => {
+        if (!userTeam.User) return null;
+        
+        const userId = userTeam.User.id;
+        return {
+          id: userId,
+          firstName: userTeam.User.firstName,
+          lastName: userTeam.User.lastName,
+          email: userTeam.User.email,
+          role: userTeam.role,
+          joinedAt: userTeam.joinedAt,
+          status: userTeam.status,
+          Player: playerMap[userId] || null,
+          Manager: managerMap[userId] || null
+        };
+      }).filter(Boolean);
 
-    return sendSafeJson(res, {
-      teamId: id,
-      teamName: team.name,
-      members: formattedMembers
-    });
+      return sendSafeJson(res, {
+        teamId: id,
+        teamName: team.name,
+        members: formattedMembers
+      });
+    } catch (error) {
+      log.error(`TEAMROUTES/MEMBERS Error: ${error.message}`, error);
+      throw error;
+    }
   })
 );
 
