@@ -502,19 +502,51 @@ export const applyTeamExtensions = (apiClient) => {
     }
   };
   
-  // Add method for joining a team
+  // Update joinTeam method to support both direct join and request to join
   apiClient.joinTeam = async function(teamId, joinData) {
     try {
-      // First, join the team with the specified role
+      // Get the current user's ID from auth endpoint
+      const currentUser = await this.get('/auth/me');
+      const userId = currentUser?.id;
+      
+      if (!userId) {
+        throw new Error('Could not determine user ID for team join request');
+      }
+      
+      console.log(`Joining team ${teamId} as user ${userId} with role ${joinData.role}`);
+      
+      const team = await this.get(`/teams/${teamId}`);
+      
+      // If team is public and requires approval, send join request
+      if (team.requiresApproval || team.visibility === 'private') {
+        console.log('Team requires approval, sending join request');
+        const joinRequestResponse = await this.post('/notifications/team-join-request', {
+          teamId: teamId,
+          role: joinData.role,
+          message: joinData.message || '',
+          playerData: joinData.playerData || null
+        });
+        
+        return {
+          success: true,
+          message: 'Join request sent to team managers',
+          isPending: true,
+          ...joinRequestResponse
+        };
+      }
+      
+      // If team is public and doesn't require approval, join directly
       const joinResponse = await this.post(`/teams/${teamId}/members`, {
+        userId: userId,
         role: joinData.role
       });
       
       // If player data was provided, save that as well
       if (joinResponse.success && joinData.playerData) {
+        console.log('Creating player profile with data:', joinData.playerData);
         await this.post('/players', {
           ...joinData.playerData,
-          teamId
+          teamId: teamId
         });
       }
       
@@ -525,7 +557,92 @@ export const applyTeamExtensions = (apiClient) => {
     }
   };
   
-  return apiClient;
+  // Add method to invite players to a team
+  apiClient.inviteToTeam = async function(teamId, inviteData) {
+    try {
+      const { email, role, message } = inviteData;
+      
+      console.log(`Inviting ${email} to team ${teamId} as ${role}`);
+      
+      const response = await this.post('/notifications/team-invitation', {
+        teamId,
+        email,
+        role,
+        message
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('Error inviting user to team:', error);
+      throw error;
+    }
+  };
+  
+  // Add method to get notifications
+  apiClient.getNotifications = async function(options = {}) {
+    try {
+      const { status = 'all', limit = 20, offset = 0 } = options;
+      
+      const response = await this.get('/notifications', {
+        params: { status, limit, offset }
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      throw error;
+    }
+  };
+  
+  // Add method to get unread notification count
+  apiClient.getUnreadNotificationCount = async function() {
+    try {
+      const response = await this.get('/notifications/unread-count');
+      return response?.count || 0;
+    } catch (error) {
+      console.error('Error fetching unread notification count:', error);
+      return 0; // Return 0 as fallback
+    }
+  };
+  
+  // Add methods to handle notification actions
+  apiClient.acceptNotification = async function(notificationId) {
+    try {
+      const response = await this.post(`/notifications/${notificationId}/accept`);
+      return response;
+    } catch (error) {
+      console.error('Error accepting notification:', error);
+      throw error;
+    }
+  };
+  
+  apiClient.rejectNotification = async function(notificationId, reason = '') {
+    try {
+      const response = await this.post(`/notifications/${notificationId}/reject`, { reason });
+      return response;
+    } catch (error) {
+      console.error('Error rejecting notification:', error);
+      throw error;
+    }
+  };
+  
+  apiClient.markNotificationRead = async function(notificationId) {
+    try {
+      const response = await this.put(`/notifications/${notificationId}/read`);
+      return response;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
+  };
+  
+  apiClient.markAllNotificationsRead = async function() {
+    try {
+      const response = await this.put('/notifications/read-all');
+      return response;
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      throw error;
+    }
+  };
 };
-
-export default applyTeamExtensions;

@@ -19,7 +19,8 @@ const Settings = () => {
     city: '',
     abbreviation: '', 
     foundedYear: '',
-    logoUrl: ''
+    logoUrl: '',
+    visibility: 'public' // Add default visibility
   });
   const [logoFile, setLogoFile] = useState(null); // Added state for logo file
   const [logoPreview, setLogoPreview] = useState(null); // Added state for logo preview
@@ -44,9 +45,10 @@ const Settings = () => {
           name: data.name || '',
           nickname: data.nickname || '',
           city: data.city || '',
-          abbreviation: data.abbreviation || '', // Set abbreviation from data
+          abbreviation: data.abbreviation || '',
           foundedYear: data.foundedYear || '',
-          logoUrl: data.logoUrl || ''
+          logoUrl: data.logoUrl || '',
+          visibility: data.visibility || 'public' // Set visibility from data
         });
 
         // Set logo preview if logo exists
@@ -467,6 +469,26 @@ const Settings = () => {
               {validationErrors.foundedYear && (
                 <div className="error-message">{validationErrors.foundedYear}</div>
               )}
+            </div>
+            
+            {/* Add visibility options */}
+            <div className="form-group">
+              <label htmlFor="visibility">Team Visibility</label>
+              <select
+                id="visibility"
+                name="visibility"
+                value={formData.visibility}
+                onChange={handleInputChange}
+                disabled={!isManager}
+                className="form-control"
+              >
+                <option value="public">Public - Visible in search results</option>
+                <option value="private">Private - Hidden from search results</option>
+              </select>
+              <small className="form-hint">
+                Public teams appear in search and can be joined directly. 
+                Private teams are by invitation only.
+              </small>
             </div>
           </div>
           

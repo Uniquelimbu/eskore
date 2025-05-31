@@ -18,7 +18,8 @@ const CreateTeam = () => {
     abbreviation: '',
     foundedYear: new Date().getFullYear().toString(),
     city: '',
-    teamLogo: null
+    teamLogo: null,
+    visibility: 'public' // Add default visibility
   });
   // eslint-disable-next-line no-unused-vars
   const [managerData, setManagerData] = useState(null);
@@ -253,7 +254,8 @@ const CreateTeam = () => {
         abbreviation: formData.abbreviation,
         foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : null,
         city: formData.city,
-        nickname: formData.nickname
+        nickname: formData.nickname,
+        visibility: formData.visibility // Add visibility to the payload
       };
 
       console.log("Attempting to create team with payload:", teamPayload);
@@ -418,6 +420,25 @@ const CreateTeam = () => {
                   />
                   {errors.city && <div className="error-message">{errors.city}</div>}
                 </div>
+              </div>
+              
+              {/* Add visibility options */}
+              <div className="form-group">
+                <label htmlFor="visibility">Team Visibility</label>
+                <select
+                  id="visibility"
+                  name="visibility"
+                  value={formData.visibility}
+                  onChange={handleChange}
+                  className="form-control"
+                >
+                  <option value="public">Public - Visible in search results</option>
+                  <option value="private">Private - Hidden from search results</option>
+                </select>
+                <small className="form-hint">
+                  Public teams appear in search and can be joined directly. 
+                  Private teams are by invitation only.
+                </small>
               </div>
               
               <h3 className="section-title">Team Logo</h3>
