@@ -31,17 +31,12 @@ const PlayerChip = ({
         originalPositionId: isStarter ? positionId : null,
         originalSubIndex: !isStarter ? indexInSubs : null,
       };
-      // console.log('Dragging item:', itemPayload);
       return itemPayload;
     },
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult();
-      // console.log('PlayerChip drop result:', dropResult, 'Dragged item:', item);
       if (dropResult && onDropOrSwap) {
         onDropOrSwap(item, dropResult);
-      } else {
-        // console.log('Player dropped on invalid target or no drop target.');
-        // Optionally, trigger a "snap back" action here if not handled by optimistic updates
       }
     },
     collect: (monitor) => ({
@@ -51,11 +46,10 @@ const PlayerChip = ({
   }), [id, isStarter, positionId, indexInSubs, draggable, isPlaceholder, onDropOrSwap]);
 
   // Setup for this chip being a drop target (for swapping)
-  const [{ isOverDropTarget, canDropOnPlayer }, drop] = useDrop(() => ({
+  const [{ isOverDropTarget }, drop] = useDrop(() => ({
     accept: 'player',
-    canDrop: (draggedItem) => draggable && draggedItem.id !== id && !isPlaceholder,
+    canDrop: (draggedItem) => draggable && draggedItem.id !== id,
     drop: (draggedItem) => {
-      // console.log(`PlayerChip ${id} is drop target for ${draggedItem.id}`);
       return {
         type: 'playerSwapTarget',
         targetPlayerId: id,
@@ -64,20 +58,16 @@ const PlayerChip = ({
     },
     collect: (monitor) => ({
       isOverDropTarget: !!monitor.isOver() && monitor.canDrop(),
-      canDropOnPlayer: monitor.canDrop(),
     }),
-  }), [id, isStarter, draggable, isPlaceholder]);
+  }), [id, isStarter, draggable]);
 
   // Attach both drag and drop refs to the same element
   drag(drop(playerChipRef));
-  
-  // Apply the preview to the same element (the default behavior)
-  // This is optional since by default the preview attaches to the same element as drag
   preview(playerChipRef);
 
   // Handle click for selection
   const handleClick = () => {
-    if (!isPlaceholder && onSelect && !isSwapping) {
+    if (onSelect && !isSwapping) {
       onSelect(id, isStarter, positionId, indexInSubs);
     }
   };
@@ -88,20 +78,25 @@ const PlayerChip = ({
     top: `${y}px`,
     transform: 'translate(-50%, -50%)',
     opacity: isDragging ? 0.4 : 1,
-    cursor: draggable && !isPlaceholder ? 'grab' : isSwapping ? 'not-allowed' : 'pointer',
+    cursor: draggable ? 'grab' : isSwapping ? 'not-allowed' : 'pointer',
     zIndex: isDragging ? 9999 : (isOverDropTarget || isSelected || isSwapping ? 15 : 10),
-    width: '80px', // Ensure these are consistent
-    height: '90px', // Ensure these are consistent
+    width: '80px',
+    height: '110px', // Increased to accommodate badge shape
     transition: isDragging ? 'none' : 'transform 0.2s, opacity 0.2s, box-shadow 0.2s',
-    boxShadow: isSelected 
-      ? '0 0 10px 3px rgba(74, 108, 247, 0.7)' 
-      : (isOverDropTarget && canDropOnPlayer 
-        ? '0 0 10px 3px rgba(74, 108, 247, 0.7)' 
-        : (isDragging ? '0 5px 15px rgba(0,0,0,0.3)' : 'none')
-      ),
   };
   
-  const chipClasses = `player-chip ${isStarter ? 'starter' : 'substitute'} ${isPlaceholder ? 'placeholder' : ''} ${draggable && !isPlaceholder ? 'draggable' : ''} ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''} ${isSwapping ? 'swapping' : ''}`;
+  const chipClasses = `player-chip ${isStarter ? 'starter' : 'substitute'} ${isPlaceholder ? 'placeholder' : ''} ${draggable ? 'draggable' : ''} ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''} ${isSwapping ? 'swapping' : ''}`;
+
+  // Create silhouette style with direct image reference
+  const silhouetteStyle = {
+    width: '80%',
+    height: '80%',
+    backgroundImage: `url(${process.env.PUBLIC_URL}/images/player-silhouette.png)`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: 'contain',
+    opacity: 0.7,
+  };
 
   return (
     <div
@@ -109,19 +104,35 @@ const PlayerChip = ({
       className={chipClasses}
       style={chipStyles}
       data-player-id={id}
+      data-position-id={positionId} /* Add position ID for better tracking */
       onClick={handleClick}
     >
-      <div className="player-card-content">
-        {!isPlaceholder ? (
-          <>
-            <div className="position-label">{label}</div>
-            <div className="player-name">{playerName || "Unknown"}</div>
+      {!isPlaceholder ? (
+        <div className="player-badge-card">
+          <div className="player-badge-top">
+            <div className="position-code">{label}</div>
             {jerseyNumber && <div className="jersey-number">{jerseyNumber}</div>}
-          </>
-        ) : (
-          <div className="placeholder-icon">UT</div>
-        )}
-      </div>
+          </div>
+          <div className="player-badge-middle">
+            <div style={silhouetteStyle}></div>
+          </div>
+          <div className="player-badge-bottom">
+            <div className="player-name">{playerName || "Unknown"}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="player-badge-card placeholder">
+          <div className="player-badge-top">
+            <div className="position-code">{label}</div>
+          </div>
+          <div className="player-badge-middle">
+            <div style={silhouetteStyle}></div>
+          </div>
+          <div className="player-badge-bottom">
+            <div className="placeholder-label">EMPTY</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

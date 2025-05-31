@@ -372,7 +372,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                 style={{
                   position: 'relative',
                   width: '100%',
-                  height: `${dimensions.height}px`,
+                  height: '625px', // Fixed height instead of dynamic calculation
                   overflow: 'hidden'
                 }}
               >

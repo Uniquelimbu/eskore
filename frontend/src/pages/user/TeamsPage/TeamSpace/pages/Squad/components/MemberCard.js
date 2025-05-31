@@ -15,41 +15,46 @@ const MemberCard = ({ member, onRemove, isManager, category }) => {
                 member.profileImageUrl ||
                 member.Player?.profileImageUrl || 
                 null;
-  
-  // Generate initials for the avatar placeholder
-  const getInitials = () => {
-    if (!member.firstName && !member.lastName) return "?";
-    return `${(member.firstName || "").charAt(0)}${(member.lastName || "").charAt(0)}`.toUpperCase();
-  };
 
-  // Destructure only what we need, removing 'country' if not used
-  const { firstName, lastName, email, role, profileImageUrl } = member;
+  // Destructure only what we need
+  const { id, firstName, lastName, email, role, profileImageUrl, jerseyNumber, position } = member;
+  
+  // Get position code for athletes
+  const positionCode = category === 'athlete' && member.Player?.position 
+                      ? member.Player.position 
+                      : category === 'athlete' ? 'ATH' : roleLabel.substring(0, 3).toUpperCase();
 
   return (
     <div className="member-card">
-      <div className="member-avatar">
-        {avatar ? (
-          <img src={avatar} alt={memberName} />
-        ) : (
-          <div className="member-avatar-placeholder">
-            {getInitials()}
-          </div>
-        )}
+      {/* New badge-style avatar */}
+      <div className="member-badge">
+        <div className="member-badge-top">
+          <div className="position-code">{positionCode}</div>
+          {category === 'athlete' && member.Player?.jerseyNumber && (
+            <div className="badge-jersey-number">{member.Player.jerseyNumber}</div>
+          )}
+        </div>
+        <div className="member-badge-middle">
+          {avatar ? (
+            <img src={avatar} alt={memberName} />
+          ) : (
+            <div className="player-silhouette"></div>
+          )}
+        </div>
+        <div className="member-badge-bottom">
+          <div className="badge-player-name">{memberName || "Unknown"}</div>
+        </div>
       </div>
       
       <div className="member-info">
         <h4>{memberName}</h4>
         <div className="member-details">
-          {/* Role badge moved out of member-details */}
+          {/* Original member details remain unchanged */}
         </div>
       </div>
       
       {/* Role badge moved here to position on the right */}
       <span className={`role-badge ${category}`}>{roleLabel}</span>
-      
-      {category === 'athlete' && member.Player?.jerseyNumber && (
-        <div className="jersey-number">#{member.Player.jerseyNumber}</div>
-      )}
       
       {isManager && member.role !== 'manager' && (
         <div className="member-actions">

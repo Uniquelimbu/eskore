@@ -122,12 +122,12 @@ const Formation = () => {
           &larr; Back
         </button>
         <h1 className="formation-title">
-          Formation 
-          {viewMode === 'manager' && ' (Manager View)'}
-          {viewMode === 'player' && ' (Player View)'}
-          {viewMode === 'viewer' && ' (Viewer)'}
+          Formation
+          {viewMode === 'manager' && <span className="view-mode-label"> (Manager View)</span>}
+          {viewMode === 'player' && <span className="view-mode-label"> (Player View)</span>}
+          {viewMode === 'viewer' && <span className="view-mode-label"> (Viewer)</span>}
         </h1>
-        <div className="header-spacer"></div> {/* Empty div for flex alignment */}
+        <div className="header-spacer"></div> {/* Keep this to maintain layout */}
       </div>
       <div className="formation-content">
         <FormationContainer 

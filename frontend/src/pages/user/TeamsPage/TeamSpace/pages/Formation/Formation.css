@@ -134,23 +134,32 @@
 /* Header styles */
 .page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  flex-direction: column; /* Change to column layout */
+  justify-content: center; /* Center vertically */
+  align-items: center; /* Center horizontally */
+  margin-bottom: -12px;
   position: relative;
+  border-bottom: none;
+  padding-bottom: 0;
+  min-height: 70px; /* Ensure enough space for the back button */
 }
 
 .formation-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  margin: 0;
+  position: static;
+  transform: none;
+  left: auto;
+  margin: 0; /* Remove left margin to allow centering */
   font-size: 1.8rem;
   color: var(--text-light);
+  text-align: center; /* Center text */
+  z-index: 5; /* Ensure title is above other elements */
 }
 
-.back-button {
+/* Make the selector more specific to the formation page */
+.formation-page .back-button {
+  position: absolute; /* Position absolutely to keep at top-left */
+  left: 0;
+  top: 10px; /* Align with top */
   background-color: transparent;
   color: var(--text-light);
   border: 1px solid var(--text-muted);
@@ -158,16 +167,26 @@
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s;
-  z-index: 1; /* Ensure button appears above the title */
+  z-index: 10; /* Ensure button appears above other elements */
 }
 
-.back-button:hover {
+/* Add hover state for the back button */
+.formation-page .back-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
 }
 
+/* Hide the spacer as it's not needed with centered content */
 .header-spacer {
-  width: 85px; /* Approximately the same width as the back button */
-  height: 1px;
+  display: none;
+}
+
+/* View mode label styling */
+.view-mode-label {
+  font-size: 1rem;
+  font-weight: normal;
+  opacity: 0.7;
+  margin-left: 6px;
 }
 
 /* Responsive adjustments */
@@ -190,5 +209,15 @@
   
   .formation-save-button {
     width: 100%;
+  }
+  
+  .formation-title {
+    font-size: 1.5rem;
+    margin-top: 8px; /* Add some space between back button and title on mobile */
+  }
+  
+  .back-button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
   }
 }

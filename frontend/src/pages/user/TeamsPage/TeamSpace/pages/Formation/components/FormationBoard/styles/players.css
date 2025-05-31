@@ -2,7 +2,7 @@
 .player-chip {
   position: absolute;
   width: 80px;
-  height: 90px;
+  height: 110px; /* Increased from 100px to 110px for the badge shape */
   transform: translate(-50%, -50%);
   transition: transform 0.2s ease, opacity 0.2s ease;
   cursor: move;
@@ -45,10 +45,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
+  justify-content: space-between; /* Changed from center to space-between */
+  padding: 8px 4px; /* Adjusted padding to provide more vertical space */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden; /* Ensure content stays within boundaries */
 }
 
 .player-chip.placeholder .player-card-content {
@@ -64,7 +65,7 @@
   font-weight: bold;
   padding: 2px 8px;
   border-radius: 3px;
-  margin-bottom: 4px;
+  margin-bottom: 2px; /* Reduced from 4px to compress vertical spacing */
 }
 
 .player-name {
@@ -73,10 +74,14 @@
   text-align: center;
   word-break: break-word;
   max-width: 100%;
-  margin: 4px 0;
+  margin: 2px 0; /* Reduced from 4px to compress vertical spacing */
+  flex-grow: 1; /* Allow name to take remaining space */
+  display: flex;
+  align-items: center;
 }
 
-.jersey-number {
+/* Make the jersey number selector more specific to prevent conflicts */
+.player-card-content .jersey-number {
   background-color: #444444;
   color: white;
   font-size: 14px;
@@ -87,13 +92,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 4px;
-}
-
-.placeholder-icon {
-  color: #aaa;
-  font-size: 20px;
-  font-weight: bold;
+  position: absolute;
+  top: 4px; /* Position at top */
+  right: 4px; /* Position at right */
+  margin: 0; /* Remove any margins */
+  z-index: 10; /* Ensure it's above other elements */
+  flex-shrink: 0; /* Prevent number from shrinking */
 }
 
 /* Player selection styles */
@@ -127,4 +131,137 @@
 
 .player-chip.draggable:active {
   cursor: grabbing !important;
+}
+
+/* New Badge Card Styling - updated to rounded rectangle */
+.player-badge-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Remove clip-path polygon */
+  border-radius: 12px; /* Add rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease, transform 0.2s ease;
+}
+
+.player-badge-top {
+  background-color: #444444;
+  height: 35%;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px;
+  position: relative;
+}
+
+.player-badge-middle {
+  background-color: #444444;
+  height: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.player-badge-bottom {
+  background-color: #000000;
+  height: 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.position-code {
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+}
+
+.player-badge-card .jersey-number {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  position: static; /* Override absolute positioning from existing styles */
+  background-color: transparent;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.player-badge-card .player-name {
+  color: white;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding: 0 2px;
+  margin: 0;
+  max-width: 100%;
+}
+
+.player-silhouette {
+  width: 80%;
+  height: 80%;
+  background-image: url('../../../../../../../../../../public/images/player-silhouette.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.7;
+}
+
+/* Placeholder style */
+.player-badge-card.placeholder {
+  opacity: 0.7;
+}
+
+.player-badge-card.placeholder .player-silhouette {
+  opacity: 0.4;
+}
+
+.placeholder-label {
+  color: white;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Selection and hover states with the new badge design */
+.player-chip.selected .player-badge-card {
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.7);
+  transform: scale(1.08);
+}
+
+.player-chip.draggable:hover .player-badge-card {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .player-badge-card {
+    /* Remove clip-path property */
+    border-radius: 10px; /* Simpler border radius for mobile */
+  }
+  
+  .position-code {
+    font-size: 10px;
+  }
+  
+  .player-badge-card .jersey-number {
+    font-size: 14px;
+  }
+  
+  .player-badge-card .player-name {
+    font-size: 8px;
+  }
 }

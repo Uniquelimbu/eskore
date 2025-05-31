@@ -218,7 +218,7 @@ const Settings = () => {
       setStatusMsg(null); // Clear previous messages
       
       // First, update the team basic info
-      const updateResponse = await teamService.updateTeam(teamId, formData);
+      await teamService.updateTeam(teamId, formData);
 
       // If there's a new logo, upload it separately
       if (logoFile) {
