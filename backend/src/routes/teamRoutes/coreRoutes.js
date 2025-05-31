@@ -89,7 +89,14 @@ router.post('/',
   validate(schemas.team.createTeam), 
   catchAsync(async (req, res) => {
     log.info(`TEAMROUTES/CORE (POST /): Creating new team: ${JSON.stringify(req.body)}`);
-    const { name, abbreviation, foundedYear, city, nickname } = req.body;
+    const { 
+      name, 
+      abbreviation, 
+      foundedYear, 
+      city, 
+      nickname,
+      visibility = 'public' // New field with default
+    } = req.body;
     
     // Enhanced validation for user ID before proceeding
     if (!req.user) {
@@ -110,15 +117,16 @@ router.post('/',
     const t = await sequelize.transaction();
     
     try {
-      // 1. Create the team with the extracted userId - removed passwordHash
+      // 1. Create the team with the extracted userId and visibility
       const team = await Team.create({
         name,
         abbreviation: abbreviation?.toUpperCase() || null,
         foundedYear: foundedYear || null,
         city: city || null,
         nickname: nickname || null,
-        createdBy: userId, // Use the extracted userId
-        creatorId: userId  // Make sure both fields are set
+        visibility, // Add visibility field
+        createdBy: userId,
+        creatorId: userId
       }, { transaction: t });
       
       // 2. Generate and set team identifier
@@ -194,7 +202,14 @@ router.patch('/:id',
   ]), 
   catchAsync(async (req, res) => {
     const { id } = req.params;
-    const { name, abbreviation, foundedYear, city, nickname } = req.body;
+    const { 
+      name, 
+      abbreviation, 
+      foundedYear, 
+      city, 
+      nickname,
+      visibility // Added visibility field
+    } = req.body;
     
     log.info(`TEAMROUTES/CORE (PATCH /:id): Updating team with ID: ${id}, User: ${req.user?.email}`);
     
@@ -223,6 +238,7 @@ router.patch('/:id',
     if (foundedYear !== undefined) team.foundedYear = foundedYear || null;
     if (city !== undefined) team.city = city || null;
     if (nickname !== undefined) team.nickname = nickname || null;
+    if (visibility !== undefined) team.visibility = visibility; // Handle visibility update
     
     // Save changes
     await team.save();

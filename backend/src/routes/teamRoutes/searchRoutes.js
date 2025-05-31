@@ -5,15 +5,14 @@ const Team = require('../../models/Team');
 const { sendSafeJson } = require('../../utils/safeSerializer');
 const log = require('../../utils/log');
 const { Op } = require('sequelize');
-const { query } = require('express-validator'); // Add this import
-const { validate } = require('../../validation'); // Add this import
+const { query } = require('express-validator');
+const { validate } = require('../../validation');
 
 /**
  * GET /api/teams/search
  * Search for teams by name, abbreviation, or teamIdentifier
  */
 router.get('/search', 
-  // Add validation rules but make the query optional with default behavior
   validate([
     query('q').optional().isString().trim().escape()
   ]),
@@ -25,16 +24,21 @@ router.get('/search',
       return sendSafeJson(res, { success: true, count: 0, teams: [] });
     }
     
-    const query = q.trim();
-    // Case-insensitive match (Op.iLike in Postgres, Op.like otherwise)
+    const searchQuery = q.trim();
     const likeOp = Op.iLike ? Op.iLike : Op.like;
     
     const teams = await Team.findAll({
       where: {
-        [Op.or]: [
-          { name: { [likeOp]: `%${query}%` } },
-          { abbreviation: { [likeOp]: `%${query}%` } },
-          { teamIdentifier: { [likeOp]: `%${query}%` } } // Add search by teamIdentifier
+        [Op.and]: [
+          // Only include public teams
+          { visibility: 'public' },
+          {
+            [Op.or]: [
+              { name: { [likeOp]: `%${searchQuery}%` } },
+              { abbreviation: { [likeOp]: `%${searchQuery}%` } },
+              { teamIdentifier: { [likeOp]: `%${searchQuery}%` } }
+            ]
+          }
         ]
       },
       limit: 20,

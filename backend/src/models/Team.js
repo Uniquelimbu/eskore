@@ -71,6 +71,11 @@ Team.init({
     type: DataTypes.STRING,
     allowNull: true
   },
+  visibility: {
+    type: DataTypes.ENUM('public', 'private'),
+    defaultValue: 'public',
+    allowNull: false
+  },
   teamIdentifier: {
     type: DataTypes.STRING(7),  // Format: AAA-NNN (7 characters)
     allowNull: true,

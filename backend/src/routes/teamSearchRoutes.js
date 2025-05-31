@@ -34,10 +34,16 @@ router.get('/teams-search',
 
     const teams = await Team.findAll({
       where: {
-        [Op.or]: [
-          { name: { [likeOp]: `%${searchTerm}%` } },
-          { abbreviation: { [likeOp]: `%${searchTerm}%` } },
-          { teamIdentifier: { [likeOp]: `%${searchTerm}%` } } // Add search by teamIdentifier
+        [Op.and]: [
+          // Only include public teams
+          { visibility: 'public' },
+          {
+            [Op.or]: [
+              { name: { [likeOp]: `%${searchTerm}%` } },
+              { abbreviation: { [likeOp]: `%${searchTerm}%` } },
+              { teamIdentifier: { [likeOp]: `%${searchTerm}%` } }
+            ]
+          }
         ]
       },
       limit: 20,
