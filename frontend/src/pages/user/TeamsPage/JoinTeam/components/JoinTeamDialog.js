@@ -1,32 +1,89 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import PlayerRegistrationForm from '../../../../../components/forms/PlayerRegistrationForm';
+import { apiClient } from '../../../../../services';
 import './JoinTeamDialog.css';
 
 const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
   const [joinMode, setJoinMode] = useState(null); // null, 'player', 'staff'
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleJoinModeSelect = (mode) => {
     setJoinMode(mode);
   };
   
-  const handlePlayerRegistrationSubmit = (data) => {
-    // Prepare player data for submission
-    const playerData = {
-      position: data.position,
-      teamId: team.id // Ensure teamId is included
-    };
-
-    // Only include optional fields if they have values
-    if (data.height) playerData.height = parseFloat(data.height);
-    if (data.weight) playerData.weight = parseFloat(data.weight);
-    if (data.preferredFoot) playerData.preferredFoot = data.preferredFoot;
-    if (data.jerseyNumber) playerData.jerseyNumber = data.jerseyNumber;
+  const handlePlayerRegistrationSubmit = async (data) => {
+    setIsSubmitting(true);
     
-    // Submit join request with properly structured data
-    onJoin({
-      role: 'athlete', // Use athlete role as required by the API
-      playerData: playerData
-    });
+    try {
+      console.log('Sending join request with data:', {
+        teamId: team.id,
+        message: `I would like to join ${team.name} as a player with position: ${data.position}.`,
+        playerData: {
+          position: data.position,
+          height: data.height ? parseFloat(data.height) : undefined,
+          weight: data.weight ? parseFloat(data.weight) : undefined,
+          preferredFoot: data.preferredFoot,
+          jerseyNumber: data.jerseyNumber
+        }
+      });
+      
+      // Send join request
+      const response = await apiClient.post('/notifications/team-join-request', {
+        teamId: team.id,
+        message: `I would like to join ${team.name} as a player with position: ${data.position}.`,
+        playerData: {
+          position: data.position,
+          height: data.height ? parseFloat(data.height) : undefined,
+          weight: data.weight ? parseFloat(data.weight) : undefined,
+          preferredFoot: data.preferredFoot,
+          jerseyNumber: data.jerseyNumber
+        }
+      });
+      
+      if (response && response.success) {
+        toast.success('Join request sent successfully! Team managers will review your request.');
+        onJoin({ success: true, pendingApproval: true });
+      } else {
+        toast.error(response?.message || 'Failed to send join request. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending join request:', error);
+      
+      // Provide a more helpful message based on the error
+      let errorMessage = 'Failed to send join request.';
+      
+      if (error.response) {
+        if (error.response.status === 409) {
+          // Conflict errors
+          if (error.response.data?.code === 'ALREADY_MEMBER') {
+            errorMessage = 'You are already a member of this team.';
+          } else if (error.response.data?.code === 'REQUEST_EXISTS') {
+            errorMessage = 'You already have a pending request to join this team.';
+            // This is actually a success case for the user experience
+            toast.info(errorMessage);
+            onJoin({ success: true, pendingApproval: true });
+            setIsSubmitting(false);
+            return;
+          }
+        } else if (error.response.status === 404) {
+          errorMessage = 'Team not found or has no managers to approve your request.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (error.message) {
+        // Network errors or other issues
+        if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. The server might be busy, please try again.';
+        } else if (error.message.includes('Network Error')) {
+          errorMessage = 'Network connection error. Please check your internet connection.';
+        }
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Initial join options selector
@@ -61,12 +118,16 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
   if (joinMode === 'player') {
     return (
       <div className="join-team-dialog-overlay">
-        <div className="join-team-dialog wide">
-          <button className="close-button" onClick={onCancel}>&times;</button>
-          <PlayerRegistrationForm
-            onSubmit={handlePlayerRegistrationSubmit}
-            onCancel={() => setJoinMode(null)}
-          />
+        <div className="join-team-dialog wide dark-dialog">
+          <div className="player-registration-container">
+            <PlayerRegistrationForm
+              onSubmit={handlePlayerRegistrationSubmit}
+              onCancel={() => setJoinMode(null)}
+              showCloseButton={true}
+              onCloseClick={onCancel}
+              isLoading={isSubmitting}
+            />
+          </div>
         </div>
       </div>
     );

@@ -1,0 +1,144 @@
+/* Add to your existing Squad.css file */
+
+.join-requests-section {
+  background-color: #232b3a;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-left: 4px solid #4a6cf7;
+}
+
+.join-requests-section h3 {
+  color: #e2e8f0;
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.join-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.join-request-card {
+  background-color: #1a202c;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.join-request-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.request-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.request-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.request-user-info {
+  flex: 1;
+}
+
+.request-user-info h4 {
+  margin: 0 0 4px 0;
+  color: #e2e8f0;
+  font-size: 16px;
+}
+
+.request-user-info p {
+  margin: 0;
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+.request-message {
+  font-style: italic;
+  margin-top: 8px !important;
+  padding: 6px 0;
+  border-left: 2px solid #4a5568;
+  padding-left: 12px;
+}
+
+.join-request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-request-btn {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.accept-request-btn:hover {
+  background-color: #3955d1;
+}
+
+.reject-request-btn {
+  background-color: transparent;
+  color: #e53e3e;
+  border: 1px solid #e53e3e;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.reject-request-btn:hover {
+  background-color: #e53e3e20;
+}
+
+@media (max-width: 768px) {
+  .join-request-card {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .join-request-actions {
+    width: 100%;
+  }
+  
+  .accept-request-btn,
+  .reject-request-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

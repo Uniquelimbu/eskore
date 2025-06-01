@@ -23,6 +23,8 @@ import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formati
 import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar';
 import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfilePage.js';
 import TeamOverviewPage from '../pages/user/TeamsPage/JoinTeam/TeamOverviewPage'; // Fixed import path
+import ProtectedRoute from './ProtectedRoute';
+import NotificationDetailView from '../pages/user/Notifications/NotificationDetailView';
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -106,6 +108,13 @@ const AppRoutes = () => {
             <AdminDashboard />
           </AuthenticatedLayout>
         </AdminRoute>
+      } />
+      
+      {/* Protected routes */}
+      <Route path="/invitations/:notificationId" element={
+        <ProtectedRoute>
+          <NotificationDetailView />
+        </ProtectedRoute>
       } />
       
       {/* 404 page */}

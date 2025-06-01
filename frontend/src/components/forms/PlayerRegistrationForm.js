@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './PlayerRegistrationForm.css';
 
-const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
+const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {}, showCloseButton, onCloseClick, isLoading }) => {
   const [formData, setFormData] = useState({
     position: initialValues.position || '',
     height: initialValues.height || '',
@@ -102,7 +102,12 @@ const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
 
   return (
     <div className="player-registration-form">
-      <h2>Player Registration</h2>
+      {showCloseButton && (
+        <button className="form-close-button" onClick={onCloseClick}>
+          &times;
+        </button>
+      )}
+      <h2 style={{ color: '#ffffff' }}>Player Registration</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
@@ -186,11 +191,20 @@ const PlayerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
         </div>
         
         <div className="form-actions">
-          <button type="button" className="cancel-button" onClick={onCancel}>
-            Cancel
+          <button 
+            type="button" 
+            className="cancel-button" 
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            {showCloseButton ? 'Back' : 'Cancel'}
           </button>
-          <button type="submit" className="submit-button">
-            Complete Registration
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Submitting...' : 'Complete Registration'}
           </button>
         </div>
       </form>

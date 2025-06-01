@@ -28,6 +28,17 @@
   max-width: 800px;
 }
 
+/* New class for dark dialog background to match the player registration form */
+.join-team-dialog.dark-dialog {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.player-registration-container {
+  width: 100%;
+}
+
 .join-team-dialog h2 {
   margin-top: 0;
   color: #333;

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
+import NotificationBell from '../../../../components/layout/Navbar/NotificationBell';
 import './TopNavbar.css';
 
 const TopNavbar = () => {
@@ -86,6 +87,7 @@ const TopNavbar = () => {
       <div className="top-navbar-container">
         {/* Right section with action buttons */}
         <div className="top-navbar-right">
+          <NotificationBell />
           {/* Chat button */}
           <button 
             className="top-navbar-button" 

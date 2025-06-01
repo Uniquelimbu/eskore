@@ -1,5 +1,5 @@
 // Core services
-import apiClient from './core/apiClient';
+import { apiClient, API_CONFIG } from './core';
 
 // Auth services
 import authService from './auth/authService';
@@ -16,9 +16,29 @@ import dashboardService from './game/dashboardService';
 // Analytics services
 import monitoringService, { checkServerHealth, monitorApiOperation } from './analytics/monitoringService';
 
+// Import extensions
+import { applyUserExtensions } from './core/extensions/userExtensions';
+import { applyTeamExtensions } from './core/extensions/teamExtensions';
+import { applyRequestExtensions } from './core/extensions/requestExtensions';
+import { applyManagerExtensions } from './core/extensions/managerExtensions';
+import { applyNotificationExtensions } from './core/extensions/notificationExtensions';
+
+// Apply all extensions
+applyUserExtensions(apiClient);
+applyTeamExtensions(apiClient);
+applyRequestExtensions(apiClient);
+applyManagerExtensions(apiClient);
+// Add the notification extensions
+applyNotificationExtensions(apiClient);
+
+// Export the configured API client
+export { apiClient, API_CONFIG };
+
+// Export other service modules
+export * from './team';
+
 // Export individual services
 export {
-  apiClient,
   authService,
   profileService,
   teamService,
@@ -27,15 +47,3 @@ export {
   checkServerHealth,
   monitorApiOperation
 };
-
-// Create a named services object instead of anonymous default export
-const services = {
-  apiClient,
-  authService,
-  profileService,
-  teamService,
-  dashboardService,
-  monitoringService
-};
-
-export default services;

@@ -43,25 +43,21 @@ const TeamOverviewPage = () => {
 
   const handleJoinSubmit = async (joinData) => {
     try {
-      // For joining a team, we must have player data
-      if (!joinData.playerData) {
-        setError('Player information is required to join a team.');
-        return;
-      }
-      
-      // Use the dedicated joinTeam method which now handles player creation
-      const joinResponse = await apiClient.joinTeam(teamId, joinData);
-      
-      if (joinResponse && joinResponse.success) {
-        // Success message
-        toast.success('You have successfully joined the team!');
-        
-        // Close dialog and navigate to team space
+      // If we get a success response but with pendingApproval flag, 
+      // show a different message and don't navigate
+      if (joinData.success && joinData.pendingApproval) {
+        // Close dialog
         setShowJoinDialog(false);
-        navigate(`/teams/${teamId}/space`);
       } else {
-        setError('Failed to join team. Please try again.');
-        setShowJoinDialog(false);
+        // This would be the direct join path, unlikely to be used now
+        if (joinData.success) {
+          toast.success('You have successfully joined the team!');
+          setShowJoinDialog(false);
+          navigate(`/teams/${teamId}/space`);
+        } else {
+          setError('Failed to join team. Please try again.');
+          setShowJoinDialog(false);
+        }
       }
     } catch (err) {
       console.error('Error joining team:', err);
