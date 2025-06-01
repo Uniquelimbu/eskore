@@ -15,6 +15,7 @@ const UserMatch = require('./UserMatch');
 const Formation = require('./Formation');
 const Manager = require('./Manager'); // <-- Require Manager model
 const Player = require('./Player'); // Add this import
+const Notification = require('./Notification'); // <-- Require Notification model
 
 function setupAssociations() {
   // Existing associations
@@ -178,6 +179,15 @@ function setupAssociations() {
   // Team-Manager association
   Team.hasMany(Manager, { foreignKey: 'teamId', as: 'managers' });
   Manager.belongsTo(Team, { foreignKey: 'teamId', as: 'team' });
+
+  // Notification associations
+  User.hasMany(Notification, { foreignKey: 'userId' });
+  User.hasMany(Notification, { as: 'SentNotifications', foreignKey: 'senderUserId' });
+  Team.hasMany(Notification, { foreignKey: 'teamId' });
+  
+  Notification.belongsTo(User, { foreignKey: 'userId' });
+  Notification.belongsTo(User, { as: 'sender', foreignKey: 'senderUserId' });
+  Notification.belongsTo(Team, { foreignKey: 'teamId' });
 }
 
 module.exports = { setupAssociations };

@@ -29,36 +29,51 @@ router.get('/',
     
     const { status = 'all', limit = 20, offset = 0 } = req.query;
     
-    const where = { userId: req.user.userId };
-    
-    if (status !== 'all') {
-      where.status = status;
+    try {
+      const where = { userId: req.user.userId };
+      
+      if (status !== 'all') {
+        where.status = status;
+      }
+      
+      const notifications = await Notification.findAndCountAll({
+        where,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: User,
+            as: 'sender',
+            attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+          },
+          {
+            model: Team,
+            attributes: ['id', 'name', 'logoUrl']
+          }
+        ]
+      });
+      
+      return sendSafeJson(res, {
+        notifications: notifications.rows,
+        count: notifications.count,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+    } catch (error) {
+      // Check if the error is about a missing table
+      if (error.name === 'SequelizeDatabaseError' && 
+          error.message.includes('relation "notifications" does not exist')) {
+        log.warn('Notifications table does not exist yet. Returning empty list.');
+        return sendSafeJson(res, {
+          notifications: [],
+          count: 0,
+          limit: parseInt(limit),
+          offset: parseInt(offset)
+        });
+      }
+      throw error; // Re-throw if it's another type of error
     }
-    
-    const notifications = await Notification.findAndCountAll({
-      where,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: User,
-          as: 'sender',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
-        },
-        {
-          model: Team,
-          attributes: ['id', 'name', 'logoUrl']
-        }
-      ]
-    });
-    
-    return sendSafeJson(res, {
-      notifications: notifications.rows,
-      count: notifications.count,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
   })
 );
 
@@ -71,14 +86,24 @@ router.get('/unread-count',
   catchAsync(async (req, res) => {
     log.info(`NOTIFICATIONS (GET /unread-count): Fetching unread count for user ${req.user.userId}`);
     
-    const count = await Notification.count({
-      where: {
-        userId: req.user.userId,
-        status: 'unread'
+    try {
+      const count = await Notification.count({
+        where: {
+          userId: req.user.userId,
+          status: 'unread'
+        }
+      });
+      
+      return sendSafeJson(res, { count });
+    } catch (error) {
+      // Check if the error is about a missing table
+      if (error.name === 'SequelizeDatabaseError' && 
+          error.message.includes('relation "notifications" does not exist')) {
+        log.warn('Notifications table does not exist yet. Returning count 0.');
+        return sendSafeJson(res, { count: 0 });
       }
-    });
-    
-    return sendSafeJson(res, { count });
+      throw error; // Re-throw if it's another type of error
+    }
   })
 );
 
@@ -144,113 +169,112 @@ router.post('/team-join-request',
   requireAuth,
   validate([
     body('teamId').isInt().withMessage('Team ID is required'),
-    body('message').optional().isString().withMessage('Message must be a string')
+    body('message').optional().isString().withMessage('Message must be a string'),
+    body('playerData').optional().isObject().withMessage('Player data must be an object')
   ]),
   catchAsync(async (req, res) => {
-    log.info(`NOTIFICATIONS (POST /team-join-request): User ${req.user.userId} requesting to join team ${req.body.teamId}`);
-    const { teamId, message } = req.body;
-    
-    // Check if team exists
-    const team = await Team.findByPk(teamId);
-    if (!team) {
-      throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
-    }
-    
-    // Check if user is already a member
-    const existingMembership = await UserTeam.findOne({
-      where: {
-        userId: req.user.userId,
-        teamId
-      }
-    });
-    
-    if (existingMembership) {
-      throw new ApiError('You are already a member of this team', 409, 'ALREADY_MEMBER');
-    }
-    
-    // Check if there's already a pending request
-    const existingRequest = await Notification.findOne({
-      where: {
-        type: 'join_request',
-        teamId,
-        senderUserId: req.user.userId,
-        status: 'unread'
-      }
-    });
-    
-    if (existingRequest) {
-      throw new ApiError('You already have a pending join request for this team', 409, 'REQUEST_EXISTS');
-    }
-    
-    // Find team managers to send notifications to
-    const managers = await UserTeam.findAll({
-      where: {
-        teamId,
-        role: { [Op.in]: ['manager', 'assistant_manager'] }
-      },
-      include: [{ 
-        model: User,
-        attributes: ['id', 'email', 'firstName', 'lastName'] 
-      }]
-    });
-    
-    if (managers.length === 0) {
-      throw new ApiError('No team managers found', 404, 'NO_MANAGERS');
-    }
-    
-    // Get current user details
-    const currentUser = await User.findByPk(req.user.userId, {
-      attributes: ['id', 'firstName', 'lastName', 'email']
-    });
-    
-    // Create notifications for all managers
-    const notifications = [];
-    for (const manager of managers) {
-      if (!manager.User) continue;
+    try {
+      log.info(`NOTIFICATIONS (POST /team-join-request): User ${req.user.userId} requesting to join team ${req.body.teamId}`);
+      const { teamId, message, playerData } = req.body;
       
-      const notification = await Notification.create({
-        userId: manager.User.id,
-        teamId,
-        type: 'join_request',
-        message: `${currentUser.firstName} ${currentUser.lastName} requested to join ${team.name}`,
-        senderUserId: req.user.userId,
-        status: 'unread',
-        metadata: {
-          teamName: team.name,
-          userMessage: message || '',
-          userEmail: currentUser.email
+      // Check if team exists
+      const team = await Team.findByPk(teamId);
+      if (!team) {
+        throw new ApiError('Team not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // Check if user is already a member
+      const existingMembership = await UserTeam.findOne({
+        where: {
+          userId: req.user.userId,
+          teamId
         }
       });
       
-      notifications.push(notification);
-      
-      // Send email notification to manager (would use actual email service in production)
-      try {
-        // Simulate email sending
-        log.info(`NOTIFICATIONS: Would send email to ${manager.User.email} about join request`);
-        
-        // In a real implementation, you would use your email service:
-        // await emailService.sendEmail({
-        //   to: manager.User.email,
-        //   subject: `Team Join Request: ${team.name}`,
-        //   template: 'join-request',
-        //   data: {
-        //     teamName: team.name,
-        //     userName: `${currentUser.firstName} ${currentUser.lastName}`,
-        //     userMessage: message || 'No message provided',
-        //     userEmail: currentUser.email
-        //   }
-        // });
-      } catch (emailError) {
-        log.error(`Failed to send notification email: ${emailError.message}`);
-        // Continue execution even if email fails
+      if (existingMembership) {
+        throw new ApiError('You are already a member of this team', 409, 'ALREADY_MEMBER');
       }
+      
+      // Check if there's already a pending request
+      const existingRequest = await Notification.findOne({
+        where: {
+          type: 'join_request',
+          teamId,
+          senderUserId: req.user.userId,
+          status: 'unread'
+        }
+      });
+      
+      if (existingRequest) {
+        throw new ApiError('You already have a pending join request for this team', 409, 'REQUEST_EXISTS');
+      }
+      
+      // Find team managers to send notifications to
+      const managers = await UserTeam.findAll({
+        where: {
+          teamId,
+          role: { [Op.in]: ['manager', 'assistant_manager'] }
+        },
+        include: [{ 
+          model: User,
+          attributes: ['id', 'email', 'firstName', 'lastName'] 
+        }]
+      });
+      
+      if (managers.length === 0) {
+        throw new ApiError('No team managers found', 404, 'NO_MANAGERS');
+      }
+      
+      // Get current user details
+      const currentUser = await User.findByPk(req.user.userId, {
+        attributes: ['id', 'firstName', 'lastName', 'email']
+      });
+      
+      if (!currentUser) {
+        throw new ApiError('User not found', 404, 'USER_NOT_FOUND');
+      }
+      
+      // Create notifications for all managers
+      const notifications = [];
+      for (const manager of managers) {
+        if (!manager.User) continue;
+        
+        // Prepare metadata with any player data
+        const metadata = {
+          teamName: team.name,
+          userMessage: message || '',
+          userEmail: currentUser.email
+        };
+        
+        // Add player data to metadata if provided
+        if (playerData) {
+          metadata.playerData = playerData;
+        }
+        
+        const notification = await Notification.create({
+          userId: manager.User.id,
+          teamId,
+          type: 'join_request',
+          message: `${currentUser.firstName} ${currentUser.lastName} requested to join ${team.name}`,
+          senderUserId: req.user.userId,
+          status: 'unread',
+          metadata
+        });
+        
+        notifications.push(notification);
+        
+        // Log instead of sending email (avoid email service dependency)
+        log.info(`NOTIFICATIONS: Would send email to ${manager.User.email} about join request from ${currentUser.email}`);
+      }
+      
+      return sendSafeJson(res, { 
+        success: true, 
+        message: `Join request sent to ${notifications.length} team manager(s)` 
+      });
+    } catch (error) {
+      log.error(`Error in team-join-request: ${error.message}`, error);
+      throw error; // Let the error handler format the response
     }
-    
-    return sendSafeJson(res, { 
-      success: true, 
-      message: `Join request sent to ${managers.length} team manager(s)` 
-    });
   })
 );
 
@@ -568,6 +592,44 @@ router.post('/:id/reject',
         ? 'Invitation declined' 
         : 'Join request rejected'
     });
+  })
+);
+
+/**
+ * GET /api/notifications/:id
+ * Get a specific notification by ID
+ */
+router.get('/:id',
+  requireAuth,
+  validate([
+    param('id').isInt().withMessage('Notification ID must be an integer')
+  ]),
+  catchAsync(async (req, res) => {
+    log.info(`NOTIFICATIONS (GET /:id): Fetching notification ${req.params.id} for user ${req.user.userId}`);
+    
+    const notification = await Notification.findOne({
+      where: { 
+        id: req.params.id,
+        userId: req.user.userId
+      },
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+        },
+        {
+          model: Team,
+          attributes: ['id', 'name', 'logoUrl']
+        }
+      ]
+    });
+    
+    if (!notification) {
+      throw new ApiError('Notification not found', 404, 'RESOURCE_NOT_FOUND');
+    }
+    
+    return sendSafeJson(res, { notification });
   })
 );
 

@@ -41,19 +41,18 @@ const bodyParserErrorHandler = require('./middleware/bodyParserErrorHandler'); /
 
 // --- Route requires ---
 const authRoutes = require('./routes/authRoutes'); 
-const userRoutes = require('./routes/userRoutes'); // Add this missing import
-// Use the specific file for team routes (not the folder)
+const userRoutes = require('./routes/userRoutes');
 const teamRoutes = require('./routes/teamRoutes'); 
-// If needed, also import the structured team routes
 const teamRoutesStructured = require('./routes/teamRoutes/index');
-const tournamentRoutes = require('./routes/tournamentRoutes'); // Restored
-const leagueRoutes = require('./routes/leagueRoutes'); // Restored
-const matchRoutes = require('./routes/matchRoutes'); // Restored
-const leaderboardRoutes = require('./routes/leaderboardRoutes'); // Restored
-const formationRoutes = require('./routes/formationRoutes'); // Add the new route
-const teamSearchRoutes = require('./routes/teamSearchRoutes'); // New route for /api/teams-search
-const managerRoutes = require('./routes/managerRoutes'); // Import manager routes
-const playerRoutes = require('./routes/playerRoutes'); // Import player routes
+const tournamentRoutes = require('./routes/tournamentRoutes');
+const leagueRoutes = require('./routes/leagueRoutes');
+const matchRoutes = require('./routes/matchRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const formationRoutes = require('./routes/formationRoutes');
+const teamSearchRoutes = require('./routes/teamSearchRoutes');
+const managerRoutes = require('./routes/managerRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const notificationRoutes = require('./routes/notificationRoutes'); // Add this line
 
 const app = express();
 
@@ -193,14 +192,15 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/teams', teamRoutes); // This will now use our fixed teamRoutes.js
+app.use('/api/teams', teamRoutes);
 app.use('/api/tournaments', tournamentRoutes); 
 app.use('/api/leagues', leagueRoutes); 
 app.use('/api/matches', matchRoutes); 
 app.use('/api/leaderboards', leaderboardRoutes); 
-app.use('/api', teamSearchRoutes); // Mount standalone search route
-app.use('/api/managers', managerRoutes); // Use manager routes
-app.use('/api/players', playerRoutes); // Use player routes
+app.use('/api', teamSearchRoutes); 
+app.use('/api/managers', managerRoutes);
+app.use('/api/players', playerRoutes);
+app.use('/api/notifications', notificationRoutes); // Add this line
 
 // Add debug log before registering formation routes
 logger.info('APP.JS: Registering formation routes at /api/formations'); 
