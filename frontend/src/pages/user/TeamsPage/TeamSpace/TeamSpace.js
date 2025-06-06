@@ -82,7 +82,7 @@ const TeamSpace = () => {
 
   return (
     <div className="team-space-layout">
-      <div className="team-space-container">
+      <div className="team-space-container" style={{ paddingTop: 0 }}>
         {/* Team Header - Only show on dashboard (isBasePath) */}
         {isBasePath && (
           <div className="team-space-header">

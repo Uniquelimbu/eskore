@@ -136,8 +136,8 @@ router.post('/:id/members',
     throw new ApiError('User ID is required', 400, 'VALIDATION_ERROR');
   }
   
-  if (!['manager', 'assistant_manager', 'athlete', 'coach'].includes(role)) {
-    throw new ApiError('Invalid role', 400, 'VALIDATION_ERROR');
+  if (!['manager', 'assistant_manager', 'athlete'].includes(role)) {
+    throw new ApiError('Invalid role specified', 400, 'BAD_REQUEST');
   }
   
   // Check if team exists
@@ -159,10 +159,6 @@ router.post('/:id/members',
     throw new ApiError('Forbidden - You must be a team manager or assistant manager to add members', 403, 'FORBIDDEN');
   }
   
-  if (userTeamPermission.role === 'assistant_manager' && ['manager', 'assistant_manager'].includes(role)) {
-    throw new ApiError('Forbidden - Assistant managers can only add athletes and coaches', 403, 'FORBIDDEN');
-  }
-  
   // Check if user exists
   const user = await User.findByPk(userId);
   if (!user) {
@@ -180,6 +176,16 @@ router.post('/:id/members',
   
   if (existingMembership) {
     throw new ApiError('User already has this role in the team', 409, 'ALREADY_EXISTS');
+  }
+  
+  // Check permissions - only managers can add other managers or assistant managers
+  if (['manager', 'assistant_manager'].includes(role) && userTeamPermission.role !== 'manager') {
+    throw new ApiError('Forbidden - Only managers can add other managers or assistant managers', 403, 'FORBIDDEN');
+  }
+  
+  // Assistant managers can only add athletes
+  if (userTeamPermission.role === 'assistant_manager' && role !== 'athlete') {
+    throw new ApiError('Forbidden - Assistant managers can only add athletes', 403, 'FORBIDDEN');
   }
   
   // Add user to the team

@@ -54,7 +54,9 @@ export const initFormation = async (teamId, preferredPreset, get, set) => {
   
   try {
     console.log(`Attempting to fetch formation for team ${teamId} from server`);
-    const response = await apiClient.get(`/formations/${teamId}`);
+    // Add cache-busting parameter to prevent browser caching
+    const timestamp = new Date().getTime();
+    const response = await apiClient.get(`/formations/${teamId}?_t=${timestamp}`);
     console.log(`Formation API response received:`, response);
     
     // Enhanced response validation
@@ -114,17 +116,39 @@ export const initFormation = async (teamId, preferredPreset, get, set) => {
     currentPreset
   });
   
-  // Decide which data source to use
+  // Decide which data source to use - compare timestamps if both are valid
   let dataToUse = null;
   let source = 'unknown';
   
-  if (hasValidServerData) {
+  if (hasValidServerData && hasValidLocalData) {
+    // Compare timestamps to determine which is newer
+    const serverTimestamp = serverFormation.updated_at || serverFormation.last_saved_at || '1970-01-01';
+    const localTimestamp = localBackup.updated_at || localBackup.last_saved_at || '1970-01-01';
+    
+    const serverDate = new Date(serverTimestamp).getTime();
+    const localDate = new Date(localTimestamp).getTime();
+    
+    console.log('Timestamp comparison:', {
+      serverTimestamp,
+      localTimestamp,
+      serverDate,
+      localDate,
+      serverIsNewer: serverDate >= localDate
+    });
+    
+    if (serverDate >= localDate) {
+      dataToUse = serverFormation;
+      source = 'server (newer)';
+    } else {
+      dataToUse = localBackup;
+      source = 'localStorage (newer)';
+    }
+  } else if (hasValidServerData) {
     dataToUse = serverFormation;
-    source = 'server';
+    source = 'server (only valid source)';
   } else if (hasValidLocalData) {
     dataToUse = localBackup;
-    source = 'localStorage';
-    console.log('Using localStorage backup as server data was invalid');
+    source = 'localStorage (only valid source)';
   }
   
   if (dataToUse) {
@@ -314,7 +338,7 @@ export const createDefaultFormation = async (teamId, get, set) => {
 };
 
 /**
- * Perform the API call to save formation to server.
+ * Perform the API call to save formation to server with retry logic.
  * This function does NOT interact with the Zustand store's set method directly.
  */
 export const performSaveFormationAPI = async (teamId, formationData) => {
@@ -326,61 +350,143 @@ export const performSaveFormationAPI = async (teamId, formationData) => {
   const token = localStorage.getItem('token');
   if (!token) {
     console.error('performSaveFormationAPI: Cannot save formation: No authentication token found');
-    return { error: 'Missing authentication token', success: false };
+    return { error: 'Missing authentication token - please log in again', success: false };
   }
   
-  try {
-    console.log('performSaveFormationAPI: Sending data to server for team:', teamId);
-    console.log('performSaveFormationAPI payload:', formationData);
-    
-    const response = await apiClient.put(`/formations/${teamId}`, { 
-      schema_json: formationData 
-    });
-    
-    console.log('performSaveFormationAPI: Server response:', response);
-    
-    if (!response) {
-      throw new Error('Empty response from server');
-    }
-    
-    const isSuccess = response.success !== false;
-    
-    if (isSuccess) {
-      console.log('performSaveFormationAPI: Save completed successfully');
-      try {
-        const verifyResponse = await apiClient.get(`/formations/${teamId}`);
-        console.log('performSaveFormationAPI: Verification response:', verifyResponse);
-        const savedData = verifyResponse.data?.schema_json || verifyResponse.schema_json;
-        if (savedData) {
-          console.log('performSaveFormationAPI: Data verified on server');
-        }
-      } catch (verifyError) {
-        console.warn('performSaveFormationAPI: Verification failed but original save was successful:', verifyError);
-      }
-      return { success: true };
-    } else {
-      console.error('performSaveFormationAPI: Server indicated failure:', response);
-      return { 
-        error: response.message || 'Server indicated failure without details', 
-        success: false 
+  // Add retry logic with exponential backoff
+  const maxRetries = 3;
+  let retryCount = 0;
+  let lastError = null;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`performSaveFormationAPI: Sending data to server for team: ${teamId} (Attempt ${retryCount + 1}/${maxRetries})`);
+      console.log('performSaveFormationAPI payload:', formationData);
+      
+      // Add timestamp to ensure we're tracking the most recent save
+      const dataToSave = {
+        ...formationData,
+        last_saved_at: new Date().toISOString()
       };
+      
+      // Validate data before sending
+      if (!dataToSave.preset) {
+        throw new Error('Formation preset is required');
+      }
+      
+      if (!Array.isArray(dataToSave.starters)) {
+        throw new Error('Formation starters must be an array');
+      }
+      
+      if (!Array.isArray(dataToSave.subs)) {
+        throw new Error('Formation subs must be an array');
+      }
+      
+      const response = await apiClient.put(`/formations/${teamId}`, { 
+        schema_json: dataToSave 
+      });
+      
+      console.log('performSaveFormationAPI: Server response:', response);
+      
+      if (!response) {
+        throw new Error('Empty response from server');
+      }
+      
+      // Check for explicit success field or assume success if no error
+      const isSuccess = response.success !== false;
+      
+      if (isSuccess) {
+        console.log('performSaveFormationAPI: Save completed successfully');
+        
+        // Always perform a verification GET to ensure data was saved properly
+        try {
+          const verifyResponse = await apiClient.get(`/formations/${teamId}?_t=${Date.now()}`);
+          console.log('performSaveFormationAPI: Verification response:', verifyResponse);
+          const savedData = verifyResponse.data?.schema_json || verifyResponse.schema_json;
+          
+          if (savedData && savedData.last_saved_at) {
+            const savedTimestamp = new Date(savedData.last_saved_at).getTime();
+            const ourTimestamp = new Date(dataToSave.last_saved_at).getTime();
+            
+            if (savedTimestamp >= ourTimestamp) {
+              console.log('performSaveFormationAPI: Data verified on server with matching timestamp');
+            } else {
+              console.warn('performSaveFormationAPI: Verification found older timestamp - this may indicate a save issue');
+            }
+          } else {
+            console.warn('performSaveFormationAPI: Verification couldn\'t compare timestamps');
+          }
+        } catch (verifyError) {
+          console.warn('performSaveFormationAPI: Verification failed but original save was successful:', verifyError);
+        }
+        return { success: true };
+      } else {
+        console.error('performSaveFormationAPI: Server indicated failure:', response);
+        lastError = { 
+          error: response.message || response.error || 'Server indicated failure without details', 
+          success: false 
+        };
+      }
+    } catch (error) {
+      console.error(`performSaveFormationAPI: Failed to save formation (Attempt ${retryCount + 1}/${maxRetries}):`, error);
+      
+      let errorMessage = 'Unknown error saving formation';
+      let shouldRetry = true;
+      
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        errorMessage = `Server error ${status}: ${data?.message || data?.error || JSON.stringify(data)}`;
+        
+        // Don't retry on authentication/authorization errors
+        if (status === 401) {
+          errorMessage = 'Authentication failed - please log in again';
+          shouldRetry = false;
+        } else if (status === 403) {
+          errorMessage = 'Permission denied - you may not have permission to edit this formation';
+          shouldRetry = false;
+        } else if (status === 400) {
+          errorMessage = `Invalid formation data: ${data?.message || data?.error || 'Bad request'}`;
+          shouldRetry = false;
+        } else if (status === 404) {
+          errorMessage = 'Team not found';
+          shouldRetry = false;
+        }
+      } else if (error.request) {
+        errorMessage = 'No response from server - please check your internet connection';
+      } else if (error.message) {
+        errorMessage = `Request error: ${error.message}`;
+        // Don't retry on validation errors
+        if (error.message.includes('required') || error.message.includes('must be')) {
+          shouldRetry = false;
+        }
+      }
+      
+      lastError = { 
+        error: errorMessage, 
+        originalError: error,
+        success: false
+      };
+      
+      // Don't retry if we know it won't help
+      if (!shouldRetry) {
+        console.log('performSaveFormationAPI: Not retrying due to error type');
+        break;
+      }
     }
-  } catch (error) {
-    console.error('performSaveFormationAPI: Failed to save formation:', error);
     
-    let errorMessage = 'Unknown error saving formation';
-    if (error.response) {
-      errorMessage = `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
-    } else if (error.request) {
-      errorMessage = 'No response received from server. Check if backend is running.';
-    } else {
-      errorMessage = `Error setting up request: ${error.message}`;
+    // Exponential backoff delay before retry
+    if (retryCount < maxRetries - 1) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5 seconds
+      console.log(`performSaveFormationAPI: Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    console.error(`performSaveFormationAPI: ${errorMessage}`);
-    return { 
-      error: errorMessage, 
-      originalError: error,
-      success: false
-    };
+    retryCount++;
   }
+  
+  // All retries failed
+  console.error(`performSaveFormationAPI: All ${maxRetries} save attempts failed`);
+  return lastError;
 };

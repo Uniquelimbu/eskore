@@ -173,6 +173,7 @@ export const movePlayerToPosition = (draggedPlayerId, targetPositionId, wasStart
     }
   }
   
+  console.log(`Player ${draggedPlayerId} moved to position ${targetPositionId} - marking as needing save`);
   return { starters, subs, saved: false };
 };
 
@@ -226,6 +227,7 @@ export const movePlayerToSubSlot = (draggedPlayerId, targetSubIndex, wasStarter,
     }
   }
   
+  console.log(`Player ${draggedPlayerId} moved to sub slot ${targetSubIndex} - marking as needing save`);
   return { starters, subs, saved: false };
 };
 

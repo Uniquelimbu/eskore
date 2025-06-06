@@ -34,6 +34,8 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     preset,
     loading,
     saved,
+    saveError,
+    pendingChanges,
     mapPlayersToPositions,
     movePlayerToPosition,
     movePlayerToSubSlot,
@@ -42,6 +44,8 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     changePreset,
     exportAsPNG,
     saveFormation,
+    saveWithRetry,
+    clearSaveError,
   } = useFormationStore();
   
   // Get PRESETS from the store
@@ -116,30 +120,48 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   // Save changes when formation is updated
   useEffect(() => {
     // Use store's `loading` state to prevent concurrent saves triggered by this effect
-    if (!saved && !loading && teamId) {
+    if (!saved && !loading && teamId && pendingChanges) {
+      console.log("🔄 FormationContainer: Auto-save triggered", {
+        saved,
+        loading,
+        teamId,
+        pendingChanges,
+        startersLength: starters.length,
+        subsLength: subs.length,
+        preset
+      });
+      
       const saveChanges = async () => {
-        // setIsSaving(true); // Not needed if UI relies on store.loading
         try {
-          console.log("Formation container: Detected unsaved changes, triggering save (useEffect [saved, loading, teamId])");
+          console.log("📤 FormationContainer: Calling saveWithRetry...");
           
-          const result = await saveFormation(); // Calls store's saveFormation -> forceSave
+          const result = await saveWithRetry(); // Use enhanced save with retry
           
           if (result && result.success) {
-            console.log("Formation container: Formation saved successfully (useEffect [saved, loading, teamId])");
+            console.log("✅ FormationContainer: Formation saved successfully");
           } else {
-            console.error("Formation container: Error saving formation (useEffect [saved, loading, teamId]):", 
+            console.error("❌ FormationContainer: Error saving formation:", 
               result ? result.error : "No result returned from save operation");
           }
         } catch (error) {
-          console.error("Formation container: Exception during save (useEffect [saved, loading, teamId]):", error);
-        } finally {
-          // setIsSaving(false); // Not needed if UI relies on store.loading
+          console.error("💥 FormationContainer: Exception during save:", error);
         }
       };
       
       saveChanges();
+    } else {
+      console.log("⏸️ FormationContainer: Auto-save conditions not met", {
+        saved,
+        loading,
+        teamId: !!teamId,
+        pendingChanges,
+        reason: !saved ? 'not saved' : 
+                loading ? 'loading' : 
+                !teamId ? 'no teamId' : 
+                !pendingChanges ? 'no pending changes' : 'unknown'
+      });
     }
-  }, [saved, loading, teamId, saveFormation, preset, starters, subs]); // Added starters, subs to dependency array for completeness
+  }, [saved, loading, teamId, saveWithRetry, pendingChanges]); // Added pendingChanges to dependency array
   
   // Add a new useEffect for manual saving after player swaps
   useEffect(() => {
@@ -288,13 +310,24 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   const positionMarkers = createPositionMarkers(PRESETS, preset, dimensions);
   const positionPlaceholders = isManager ? createPositionPlaceholders(PRESETS, preset, starters, dimensions, isManager) : [];
   
-  // Determine save status message using store's `loading` state
-  const saveStatusText = loading ? "Saving..." : (saved ? "Saved" : "Unsaved Changes");
-  const saveStatusClass = `save-status ${loading ? 'saving' : (saved ? 'saved' : 'unsaved')}`;
+  // Determine save status message and handle errors
+  let saveStatusText = "Saved";
+  let saveStatusClass = "save-status saved";
+  
+  if (loading) {
+    saveStatusText = "Saving...";
+    saveStatusClass = "save-status saving";
+  } else if (saveError) {
+    saveStatusText = "Save Failed";
+    saveStatusClass = "save-status error";
+  } else if (!saved || pendingChanges) {
+    saveStatusText = "Unsaved Changes";
+    saveStatusClass = "save-status unsaved";
+  }
   
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '1rem', borderRadius: '0.5rem' }}>
+      <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '0 1rem 1rem 1rem', borderRadius: '0.5rem' }}>
         {showEditTab ? (
           <Edit 
             onSelectPreset={onPresetChange} 
@@ -304,28 +337,40 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
           />
         ) : (
           <>
-            <div className="formation-header-controls">
-              <div className={saveStatusClass}>
-                <span className="save-status-icon">
-                  {loading ? ( // Use store's `loading` state
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="spinner">
-                      <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                  ) : saved ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                    </svg>
-                  )}
-                </span>
-                {saveStatusText}
-              </div>
+            <div className="formation-header">
+              {/* Removed formation preset display */}
               
-              <div className="controls-right">
+              <div className="formation-actions">
+                <div className={saveStatusClass}>
+                  <span className="save-status-icon">
+                    {loading ? ( 
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="spinner">
+                        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                      </svg>
+                    ) : saveError ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="error-icon">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                      </svg>
+                    ) : saved && !pendingChanges ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="attention-icon">
+                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.553.553 0 0 1-1.1 0L7.1 4.995z"/>
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                      </svg>
+                    )}
+                  </span>
+                  <span className="save-status-text">{saveStatusText}</span>
+                  {saveError && (
+                    <span className="save-error-details" title={saveError}>
+                      {saveError.includes('401') || saveError.includes('403') ? 'Permission Denied' : 'Connection Error'}
+                    </span>
+                  )}
+                </div>
+                
                 {isManager && (
                   <button 
                     className="edit-formation-button"
@@ -349,6 +394,38 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                   </svg>
                   Export
                 </button>
+                
+                {/* Show retry button when there's an error */}
+                {saveError && (
+                  <button 
+                    className="retry-save-button" 
+                    onClick={() => {
+                      clearSaveError();
+                      saveWithRetry();
+                    }}
+                    title="Retry saving formation"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                    </svg>
+                    Retry
+                  </button>
+                )}
+                
+                {/* Show save now button for unsaved changes */}
+                {((!saved && !loading) || pendingChanges) && !saveError && (
+                  <button 
+                    className="save-now-button" 
+                    onClick={() => saveWithRetry()}
+                    title="Save changes now"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 8.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                    </svg>
+                    Save Now
+                  </button>
+                )}
               </div>
             </div>
             
@@ -363,7 +440,6 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
               }}
             >
               <div className="formation-label">
-                <span className="preset-label">Formation:</span>
                 <span className="preset-value">{preset}</span>
               </div>
               
@@ -409,7 +485,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
                       key={player.id}
                       id={player.id}
                       x={pixelPos.x}
-                      y={pixelPos.y - 15} // Move player chips UP by 15px to match placeholder positions
+                      y={pixelPos.y} // Remove the -15px offset since markers are now positioned lower
                       label={player.position || player.label}
                       jerseyNumber={player.jerseyNumber}
                       playerName={player.playerName}

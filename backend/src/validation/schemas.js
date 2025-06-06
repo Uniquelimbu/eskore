@@ -260,8 +260,8 @@ const team = {
       .withMessage('User ID must be an integer')
       .toInt(),
     body('role')
-      .isIn(['manager', 'assistant_manager', 'athlete', 'coach'])
-      .withMessage('Role must be one of: manager, assistant_manager, athlete, coach')
+      .isIn(['manager', 'assistant_manager', 'athlete'])
+      .withMessage('Role must be one of: manager, assistant_manager, athlete')
   ],
   
   teamIdParam: [

@@ -1,9 +1,4 @@
 /* Animations and interaction styles */
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
 
 @keyframes pulse-selection {
   0% {

@@ -31,9 +31,9 @@ const AddMemberForm = ({ onSubmit, onCancel, isManager }) => {
             value={newMemberRole}
             onChange={(e) => setNewMemberRole(e.target.value)}
           >
-            <option value="athlete">Athlete</option>
-            <option value="coach">Coach</option>
-            {isManager && <option value="assistant_manager">Assistant Manager</option>}
+            <option value="">Select Role</option>
+            <option value="athlete">Player</option>
+            <option value="assistant_manager">Assistant Manager</option>
           </select>
         </div>
         <div className="form-actions">

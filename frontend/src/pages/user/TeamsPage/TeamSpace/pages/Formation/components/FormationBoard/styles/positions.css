@@ -58,14 +58,16 @@
 }
 
 .position-marker-label {
-  background-color: rgba(0, 0, 0, 0.6);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 11px;
+  background-color: rgba(0, 0, 0, 0.7); /* Slightly more opaque for better visibility */
+  color: rgba(255, 255, 255, 0.95); /* Brighter text */
+  font-size: 10px; /* Slightly smaller to avoid clutter */
   font-weight: bold;
-  padding: 3px 7px;
-  border-radius: 10px;
+  padding: 2px 6px; /* Reduced padding for compactness */
+  border-radius: 8px; /* Smaller border radius */
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4); /* More visible border */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Add subtle shadow for depth */
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 /* Position hover states */

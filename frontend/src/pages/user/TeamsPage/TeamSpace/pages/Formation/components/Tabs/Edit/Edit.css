@@ -3,6 +3,7 @@
   background-color: #1a202c;
   border-radius: 8px;
   overflow: hidden;
+  padding-top: 0; /* Remove top padding */
 }
 
 .edit-header {

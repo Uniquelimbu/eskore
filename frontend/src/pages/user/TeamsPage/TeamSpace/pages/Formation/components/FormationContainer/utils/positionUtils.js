@@ -10,7 +10,7 @@ export const normalizedToPixel = (xNorm, yNorm, dimensions, posLabel, isMarker =
   const availableWidth = dimensions.width - (horizontalPadding * 2);
   const availableHeight = dimensions.height - (verticalPadding * 2);
   
-  // Special adjustment for goalkeeper position to place them closer to goal line
+  // Apply position adjustments FIRST, before any marker-specific logic
   let adjustedYNorm = yNorm;
   let adjustedXNorm = xNorm;
   
@@ -22,22 +22,25 @@ export const normalizedToPixel = (xNorm, yNorm, dimensions, posLabel, isMarker =
     if (adjustedYNorm > 95) adjustedYNorm = 95;
   }
   
-  // For wide positions, utilize more of the width
-  if (posLabel && ['LB', 'LWB', 'LM', 'LW'].includes(posLabel)) {
+  // For wide positions, utilize more of the width - BUT ONLY FOR PLAYER CHIPS, NOT MARKERS
+  if (!isMarker && posLabel && ['LB', 'LWB', 'LM', 'LW'].includes(posLabel)) {
     // Push left-side players wider
     adjustedXNorm = Math.max(5, xNorm * 0.95);
-  } else if (posLabel && ['RB', 'RWB', 'RM', 'RW'].includes(posLabel)) {
+  } else if (!isMarker && posLabel && ['RB', 'RWB', 'RM', 'RW'].includes(posLabel)) {
     // Push right-side players wider
     adjustedXNorm = Math.min(95, xNorm * 1.05);
   }
   
-  // Position markers need a vertical offset to be below player chips
-  const markerOffset = isMarker ? 25 : 0; // Only apply to markers, not player chips
+  // Calculate base coordinates using adjusted positions
+  const baseX = (adjustedXNorm / 100 * availableWidth) + horizontalPadding;
+  const baseY = (adjustedYNorm / 100 * availableHeight) + verticalPadding;
   
-  // Map coordinates to the available space, then add the padding offset
+  // Position markers need a larger vertical offset to be below player chips
+  const markerOffset = isMarker ? 70 : 0;
+
   return {
-    x: (adjustedXNorm / 100 * availableWidth) + horizontalPadding,
-    y: (adjustedYNorm / 100 * availableHeight) + verticalPadding + markerOffset,
+    x: baseX,
+    y: baseY + markerOffset,
     adjustedXNorm,
     adjustedYNorm
   };

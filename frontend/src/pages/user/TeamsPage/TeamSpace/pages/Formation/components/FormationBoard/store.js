@@ -46,6 +46,9 @@ const useFormationStore = create((set, get) => ({
   preset: '4-3-3',
   loading: false,
   saved: true,
+  saveError: null, // Track save errors
+  lastSaveAttempt: null, // Track when we last tried to save
+  pendingChanges: false, // Track if there are pending changes to save
   
   // Export constants for direct access in components
   PRESETS,
@@ -90,21 +93,36 @@ const useFormationStore = create((set, get) => ({
   
   // Add a new forceSave method to explicitly trigger a save
   forceSave: async () => {
-    const { teamId, starters, subs, preset, loading: isLoading } = get();
+    const { teamId, starters, subs, preset, loading: isLoading, lastSaveAttempt } = get();
 
+    // Prevent concurrent saves
     if (isLoading) {
       console.log('Formation store: Save already in progress, skipping new forceSave call.');
       return { success: false, error: "Save already in progress" };
     }
 
+    // Prevent too frequent saves (debounce)
+    const now = Date.now();
+    if (lastSaveAttempt && (now - lastSaveAttempt) < 1000) {
+      console.log('Formation store: Recent save attempt detected, debouncing...');
+      return { success: false, error: "Too frequent save attempts" };
+    }
+
     if (!teamId) {
       console.error('Formation store: Cannot forceSave, teamId is missing.');
-      // Potentially set error state here if needed, though UI might not show it
-      return { success: false, error: "Missing teamId" };
+      const error = "Missing teamId - cannot save formation";
+      set({ saveError: error, pendingChanges: true });
+      return { success: false, error };
     }
     
     console.log('Formation store: Forcing immediate save');
-    set({ saved: false, loading: true });
+    set({ 
+      saved: false, 
+      loading: true, 
+      saveError: null, 
+      pendingChanges: true,
+      lastSaveAttempt: now
+    });
     
     const formationData = {
       preset,
@@ -122,18 +140,81 @@ const useFormationStore = create((set, get) => ({
       
       if (result && result.success) {
         console.log('Formation store: Force save successful');
-        set({ saved: true, loading: false });
+        set({ 
+          saved: true, 
+          loading: false, 
+          saveError: null, 
+          pendingChanges: false 
+        });
         return { success: true };
       } else {
-        console.error('Formation store: Force save failed via API:', result.error);
-        set({ saved: false, loading: false }); // Ensure loading is false on failure
-        return { success: false, error: result.error || 'Save failed via API' };
+        const errorMsg = result.error || 'Save failed via API';
+        console.error('Formation store: Force save failed via API:', errorMsg);
+        
+        // Set error state but keep pendingChanges true so user knows there are unsaved changes
+        set({ 
+          loading: false, 
+          saveError: errorMsg, 
+          pendingChanges: true,
+          saved: false 
+        });
+        return { success: false, error: errorMsg };
       }
     } catch (error) {
+      const errorMsg = error.message || 'Unknown save error';
       console.error('Formation store: Force save exception:', error);
-      set({ saved: false, loading: false }); // Ensure loading is false on exception
-      return { error: error.message, success: false };
+      set({ 
+        loading: false, 
+        saveError: errorMsg, 
+        pendingChanges: true,
+        saved: false 
+      });
+      return { error: errorMsg, success: false };
     }
+  },
+
+  // Enhanced save method with retry logic
+  saveWithRetry: async (maxRetries = 3) => {
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`Formation store: Save attempt ${attempt}/${maxRetries}`);
+      
+      const result = await get().forceSave();
+      
+      if (result.success) {
+        console.log(`Formation store: Save succeeded on attempt ${attempt}`);
+        return result;
+      }
+      
+      lastError = result.error;
+      
+      // Don't retry on authentication errors
+      if (result.error && (
+        result.error.includes('401') || 
+        result.error.includes('403') || 
+        result.error.includes('Unauthorized') || 
+        result.error.includes('Forbidden')
+      )) {
+        console.log('Formation store: Authentication error detected, not retrying');
+        break;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      if (attempt < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        console.log(`Formation store: Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    console.error(`Formation store: All save attempts failed. Last error: ${lastError}`);
+    return { success: false, error: lastError };
+  },
+
+  // Clear any save errors
+  clearSaveError: () => {
+    set({ saveError: null });
   },
   
   // Action to move a player to a specific position
@@ -145,15 +226,15 @@ const useFormationStore = create((set, get) => ({
     // Apply the state change directly
     set(state => {
       const newState = movePlayerToPosition(draggedPlayerId, targetPositionId, wasStarter, originalPosId, originalSubIdx)(state);
-      return { ...newState, saved: false };
+      return { ...newState, saved: false, pendingChanges: true, saveError: null };
     });
     
-    // Immediately save the changes - no debouncing for critical operations like player movement
+    // Use enhanced save with retry logic
     setTimeout(() => {
-      get().forceSave().catch(err => {
+      get().saveWithRetry().catch(err => {
         console.error("Formation store: Failed to save after movePlayerToPosition:", err);
       });
-    }, 0);
+    }, 100); // Small delay to ensure state is updated
   },
   
   // Action to move a player to a specific sub slot
@@ -164,15 +245,15 @@ const useFormationStore = create((set, get) => ({
     
     set(state => {
       const newState = movePlayerToSubSlot(draggedPlayerId, targetSubIndex, wasStarter, originalPosId, originalSubIdx)(state);
-      return { ...newState, saved: false };
+      return { ...newState, saved: false, pendingChanges: true, saveError: null };
     });
     
-    // Immediately save the changes
+    // Use enhanced save with retry logic
     setTimeout(() => {
-      get().forceSave().catch(err => {
+      get().saveWithRetry().catch(err => {
         console.error("Formation store: Failed to save after movePlayerToSubSlot:", err);
       });
-    }, 0);
+    }, 100);
   },
   
   // Action for when a starter is dropped onto the general subs strip area
@@ -183,15 +264,15 @@ const useFormationStore = create((set, get) => ({
     
     set(state => {
       const newState = moveStarterToSubsGeneral(draggedPlayerId, originalPositionId)(state);
-      return { ...newState, saved: false };
+      return { ...newState, saved: false, pendingChanges: true, saveError: null };
     });
     
-    // Immediately save the changes
+    // Use enhanced save with retry logic
     setTimeout(() => {
-      get().forceSave().catch(err => {
+      get().saveWithRetry().catch(err => {
         console.error("Formation store: Failed to save after moveStarterToSubsGeneral:", err);
       });
-    }, 0);
+    }, 100);
   },
   
   // Action to swap two players
@@ -200,15 +281,15 @@ const useFormationStore = create((set, get) => ({
     
     set(state => {
       const newState = swapPlayersInFormation(player1Id, player2Id)(state);
-      return { ...newState, saved: false };
+      return { ...newState, saved: false, pendingChanges: true, saveError: null };
     });
     
-    // Immediately save the changes
+    // Use enhanced save with retry logic
     setTimeout(() => {
-      get().forceSave().catch(err => {
+      get().saveWithRetry().catch(err => {
         console.error("Formation store: Failed to save after swapPlayersInFormation:", err);
       });
-    }, 0);
+    }, 100);
   }
 }));
 

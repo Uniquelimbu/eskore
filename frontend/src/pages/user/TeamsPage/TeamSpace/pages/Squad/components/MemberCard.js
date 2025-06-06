@@ -17,39 +17,39 @@ const MemberCard = ({ member, onRemove, isManager, category }) => {
                 null;
 
   // Destructure only what we need
-  const { id, firstName, lastName, email, role, profileImageUrl, jerseyNumber, position } = member;
+  const { id, firstName, lastName, role, profileImageUrl, jerseyNumber, position } = member;
   
-  // Get position code for athletes
-  const positionCode = category === 'athlete' && member.Player?.position 
+  // Generate initials from first and last name
+  const initials = `${firstName ? firstName.charAt(0) : ''}${lastName ? lastName.charAt(0) : ''}`.toUpperCase();
+  
+  // Get position info for display
+  const positionInfo = category === 'athlete' && member.Player?.position 
                       ? member.Player.position 
-                      : category === 'athlete' ? 'ATH' : roleLabel.substring(0, 3).toUpperCase();
+                      : null;
+  const jerseyNum = category === 'athlete' && member.Player?.jerseyNumber
+                      ? member.Player.jerseyNumber
+                      : null;
 
   return (
     <div className="member-card">
-      {/* New badge-style avatar */}
-      <div className="member-badge">
-        <div className="member-badge-top">
-          <div className="position-code">{positionCode}</div>
-          {category === 'athlete' && member.Player?.jerseyNumber && (
-            <div className="badge-jersey-number">{member.Player.jerseyNumber}</div>
-          )}
-        </div>
-        <div className="member-badge-middle">
-          {avatar ? (
-            <img src={avatar} alt={memberName} />
-          ) : (
-            <div className="player-silhouette"></div>
-          )}
-        </div>
-        <div className="member-badge-bottom">
-          <div className="badge-player-name">{memberName || "Unknown"}</div>
-        </div>
+      <div className="member-avatar">
+        {avatar ? (
+          <img src={avatar} alt={memberName} className="member-avatar-img" />
+        ) : (
+          <div className="member-avatar-placeholder">
+            {initials || "?"}
+          </div>
+        )}
+        {jerseyNum && <div className="jersey-number-badge">{jerseyNum}</div>}
       </div>
       
       <div className="member-info">
         <h4>{memberName}</h4>
         <div className="member-details">
-          {/* Original member details remain unchanged */}
+          {positionInfo && (
+            <span className="member-position">{positionInfo}</span>
+          )}
+          {/* Email display removed */}
         </div>
       </div>
       

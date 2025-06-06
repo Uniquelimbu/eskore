@@ -3,59 +3,136 @@
 /* Header controls styling */
 .formation-header-controls {
   display: flex;
-  justify-content: space-between; /* Changed from flex-end to space-between */
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
   margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  background-color: #2d3748;
+  border-radius: 0.5rem;
 }
 
 .controls-right {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 0.5rem;
 }
 
 /* Save status styling */
 .save-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  padding: 6px 10px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  gap: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 500;
-}
-
-.save-status.saving {
-  color: #facc15; /* Yellow */
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
 }
 
 .save-status.saved {
-  color: #4ade80; /* Green */
+  color: #68d391;
+  background-color: rgba(104, 211, 145, 0.1);
+  border: 1px solid rgba(104, 211, 145, 0.3);
+}
+
+.save-status.saving {
+  color: #63b3ed;
+  background-color: rgba(99, 179, 237, 0.1);
+  border: 1px solid rgba(99, 179, 237, 0.3);
 }
 
 .save-status.unsaved {
-  color: #f87171; /* Red */
+  color: #fbb6ce;
+  background-color: rgba(251, 182, 206, 0.1);
+  border: 1px solid rgba(251, 182, 206, 0.3);
+}
+
+.save-status.error {
+  color: #fc8181;
+  background-color: rgba(252, 129, 129, 0.1);
+  border: 1px solid rgba(252, 129, 129, 0.3);
 }
 
 .save-status-icon {
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-/* Spinner animation for saving state */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.spinner {
+.save-status-icon .spinner {
   animation: spin 1s linear infinite;
+}
+
+.save-status-icon .error-icon {
+  color: #fc8181;
+}
+
+.save-status-icon .attention-icon {
+  color: #f6ad55;
+}
+
+.save-error-details {
+  font-size: 0.75rem;
+  color: #fc8181;
+  background-color: rgba(252, 129, 129, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Save now button styling */
+.save-now-button {
+  background-color: #3182ce;
+  color: white;
+}
+
+.save-now-button:hover {
+  background-color: #2c5aa0;
+  transform: translateY(-1px);
+}
+
+/* Retry save button styling */
+.retry-save-button {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.retry-save-button:hover {
+  background-color: #c53030;
+  transform: translateY(-1px);
+}
+
+/* Edit button styling */
+.edit-formation-button {
+  background-color: #38a169;
+  color: white;
+}
+
+.edit-formation-button:hover {
+  background-color: #2f855a;
+  transform: translateY(-1px);
+}
+
+.edit-formation-button:disabled {
+  background-color: #4a5568;
+  color: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Export button styling */
+.export-formation-button {
+  background-color: #805ad5;
+  color: white;
+}
+
+.export-formation-button:hover {
+  background-color: #6b46c1;
+  transform: translateY(-1px);
 }
 
 /* Formation label styling */
@@ -63,92 +140,71 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 5px 10px;
-  border-radius: 4px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.formation-label .preset-label {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-}
-
-.formation-label .preset-value {
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  font-size: 1rem;
-}
-
-/* Edit button styling */
-.edit-formation-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.edit-formation-button:hover {
-  background-color: #2563eb;
-}
-
-.edit-formation-button:disabled {
-  background-color: #4b5563;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Export button styling */
-.export-formation-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.export-formation-button:hover {
-  background-color: #2563eb;
+  z-index: 10;
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
   .formation-header-controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
   }
-  
+
+  .save-status {
+    justify-content: center;
+  }
+
+  .controls-right {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .save-now-button,
+  .retry-save-button,
   .edit-formation-button,
   .export-formation-button {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .save-status.saved {
+    border-width: 2px;
   }
   
-  .formation-label {
-    top: 5px;
-    left: 5px;
-    padding: 3px 6px;
+  .save-status.saving {
+    border-width: 2px;
   }
   
-  .formation-label .preset-label,
-  .formation-label .preset-value {
-    font-size: 0.8rem;
+  .save-status.unsaved {
+    border-width: 2px;
+  }
+  
+  .save-status.error {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .save-status-icon .spinner {
+    animation: none;
+  }
+  
+  .save-now-button:hover,
+  .retry-save-button:hover,
+  .edit-formation-button:hover,
+  .export-formation-button:hover {
+    transform: none;
   }
 }

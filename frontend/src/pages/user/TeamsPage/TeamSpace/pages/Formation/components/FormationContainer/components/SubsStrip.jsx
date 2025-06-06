@@ -167,9 +167,11 @@ const SubsStrip = ({
         {subs.map((sub, index) => {
           if (!sub) return null;
           const pos = getChipPosition(index, Math.max(7, subs.length));
+          // Create truly unique key using multiple identifiers to prevent duplicates
+          const uniqueKey = `sub-${sub.playerId || sub.id}-position-${index}-${sub.jerseyNumber || 'no-jersey'}`;
           return (
             <PlayerChip
-              key={sub.id}
+              key={uniqueKey}
               id={sub.id}
               x={pos.x}
               y={pos.y}

@@ -287,7 +287,7 @@ router.post('/team-invitation',
   validate([
     body('teamId').isInt().withMessage('Team ID is required'),
     body('email').isEmail().withMessage('Valid email is required'),
-    body('role').isIn(['athlete', 'coach', 'assistant_manager']).withMessage('Invalid role'),
+    body('role').isIn(['athlete', 'assistant_manager']).withMessage('Invalid role'),
     body('message').optional().isString().withMessage('Message must be a string')
   ]),
   catchAsync(async (req, res) => {

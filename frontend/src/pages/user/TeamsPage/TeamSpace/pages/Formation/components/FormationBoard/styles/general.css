@@ -1,13 +1,14 @@
 /* General Formation Styles */
 .formation-container {
   background-color: #1a202c;
-  padding: 1rem;
+  padding: 0 1rem 1rem 1rem; /* Remove top padding */
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
 .formation-header {
   margin-bottom: 1rem;
+  margin-top: 0; /* Ensure no top margin */
 }
 
 .formation-header h2 {
@@ -32,23 +33,6 @@
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.formation-current-preset {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.preset-label {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
-}
-
-.preset-value {
-  color: white;
-  font-weight: 600;
-  font-size: 1.1rem;
 }
 
 .edit-formation-button {
@@ -118,11 +102,6 @@
   gap: 5px;
 }
 
-.formation-label .preset-label {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-}
-
 .formation-label .preset-value {
   color: white;
   font-weight: 600;
@@ -159,14 +138,10 @@
 
 /* Save button styles */
 .save-button {
-  background-color: #facc15;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  border: none;
   cursor: pointer;
   transition: background-color 0.2s, opacity 0.2s;
   font-weight: 500;
+  order: -1; /* Move to leftmost position */
 }
 
 .save-button:hover:not(:disabled) {
@@ -180,14 +155,6 @@
 
 .save-button.saved {
   background-color: #4ade80;
-}
-
-/* Save status indicator animation */
-.save-status {
-  color: #facc15;
-  animation: pulse 2s infinite;
-  font-size: 0.875rem;
-  margin-left: 0.5rem;
 }
 
 /* Formation notes section */

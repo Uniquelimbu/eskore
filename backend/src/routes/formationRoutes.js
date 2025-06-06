@@ -7,6 +7,7 @@ const { validate } = require('../validation');
 const { param } = require('express-validator');
 const log = require('../utils/log');
 const sequelize = require('../config/db'); // Fixed: changed from '../config/sequelize' to '../config/db'
+const { Op } = require('sequelize'); // Add Sequelize operators import
 
 // Debug route for testing
 router.get('/test', (req, res) => {
@@ -82,7 +83,7 @@ router.get('/:teamId',
               where: {
                 userId: req.user.userId,
                 teamId,
-                role: { [Op.in]: ['manager', 'assistant_manager', 'coach'] } // Allow more roles to create default
+                role: { [Op.in]: ['manager', 'assistant_manager'] } // Only managers and assistant managers can create default
               }
             });
             
@@ -168,14 +169,26 @@ router.put('/:teamId',
     const { teamId } = req.params;
     const { schema_json } = req.body;
     
-    log.info(`PUT formation for team ${teamId}`);
+    log.info(`PUT formation for team ${teamId} by user ${req.user?.userId}`);
     
     try {
+      // Validate request body
+      if (!schema_json) {
+        log.warn(`PUT formation for team ${teamId}: Missing schema_json in request body`);
+        throw new ApiError('Formation data (schema_json) is required', 400, 'BAD_REQUEST');
+      }
+
+      // Validate schema_json structure
+      if (typeof schema_json !== 'object') {
+        log.warn(`PUT formation for team ${teamId}: Invalid schema_json type - expected object, got ${typeof schema_json}`);
+        throw new ApiError('Formation data must be a valid object', 400, 'BAD_REQUEST');
+      }
+
       // First check if the team exists
       const teamExists = await sequelize.models.Team.findByPk(teamId);
       
       if (!teamExists) {
-        log.warn(`Team with ID ${teamId} does not exist in database`);
+        log.warn(`PUT formation for team ${teamId}: Team does not exist in database`);
         throw new ApiError('Team not found', 404, 'NOT_FOUND');
       }
 
@@ -185,41 +198,103 @@ router.put('/:teamId',
           where: {
             userId: req.user.userId,
             teamId,
-            role: 'manager' // Only managers can update formations
+            role: { [Op.in]: ['manager', 'assistant_manager'] } // Only managers and assistant managers can save formations
           }
         });
         
         if (!userTeam) {
-          log.warn(`User ${req.user.userId} attempted to update formation for team ${teamId} but is not a manager`);
-          throw new ApiError('Only team managers can update formations', 403, 'FORBIDDEN');
+          log.warn(`PUT formation for team ${teamId}: User ${req.user.userId} attempted to update formation but lacks sufficient permissions (current role in team: ${userTeam?.role || 'none'})`);
+          throw new ApiError('Insufficient permissions: Only team managers and assistant managers can update formations', 403, 'FORBIDDEN');
         }
+        
+        log.info(`PUT formation for team ${teamId}: User ${req.user.userId} has role '${userTeam.role}' - permission granted`);
       } else {
+        log.error(`PUT formation for team ${teamId}: No user information found in request - authentication middleware may have failed`);
         throw new ApiError('Authentication required', 401, 'UNAUTHORIZED');
+      }
+
+      // Add timestamp and validation to the schema_json
+      const enrichedSchemaJson = {
+        ...schema_json,
+        updated_at: new Date().toISOString(),
+        saved_by_user_id: req.user.userId
+      };
+
+      // Validate essential formation data
+      if (!enrichedSchemaJson.preset) {
+        log.warn(`PUT formation for team ${teamId}: Missing 'preset' in formation data`);
+        throw new ApiError('Formation preset is required', 400, 'BAD_REQUEST');
+      }
+
+      if (!Array.isArray(enrichedSchemaJson.starters)) {
+        log.warn(`PUT formation for team ${teamId}: Invalid 'starters' data - expected array`);
+        throw new ApiError('Formation starters must be an array', 400, 'BAD_REQUEST');
+      }
+
+      if (!Array.isArray(enrichedSchemaJson.subs)) {
+        log.warn(`PUT formation for team ${teamId}: Invalid 'subs' data - expected array`);
+        throw new ApiError('Formation subs must be an array', 400, 'BAD_REQUEST');
       }
 
       // Check if formation exists
       let formation = await Formation.findOne({ where: { teamId } });
       let statusCode = 200;
+      let isNewFormation = false;
       
       if (formation) {
         // Update existing formation
-        formation.schema_json = schema_json;
+        log.info(`PUT formation for team ${teamId}: Updating existing formation (ID: ${formation.id})`);
+        formation.schema_json = enrichedSchemaJson;
         await formation.save();
-        log.info(`Updated formation for team ${teamId}`);
+        log.info(`PUT formation for team ${teamId}: Successfully updated formation`);
       } else {
         // Create new formation
+        log.info(`PUT formation for team ${teamId}: Creating new formation`);
         formation = await Formation.create({
           teamId,
-          schema_json
+          schema_json: enrichedSchemaJson
         });
         statusCode = 201;
-        log.info(`Created new formation for team ${teamId}`);
+        isNewFormation = true;
+        log.info(`PUT formation for team ${teamId}: Successfully created new formation (ID: ${formation.id})`);
       }
       
-      return res.status(statusCode).json(formation);
+      // Return success response with additional metadata
+      const response = {
+        ...formation.toJSON(),
+        success: true,
+        operation: isNewFormation ? 'created' : 'updated',
+        timestamp: new Date().toISOString()
+      };
+      
+      log.info(`PUT formation for team ${teamId}: Operation completed successfully - ${isNewFormation ? 'created' : 'updated'} formation`);
+      return res.status(statusCode).json(response);
+      
     } catch (error) {
-      log.error(`Error saving formation for team ${teamId}:`, error);
-      throw error;
+      log.error(`PUT formation for team ${teamId}: Error occurred:`, {
+        error: error.message,
+        stack: error.stack,
+        userId: req.user?.userId,
+        errorType: error.constructor.name
+      });
+      
+      // If it's already an ApiError, just throw it
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      // Handle specific database errors
+      if (error.name === 'SequelizeValidationError') {
+        throw new ApiError('Formation data validation failed: ' + error.message, 400, 'VALIDATION_ERROR');
+      }
+      
+      if (error.name === 'SequelizeDatabaseError') {
+        log.error(`PUT formation for team ${teamId}: Database error:`, error);
+        throw new ApiError('Database error occurred while saving formation', 500, 'DATABASE_ERROR');
+      }
+      
+      // Generic error fallback
+      throw new ApiError('Failed to save formation: ' + (error.message || 'Unknown error'), 500, 'SERVER_ERROR');
     }
   })
 );
