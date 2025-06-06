@@ -22,6 +22,41 @@ const isValidResponse = (response) => {
 const memberCache = new Map();
 
 export const applyTeamExtensions = (apiClient) => {
+  const normalizeTeamMembersResponse = (response, requestId = 'unknown') => {
+    try {
+      // Extract members from response - handle different response structures
+      let members = [];
+      if (response?.members) {
+        members = response.members;
+      } else if (response?.data?.members) {
+        members = response.data.members;
+      } else if (Array.isArray(response)) {
+        members = response;
+      }
+
+      const normalizedMembers = members.map(member => {
+        // Extract user data from different possible structures
+        const userData = member.User || member.user || member;
+        
+        return {
+          id: member.id || member.userId || userData.id || `unknown-${Math.random().toString(36).substr(2, 9)}`,
+          userId: member.userId || member.id || userData.id,
+          firstName: userData.firstName || member.firstName || '',
+          lastName: userData.lastName || member.lastName || '',
+          email: userData.email || member.email || '',
+          role: member.role || userData.role || 'athlete',
+          Player: member.Player || userData.Player || null,
+          profileImageUrl: userData.profileImageUrl || member.profileImageUrl || null
+        };
+      });
+
+      return { members: normalizedMembers, team: response.team || null };
+    } catch (err) {
+      console.error(`TeamMembers[${requestId}]: Error normalizing response:`, err);
+      return { members: [], team: null };
+    }
+  };
+
   // Add a specific method for team requests with shorter timeout
   apiClient.getTeam = async function(teamId, options = {}) {
     // Validate teamId
@@ -77,6 +112,9 @@ export const applyTeamExtensions = (apiClient) => {
               break;
             case RETRY_STRATEGIES.IMMEDIATE:
               delayMs = 0;
+              break;
+            default:
+              delayMs = 500; // Default delay
               break;
           }
           
@@ -140,7 +178,7 @@ export const applyTeamExtensions = (apiClient) => {
     const maxAttempts = options.maxRetries || 1; // Reduced to just 1 retry (total of 2 attempts)
     const retryStrategy = options.retryStrategy || RETRY_STRATEGIES.EXPONENTIAL_BACKOFF;
     const bailOnServerError = options.bailOnServerError !== undefined ? options.bailOnServerError : false;
-    const useMockOnFailure = options.useMockOnFailure !== undefined ? options.useMockOnFailure : false;
+    // Remove useMockOnFailure since it's not used
     
     // Create a dedicated client instance for member requests
     const teamMembersClient = this.withTimeout(timeoutMs);
@@ -296,6 +334,9 @@ export const applyTeamExtensions = (apiClient) => {
       
       // All attempts failed - try to recover with fallback strategies
       
+      // Use lastError for final error handling
+      console.error(`TeamMembers[${requestId}]: All attempts failed:`, lastError);
+      
       // STRATEGY 1: Check if we have stale cached data we can use
       if (cachedData) {
         console.log(`TeamMembers[${requestId}]: Using stale cache after failed attempts`);
@@ -360,144 +401,6 @@ export const applyTeamExtensions = (apiClient) => {
         status: errorStatus,
         timestamp: new Date().toISOString(),
         requestId: requestId
-      };
-    }
-  };
-  
-  // Normalize team members response to a consistent format with enhanced reliability
-  const normalizeTeamMembersResponse = (response, requestId = 'unknown') => {
-    // Default structure to return if we can't extract data
-    const defaultStructure = { members: [], team: null, success: false };
-    
-    if (!response) {
-      console.warn(`TeamMembers[${requestId}]: Empty response received`);
-      return defaultStructure;
-    }
-    
-    try {
-      // Try to extract members data from various possible locations in the response
-      let members = null;
-      let team = null;
-      
-      console.log(`TeamMembers[${requestId}]: Normalizing response. Available keys:`, 
-        Object.keys(response).join(', '));
-      
-      // Enhanced path resolution with more possible structures
-      const possibleMembersPaths = [
-        response.members,
-        response.data?.members,
-        response.Users,
-        response.data?.Users,
-        response.team?.members,
-        response.data?.team?.members,
-        response.users,
-        response.data?.users,
-        response.roster,
-        response.data?.roster
-      ];
-      
-      // Find first valid members array
-      for (const path of possibleMembersPaths) {
-        if (Array.isArray(path)) {
-          members = path;
-          console.log(`TeamMembers[${requestId}]: Found members array with ${members.length} items`);
-          break;
-        }
-      }
-      
-      // Special case: Response itself is an array
-      if (!members && Array.isArray(response)) {
-        console.log(`TeamMembers[${requestId}]: Response itself is an array with ${response.length} items`);
-        members = response;
-      }
-      
-      // Extract team data if available
-      const possibleTeamPaths = [
-        response.team,
-        response.data?.team,
-        response.teamInfo,
-        response.data?.teamInfo
-      ];
-      
-      for (const path of possibleTeamPaths) {
-        if (path && typeof path === 'object') {
-          team = path;
-          console.log(`TeamMembers[${requestId}]: Found team info`);
-          break;
-        }
-      }
-      
-      // Ensure members is always an array
-      if (!members || !Array.isArray(members)) {
-        console.warn(`TeamMembers[${requestId}]: Could not find valid members array, using empty array`);
-        members = [];
-      }
-      
-      // Normalize member objects for consistency
-      const normalizedMembers = members.map(member => {
-        // Handle nested user data structure
-        const userData = member.User || member;
-        
-        return {
-          id: member.id || member.userId || userData.id || `unknown-${Math.random().toString(36).substr(2, 9)}`,
-          userId: member.userId || member.id || userData.id,
-          firstName: userData.firstName || member.firstName || '',
-          lastName: userData.lastName || member.lastName || '',
-          email: userData.email || member.email || '',
-          role: member.role || userData.role || 'athlete',
-          Player: member.Player || userData.Player || null,
-          profileImageUrl: userData.profileImageUrl || member.profileImageUrl || null
-        };
-      });
-      
-      // Filter out invalid members (without ID)
-      const validMembers = normalizedMembers.filter(m => m.id && m.id !== 'unknown');
-      
-      if (validMembers.length < normalizedMembers.length) {
-        console.warn(`TeamMembers[${requestId}]: Filtered ${normalizedMembers.length - validMembers.length} invalid members`);
-      }
-      
-      // Return normalized structure
-      return {
-        members: validMembers,
-        team,
-        // Preserve any other fields that might be useful
-        totalCount: response.totalCount || validMembers.length,
-        success: true,
-        meta: {
-          requestId,
-          normalizedAt: new Date().toISOString(),
-          originalMemberCount: members.length,
-          validMemberCount: validMembers.length
-        }
-      };
-    } catch (err) {
-      console.error(`TeamMembers[${requestId}]: Error normalizing team members response:`, err);
-      
-      // Even on error, try our best to return something usable
-      let fallbackMembers = [];
-      
-      // Last-ditch effort: if response is an object, try to find arrays
-      if (response && typeof response === 'object') {
-        Object.keys(response).forEach(key => {
-          if (Array.isArray(response[key]) && response[key].length > 0 && 
-              response[key][0] && (response[key][0].id || response[key][0].userId)) {
-            console.log(`TeamMembers[${requestId}]: Found possible members in key "${key}"`);
-            fallbackMembers = response[key];
-          }
-        });
-      }
-      
-      return { 
-        members: fallbackMembers, 
-        team: null, 
-        success: fallbackMembers.length > 0,
-        meta: {
-          requestId,
-          normalizedAt: new Date().toISOString(),
-          recovery: true,
-          error: err.message
-        }
       };
     }
   };
@@ -632,6 +535,39 @@ export const applyTeamExtensions = (apiClient) => {
       return response;
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      throw error;
+    }
+  };
+  
+  // Add method to get team join requests
+  apiClient.getTeamJoinRequests = async function(teamId) {
+    try {
+      const response = await this.get(`/teams/${teamId}/join-requests`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching team join requests:', error);
+      throw error;
+    }
+  };
+
+  // Add method to accept team join request
+  apiClient.acceptTeamJoinRequest = async function(requestId) {
+    try {
+      const response = await this.post(`/teams/join-requests/${requestId}/accept`);
+      return response;
+    } catch (error) {
+      console.error('Error accepting team join request:', error);
+      throw error;
+    }
+  };
+
+  // Add method to reject team join request
+  apiClient.rejectTeamJoinRequest = async function(requestId, reason = '') {
+    try {
+      const response = await this.post(`/teams/join-requests/${requestId}/reject`, { reason });
+      return response;
+    } catch (error) {
+      console.error('Error rejecting team join request:', error);
       throw error;
     }
   };

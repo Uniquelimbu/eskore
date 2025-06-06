@@ -109,8 +109,8 @@ export const assignPlayersToFormation = (players, presetName, get, set) => {
   const newSubs = remainingPlayers.slice(0, 7).map((player, index) => {
     return {
       id: `sub-${index + 1}`,
-      label: player.position || 'SUB',
-      position: player.position || 'SUB',
+      label: player.position || player.preferredPosition || 'SUB',
+      position: player.position || player.preferredPosition || 'SUB',
       playerId: player.id,
       jerseyNumber: player.jerseyNumber || String(index + 12), // Start from 12
       playerName: player.lastName || player.firstName || player.name || `Sub ${index + 1}`
@@ -125,7 +125,8 @@ export const assignPlayersToFormation = (players, presetName, get, set) => {
       label: 'SUB',
       position: 'SUB',
       jerseyNumber: String(index + 12),
-      playerName: `Player ${index + 12}`
+      playerName: `Player ${index + 12}`,
+      playerId: null
     });
   }
   
@@ -158,7 +159,7 @@ export const mapPlayersToPositions = (players, get, set) => {
   const hasRealPlayers = starters.some(s => s.playerId) || subs.some(s => s.playerId);
   
   if (hasRealPlayers) {
-    // Just update player details for already assigned players
+    // Update existing players and add new ones to subs
     const newStarters = starters.map(starter => {
       if (starter.playerId && playerMap[starter.playerId]) {
         const player = playerMap[starter.playerId];
@@ -183,7 +184,44 @@ export const mapPlayersToPositions = (players, get, set) => {
       return sub;
     });
     
-    set({ starters: newStarters, subs: newSubs });
+    // Find new players not yet assigned
+    const assignedPlayerIds = new Set([
+      ...newStarters.filter(s => s.playerId).map(s => s.playerId),
+      ...newSubs.filter(s => s.playerId).map(s => s.playerId)
+    ]);
+    
+    const unassignedPlayers = players.filter(p => !assignedPlayerIds.has(p.id));
+    
+    // Replace dummy subs with new players
+    if (unassignedPlayers.length > 0) {
+      const updatedSubs = [...newSubs];
+      
+      unassignedPlayers.forEach(player => {
+        // Find a dummy player slot to replace, preferably matching position
+        const dummyIndex = updatedSubs.findIndex(sub => 
+          !sub.playerId && (
+            (sub.position === player.position || sub.position === player.preferredPosition) ||
+            sub.position === 'SUB'
+          )
+        );
+        
+        if (dummyIndex !== -1) {
+          updatedSubs[dummyIndex] = {
+            id: `sub-${dummyIndex + 1}`,
+            label: player.position || player.preferredPosition || 'SUB',
+            position: player.position || player.preferredPosition || 'SUB',
+            playerId: player.id,
+            jerseyNumber: player.jerseyNumber || String(dummyIndex + 12),
+            playerName: player.lastName || player.firstName || player.name || ''
+          };
+        }
+      });
+      
+      set({ starters: newStarters, subs: updatedSubs, saved: false });
+      get().saveFormation();
+    } else {
+      set({ starters: newStarters, subs: newSubs });
+    }
   } else {
     // No real players assigned yet - do intelligent assignment
     assignPlayersToFormation(players, preset, get, set);

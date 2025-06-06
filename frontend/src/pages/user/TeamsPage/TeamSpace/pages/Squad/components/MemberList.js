@@ -1,53 +1,72 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { apiClient } from '../../../../../../../services';
 import MemberCard from './MemberCard';
 import '../styles/MemberList.css';
 
-const MemberList = ({ title, members, isManager, onRemoveMember, category, categoryFilter }) => {
-  if (!Array.isArray(members)) {
-    console.error('MemberList: members is not an array', members);
-    return null;
-  }
-  
-  // Filter members if a categoryFilter is provided
-  const filteredMembers = categoryFilter 
-    ? members.filter(member => {
-        if (categoryFilter === 'athlete') return member.role === 'athlete';
-        if (categoryFilter === 'manager') return ['manager', 'assistant_manager'].includes(member.role);
-        if (categoryFilter === 'coach') return member.role === 'coach';
-        return true; // All members if no filter
-      })
-    : members;
+const MemberList = ({ members, team, isManager, onMemberUpdate }) => {
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { teamId } = useParams();
 
-  // If no members after filtering
-  if (filteredMembers.length === 0) {
-    return (
-      <div className="empty-member-list">
-        <p>No team members in this category.</p>
-      </div>
-    );
-  }
+  // Fetch join requests for managers
+  useEffect(() => {
+    const fetchJoinRequests = async () => {
+      if (!isManager || !teamId) return;
+      
+      setRequestsLoading(true);
+      try {
+        const response = await apiClient.getTeamJoinRequests(teamId);
+        setJoinRequests(response?.requests || []);
+      } catch (error) {
+        console.error('Error fetching join requests:', error);
+        setJoinRequests([]);
+      } finally {
+        setRequestsLoading(false);
+      }
+    };
+
+    fetchJoinRequests();
+  }, [isManager, teamId]);
+
+  const handleRequestsClick = () => {
+    navigate(`/teams/${teamId}/requests`);
+  };
 
   return (
-    <div className="squad-section">
-      <h3>{title} ({filteredMembers.length})</h3>
-      <div className="squad-members">
-        {filteredMembers.map((member) => {
-          // Ensure we have a valid ID for the key
-          const memberId = member.id || member.userId || `member-${Date.now()}-${Math.random()}`;
-          
-          return (
+    <div className="member-list-container">
+      {/* Add requests section for managers */}
+      {isManager && (
+        <div className="requests-section">
+          <div className="requests-header">
+            
+            <button 
+              className="requests-button" 
+              onClick={handleRequestsClick}
+              disabled={requestsLoading}
+            >
+              Requests
+              {joinRequests.length > 0 && (
+                <span className="requests-badge">{joinRequests.length}</span>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="squad-section">
+        <div className="members-grid">
+          {members.map(member => (
             <MemberCard
-              key={memberId}
+              key={member.id}
               member={member}
-              onRemove={onRemoveMember}
+              team={team}
               isManager={isManager}
-              category={
-                member.role === 'athlete' ? 'athlete' :
-                ['manager', 'assistant_manager'].includes(member.role) ? 'manager' : 'coach'
-              }
+              onMemberUpdate={onMemberUpdate}
             />
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );

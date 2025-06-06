@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { apiClient } from '../../../services'; // Updated import path
-import PageLayout from '../../../components/PageLayout/PageLayout';
+import { apiClient } from '../../../services';
+import PageLayout from '../../../components/layout/PageLayout';
 import './TeamsPage.css';
 
 // Team API timeout - make it much shorter to improve user experience
@@ -92,7 +92,7 @@ const TeamsPage = () => {
   return (
     <PageLayout className="teams-page-content" maxWidth="1200px" withPadding={true}>
       <div className="teams-header">
-        <h1>Team Management</h1>
+        <h1>Teams</h1>
         <p className="teams-subtitle">Join an existing team or create a new one</p>
       </div>
       {error && (

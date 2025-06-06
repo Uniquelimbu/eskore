@@ -2,17 +2,19 @@
 .back-button {
   background-color: transparent;
   color: var(--text-light);
-  border: none;
-  padding: 8px 15px;
+  border: 1px solid var(--text-muted);
+  border-radius: 6px;
+  padding: 8px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 0.9rem;
   margin-right: 15px;
-  transition: color 0.2s;
+  transition: all 0.2s;
 }
 
 .back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--primary-color);
 }
 

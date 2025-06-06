@@ -37,7 +37,7 @@ export const getNotificationActionText = (notification) => {
 export const getNotificationIcon = (type) => {
   switch (type) {
     case 'invitation':
-      return '✉️';
+      return '📨';
     case 'join_request':
       return '👥';
     case 'request_accepted':
@@ -58,7 +58,7 @@ export const getNotificationRoute = (notification) => {
     case 'invitation':
       return `/invitations/${notification.id}`;
     case 'join_request':
-      return `/teams/${notification.teamId}/space/squad`;
+      return `/teams/${notification.teamId}/requests`;
     case 'request_accepted':
       return `/teams/${notification.teamId}/space`;
     case 'team_announcement':

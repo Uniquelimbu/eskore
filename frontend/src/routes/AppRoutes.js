@@ -25,6 +25,7 @@ import EditProfilePage from '../pages/user/ProfilePage/components/Edit/EditProfi
 import TeamOverviewPage from '../pages/user/TeamsPage/JoinTeam/TeamOverviewPage'; // Fixed import path
 import ProtectedRoute from './ProtectedRoute';
 import NotificationDetailView from '../pages/user/Notifications/NotificationDetailView';
+import TeamRequests from '../pages/user/TeamsPage/TeamSpace/pages/Squad/TeamRequests/TeamRequests';
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -99,6 +100,16 @@ const AppRoutes = () => {
         
         {/* Add the TeamOverviewPage route */}
         <Route path="/team-overview/:teamId" element={<TeamOverviewPage />} />
+        
+        {/* Add the team requests route */}
+        <Route 
+          path="/teams/:teamId/requests" 
+          element={
+            <ProtectedRoute>
+              <TeamRequests />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
 
       {/* Admin routes */}

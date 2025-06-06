@@ -96,12 +96,12 @@ const NotificationBell = () => {
     // Handle different notification types
     switch (notification.type) {
       case 'invitation':
-        // Navigate to invitations view
-        navigate(`/invitations/${notification.id}`);
+        // Navigate to notification details for invitations
+        navigate(`/notifications/${notification.id}`);
         break;
       case 'join_request':
-        // Navigate to team management page
-        navigate(`/teams/${notification.teamId}/space/squad`);
+        // Navigate to team requests page
+        navigate(`/teams/${notification.teamId}/requests`);
         break;
       case 'request_accepted':
         // Navigate to the team page

@@ -1,31 +1,77 @@
 .squad-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  justify-content: center;
+  padding: 1rem 0 0 0;
+  margin-bottom: 2rem;
+  /* border-bottom: 1px solid #e0e0e0; */
 }
 
 .squad-header h2 {
   color: var(--text-light);
   font-size: 1.8rem;
   margin: 0;
+  flex: 1;
+  text-align: center;
 }
 
-.back-button {
+.back-button-squad {
+  position: absolute; /* Position absolutely to keep at top-left */
+  left: 0;
+  top: 10px; /* Align with top */
   background-color: transparent;
   color: var(--text-light);
-  border: 1px solid #4a5568;
+  border: 1px solid var(--text-muted);
   border-radius: 6px;
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s;
+  z-index: 10; /* Ensure button appears above other elements */
 }
 
-.back-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.back-button-squad:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
 }
 
-.add-member-btn, .join-team-btn {
+.squad-header-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.squad-header-content h1 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.join-team-button {
+  background: #4a6cf7;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.join-team-button:hover {
+  background: #3b5ae0;
+  transform: translateY(-1px);
+}
+
+.squad-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.join-team-btn,
+.manage-requests-btn {
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -33,12 +79,21 @@
   padding: 10px 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.add-member-btn:hover, .join-team-btn:hover {
+.join-team-btn:hover,
+.manage-requests-btn:hover {
   background-color: var(--primary-dark);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+}
+
+.manage-requests-btn {
+  background-color: #28a745;
+}
+
+.manage-requests-btn:hover {
+  background-color: #218838;
 }
 
 @media (max-width: 768px) {
@@ -50,6 +105,7 @@
   
   .squad-header h2 {
     font-size: 1.5rem;
+    text-align: left;
   }
   
   .squad-actions {
@@ -57,7 +113,7 @@
     width: 100%;
   }
   
-  .add-member-btn, .join-team-btn {
+  .join-team-btn {
     flex-grow: 1;
   }
 }

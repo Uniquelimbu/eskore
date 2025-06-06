@@ -67,7 +67,7 @@ const Formation = () => {
   }, [teamId, user, contextTeam, contextIsManager]);
 
   useEffect(() => {
-    // Fetch players data
+    // Fetch players data - refresh when team members change
     const fetchPlayers = async () => {
       try {
         setLoading(true);
@@ -90,6 +90,11 @@ const Formation = () => {
     };
 
     fetchPlayers();
+    
+    // Set up polling to refresh players when new members are added
+    const pollInterval = setInterval(fetchPlayers, 30000); // Poll every 30 seconds
+    
+    return () => clearInterval(pollInterval);
   }, [teamId]);
 
   const handleBack = () => {

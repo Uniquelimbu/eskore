@@ -10,24 +10,17 @@
  * @returns {Array} - Extracted members array
  */
 export const extractMembersFromResponse = (response) => {
-  if (!response) return [];
+  // Try different possible response structures
+  if (response?.members && Array.isArray(response.members)) {
+    return response.members;
+  }
   
-  // Try different paths where members might be located in the response
-  const possiblePaths = [
-    response.members,
-    response.Users,
-    response.data?.members,
-    response.data?.Users,
-    response.team?.members,
-    response.team?.Users
-  ];
+  if (response?.data?.members && Array.isArray(response.data.members)) {
+    return response.data.members;
+  }
   
-  // Find the first path that contains an array of members
-  for (const path of possiblePaths) {
-    if (Array.isArray(path) && path.length > 0) {
-      console.log(`Squad: Found ${path.length} members in response`);
-      return path;
-    }
+  if (Array.isArray(response)) {
+    return response;
   }
   
   // If no valid path is found
@@ -63,51 +56,30 @@ export const checkIfUserIsMember = (members, userId) => {
  * @returns {Object} - Categorized members {managerMembers, athleteMembers, coachMembers}
  */
 export const processMembersByRole = (members, currentUser, isUserManager) => {
-  if (!Array.isArray(members)) {
-    console.error('Squad: Members is not an array:', members);
-    return { managerMembers: [], athleteMembers: [], coachMembers: [] };
-  }
+  const managerMembers = [];
+  const athleteMembers = [];
+  const coachMembers = [];
   
-  // Helper function to normalize member data
-  const normalizeMember = (member) => {
-    // Get user data which could be directly on member or nested
-    const userData = member.User || member;
-    return {
-      id: member.id || member.userId || userData.id,
-      userId: member.userId || member.id || userData.id,
-      firstName: userData.firstName || member.firstName || '',
-      lastName: userData.lastName || member.lastName || '',
-      email: userData.email || member.email || '',
-      role: member.role || userData.role || 'athlete',
-      Player: member.Player || userData.Player || null,
-      profileImageUrl: userData.profileImageUrl || member.profileImageUrl || null
-    };
+  members.forEach(member => {
+    const role = member.role || 'athlete';
+    
+    switch (role) {
+      case 'manager':
+      case 'assistant_manager':
+        managerMembers.push(member);
+        break;
+      case 'coach':
+        coachMembers.push(member);
+        break;
+      default:
+        athleteMembers.push(member);
+        break;
+    }
+  });
+  
+  return {
+    managerMembers,
+    athleteMembers,
+    coachMembers
   };
-  
-  // Normalize and categorize all members
-  const normalizedMembers = members.map(normalizeMember);
-  
-  // Group members by role
-  const managerMembers = normalizedMembers.filter(m => 
-    m.role === 'manager' || m.role === 'assistant_manager');
-  const athleteMembers = normalizedMembers.filter(m => 
-    m.role === 'athlete');
-  const coachMembers = normalizedMembers.filter(m => 
-    m.role === 'coach');
-  
-  // Add current user as manager if marked as manager but not in the list
-  if (isUserManager && currentUser && 
-      !managerMembers.some(m => m.id === currentUser.id || m.userId === currentUser.id)) {
-    console.log('Squad: Adding current user as manager (not found in API response)');
-    managerMembers.push({
-      id: currentUser.id,
-      userId: currentUser.id,
-      firstName: currentUser.firstName || 'Team',
-      lastName: currentUser.lastName || 'Manager',
-      email: currentUser.email,
-      role: 'manager'
-    });
-  }
-  
-  return { managerMembers, athleteMembers, coachMembers };
 };
