@@ -292,7 +292,7 @@ export const PRESETS = {
   ]),
 };
 
-// Default subs array
+// Default subs array - exactly 7 substitutes
 export const DEFAULT_SUBS = [
   { id: 'sub-1', label: 'SUB', jerseyNumber: '12', playerName: 'Player 12' },
   { id: 'sub-2', label: 'SUB', jerseyNumber: '13', playerName: 'Player 13' },

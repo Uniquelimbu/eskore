@@ -6,6 +6,7 @@ import MemberList from './components/MemberList';
 import useSquadMembers from './hooks/useSquadMembers';
 import { apiClient } from '../../../../../../services';
 import { toast } from 'react-toastify';
+import { collapseSidebar, expandSidebar } from '../../../../../../utils/sidebarUtils';
 import './styles/Squad.css';
 
 const Squad = () => {
@@ -88,7 +89,24 @@ const Squad = () => {
     }
   };
 
+  // Ensure sidebar is collapsed when Squad page loads
+  useEffect(() => {
+    console.log('Squad: Attempting to collapse sidebar');
+    
+    // Use a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      collapseSidebar();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+      // Don't expand here - let TeamSpace handle it
+    };
+  }, []); // Empty dependency array - only run once when component mounts
+
   const handleBack = () => {
+    console.log('Squad: Expanding sidebar and navigating back');
+    expandSidebar();
     navigate(`/teams/${teamId}/space`);
   };
   

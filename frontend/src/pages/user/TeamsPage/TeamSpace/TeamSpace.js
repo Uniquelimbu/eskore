@@ -5,6 +5,7 @@ import { isUserManager } from '../../../../utils/permissions';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import './styles/index.css'; // Updated import to use the new modular CSS
 import { useAuth } from '../../../../contexts/AuthContext';
+import { autoCollapseSidebarForPath } from '../../../../utils/sidebarUtils';
 
 const TeamSpace = () => {
   const { teamId } = useParams();
@@ -17,6 +18,20 @@ const TeamSpace = () => {
   const [error, setError] = useState(null);
 
   const isBasePath = location.pathname === `/teams/${teamId}/space`;
+
+  // Auto-collapse sidebar for TeamSpace sub-pages
+  useEffect(() => {
+    autoCollapseSidebarForPath(location.pathname);
+    
+    // Cleanup on unmount - expand sidebar when leaving TeamSpace
+    return () => {
+      if (!location.pathname.includes('/teams/') || location.pathname.includes('/teams') && !location.pathname.includes('/space/')) {
+        import('../../../../utils/sidebarUtils').then(({ expandSidebar }) => {
+          expandSidebar();
+        });
+      }
+    };
+  }, [location.pathname]);
 
   // Function to refresh team data
   const refreshTeam = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { apiClient } from '../../../services';
@@ -12,35 +12,59 @@ const NotificationBell = () => {
   const [error, setError] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const lastFetchRef = useRef(0);
 
-  // Fetch notifications and unread count
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await apiClient.getNotifications({ 
-        limit: 10, 
-        status: 'all' 
-      });
+  // Debounced fetch function to prevent excessive API calls
+  const debouncedFetchNotifications = useCallback(
+    debounce(async () => {
+      const now = Date.now();
+      // Prevent fetching more than once every 5 seconds
+      if (now - lastFetchRef.current < 5000) {
+        return;
+      }
       
-      const countResponse = await apiClient.getUnreadNotificationCount();
+      lastFetchRef.current = now;
+      setIsLoading(true);
+      setError(null);
       
-      setNotifications(response?.notifications || []);
-      setUnreadCount(countResponse || 0);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-      setError('Failed to load notifications');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        const response = await apiClient.getNotifications({ 
+          limit: 10, 
+          status: 'all' 
+        });
+        
+        const countResponse = await apiClient.getUnreadNotificationCount();
+        
+        setNotifications(response?.notifications || []);
+        setUnreadCount(countResponse || 0);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        setError('Failed to load notifications');
+      } finally {
+        setIsLoading(false);
+      }
+    }, 1000),
+    [setNotifications, setUnreadCount, setIsLoading, setError]
+  );
+
+  // Debounced unread count fetch for polling
+  const debouncedFetchUnreadCount = useCallback(
+    debounce(async () => {
+      try {
+        const countResponse = await apiClient.getUnreadNotificationCount();
+        setUnreadCount(countResponse || 0);
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
+      }
+    }, 2000),
+    [setUnreadCount]
+  );
 
   // Toggle dropdown
   const toggleDropdown = () => {
     setIsOpen(prev => !prev);
     if (!isOpen) {
-      fetchNotifications();
+      debouncedFetchNotifications();
     }
   };
 
@@ -58,25 +82,24 @@ const NotificationBell = () => {
     };
   }, []);
 
-  // Fetch initial notifications and set up polling
+  // Fetch initial notifications and set up less aggressive polling
   useEffect(() => {
-    fetchNotifications();
+    debouncedFetchNotifications();
     
-    // Set up polling for notifications every 30 seconds
+    // Reduce polling frequency to every 60 seconds
     const intervalId = setInterval(async () => {
       if (document.visibilityState === 'visible') {
-        const countResponse = await apiClient.getUnreadNotificationCount();
-        setUnreadCount(countResponse || 0);
+        debouncedFetchUnreadCount();
         
-        // If dropdown is open, refresh notifications too
+        // Only refresh full notifications if dropdown is open
         if (isOpen) {
-          fetchNotifications();
+          debouncedFetchNotifications();
         }
       }
-    }, 30000);
+    }, 60000); // Increased from 30 seconds to 60 seconds
     
     return () => clearInterval(intervalId);
-  }, [isOpen]);
+  }, [isOpen, debouncedFetchNotifications, debouncedFetchUnreadCount]);
 
   // Handle notification click based on type
   const handleNotificationClick = async (notification) => {
@@ -186,7 +209,7 @@ const NotificationBell = () => {
             ) : error ? (
               <div className="notification-error">
                 {error}
-                <button onClick={fetchNotifications} className="retry-button">
+                <button onClick={debouncedFetchNotifications} className="retry-button">
                   Retry
                 </button>
               </div>
@@ -219,3 +242,16 @@ const NotificationBell = () => {
 };
 
 export default NotificationBell;
+
+// Helper debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}

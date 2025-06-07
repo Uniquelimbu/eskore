@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { collapseSidebar, expandSidebar } from '../../../../../../utils/sidebarUtils';
 import './Calendar.css';
 
 const Calendar = ({ team, members, isManager }) => {
@@ -9,7 +10,24 @@ const Calendar = ({ team, members, isManager }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Ensure sidebar is collapsed when Calendar page loads
+  useEffect(() => {
+    console.log('Calendar: Attempting to collapse sidebar');
+    
+    // Use a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      collapseSidebar();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+      // Don't expand here - let TeamSpace handle it
+    };
+  }, []);
+  
   const handleBackClick = () => {
+    console.log('Calendar: Expanding sidebar and navigating back');
+    expandSidebar();
     navigate(`/teams/${teamId}/space`);
   };
   

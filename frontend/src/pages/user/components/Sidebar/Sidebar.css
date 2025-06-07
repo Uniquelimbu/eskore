@@ -42,6 +42,8 @@
   justify-content: center;
   object-fit: contain;
   transition: height 0.3s ease, width 0.3s ease, transform 0.3s ease; /* Added transform for smoother transition */
+  margin-left: -2px; /* Move 2px to the left */
+  flex-shrink: 0; /* Prevent logo from shrinking */
 }
 
 .sidebar-logo-text {
@@ -116,22 +118,18 @@
   overflow: hidden; /* Prevent content from overflowing during transition */
 }
 
-/* Styles when sidebar is collapsed (driven by --sidebar-current-width) */
-/* This logic is primarily handled by the media query in variables.css that changes --sidebar-current-width */
-/* These specific style overrides ensure correct appearance when collapsed. */
-
-/* Using a class for JS-driven collapse provides an alternative/override to media query based collapse */
+/* Styles when sidebar is collapsed - keep icons in their original position */
 .sidebar.sidebar-is-collapsed .sidebar-header,
 body.sidebar-is-collapsed .sidebar .sidebar-header {
-  padding: 18px 0; /* Center horizontally by removing left/right padding */
-  justify-content: center; /* Center the logo in collapsed mode */
+  padding: 18px 20px; /* Keep some horizontal padding to maintain icon position */
+  justify-content: flex-start; /* Keep left alignment instead of centering */
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-logo,
 body.sidebar-is-collapsed .sidebar .sidebar-logo {
-  height: 28px;
-  width: 28px;
-  transform: translateX(0); /* Ensure logo is centered */
+  height: 36px; /* Keep original size */
+  width: 36px; /* Keep original size */
+  transform: translateX(0); /* Keep in original position */
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-logo-text,
@@ -146,8 +144,8 @@ body.sidebar-is-collapsed .sidebar .sidebar-logo-text {
 .sidebar.sidebar-is-collapsed .sidebar-more-button,
 body.sidebar-is-collapsed .sidebar .sidebar-nav a,
 body.sidebar-is-collapsed .sidebar .sidebar-more-button {
-  padding: 12px 0; /* Remove horizontal padding */
-  justify-content: center; /* Center the icons horizontally */
+  padding: 12px 20px; /* Keep horizontal padding to maintain icon position */
+  justify-content: flex-start; /* Keep left alignment */
 }
 
 /* Fix for icon alignment in collapsed state */
@@ -184,7 +182,9 @@ body.sidebar-is-collapsed .sidebar .sidebar-nav-label {
 
 .sidebar.sidebar-is-collapsed .sidebar-generic-profile-icon,
 body.sidebar-is-collapsed .sidebar .sidebar-generic-profile-icon {
-  font-size: 1.2rem;
+  font-size: 1.35rem; /* Keep original size instead of 1.2rem */
+  width: 28px; /* Keep original width */
+  height: 28px; /* Keep original height */
 }
 
 .sidebar.sidebar-is-collapsed .sidebar-more-btn,
@@ -349,19 +349,17 @@ body.sidebar-is-collapsed .sidebar .options-menu {
   box-shadow: none !important;
 }
 
-/* Media query for responsive sidebar collapse (updates --sidebar-current-width in variables.css) */
+/* Media query for responsive sidebar collapse */
 @media (max-width: 992px) {
-  /* Styles that specifically apply when the media query is active, 
-     and --sidebar-current-width is --sidebar-collapsed-width */
   .sidebar-header {
-    padding: 18px 0; /* Center horizontally */
-    justify-content: center;
+    padding: 18px 20px; /* Keep horizontal padding */
+    justify-content: flex-start; /* Keep left alignment */
   }
   
   .sidebar-logo {
-    height: 28px;
-    width: 28px;
-    margin: 0 auto; /* Center logo */
+    height: 36px; /* Keep original size */
+    width: 36px; /* Keep original size */
+    margin: 0; /* Remove auto centering */
   }
   
   .sidebar-logo-text {
@@ -373,8 +371,8 @@ body.sidebar-is-collapsed .sidebar .options-menu {
   
   .sidebar-nav a,
   .sidebar-more-button {
-    padding: 12px 0; /* Remove horizontal padding */
-    justify-content: center; /* Center the icons */
+    padding: 12px 20px; /* Keep horizontal padding */
+    justify-content: flex-start; /* Keep left alignment */
   }
   
   .sidebar-nav-label {
@@ -384,45 +382,24 @@ body.sidebar-is-collapsed .sidebar .options-menu {
     padding: 0;
   }
   
-  /* Remove any potential misalignments */
   .sidebar-nav-icon {
     margin-right: 0;
     margin-left: 0;
+    width: 28px; /* Keep original size */
+    height: 28px; /* Keep original size */
+    font-size: 1.35rem; /* Keep original size */
   }
   
   .sidebar-generic-profile-icon {
-    font-size: 1.2rem;
-  }
-  
-  .sidebar-more-btn {
-    margin-bottom: 10px;
+    font-size: 1.35rem; /* Keep original size */
+    width: 28px; /* Keep original size */
+    height: 28px; /* Keep original size */
   }
   
   .options-menu {
-    left: var(--sidebar-collapsed-width); /* Use variable for positioning */
+    left: var(--sidebar-collapsed-width);
     min-width: 120px;
     font-size: 0.95rem;
-  }
-
-  /* Center all nav items when sidebar is collapsed by media query */
-  .sidebar .sidebar-nav a,
-  .sidebar .sidebar-more-button {
-    padding: 12px 0;
-    justify-content: center !important;
-    text-align: center;
-    width: 100%;
-  }
-  
-  .sidebar .sidebar-nav-icon {
-    margin: 0 auto !important;
-    padding-left: 0 !important;
-  }
-  
-  /* Hide labels completely */
-  .sidebar .sidebar-nav-label {
-    display: none;
-    width: 0;
-    opacity: 0;
   }
 }
 
@@ -436,4 +413,61 @@ body.sidebar-is-collapsed .sidebar .options-menu {
   .sidebar-logo {
     transform: scale(0.9); /* Slightly scale down logo for very small screens */
   }
+}
+
+/* Programmatic collapse styles - higher specificity to override media queries */
+body.sidebar-force-collapsed .sidebar {
+  width: var(--sidebar-collapsed-main-width) !important;
+  min-width: var(--sidebar-collapsed-main-width) !important;
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-header {
+  padding: 18px 20px !important; /* Keep horizontal padding */
+  justify-content: flex-start !important; /* Keep left alignment */
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-logo {
+  height: 36px !important; /* Keep original size */
+  width: 36px !important; /* Keep original size */
+  transform: translateX(0) !important;
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-logo-text {
+  opacity: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-nav a,
+body.sidebar-force-collapsed .sidebar .sidebar-more-button {
+  padding: 12px 20px !important; /* Keep horizontal padding */
+  justify-content: flex-start !important; /* Keep left alignment */
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-nav-icon {
+  margin: 0 !important;
+  padding-left: 0 !important;
+  width: 28px !important; /* Keep original size */
+  height: 28px !important; /* Keep original size */
+  font-size: 1.35rem !important; /* Keep original size */
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-nav-label {
+  opacity: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.sidebar-force-collapsed .sidebar .sidebar-generic-profile-icon {
+  font-size: 1.35rem !important; /* Keep original size */
+  width: 28px !important; /* Keep original size */
+  height: 28px !important; /* Keep original size */
+}
+
+body.sidebar-force-collapsed .sidebar .options-menu {
+  left: var(--sidebar-collapsed-main-width) !important;
+  min-width: 120px !important;
+  font-size: 0.95rem !important;
 }

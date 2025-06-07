@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { apiClient } from '../../../../../../../../services'; // Updated import path
@@ -21,7 +21,9 @@ import './styles/index.css';
 
 const FormationContainer = ({ teamId, isManager, players = [] }) => {
   const pitchRef = useRef(null);
-  const containerRef = useRef(null); // Added missing ref
+  const containerRef = useRef(null);
+  const initializationRef = useRef(new Set());
+  const lastTeamIdRef = useRef(null);
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 450 });
   const [showEditTab, setShowEditTab] = useState(false);
   // const [isSaving, setIsSaving] = useState(false); // Local isSaving is no longer primary for display
@@ -56,67 +58,82 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   const [swappingPlayers, setSwappingPlayers] = useState([]);
   const [managerPreferredFormation, setManagerPreferredFormation] = useState(null);
   
-  // Initialize formation data
+  // Memoize store properties to prevent unnecessary re-renders
+  const storeData = useMemo(() => ({
+    starters: starters || [],
+    subs: subs || [],
+    preset,
+    loading,
+    saved,
+    saveError,
+    pendingChanges
+  }), [starters, subs, preset, loading, saved, saveError, pendingChanges]);
+
+  // Initialize formation data only when teamId actually changes
   useEffect(() => {
-    console.log("Initializing formation data", { teamId });
+    if (!teamId || teamId === lastTeamIdRef.current) {
+      console.log('FormationContainer: Skipping initialization - same team ID or no team ID');
+      return;
+    }
+
+    const initKey = `${teamId}_${Date.now()}`;
     
-    // First, try to get manager's preferred formation if available
-    const fetchManagerPreferences = async () => {
+    if (initializationRef.current.has(teamId)) {
+      console.log('Initialization already in progress for team', teamId);
+      return;
+    }
+
+    console.log('Initializing formation data', { teamId });
+    initializationRef.current.add(teamId);
+    lastTeamIdRef.current = teamId;
+
+    const initializeFormation = async () => {
       try {
-        // Get team managers information
-        const managersResponse = await apiClient.get(`/teams/${teamId}/managers`);
-        
-        if (managersResponse && Array.isArray(managersResponse.managers) && managersResponse.managers.length > 0) {
-          // Find the first active manager with a preferred formation
-          const managerWithFormation = managersResponse.managers.find(m => m.preferredFormation);
-          
-          if (managerWithFormation && managerWithFormation.preferredFormation) {
-            const preferredPreset = typeof managerWithFormation.preferredFormation === 'string' 
-              ? managerWithFormation.preferredFormation 
-              : (managerWithFormation.preferredFormation.preset || '4-3-3');
-              
-            console.log("Using manager's preferred formation:", preferredPreset);
-            setManagerPreferredFormation(preferredPreset);
-            
-            // Set the preferred formation as the preset before initializing
-            useFormationStore.setState({ preset: preferredPreset });
-            
-            // Pass the preferred formation to init so it knows what to default to
-            init(teamId, preferredPreset);
-            return; // Exit early since we've initialized with the preferred preset
-          }
-        }
-        
-        // If we get here, no manager preferences were found, use default initialization
-        init(teamId);
-      } catch (err) {
-        console.warn("Could not fetch manager preferences:", err);
-        // Continue with normal initialization on error
-        init(teamId);
+        await init(teamId);
+      } finally {
+        // Allow re-initialization after a delay
+        setTimeout(() => {
+          initializationRef.current.delete(teamId);
+        }, 1000);
       }
     };
-    
-    fetchManagerPreferences();
-  }, [teamId, init]);
-  
-  // Map real players when available
+
+    initializeFormation();
+  }, [teamId, init]); // Only depend on teamId and init function
+
+  // Only fetch managers when needed and prevent duplicate calls
   useEffect(() => {
-    if (players.length > 0) {
-      console.log("Mapping real players to positions", players.length);
-      mapPlayersToPositions(players);
-    } else if (players.length === 0 && starters.length === 0 && !loading) {
-      // If we still have no starters after the initial load (and no real players),
-      // populate the pitch with dummy players so the UI is never blank.
-      console.log("No players and no starters – inserting dummy players for display");
-      
-      // Use the manager's preferred formation if available, otherwise use default
-      const formationToUse = managerPreferredFormation || preset || '4-3-3';
-      console.log(`Using formation preset: ${formationToUse} for dummy players`);
-      
-      useFormationStore.getState().setDummyPlayers(formationToUse);
-    }
-  }, [players, mapPlayersToPositions, starters.length, loading, managerPreferredFormation, preset]);
-  
+    let isMounted = true;
+    
+    if (!teamId || !isManager) return;
+
+    const fetchManagers = async () => {
+      try {
+        const response = await apiClient.get(`/teams/${teamId}/managers`);
+        
+        if (isMounted && response?.managers?.length > 0) {
+          const managerData = response.managers[0];
+          const preferredFormation = managerData?.Manager?.preferredFormation;
+          
+          if (preferredFormation && preferredFormation !== preset) {
+            console.log('Using manager\'s preferred formation:', preferredFormation);
+            changePreset(preferredFormation);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching managers:', error);
+      }
+    };
+
+    // Debounce the manager fetch to prevent multiple calls
+    const timeoutId = setTimeout(fetchManagers, 100);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [teamId, isManager, preset, changePreset]); // Include preset to prevent unnecessary calls
+
   // Save changes when formation is updated
   useEffect(() => {
     // Use store's `loading` state to prevent concurrent saves triggered by this effect
@@ -304,7 +321,14 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
     }
   };
   
-  console.log("Render FormationContainer", { starters: starters.length, subs: subs.length, isManager });
+  console.log('Render FormationContainer', { 
+    starters: starters?.length || 0, 
+    subs: subs?.length || 0, 
+    isManager,
+    teamId,
+    saved,
+    loading
+  });
   
   // Get position markers and placeholders using utility functions
   const positionMarkers = createPositionMarkers(PRESETS, preset, dimensions);

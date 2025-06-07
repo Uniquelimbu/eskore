@@ -59,6 +59,14 @@
   font-weight: 600;
 }
 
+/* Make member card styles more specific */
+.member-card .member-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
 .member-details {
   display: flex;
   flex-wrap: wrap;
@@ -136,7 +144,7 @@
     height: 40px;
   }
   
-  .member-info h4 {
+  .member-card .member-info h4 {
     font-size: 1rem;
   }
   

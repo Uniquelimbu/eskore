@@ -88,6 +88,14 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Make member card name styles more specific to avoid conflicts with player chips */
+.member-card .member-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   .member-avatar {
     width: 40px;
@@ -100,7 +108,7 @@
     font-size: 0.7rem;
   }
   
-  .member-info h4 {
+  .member-card .member-info h4 {
     font-size: 1rem;
   }
 }

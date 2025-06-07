@@ -100,9 +100,9 @@ const SubsStrip = ({
     };
   };
   
-  // Generate empty placeholders if needed
+  // Generate empty placeholders if needed - exactly 7 total slots
   const renderPlaceholders = () => {
-    const totalSlots = 7; // Max subs
+    const totalSlots = 7; // Fixed at exactly 7 subs
     const occupiedSlots = subs.length;
     const emptySlotsToRender = Math.max(0, totalSlots - occupiedSlots);
     
@@ -164,9 +164,9 @@ const SubsStrip = ({
         style={stripStyle}
       >
         {/* Actual player chips */}
-        {subs.map((sub, index) => {
+        {subs.slice(0, 7).map((sub, index) => { /* Ensure max 7 subs are rendered */
           if (!sub) return null;
-          const pos = getChipPosition(index, Math.max(7, subs.length));
+          const pos = getChipPosition(index, 7); /* Fixed at 7 total slots */
           // Create truly unique key using multiple identifiers to prevent duplicates
           const uniqueKey = `sub-${sub.playerId || sub.id}-position-${index}-${sub.jerseyNumber || 'no-jersey'}`;
           return (

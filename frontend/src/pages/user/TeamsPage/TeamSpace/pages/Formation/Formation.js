@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import FormationContainer from './components/FormationContainer';
-import { apiClient } from '../../../../../../services'; // Updated import path
+import { apiClient } from '../../../../../../services';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import { isUserManager, isUserPlayer } from '../../../../../../utils/permissions';
+import { collapseSidebar, expandSidebar } from '../../../../../../utils/sidebarUtils';
 import './Formation.css';
 
 const Formation = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { team: contextTeam, isManager: contextIsManager } = useOutletContext() || {};
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,82 +24,81 @@ const Formation = () => {
     userId: user?.id
   });
 
-  // Verify user roles
-  useEffect(() => {
-    const verifyUserRoles = async () => {
-      try {
-        if (user && teamId) {
-          console.log('Formation: Verifying user roles for team', teamId);
-          
-          // Get team data directly if not provided in context
-          let isMgr = contextIsManager;
-          let isPlyr = false;
-          
-          if (!contextTeam || contextIsManager === undefined) {
-            const teamResponse = await apiClient.get(`/api/teams/${teamId}`);
-            
-            if (teamResponse && teamResponse.id) {
-              isMgr = isUserManager(teamResponse, user);
-              isPlyr = isUserPlayer(teamResponse, user);
-              
-              console.log(`Formation: Determined roles - manager: ${isMgr}, player: ${isPlyr}`);
-              setIsManager(isMgr);
-              setIsPlayer(isPlyr);
-            }
-          } else {
-            // Use the context values if available but also check player status
-            setIsManager(!!contextIsManager);
-            
-            // Determine if user is a player
-            const isPlayerInTeam = isUserPlayer(contextTeam, user);
-            setIsPlayer(isPlayerInTeam);
-            
-            console.log(`Formation: Using context/check - manager: ${contextIsManager}, player: ${isPlayerInTeam}`);
-          }
-        }
-      } catch (error) {
-        console.error('Error verifying user roles:', error);
-        // If we can't verify, we'll fall back to the context value for manager
-        // and assume not a player
-        setIsPlayer(false);
-      }
-    };
-    
-    verifyUserRoles();
-  }, [teamId, user, contextTeam, contextIsManager]);
+  // Memoize the team ID to prevent unnecessary re-renders
+  const currentTeamId = useMemo(() => {
+    return contextTeam?.id || teamId;
+  }, [contextTeam?.id, teamId]);
 
+  // Fetch players only when team ID changes
   useEffect(() => {
-    // Fetch players data - refresh when team members change
+    let isMounted = true;
+    
     const fetchPlayers = async () => {
+      if (!currentTeamId) return;
+      
       try {
         setLoading(true);
-        // Get players with their associated player details
-        const response = await apiClient.get(`/teams/${teamId}/players`);
+        const response = await apiClient.get(`/teams/${currentTeamId}/players`);
         
-        if (response && Array.isArray(response.players)) {
-          setPlayers(response.players);
-          console.log('Formation: Fetched player data:', response.players.length);
-        } else {
-          setPlayers([]);
-          console.warn('Formation: Invalid or empty player response');
+        if (isMounted) {
+          const playersData = response?.players || [];
+          setPlayers(playersData);
+          console.log('Formation: Fetched player data:', playersData.length);
         }
       } catch (error) {
-        console.error('Error fetching player data:', error);
-        setPlayers([]);
+        if (isMounted) {
+          console.error('Error fetching players:', error);
+          setPlayers([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchPlayers();
     
-    // Set up polling to refresh players when new members are added
-    const pollInterval = setInterval(fetchPlayers, 30000); // Poll every 30 seconds
+    return () => {
+      isMounted = false;
+    };
+  }, [currentTeamId]); // Only depend on currentTeamId
+
+  // Update roles only when relevant data changes
+  useEffect(() => {
+    if (!user?.id || !currentTeamId) return;
+
+    const updateRoles = () => {
+      const managerStatus = contextIsManager || isUserManager(user, currentTeamId);
+      const playerStatus = isUserPlayer(user, currentTeamId);
+      
+      setIsManager(managerStatus);
+      setIsPlayer(playerStatus);
+      
+      console.log('Formation: Final roles before render - manager:', managerStatus, 'player:', playerStatus);
+    };
+
+    updateRoles();
+  }, [user?.id, currentTeamId, contextIsManager]); // Only update when these specific values change
+
+  // Ensure sidebar is collapsed when Formation page loads
+  useEffect(() => {
+    console.log('Formation: Attempting to collapse sidebar');
     
-    return () => clearInterval(pollInterval);
-  }, [teamId]);
+    // Use a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      collapseSidebar();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+      // Don't expand here - let TeamSpace handle it
+    };
+  }, []); // Empty dependency array - only run once when component mounts
 
   const handleBack = () => {
+    console.log('Formation: Expanding sidebar and navigating back');
+    expandSidebar();
     navigate(`/teams/${teamId}/space`);
   };
 

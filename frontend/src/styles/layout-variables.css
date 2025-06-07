@@ -1,7 +1,7 @@
 :root {
   /* Sidebar dimensions */
   --sidebar-main-width: 260px;
-  --sidebar-collapsed-main-width: 90px;
+  --sidebar-collapsed-main-width: 72px; /* Updated from 90px */
   
   /* Top navbar dimensions */
   --top-navbar-height: 56px;

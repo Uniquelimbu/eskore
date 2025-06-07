@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../../../../../contexts/AuthContext';
-import { apiClient, teamService } from '../../../../../../services'; // Updated import paths
+import { apiClient, teamService } from '../../../../../../services';
 import { isUserManager } from '../../../../../../utils/permissions';
+import { collapseSidebar, expandSidebar } from '../../../../../../utils/sidebarUtils';
 import './Settings.css';
 
 const Settings = () => {
@@ -33,6 +34,21 @@ const Settings = () => {
   const [isManager, setIsManager] = useState(outletCtx?.isManager || false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({}); // Added validation errors state
+
+  // Ensure sidebar is collapsed when Settings page loads
+  useEffect(() => {
+    console.log('Settings: Attempting to collapse sidebar');
+    
+    // Use a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      collapseSidebar();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+      // Don't expand here - let TeamSpace handle it
+    };
+  }, []); // Empty dependency array - only run once when component mounts
 
   // Fetch team details on mount
   useEffect(() => {
@@ -89,7 +105,11 @@ const Settings = () => {
     fetchTeamMembers();
   }, [teamId]);
 
-  const handleBack = () => navigate(`/teams/${teamId}/space`);
+  const handleBack = () => {
+    console.log('Settings: Expanding sidebar and navigating back');
+    expandSidebar();
+    navigate(`/teams/${teamId}/space`);
+  };
 
   // Enhanced input change handler with validation
   const handleInputChange = (e) => {

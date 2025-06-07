@@ -77,6 +77,6 @@
 
 @media (max-width: 992px) {
   .team-space-layout {
-    padding-left: var(--sidebar-collapsed-main-width);
+    padding-left: var(--sidebar-collapsed-main-width); /* Will now use 72px */
   }
 }

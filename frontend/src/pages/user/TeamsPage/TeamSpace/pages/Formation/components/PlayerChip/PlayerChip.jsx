@@ -81,21 +81,24 @@ const PlayerChip = ({
     cursor: draggable ? 'grab' : isSwapping ? 'not-allowed' : 'pointer',
     zIndex: isDragging ? 9999 : (isOverDropTarget || isSelected || isSwapping ? 15 : 10),
     width: '80px',
-    height: '110px', // Increased to accommodate badge shape
+    height: '95px', // Reduced from 110px to 95px
     transition: isDragging ? 'none' : 'transform 0.2s, opacity 0.2s, box-shadow 0.2s',
   };
   
   const chipClasses = `player-chip ${isStarter ? 'starter' : 'substitute'} ${isPlaceholder ? 'placeholder' : ''} ${draggable ? 'draggable' : ''} ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''} ${isSwapping ? 'swapping' : ''}`;
 
-  // Create silhouette style with direct image reference
+  // Create silhouette style with matching background
   const silhouetteStyle = {
-    width: '80%',
-    height: '80%',
+    width: '90%',
+    height: '90%',
     backgroundImage: `url(${process.env.PUBLIC_URL}/images/player-silhouette.png)`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     backgroundSize: 'contain',
-    opacity: 0.7,
+    backgroundColor: '#4a4a4a', // Match the chip background color
+    opacity: 0.8, // Slightly increased opacity for better visibility
+    zIndex: 1,
+    borderRadius: '2px', // Slight rounding to match card style
   };
 
   return (
@@ -104,20 +107,20 @@ const PlayerChip = ({
       className={chipClasses}
       style={chipStyles}
       data-player-id={id}
-      data-position-id={positionId} /* Add position ID for better tracking */
+      data-position-id={positionId}
       onClick={handleClick}
     >
       {!isPlaceholder ? (
         <div className="player-badge-card">
           <div className="player-badge-top">
             <div className="position-code">{label}</div>
-            {jerseyNumber && <div className="jersey-number">{jerseyNumber}</div>}
+            {jerseyNumber && <div className="position-code">{jerseyNumber}</div>}
           </div>
           <div className="player-badge-middle">
             <div style={silhouetteStyle}></div>
           </div>
           <div className="player-badge-bottom">
-            <div className="player-name">{playerName || "Unknown"}</div>
+            <div className="player-chip-name">{playerName || "Unknown"}</div>
           </div>
         </div>
       ) : (

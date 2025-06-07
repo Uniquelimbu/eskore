@@ -36,7 +36,7 @@
   
   .player-chip {
     width: 70px;
-    height: 80px;
+    height: 85px; /* Reduced from 80px to 85px */
   }
   
   .position-placeholder {

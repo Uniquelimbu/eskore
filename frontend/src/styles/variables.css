@@ -6,8 +6,12 @@
   
   /* Sidebar widths - Refined */
   --sidebar-expanded-width: 260px;
-  --sidebar-collapsed-width: 90px;
+  --sidebar-collapsed-width: 72px; /* Reduced from 90px to better fit icons */
   --sidebar-current-width: var(--sidebar-expanded-width); /* Default to expanded */
+
+  /* Sidebar widths - referenced from other files */
+  --sidebar-main-width: 260px;
+  --sidebar-collapsed-main-width: 72px; /* Updated to match */
 
   /* Keep legacy eskore vars as aliases if strictly needed by other less critical components, otherwise phase out */
   --eskore-sidebar-width: var(--sidebar-current-width); /* Alias to current width */
@@ -84,7 +88,7 @@
   /* Layout Standardization Variables */
   /* Sidebar dimensions */
   --sidebar-expanded-width: 260px;
-  --sidebar-collapsed-width: 90px;
+  --sidebar-collapsed-width: 72px; /* Reduced from 90px to better fit icons */
   --sidebar-current-width: var(--sidebar-expanded-width);
   
   /* Top navbar height */
@@ -111,6 +115,17 @@ body.sidebar-is-collapsed {
   --text-primary: #f7fafc;
   --text-secondary: #a0aec0;
   --border-light: #4a5568;
+}
+
+/* Programmatic collapse support */
+body.sidebar-force-collapsed {
+  --sidebar-current-width: var(--sidebar-collapsed-main-width);
+}
+
+/* Ensure force collapse overrides media queries */
+body.sidebar-force-collapsed .sidebar {
+  width: var(--sidebar-collapsed-main-width) !important;
+  min-width: var(--sidebar-collapsed-main-width) !important;
 }
 
 /* Responsive sizes */

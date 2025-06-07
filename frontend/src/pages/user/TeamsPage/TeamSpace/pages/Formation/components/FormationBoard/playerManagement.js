@@ -104,7 +104,7 @@ export const assignPlayersToFormation = (players, presetName, get, set) => {
     return starter;
   });
   
-  // 5. Assign remaining players to subs
+  // 5. Assign remaining players to subs - exactly 7 subs
   const remainingPlayers = playersToAssign.filter(p => !assignedPlayerIds.has(p.id));
   const newSubs = remainingPlayers.slice(0, 7).map((player, index) => {
     return {
@@ -117,7 +117,7 @@ export const assignPlayersToFormation = (players, presetName, get, set) => {
     };
   });
   
-  // Fill remaining sub slots with dummy players
+  // Fill remaining sub slots with dummy players - ensure exactly 7 total
   while (newSubs.length < 7) {
     const index = newSubs.length;
     newSubs.push({
