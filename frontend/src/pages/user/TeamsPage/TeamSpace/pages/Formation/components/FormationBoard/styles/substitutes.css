@@ -8,14 +8,11 @@
 }
 
 .subs-strip-header {
-  background-color: #2d2d2d;
-  padding: 0.5rem 1rem;
+  display: none; /* Hide the header section completely */
 }
 
 .subs-strip-header h3 {
-  color: white;
-  margin: 0;
-  font-size: 1.1rem;
+  display: none; /* Hide the title */
 }
 
 .subs-strip {

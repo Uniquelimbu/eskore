@@ -47,10 +47,26 @@ export const normalizedToPixel = (xNorm, yNorm, dimensions, posLabel, isMarker =
 };
 
 /**
- * Check if a player is currently being swapped
+ * Create position markers for the current formation preset
  */
-export const isPlayerSwapping = (playerId, swappingPlayers) => {
-  return Array.isArray(swappingPlayers) && swappingPlayers.includes(playerId);
+export const createPositionMarkers = (PRESETS, preset, dimensions) => {
+  if (!PRESETS || !preset || !PRESETS[preset]) {
+    return null;
+  }
+  
+  // Ensure we only create markers for exactly 11 positions
+  const validPositions = PRESETS[preset].slice(0, 11);
+  
+  return validPositions.map(pos => {
+    // Pass isMarker=true to apply the position marker offset
+    const pixelPos = normalizedToPixel(pos.xNorm, pos.yNorm, dimensions, pos.label, true);
+    return {
+      key: `marker-${pos.id}`,
+      x: pixelPos.x,
+      y: pixelPos.y, // The offset is now handled inside normalizedToPixel
+      label: pos.label
+    };
+  });
 };
 
 /**
@@ -88,26 +104,10 @@ export const createPositionPlaceholders = (PRESETS, preset, starters, dimensions
 };
 
 /**
- * Render position markers for the preset formation
+ * Check if a player is currently being swapped
  */
-export const createPositionMarkers = (PRESETS, preset, dimensions) => {
-  if (!PRESETS || !preset || !PRESETS[preset]) {
-    return null;
-  }
-  
-  // Ensure we only create markers for exactly 11 positions
-  const validPositions = PRESETS[preset].slice(0, 11);
-  
-  return validPositions.map(pos => {
-    // Pass isMarker=true to apply the position marker offset
-    const pixelPos = normalizedToPixel(pos.xNorm, pos.yNorm, dimensions, pos.label, true);
-    return {
-      key: `marker-${pos.id}`,
-      x: pixelPos.x,
-      y: pixelPos.y, // The offset is now handled inside normalizedToPixel
-      label: pos.label
-    };
-  });
+export const isPlayerSwapping = (playerId, swappingPlayers) => {
+  return Array.isArray(swappingPlayers) && swappingPlayers.includes(playerId);
 };
 
 /**

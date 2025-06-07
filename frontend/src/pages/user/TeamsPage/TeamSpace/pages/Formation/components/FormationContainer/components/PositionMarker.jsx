@@ -5,7 +5,7 @@ import React from 'react';
  */
 const PositionMarker = ({ x, y, label }) => {
   return (
-    <div className="position-marker" style={{ left: `${x}px`, top: `${y}px` }}>
+    <div className="position-marker" style={{ left: `${x}px`, top: `${y - 5}px` }}>
       <div className="position-marker-label">{label}</div>
     </div>
   );
