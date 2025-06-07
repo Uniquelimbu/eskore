@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import FormationContainer from './components/FormationContainer';
+import TeamLogoOverlay from './components/TeamLogoOverlay';
 import { apiClient } from '../../../../../../services';
 import { useAuth } from '../../../../../../contexts/AuthContext';
 import { isUserManager, isUserPlayer } from '../../../../../../utils/permissions';
@@ -16,6 +17,7 @@ const Formation = () => {
   const [loading, setLoading] = useState(true);
   const [isManager, setIsManager] = useState(contextIsManager || false);
   const [isPlayer, setIsPlayer] = useState(false);
+  const [showTeamLogoOverlay, setShowTeamLogoOverlay] = useState(false);
   const { user } = useAuth();
   
   console.log('Formation: Initial context values:', { 
@@ -102,6 +104,28 @@ const Formation = () => {
     navigate(`/teams/${teamId}/space`);
   };
 
+  const handleTeamLogoClick = () => {
+    setShowTeamLogoOverlay(true);
+  };
+
+  const handleInMatchRoles = () => {
+    // Navigate to in-match roles or show functionality
+    console.log('Navigate to In-Match Roles');
+    // navigate(`/teams/${teamId}/space/roles`);
+  };
+
+  const handleEditPlayerNumber = () => {
+    // Navigate to edit player numbers or show functionality
+    console.log('Navigate to Edit Player Number');
+    // navigate(`/teams/${teamId}/space/squad?edit=numbers`);
+  };
+
+  const handleLineups = () => {
+    // Navigate to lineups or show functionality
+    console.log('Navigate to Lineups');
+    // navigate(`/teams/${teamId}/space/lineups`);
+  };
+
   // Fallback: if user created the team, they should be manager
   useEffect(() => {
     if (!isManager && user && contextTeam && contextTeam.createdBy === user.id) {
@@ -138,7 +162,11 @@ const Formation = () => {
       <div className="formation-content">
         <div className="formation-layout">
           <div className="formation-team-logo-container">
-            <div className="formation-team-logo-button">
+            <button 
+              className="formation-team-logo-button"
+              onClick={handleTeamLogoClick}
+              title="Team Options"
+            >
               {contextTeam?.logoUrl ? (
                 <img 
                   src={contextTeam.logoUrl} 
@@ -150,7 +178,7 @@ const Formation = () => {
                   {contextTeam?.abbreviation || contextTeam?.name?.substring(0, 3).toUpperCase() || 'TM'}
                 </div>
               )}
-            </div>
+            </button>
           </div>
           <FormationContainer 
             teamId={teamId} 
@@ -160,6 +188,18 @@ const Formation = () => {
           />
         </div>
       </div>
+
+      {/* Team Logo Overlay */}
+      <TeamLogoOverlay
+        isOpen={showTeamLogoOverlay}
+        onClose={() => setShowTeamLogoOverlay(false)}
+        teamLogo={contextTeam?.logoUrl}
+        teamName={contextTeam?.name}
+        teamAbbreviation={contextTeam?.abbreviation}
+        onInMatchRoles={handleInMatchRoles}
+        onEditPlayerNumber={handleEditPlayerNumber}
+        onLineups={handleLineups}
+      />
     </div>
   );
 };

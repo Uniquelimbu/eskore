@@ -220,12 +220,19 @@
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-top: 75px; /* Add margin to align with the formation content */
+  position: relative;
 }
 
 .formation-team-logo-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   border-color: var(--primary-color);
+  background-color: #3a4556;
+}
+
+.formation-team-logo-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .formation-team-logo-img {
