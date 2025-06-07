@@ -351,7 +351,7 @@ const FormationContainer = ({ teamId, isManager, players = [] }) => {
   
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '0 1rem 1rem 1rem', borderRadius: '0.5rem' }}>
+      <div className="formation-container" style={{ backgroundColor: '#1a202c', padding: '0 0rem 0rem 1rem', borderRadius: '0.5rem' }}>
         {showEditTab ? (
           <Edit 
             onSelectPreset={onPresetChange} 

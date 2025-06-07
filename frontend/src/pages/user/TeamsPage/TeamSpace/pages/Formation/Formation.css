@@ -189,6 +189,72 @@
   margin-left: 6px;
 }
 
+/* New formation layout container */
+.formation-layout {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: 20px; /* Add top margin to move the entire layout down */
+}
+
+/* Team logo container on the left */
+.formation-team-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.formation-team-logo-button {
+  width: 60px;
+  height: 60px;
+  background-color: #2d3748;
+  border-radius: 8px;
+  border: 2px solid #4a5568;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 75px; /* Add margin to align with the formation content */
+}
+
+.formation-team-logo-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: var(--primary-color);
+}
+
+.formation-team-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.formation-team-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem; /* Reduced from 1.5rem */
+  text-transform: uppercase;
+}
+
+/* Ensure formation container takes remaining space and is positioned correctly */
+.formation-content .formation-container {
+  flex: 1;
+  min-width: 0;
+  margin-top: 10px; /* Add top margin to align with logo */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .formation-page-header h2 {
@@ -219,5 +285,44 @@
   .back-button {
     padding: 6px 12px;
     font-size: 0.9rem;
+  }
+  
+  .formation-layout {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 15px; /* Adjust for mobile */
+  }
+  
+  .formation-team-logo-container {
+    align-self: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .formation-team-logo-button {
+    width: 60px;
+    height: 60px;
+    margin-top: 5px; /* Reduce margin on mobile */
+  }
+  
+  .formation-team-logo-placeholder {
+    font-size: 1rem; /* Reduced from 1.2rem for mobile */
+    transform: translateY(3px); /* Slightly less movement on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .formation-layout {
+    margin-top: 10px; /* Further reduce for very small screens */
+  }
+  
+  .formation-team-logo-button {
+    width: 50px;
+    height: 50px;
+    margin-top: 0; /* Remove margin on very small screens */
+  }
+  
+  .formation-team-logo-placeholder {
+    font-size: 0.8rem; /* Reduced from 1rem for very small screens */
+    transform: translateY(2px); /* Even less movement on very small screens */
   }
 }

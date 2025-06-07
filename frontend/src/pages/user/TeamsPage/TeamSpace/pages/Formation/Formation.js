@@ -133,15 +133,32 @@ const Formation = () => {
           {viewMode === 'player' && <span className="view-mode-label"> (Player View)</span>}
           {viewMode === 'viewer' && <span className="view-mode-label"> (Viewer)</span>}
         </h1>
-        <div className="header-spacer"></div> {/* Keep this to maintain layout */}
+        <div className="header-spacer"></div>
       </div>
       <div className="formation-content">
-        <FormationContainer 
-          teamId={teamId} 
-          isManager={isManager}
-          viewMode={viewMode}
-          players={players} 
-        />
+        <div className="formation-layout">
+          <div className="formation-team-logo-container">
+            <div className="formation-team-logo-button">
+              {contextTeam?.logoUrl ? (
+                <img 
+                  src={contextTeam.logoUrl} 
+                  alt={contextTeam.name} 
+                  className="formation-team-logo-img"
+                />
+              ) : (
+                <div className="formation-team-logo-placeholder">
+                  {contextTeam?.abbreviation || contextTeam?.name?.substring(0, 3).toUpperCase() || 'TM'}
+                </div>
+              )}
+            </div>
+          </div>
+          <FormationContainer 
+            teamId={teamId} 
+            isManager={isManager}
+            viewMode={viewMode}
+            players={players} 
+          />
+        </div>
       </div>
     </div>
   );
