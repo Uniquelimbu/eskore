@@ -7,7 +7,8 @@ const coreRoutes = require('./coreRoutes');
 const memberRoutes = require('./memberRoutes');
 const mediaRoutes = require('./mediaRoutes');
 const playerRoutes = require('./playerRoutes');
-const managerRoutes = require('./managerRoutes'); // Add the new manager routes
+const managerRoutes = require('./managerRoutes');
+const managementRoutes = require('./managementRoutes');
 const searchRoutes = require('./searchRoutes');
 
 // Middleware for all routes in this router, skip excessive logging
@@ -25,7 +26,8 @@ router.use('/', coreRoutes);         // Basic team CRUD operations
 router.use('/', memberRoutes);       // Team membership operations
 router.use('/', mediaRoutes);        // Logo and media handling
 router.use('/', playerRoutes);       // Player-related operations
-router.use('/', managerRoutes);      // Register the manager routes
+router.use('/', managerRoutes);      // Manager routes
+router.use('/', managementRoutes);   // Management routes (transfer, promote)
 router.use('/', searchRoutes);       // Search functionality
 
 log.info('TEAMROUTES/INDEX: All team routes loaded successfully');

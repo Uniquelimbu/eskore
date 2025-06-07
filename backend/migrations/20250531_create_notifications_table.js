@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'users',  // Changed from 'Users' to 'users' for case-sensitive systems
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'Teams',
+          model: 'teams',  // Changed from 'Teams' to 'teams'
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -40,7 +40,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'Users',
+          model: 'users',  // Changed from 'Users' to 'users'
           key: 'id'
         },
         onUpdate: 'CASCADE',

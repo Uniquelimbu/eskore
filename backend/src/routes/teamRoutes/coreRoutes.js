@@ -329,4 +329,50 @@ router.delete('/:id',
   })
 );
 
+/**
+ * GET /api/teams/:id/requests
+ * Get join requests for a team
+ */
+router.get('/:id/requests',
+  requireAuth,
+  validate(schemas.team.teamIdParam),
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+    log.info(`TEAMROUTES/CORE (GET /:id/requests): Fetching join requests for team ${id}`);
+    
+    // Check if user is a team manager
+    const userTeam = await UserTeam.findOne({
+      where: {
+        userId: req.user.userId,
+        teamId: id,
+        role: { [Op.in]: ['manager', 'assistant_manager'] }
+      }
+    });
+    
+    if (!userTeam) {
+      throw new ApiError('Only team managers can view join requests', 403, 'FORBIDDEN');
+    }
+    
+    // Get join request notifications for this team
+    const Notification = require('../../models/Notification');
+    const requests = await Notification.findAll({
+      where: {
+        teamId: id,
+        type: 'join_request',
+        status: { [Op.ne]: 'archived' }
+      },
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    
+    return sendSafeJson(res, { requests });
+  })
+);
+
 module.exports = router;

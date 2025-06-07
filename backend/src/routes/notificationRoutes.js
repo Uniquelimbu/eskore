@@ -45,11 +45,13 @@ router.get('/',
           {
             model: User,
             as: 'sender',
-            attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+            attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl'],
+            required: false
           },
           {
             model: Team,
-            attributes: ['id', 'name', 'logoUrl']
+            attributes: ['id', 'name', 'logoUrl'],
+            required: false
           }
         ]
       });
@@ -72,7 +74,7 @@ router.get('/',
           offset: parseInt(offset)
         });
       }
-      throw error; // Re-throw if it's another type of error
+      throw error;
     }
   })
 );
@@ -195,18 +197,22 @@ router.post('/team-join-request',
         throw new ApiError('You are already a member of this team', 409, 'ALREADY_MEMBER');
       }
       
-      // Check if there's already a pending request
+      // Check if there's already a pending request (any status except archived)
       const existingRequest = await Notification.findOne({
         where: {
           type: 'join_request',
           teamId,
           senderUserId: req.user.userId,
-          status: 'unread'
+          status: { [Op.ne]: 'archived' }  // Not equal to archived (includes 'unread' and 'read')
         }
       });
       
       if (existingRequest) {
-        throw new ApiError('You already have a pending join request for this team', 409, 'REQUEST_EXISTS');
+        if (existingRequest.status === 'read') {
+          throw new ApiError('Your join request is still being reviewed by the team managers', 409, 'REQUEST_PENDING');
+        } else {
+          throw new ApiError('You already have a pending join request for this team', 409, 'REQUEST_EXISTS');
+        }
       }
       
       // Find team managers to send notifications to

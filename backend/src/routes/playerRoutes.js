@@ -100,6 +100,93 @@ router.post('/',
 );
 
 /**
+ * GET /api/players/me
+ * Get the current user's player profile
+ */
+router.get('/me',
+  requireAuth,
+  catchAsync(async (req, res) => {
+    log.info(`PLAYER (GET /me): Fetching player profile for user ${req.user.userId}`);
+    
+    try {
+      // Check if Player model exists and table is available
+      const player = await Player.findOne({
+        where: { userId: req.user.userId },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+            required: false
+          }
+        ]
+      });
+      
+      if (!player) {
+        return sendSafeJson(res, { 
+          success: true,
+          player: null,
+          message: 'No player profile found'
+        });
+      }
+      
+      return sendSafeJson(res, { success: true, player });
+    } catch (error) {
+      log.error('Error in GET /players/me:', error);
+      
+      if (error.name === 'SequelizeDatabaseError') {
+        if (error.message.includes('relation "players" does not exist') ||
+            error.message.includes('relation "Players" does not exist')) {
+          log.warn('Players table does not exist yet.');
+          return sendSafeJson(res, { 
+            success: true,
+            player: null,
+            message: 'Player profile not available - table not initialized'
+          });
+        }
+        if (error.message.includes('column') && error.message.includes('does not exist')) {
+          log.warn('Players table schema issue:', error.message);
+          return sendSafeJson(res, { 
+            success: true,
+            player: null,
+            message: 'Player profile not available - schema update needed'
+          });
+        }
+      }
+      
+      if (error.name === 'SequelizeEagerLoadingError') {
+        log.warn('Association error, trying without includes:', error.message);
+        try {
+          const player = await Player.findOne({
+            where: { userId: req.user.userId }
+          });
+          return sendSafeJson(res, { 
+            success: true, 
+            player: player || null,
+            message: player ? 'Player profile loaded (limited data)' : 'No player profile found'
+          });
+        } catch (retryError) {
+          log.error('Retry also failed:', retryError);
+          return sendSafeJson(res, { 
+            success: true,
+            player: null,
+            message: 'Player profile not available'
+          });
+        }
+      }
+      
+      // For any other error, return a safe response instead of throwing
+      log.error('Unexpected error in players/me:', error);
+      return sendSafeJson(res, { 
+        success: true,
+        player: null,
+        message: 'Player profile temporarily unavailable'
+      });
+    }
+  })
+);
+
+/**
  * GET /api/players/:id
  * Get player profile by ID
  */
