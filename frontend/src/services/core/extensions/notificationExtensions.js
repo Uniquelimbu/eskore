@@ -102,7 +102,7 @@ export const applyNotificationExtensions = (apiClient) => {
    * Reject a notification
    * 
    * @param {number|string} notificationId - The notification ID to reject
-   * @param {string} [reason=''] - The reason for rejection
+   * @param {string} reason - The reason for rejection
    * @returns {Promise<Object>} - The response
    */
   apiClient.rejectNotification = async function(notificationId, reason = '') {

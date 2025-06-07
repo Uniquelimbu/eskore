@@ -16,6 +16,7 @@ import Squad from '../pages/user/TeamsPage/TeamSpace/pages/Squad/Squad';
 import Formation from '../pages/user/TeamsPage/TeamSpace/pages/Formation/Formation';
 import Calendar from '../pages/user/TeamsPage/TeamSpace/pages/Calendar/Calendar';
 import Settings from '../pages/user/TeamsPage/TeamSpace/pages/Settings/Settings';
+import TeamRequests from '../pages/user/TeamsPage/TeamSpace/pages/TeamRequests/TeamRequests'; // Import the TeamRequests component
 
 const UserRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const UserRoutes = () => {
           <Route path="space/formation" element={<Formation />} />
           <Route path="space/calendar" element={<Calendar />} />
           <Route path="space/settings" element={<Settings />} />
+          <Route path="requests" element={<TeamRequests />} /> {/* Add route for Team Requests */}
         </Route>
         
         {/* Redirect old routes to new structure - These might be less necessary if direct links are updated,

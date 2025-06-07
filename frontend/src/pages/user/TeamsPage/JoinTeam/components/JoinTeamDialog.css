@@ -159,6 +159,49 @@
   margin-top: 24px;
 }
 
+.pending-request-notice {
+  text-align: center;
+  padding: 2rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+
+.pending-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.pending-request-notice p {
+  margin: 0.5rem 0;
+  color: #92400e;
+}
+
+.pending-request-notice strong {
+  color: #78350f;
+}
+
+.pending-request-notice small {
+  color: #a16207;
+  font-size: 0.875rem;
+}
+
+.btn-secondary {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
 @keyframes dialogFadeIn {
   from {
     opacity: 0;

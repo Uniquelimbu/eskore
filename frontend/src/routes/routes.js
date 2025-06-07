@@ -37,6 +37,7 @@ export const privateRoutes = [
   // { path: '/teams/:teamId/dashboard/*', element: <TeamDashboard /> },
   { path: '/teams/:teamId/space', element: <TeamSpace />, exact: true },
   { path: '/teams/:teamId/space/*', element: <TeamSpace /> },
+  { path: '/teams/:teamId/requests', element: <TeamRequests /> },
   { path: '/tournaments', element: <TournamentPage />, exact: true },
   { path: '/tournaments/:id', element: <TournamentDetailsPage /> },
   { path: '/admin/dashboard', element: <AdminDashboard /> }

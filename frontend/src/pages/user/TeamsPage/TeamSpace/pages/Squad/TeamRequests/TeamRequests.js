@@ -10,6 +10,9 @@ const TeamRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState({});
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [declineReason, setDeclineReason] = useState('');
 
   useEffect(() => {
     fetchJoinRequests();
@@ -47,22 +50,38 @@ const TeamRequests = () => {
   };
 
   const handleRejectRequest = async (requestId) => {
-    const reason = window.prompt('Please provide a reason for declining this request (optional):');
+    setSelectedRequest(requestId);
+    setShowDeclineModal(true);
+  };
+
+  const confirmDecline = async () => {
+    if (!selectedRequest) return;
     
-    setProcessing(prev => ({ ...prev, [requestId]: true }));
+    setProcessing(prev => ({ ...prev, [selectedRequest]: true }));
     
     try {
-      await apiClient.rejectTeamJoinRequest(requestId, reason || 'No reason provided');
+      await apiClient.rejectTeamJoinRequest(selectedRequest, declineReason || 'No reason provided');
       toast.info('Join request declined');
       
       // Remove the rejected request from the list
-      setRequests(prev => prev.filter(req => req.id !== requestId));
+      setRequests(prev => prev.filter(req => req.id !== selectedRequest));
+      
+      // Reset modal state
+      setShowDeclineModal(false);
+      setSelectedRequest(null);
+      setDeclineReason('');
     } catch (error) {
       console.error('Error rejecting request:', error);
       toast.error('Failed to reject join request');
     } finally {
-      setProcessing(prev => ({ ...prev, [requestId]: false }));
+      setProcessing(prev => ({ ...prev, [selectedRequest]: false }));
     }
+  };
+
+  const cancelDecline = () => {
+    setShowDeclineModal(false);
+    setSelectedRequest(null);
+    setDeclineReason('');
   };
 
   const handleBack = () => {
@@ -93,57 +112,149 @@ const TeamRequests = () => {
       </div>
 
       {requests.length === 0 ? (
-        <div className="team-requests-no-requests">
-          <p>No pending join requests at this time.</p>
+        <div className="team-requests-empty-state">
+          <div className="empty-state-icon">📋</div>
+          <h3>No Pending Requests</h3>
+          <p>There are no pending join requests at this time.</p>
         </div>
       ) : (
         <div className="team-requests-list">
           {requests.map(request => (
             <div key={request.id} className="team-request-card">
-              <div className="team-request-user-info">
-                <div className="team-request-user-avatar">
-                  {request.user?.profileImageUrl ? (
-                    <img src={request.user.profileImageUrl} alt={request.user.firstName} />
+              <div className="team-request-content">
+                <div className="team-request-avatar">
+                  {request.sender?.profileImageUrl ? (
+                    <img src={request.sender.profileImageUrl} alt={request.sender.firstName} />
                   ) : (
                     <div className="team-request-avatar-placeholder">
-                      {request.user?.firstName?.charAt(0)}{request.user?.lastName?.charAt(0)}
+                      {request.sender?.firstName?.charAt(0)}{request.sender?.lastName?.charAt(0)}
                     </div>
                   )}
                 </div>
-                <div className="team-request-user-details">
-                  <h4>{request.user?.firstName} {request.user?.lastName}</h4>
-                  <p>{request.user?.email}</p>
+                
+                <div className="team-request-info">
+                  <div className="team-request-header">
+                    <h4 className="team-request-name">
+                      {request.sender?.firstName} {request.sender?.lastName}
+                    </h4>
+                    <span className="team-request-time">
+                      {new Date(request.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  <p className="team-request-email">{request.sender?.email}</p>
+                  
                   {request.message && (
-                    <p className="team-request-message">"{request.message}"</p>
+                    <div className="team-request-message">
+                      <strong>Message:</strong>
+                      <p>"{request.message}"</p>
+                    </div>
                   )}
-                  {request.playerData && (
-                    <div className="team-request-player-data">
-                      <span className="team-request-position-badge">{request.playerData.position}</span>
-                      {request.playerData.preferredFoot && (
-                        <span className="team-request-foot-badge">{request.playerData.preferredFoot} footed</span>
+                  
+                  {request.metadata?.playerData && (
+                    <div className="team-request-player-info">
+                      <div className="player-info-badges">
+                        <span className="badge badge-position">
+                          {request.metadata.playerData.position}
+                        </span>
+                        {request.metadata.playerData.preferredFoot && (
+                          <span className="badge badge-foot">
+                            {request.metadata.playerData.preferredFoot} footed
+                          </span>
+                        )}
+                        {request.metadata.playerData.jerseyNumber && (
+                          <span className="badge badge-number">
+                            #{request.metadata.playerData.jerseyNumber}
+                          </span>
+                        )}
+                      </div>
+                      {(request.metadata.playerData.height || request.metadata.playerData.weight) && (
+                        <div className="player-info-stats">
+                          {request.metadata.playerData.height && (
+                            <span>Height: {request.metadata.playerData.height}cm</span>
+                          )}
+                          {request.metadata.playerData.weight && (
+                            <span>Weight: {request.metadata.playerData.weight}kg</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
                 </div>
               </div>
+              
               <div className="team-request-actions">
                 <button 
-                  className="team-request-accept-btn"
+                  className="btn btn-primary btn-accept"
                   onClick={() => handleAcceptRequest(request.id)}
                   disabled={processing[request.id]}
                 >
-                  {processing[request.id] ? 'Accepting...' : 'Accept'}
+                  {processing[request.id] ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Accepting...
+                    </>
+                  ) : (
+                    'Accept'
+                  )}
                 </button>
                 <button 
-                  className="team-request-reject-btn"
+                  className="btn btn-secondary btn-decline"
                   onClick={() => handleRejectRequest(request.id)}
                   disabled={processing[request.id]}
                 >
-                  {processing[request.id] ? 'Rejecting...' : 'Decline'}
+                  {processing[request.id] ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Declining...
+                    </>
+                  ) : (
+                    'Decline'
+                  )}
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Decline Reason Modal */}
+      {showDeclineModal && (
+        <div className="modal-overlay">
+          <div className="modal-content decline-modal">
+            <div className="modal-header">
+              <h3>Decline Join Request</h3>
+              <button className="modal-close" onClick={cancelDecline}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <p>Are you sure you want to decline this join request?</p>
+              <div className="form-group">
+                <label htmlFor="declineReason">Reason (optional):</label>
+                <textarea
+                  id="declineReason"
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  placeholder="Provide a reason for declining this request..."
+                  rows={3}
+                  className="form-control"
+                />
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={cancelDecline}>
+                Cancel
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={confirmDecline}
+                disabled={processing[selectedRequest]}
+              >
+                {processing[selectedRequest] ? 'Declining...' : 'Decline Request'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
