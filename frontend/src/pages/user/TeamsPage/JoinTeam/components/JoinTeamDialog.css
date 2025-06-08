@@ -53,19 +53,19 @@
   color: #666;
 }
 
-.close-button {
+.close-button-join-team {
   position: absolute;
   top: 12px;
   right: 12px;
   background: none;
   border: none;
   font-size: 24px;
-  color: #888;
+  color: #0a0707;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
-.close-button:hover {
+.close-button-join-team:hover {
   color: #333;
 }
 
@@ -107,7 +107,7 @@
   background-color: #f8f9fa;
 }
 
-.option-icon {
+.option-icon-jointeam {
   font-size: 36px;
   margin-bottom: 16px;
   display: inline-block;

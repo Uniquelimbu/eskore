@@ -204,19 +204,19 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
     return (
       <div className="join-team-dialog-overlay">
         <div className="join-team-dialog">
-          <button className="close-button" onClick={onCancel}>&times;</button>
+          <button className="close-button-join-team" onClick={onCancel}>&times;</button>
           <h2>Join {team.name}</h2>
           <p>How would you like to join this team?</p>
           
           <div className="join-options">
             <div className="join-option" onClick={() => handleJoinModeSelect('player')}>
-              <div className="option-icon player-icon">👤</div>
+              <div className="option-icon-jointeam player-icon">👤</div>
               <h3>Join as Player</h3>
               <p>{playerExists ? 'Continue with your existing player profile' : 'Create a player profile and join the team'}</p>
             </div>
             
             <div className="join-option disabled">
-              <div className="option-icon staff-icon">👥</div>
+              <div className="option-icon-jointeam staff-icon">👥</div>
               <h3>Join as Team Staff</h3>
               <p>Coming soon - this feature is not available yet</p>
               <div className="coming-soon-badge">Coming Soon</div>
