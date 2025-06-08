@@ -56,6 +56,7 @@ export const autoCollapseSidebarForPath = (pathname) => {
   // Define paths that should trigger sidebar collapse
   const collapsePages = [
     '/teams/*/space/formation',
+    '/teams/*/space/formation/in-match-roles',
     '/teams/*/space/squad', 
     '/teams/*/space/calendar',
     '/teams/*/space/settings'

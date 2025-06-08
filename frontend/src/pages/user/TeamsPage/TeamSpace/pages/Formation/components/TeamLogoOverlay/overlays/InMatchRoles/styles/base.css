@@ -1,0 +1,42 @@
+.inmatch-page {
+  min-height: 85vh;
+  color: #e2e8f0;
+  padding: 0;
+}
+
+.inmatch-content {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.inmatch-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.inmatch-save-btn {
+  background-color: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 48px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.inmatch-save-btn:hover:not(:disabled) {
+  background-color: #3a5bd9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(74, 108, 247, 0.3);
+}
+
+.inmatch-save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

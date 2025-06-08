@@ -1,0 +1,41 @@
+.inmatch-header {
+  background-color: #1a202c;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.inmatch-back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.inmatch-back-button:hover {
+  background-color: #2d3748;
+  border-color: #4a6cf7;
+  color: #ffffff;
+}
+
+.inmatch-page-title {
+  color: #e2e8f0;
+  text-align: center;
+  margin-left: -60px;
+  font-size: 1.75rem;
+  font-weight: 600;
+  flex: 1;
+}

@@ -1,0 +1,95 @@
+/* Fullscreen overlay styles */
+.team-logo-overlay.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1a202c;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-logo-overlay.fullscreen .team-logo-overlay-content {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  animation: none;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  background-color: #232b3a;
+  border-bottom: 1px solid #2d3748;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #2d3748;
+  border-color: #4a6cf7;
+  color: #ffffff;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.overlay-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+/* Remove the old grid styles */
+.inmatch-roles-grid,
+.inmatch-role-card,
+.inmatch-role-header,
+.inmatch-role-title,
+.inmatch-role-description,
+.inmatch-role-assignment,
+.inmatch-current-player,
+.inmatch-player-name,
+.inmatch-remove-player-btn {
+  display: none;
+}

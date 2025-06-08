@@ -26,6 +26,8 @@ import TeamOverviewPage from '../pages/user/TeamsPage/JoinTeam/TeamOverviewPage'
 import ProtectedRoute from './ProtectedRoute';
 import NotificationDetailView from '../pages/user/Notifications/NotificationDetailView';
 import TeamRequests from '../pages/user/TeamsPage/TeamSpace/pages/Squad/TeamRequests/TeamRequests';
+import InMatchRoles from '../pages/user/TeamsPage/TeamSpace/pages/Formation/components/TeamLogoOverlay/overlays/InMatchRoles';
+
 
 // AuthRoute: Redirects to login if not authenticated
 const AuthRoute = ({ children }) => {
@@ -90,6 +92,7 @@ const AppRoutes = () => {
           {/* <Route index element={<Navigate to="squad" replace />} /> */}
           <Route path="squad" element={<Squad />} />
           <Route path="formation" element={<Formation />} />
+          <Route path="formation/in-match-roles" element={<InMatchRoles />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="settings" element={<Settings />} />
         </Route>

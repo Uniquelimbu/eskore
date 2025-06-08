@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import './TeamLogoOverlay.css';
 
 const TeamLogoOverlay = ({ 
@@ -7,92 +8,68 @@ const TeamLogoOverlay = ({
   teamLogo, 
   teamName, 
   teamAbbreviation,
-  onInMatchRoles,
   onEditPlayerNumber,
   onLineups 
 }) => {
-  if (!isOpen) return null;
+  const { teamId } = useParams();
+  const navigate = useNavigate();
 
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
+  const handleInMatchRoles = () => {
+    navigate(`/teams/${teamId}/space/formation/in-match-roles`);
+    onClose(); // Close the overlay
+  };
+
+  const handleEditPlayerNumber = () => {
+    if (onEditPlayerNumber) {
+      onEditPlayerNumber();
     }
   };
 
+  const handleLineups = () => {
+    if (onLineups) {
+      onLineups();
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="team-logo-overlay" onClick={handleOverlayClick}>
+    <div className="team-logo-overlay">
       <div className="team-logo-overlay-content">
-        {/* Close button */}
         <button className="overlay-close-button" onClick={onClose}>
-          ×
+          ✕
         </button>
         
-        {/* Team logo section */}
         <div className="overlay-team-section">
           <div className="overlay-team-logo">
             {teamLogo ? (
-              <img 
-                src={teamLogo} 
-                alt={`${teamName} logo`} 
-                className="overlay-team-logo-img"
-              />
+              <img src={teamLogo} alt={teamName} className="overlay-team-logo-img" />
             ) : (
               <div className="overlay-team-logo-placeholder">
-                {teamAbbreviation || teamName?.substring(0, 3)?.toUpperCase() || 'TM'}
+                {teamAbbreviation || teamName?.substring(0, 3).toUpperCase() || 'TM'}
               </div>
             )}
           </div>
-          <h3 className="overlay-team-name">{teamName || 'Team Name'}</h3>
+          <h2 className="overlay-team-name">{teamName || 'Team Name'}</h2>
         </div>
 
-        {/* Options section */}
         <div className="overlay-options-section">
-          <button 
-            className="overlay-option-button"
-            onClick={() => {
-              onInMatchRoles?.();
-              onClose();
-            }}
-          >
-            <div className="option-icon">
-              <i className="fas fa-users"></i>
-            </div>
+          <button className="overlay-option-button" onClick={handleInMatchRoles}>
+            <div className="option-icon">⚽</div>
             <span>In-Match Roles</span>
-            <div className="option-arrow">
-              <i className="fas fa-chevron-right"></i>
-            </div>
+            <div className="option-arrow">→</div>
           </button>
 
-          <button 
-            className="overlay-option-button"
-            onClick={() => {
-              onEditPlayerNumber?.();
-              onClose();
-            }}
-          >
-            <div className="option-icon">
-              <i className="fas fa-hashtag"></i>
-            </div>
+          <button className="overlay-option-button" onClick={handleEditPlayerNumber}>
+            <div className="option-icon">🔢</div>
             <span>Edit Player Number</span>
-            <div className="option-arrow">
-              <i className="fas fa-chevron-right"></i>
-            </div>
+            <div className="option-arrow">→</div>
           </button>
 
-          <button 
-            className="overlay-option-button"
-            onClick={() => {
-              onLineups?.();
-              onClose();
-            }}
-          >
-            <div className="option-icon">
-              <i className="fas fa-clipboard-list"></i>
-            </div>
+          <button className="overlay-option-button" onClick={handleLineups}>
+            <div className="option-icon">📋</div>
             <span>Lineups</span>
-            <div className="option-arrow">
-              <i className="fas fa-chevron-right"></i>
-            </div>
+            <div className="option-arrow">→</div>
           </button>
         </div>
       </div>

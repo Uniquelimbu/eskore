@@ -111,7 +111,8 @@ const Formation = () => {
   const handleInMatchRoles = () => {
     // Navigate to in-match roles or show functionality
     console.log('Navigate to In-Match Roles');
-    // navigate(`/teams/${teamId}/space/roles`);
+    navigate(`/teams/${teamId}/space/formation/in-match-roles`); // Corrected navigation
+
   };
 
   const handleEditPlayerNumber = () => {
