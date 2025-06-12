@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../../middleware/auth');
 const { catchAsync, ApiError } = require('../../middleware/errorHandler');
 const { validate, schemas } = require('../../validation');
+const { param, body } = require('express-validator'); // Add this import
 const Team = require('../../models/Team');
 const UserTeam = require('../../models/UserTeam');
 const User = require('../../models/User');
@@ -330,21 +331,23 @@ router.delete('/:id',
 );
 
 /**
- * GET /api/teams/:id/requests
+ * GET /api/teams/:id/join-requests
  * Get join requests for a team
  */
-router.get('/:id/requests',
+router.get('/:id/join-requests',
   requireAuth,
-  validate(schemas.team.teamIdParam),
+  validate([
+    param('id').isInt().withMessage('Team ID must be an integer')
+  ]),
   catchAsync(async (req, res) => {
-    const { id } = req.params;
-    log.info(`TEAMROUTES/CORE (GET /:id/requests): Fetching join requests for team ${id}`);
+    const { id: teamId } = req.params;
+    log.info(`TEAMROUTES/CORE (GET /:id/join-requests): Fetching join requests for team ${teamId}`);
     
     // Check if user is a team manager
     const userTeam = await UserTeam.findOne({
       where: {
         userId: req.user.userId,
-        teamId: id,
+        teamId,
         role: { [Op.in]: ['manager', 'assistant_manager'] }
       }
     });
@@ -353,25 +356,272 @@ router.get('/:id/requests',
       throw new ApiError('Only team managers can view join requests', 403, 'FORBIDDEN');
     }
     
-    // Get join request notifications for this team
-    const Notification = require('../../models/Notification');
-    const requests = await Notification.findAll({
-      where: {
-        teamId: id,
-        type: 'join_request',
-        status: { [Op.ne]: 'archived' }
-      },
-      include: [
-        {
-          model: User,
-          as: 'sender',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+    try {
+      // Get join request notifications for this team
+      const Notification = require('../../models/Notification');
+      
+      const requests = await Notification.findAll({
+        where: {
+          teamId,
+          type: 'join_request',
+          status: { [Op.in]: ['unread', 'read'] }
+        },
+        order: [['createdAt', 'DESC']]
+      });
+      
+      const requestsWithUserData = [];
+      
+      for (const request of requests) {
+        try {
+          const user = await User.findByPk(request.senderUserId, {
+            attributes: ['id', 'firstName', 'lastName', 'email', 'profileImageUrl']
+          });
+          
+          requestsWithUserData.push({
+            id: request.id,
+            senderName: user ? `${user.firstName} ${user.lastName}`.trim() : 'Unknown User',
+            senderEmail: user ? user.email : '',
+            senderAvatarUrl: user ? user.profileImageUrl : null,
+            message: request.message,
+            createdAt: request.createdAt,
+            metadata: request.metadata || {},
+            status: request.status,
+            senderUserId: request.senderUserId
+          });
+        } catch (userError) {
+          log.error(`Error fetching user ${request.senderUserId} for request ${request.id}:`, userError);
+          requestsWithUserData.push({
+            id: request.id,
+            senderName: 'Unknown User',
+            senderEmail: '',
+            senderAvatarUrl: null,
+            message: request.message,
+            createdAt: request.createdAt,
+            metadata: request.metadata || {},
+            status: request.status,
+            senderUserId: request.senderUserId
+          });
         }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+      }
+      
+      log.info(`Found ${requestsWithUserData.length} join requests for team ${teamId}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        requests: requestsWithUserData
+      });
+      
+    } catch (error) {
+      log.error(`Error fetching join requests for team ${teamId}:`, error);
+      throw new ApiError('Failed to fetch join requests', 500, 'INTERNAL_SERVER_ERROR');
+    }
+  })
+);
+
+/**
+ * POST /api/teams/join-requests/:requestId/accept
+ * Accept a team join request
+ */
+router.post('/join-requests/:requestId/accept',
+  requireAuth,
+  validate([
+    param('requestId').isInt().withMessage('Request ID must be an integer')
+  ]),
+  catchAsync(async (req, res) => {
+    const { requestId } = req.params;
+    const userId = req.user.userId;
     
-    return sendSafeJson(res, { requests });
+    log.info(`Accepting join request ${requestId} by user ${userId}`);
+    
+    const t = await sequelize.transaction();
+    
+    try {
+      const Notification = require('../../models/Notification');
+      const Player = require('../../models/Player');
+      
+      // Get the notification
+      const notification = await Notification.findByPk(requestId, { transaction: t });
+      
+      if (!notification || notification.type !== 'join_request') {
+        await t.rollback();
+        throw new ApiError('Join request not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // Check if user is a manager of the team
+      const userTeam = await UserTeam.findOne({
+        where: {
+          userId,
+          teamId: notification.teamId,
+          role: { [Op.in]: ['manager', 'assistant_manager'] }
+        },
+        transaction: t
+      });
+      
+      if (!userTeam) {
+        await t.rollback();
+        throw new ApiError('Only team managers can accept join requests', 403, 'FORBIDDEN');
+      }
+      
+      // Check if the requester is already a member
+      const existingMembership = await UserTeam.findOne({
+        where: {
+          userId: notification.senderUserId,
+          teamId: notification.teamId
+        },
+        transaction: t
+      });
+      
+      if (existingMembership) {
+        await t.rollback();
+        throw new ApiError('User is already a member of this team', 409, 'ALREADY_MEMBER');
+      }
+      
+      // Add user to team as athlete
+      await UserTeam.create({
+        userId: notification.senderUserId,
+        teamId: notification.teamId,
+        role: 'athlete',
+        status: 'active',
+        joinedAt: new Date()
+      }, { transaction: t });
+      
+      // Create player profile if metadata contains player data
+      if (notification.metadata && notification.metadata.playerData) {
+        try {
+          const existingPlayer = await Player.findOne({
+            where: { userId: notification.senderUserId },
+            transaction: t
+          });
+          
+          if (!existingPlayer) {
+            const playerData = notification.metadata.playerData;
+            await Player.create({
+              userId: notification.senderUserId,
+              teamId: notification.teamId,
+              position: playerData.position || 'SUB',
+              height: playerData.height || null,
+              weight: playerData.weight || null,
+              preferredFoot: playerData.preferredFoot || null,
+              jerseyNumber: playerData.jerseyNumber || null
+            }, { transaction: t });
+            
+            log.info(`Created player profile for user ${notification.senderUserId}`);
+          }
+        } catch (playerError) {
+          log.error('Error creating player profile:', playerError);
+          // Continue even if player creation fails
+        }
+      }
+      
+      // Archive the original notification
+      await notification.update({
+        status: 'archived'
+      }, { transaction: t });
+      
+      // Create acceptance notification for the requester
+      await Notification.create({
+        recipientUserId: notification.senderUserId,
+        senderUserId: userId,
+        teamId: notification.teamId,
+        type: 'join_request_accepted',
+        message: `Your request to join the team has been accepted!`,
+        status: 'unread'
+      }, { transaction: t });
+      
+      await t.commit();
+      
+      log.info(`Successfully accepted join request ${requestId}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        message: 'Join request accepted successfully'
+      });
+      
+    } catch (error) {
+      await t.rollback();
+      log.error(`Error accepting join request ${requestId}:`, error);
+      
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      throw new ApiError('Failed to accept join request', 500, 'INTERNAL_SERVER_ERROR');
+    }
+  })
+);
+
+/**
+ * POST /api/teams/join-requests/:requestId/reject
+ * Reject a team join request
+ */
+router.post('/join-requests/:requestId/reject',
+  requireAuth,
+  validate([
+    param('requestId').isInt().withMessage('Request ID must be an integer'),
+    body('reason').optional().isString().withMessage('Reason must be a string')
+  ]),
+  catchAsync(async (req, res) => {
+    const { requestId } = req.params;
+    const { reason = 'No reason provided' } = req.body;
+    const userId = req.user.userId;
+    
+    log.info(`Rejecting join request ${requestId} by user ${userId}`);
+    
+    const t = await sequelize.transaction();
+    
+    try {
+      const Notification = require('../../models/Notification');
+      
+      // Get the notification
+      const notification = await Notification.findByPk(requestId, { transaction: t });
+      
+      if (!notification || notification.type !== 'join_request') {
+        throw new ApiError('Join request not found', 404, 'RESOURCE_NOT_FOUND');
+      }
+      
+      // Check if user is a manager of the team
+      const userTeam = await UserTeam.findOne({
+        where: {
+          userId,
+          teamId: notification.teamId,
+          role: { [Op.in]: ['manager', 'assistant_manager'] }
+        },
+        transaction: t
+      });
+      
+      if (!userTeam) {
+        throw new ApiError('Only team managers can reject join requests', 403, 'FORBIDDEN');
+      }
+      
+      // Archive the original notification
+      await notification.update({
+        status: 'archived'
+      }, { transaction: t });
+      
+      // Create rejection notification for the requester
+      await Notification.create({
+        recipientUserId: notification.senderUserId,
+        senderUserId: userId,
+        teamId: notification.teamId,
+        type: 'join_request_rejected',
+        message: `Your request to join the team has been declined. Reason: ${reason}`,
+        status: 'unread'
+      }, { transaction: t });
+      
+      await t.commit();
+      
+      log.info(`Successfully rejected join request ${requestId}`);
+      
+      return sendSafeJson(res, {
+        success: true,
+        message: 'Join request rejected successfully'
+      });
+      
+    } catch (error) {
+      await t.rollback();
+      log.error(`Error rejecting join request ${requestId}:`, error);
+      throw error;
+    }
   })
 );
 

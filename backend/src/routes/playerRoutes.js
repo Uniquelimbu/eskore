@@ -74,8 +74,8 @@ router.post('/',
         });
         
         log.info(`PLAYER (POST /): User ${req.user.userId} automatically joined team ${teamId} as athlete`);
-      } else if (userTeam.role !== 'athlete') {
-        // Update the role to athlete if needed
+      } else if (userTeam.role !== 'athlete' && userTeam.role !== 'manager' && userTeam.role !== 'assistant_manager') {
+        // Update the role to athlete if needed (unless they're already a manager)
         userTeam.role = 'athlete';
         await userTeam.save();
         log.info(`PLAYER (POST /): User role updated to athlete for team ${teamId}`);
@@ -89,9 +89,11 @@ router.post('/',
       height: height || null,
       weight: weight || null,
       preferredFoot: preferredFoot || null,
-      jerseyNumber: jerseyNumber || null
+      jerseyNumber: jerseyNumber || null,
+      teamId: teamId || null // Add teamId to player creation
     });
     
+    log.info(`PLAYER (POST /): Created player profile with ID ${player.id} for user ${req.user.userId}`);
     return sendSafeJson(res, {
       success: true,
       player

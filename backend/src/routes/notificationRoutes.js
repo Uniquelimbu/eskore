@@ -249,7 +249,8 @@ router.post('/team-join-request',
         const metadata = {
           teamName: team.name,
           userMessage: message || '',
-          userEmail: currentUser.email
+          userEmail: currentUser.email,
+          requesterId: req.user.userId // Add requester ID for better tracking
         };
         
         // Add player data to metadata if provided

@@ -10,6 +10,7 @@ const playerRoutes = require('./playerRoutes');
 const managerRoutes = require('./managerRoutes');
 const managementRoutes = require('./managementRoutes');
 const searchRoutes = require('./searchRoutes');
+const joinRequestRoutes = require('./joinRequestRoutes');
 
 // Middleware for all routes in this router, skip excessive logging
 router.use((req, res, next) => {
@@ -20,10 +21,17 @@ router.use((req, res, next) => {
   next();
 });
 
+// Mount join request routes FIRST to ensure they get priority
+// These routes handle /teams/join-requests/:id/* patterns
+router.use('/', joinRequestRoutes);
+
+// Mount member routes
+// These routes handle /teams/:id/members/* patterns  
+router.use('/', memberRoutes);
+
 // Mount all the team-related routes
 log.info('TEAMROUTES/INDEX: Loading team routes');
 router.use('/', coreRoutes);         // Basic team CRUD operations
-router.use('/', memberRoutes);       // Team membership operations
 router.use('/', mediaRoutes);        // Logo and media handling
 router.use('/', playerRoutes);       // Player-related operations
 router.use('/', managerRoutes);      // Manager routes

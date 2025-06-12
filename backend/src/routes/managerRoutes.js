@@ -104,21 +104,31 @@ router.post('/',
       } else {
         // Create new manager
         log.info(`Creating new manager record for user ${userId}`);
-        manager = await Manager.create({
-          userId,
-          teamId: teamId || null,
-          playingStyle: playingStyle || 'balanced',
-          preferredFormation: preferredFormation || '4-3-3',
-          experience
-        }, { transaction: t });
+        try {
+          manager = await Manager.create({
+            userId,
+            teamId: teamId || null,
+            playingStyle: playingStyle || 'balanced',
+            preferredFormation: preferredFormation || '4-3-3',
+            experience
+          }, { transaction: t });
+          
+          log.info(`Successfully created manager record ID ${manager.id} for user ${userId}`);
+        } catch (createError) {
+          log.error(`Error creating manager record: ${createError.message}`, createError);
+          throw createError;
+        }
       }
       
       // Commit the transaction
       await t.commit();
-      
+
+      log.info(`Manager operation completed successfully for user ${userId}`);
+
       // Return the result
       return sendSafeJson(res, {
         success: true,
+        message: existingManager ? 'Manager profile updated successfully' : 'Manager profile created successfully',
         manager
       });
     } catch (error) {
