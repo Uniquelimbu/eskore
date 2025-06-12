@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { TeamProvider } from './contexts/TeamContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Notifications from './components/ui/Notifications/Notifications';
@@ -47,21 +48,23 @@ function App() {
         <ThemeProvider>
           <NotificationProvider>
             <AuthProvider>
-              <div className={`App ${appReady ? 'app-ready' : ''}`}>
-                <AppRoutes />
-                <Notifications />
-                <ToastContainer 
-                  position="top-right"
-                  autoClose={5000}
-                  hideProgressBar={false}
-                  newestOnTop
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                />
-              </div>
+              <TeamProvider>
+                <div className={`App ${appReady ? 'app-ready' : ''}`}>
+                  <AppRoutes />
+                  <Notifications />
+                  <ToastContainer 
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                  />
+                </div>
+              </TeamProvider>
             </AuthProvider>
           </NotificationProvider>
         </ThemeProvider>
