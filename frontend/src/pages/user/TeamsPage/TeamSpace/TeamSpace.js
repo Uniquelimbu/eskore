@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { apiClient } from '../../../../services'; // Updated import path
 import { isUserManager } from '../../../../utils/permissions';
-import PageLayout from '../../../../components/PageLayout/PageLayout';
+import PageLayout from '../../../../components/layout/PageLayout';
 import './styles/index.css'; // Updated import to use the new modular CSS
 import { useAuth } from '../../../../contexts/AuthContext';
 import { autoCollapseSidebarForPath } from '../../../../utils/sidebarUtils';

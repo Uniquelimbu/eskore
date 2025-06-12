@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import RecentActivity from './components/RecentActivity';
 import { useAuth } from '../../../contexts/AuthContext';
 import { dashboardService } from '../../../services'; // Updated import path
-import PageLayout from '../../../components/PageLayout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout';
 import './DashboardPage.css';
 
 const DashboardPage = () => {

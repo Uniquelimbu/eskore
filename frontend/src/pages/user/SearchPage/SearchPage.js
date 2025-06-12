@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import SearchFilters from './components/SearchFilters/SearchFilters'; // Updated path
 import SearchResults from './components/SearchResults/SearchResults'; // Updated path
 import Loading from '../../../components/ui/Loading/Loading';
-import PageLayout from '../../../components/PageLayout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout';
 import './SearchPage.css';
 import { apiClient } from '../../../services'; // Updated import path
 
