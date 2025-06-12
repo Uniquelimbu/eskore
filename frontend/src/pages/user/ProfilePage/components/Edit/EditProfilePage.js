@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../../../../../components/layout/PageLayout';
+import PageLayout from '../../../../../components/layout/PageLayout/PageLayout';
 import { profileService } from '../../../../../services'; // Updated import path
 import { formatDateForInput } from '../../../../../utils/dateUtils';
 import './EditProfilePage.css';

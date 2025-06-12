@@ -13,7 +13,7 @@ import CreateTeam from '../pages/user/TeamsPage/CreateTeam/CreateTeam';
 import TournamentPage from '../pages/user/TournamentPage/TournamentPage';
 import TournamentDetailsPage from '../pages/user/TournamentDetailsPage/TournamentDetailsPage';
 import AdminDashboard from '../pages/admin/Dashboard/index.js';
-import AuthenticatedLayout from '../components/layout/AuthenticatedLayout';
+import AuthenticatedLayout from '../components/layout/AuthenticatedLayout/AuthenticatedLayout.js';
 import NewsPage from '../pages/user/NewsPage';
 import AboutPage from '../pages/public/AboutPage';
 import TeamSpace from '../pages/user/TeamsPage/TeamSpace/TeamSpace'; 

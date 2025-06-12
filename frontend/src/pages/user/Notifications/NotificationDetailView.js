@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import PageLayout from '../../../components/layout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout/PageLayout';
 import { apiClient } from '../../../services';
 import { toast } from 'react-toastify';
 import './NotificationDetailView.css';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import PageLayout from '../../../components/layout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout/PageLayout';
 import './TournamentDetailsPage.css';
 
 const TournamentDetailsPage = () => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { apiClient } from '../../../services';
-import PageLayout from '../../../components/layout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout/PageLayout';
 import './TeamsPage.css';
 
 // Team API timeout - make it much shorter to improve user experience

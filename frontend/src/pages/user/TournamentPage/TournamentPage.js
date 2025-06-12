@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
-import PageLayout from '../../../components/layout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout/PageLayout';
 import './TournamentPage.css';
 
 const TournamentPage = () => {

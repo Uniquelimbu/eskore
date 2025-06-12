@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add this import
-import PageLayout from '../../../components/layout/PageLayout';
+import PageLayout from '../../../components/layout/PageLayout/PageLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import RecentActivity from '../DashboardPage/components/RecentActivity'; // Reuse RecentActivity
 import { dashboardService, profileService } from '../../../services'; // Updated import paths

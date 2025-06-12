@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import TopNavbar from '../../pages/user/components/TopNavbar/TopNavbar';
-import Sidebar from '../../pages/user/components/Sidebar/Sidebar';
+import TopNavbar from '../../../pages/user/components/TopNavbar/TopNavbar';
+import Sidebar from '../../../pages/user/components/Sidebar/Sidebar';
 import './AuthenticatedLayout.css'; // Import the CSS file
 
 /**
