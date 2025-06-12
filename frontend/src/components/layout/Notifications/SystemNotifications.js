@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { apiClient } from '../../../services';
-import './NotificationBell.css';
+import './SystemNotifications.css';
 
-const NotificationBell = () => {
+const SystemNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -184,50 +184,50 @@ const NotificationBell = () => {
   };
 
   return (
-    <div className="notification-bell-container" ref={dropdownRef}>
-      <div className="notification-bell" onClick={toggleDropdown}>
+    <div className="system-notifications-container" ref={dropdownRef}>
+      <div className="system-notifications-bell" onClick={toggleDropdown}>
         <span role="img" aria-label="notifications">🔔</span>
         {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount}</span>
+          <span className="system-notifications-badge">{unreadCount}</span>
         )}
       </div>
       
       {isOpen && (
-        <div className="notifications-dropdown">
-          <div className="notifications-header">
+        <div className="system-notifications-dropdown">
+          <div className="system-notifications-header">
             <h3>Notifications</h3>
             {unreadCount > 0 && (
-              <button onClick={handleMarkAllRead} className="mark-all-read">
+              <button onClick={handleMarkAllRead} className="system-notifications-mark-all-read">
                 Mark all as read
               </button>
             )}
           </div>
           
-          <div className="notifications-list">
+          <div className="system-notifications-list">
             {isLoading ? (
-              <div className="notification-loading">Loading notifications...</div>
+              <div className="system-notification-loading">Loading notifications...</div>
             ) : error ? (
-              <div className="notification-error">
+              <div className="system-notification-error">
                 {error}
-                <button onClick={debouncedFetchNotifications} className="retry-button">
+                <button onClick={debouncedFetchNotifications} className="system-notification-retry-button">
                   Retry
                 </button>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="notification-empty">No notifications</div>
+              <div className="system-notification-empty">No notifications</div>
             ) : (
               notifications.map(notification => (
                 <div 
                   key={notification.id}
-                  className={`notification-item ${notification.status === 'unread' ? 'unread' : ''}`}
+                  className={`system-notification-item ${notification.status === 'unread' ? 'unread' : ''}`}
                   onClick={() => handleNotificationClick(notification)}
                 >
-                  <div className="notification-icon">
+                  <div className="system-notification-icon">
                     {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="notification-content">
-                    <p className="notification-message">{notification.message}</p>
-                    <p className="notification-time">
+                  <div className="system-notification-content">
+                    <p className="system-notification-message">{notification.message}</p>
+                    <p className="system-notification-time">
                       {formatTime(notification.createdAt)}
                     </p>
                   </div>
@@ -241,7 +241,7 @@ const NotificationBell = () => {
   );
 };
 
-export default NotificationBell;
+export default SystemNotifications;
 
 // Helper debounce function
 function debounce(func, wait) {

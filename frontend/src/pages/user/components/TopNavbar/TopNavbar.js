@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
-import NotificationBell from '../../../../components/layout/Navbar/NotificationBell';
+import NotificationBell from '../../../../components/layout/Notifications/SystemNotifications';
 import './TopNavbar.css';
 
 const TopNavbar = () => {
