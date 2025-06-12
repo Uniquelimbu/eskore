@@ -53,6 +53,7 @@ const Squad = () => {
   // Handle accepting a join request
   const handleAcceptRequest = async (notification) => {
     try {
+      console.log('Squad: Accepting join request:', notification.id);
       const response = await apiClient.acceptTeamJoinRequest(notification.id);
       
       if (response && response.success) {
@@ -63,10 +64,36 @@ const Squad = () => {
         
         // Refresh the squad data
         refresh();
+        
+        // Emit events to notify other components
+        window.dispatchEvent(new CustomEvent('teamMembershipChanged'));
+        window.dispatchEvent(new CustomEvent('teamPlayersChanged', {
+          detail: { teamId: team.id }
+        }));
+        
+        // Force refresh formation after delay
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('forceFormationRefresh', {
+            detail: { teamId: team.id, reason: 'player_accepted' }
+          }));
+        }, 2000); // Increased delay
+        
+      } else {
+        toast.error('Failed to accept join request');
       }
     } catch (error) {
       console.error('Error accepting join request:', error);
-      toast.error('Failed to accept join request');
+      
+      let errorMessage = 'Failed to accept join request';
+      if (error.response?.status === 404) {
+        errorMessage = 'Join request not found';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'You do not have permission to accept this request';
+      } else if (error.response?.status === 409) {
+        errorMessage = 'User is already a member of this team';
+      }
+      
+      toast.error(errorMessage);
     }
   };
 

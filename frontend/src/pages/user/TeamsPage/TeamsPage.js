@@ -20,18 +20,12 @@ const TeamsPage = () => {
     console.log('TeamsPage: Component mounted, auth state:', { user, isAuthenticated });
     
     const checkUserTeam = async () => {
-      if (!isAuthenticated || !user || !user.id) {
-        console.log('TeamsPage: No authenticated user, ending team check');
-        setLoading(false);
-        return;
-      }
-
       try {
         // Skip cache and directly fetch teams from server for the most up-to-date data
         console.log('TeamsPage: Fetching teams for user', user.id);
-        const response = await apiClient.get(`/teams/user/${user.id}`, { 
-          timeout: TEAM_API_TIMEOUT 
-        });
+        
+        // Use the correct endpoint that exists in the backend
+        const response = await apiClient.get(`/teams/user/${user.id}`);
         
         if (response && response.teams && Array.isArray(response.teams)) {
           console.log('TeamsPage: Teams fetched successfully', response.teams);

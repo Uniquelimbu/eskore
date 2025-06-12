@@ -153,40 +153,65 @@
 }
 
 .join-team-button {
-  background-color: #4a6cf7;
+  background: #4a6cf7;
   color: white;
   border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 6px;
-  padding: 12px 24px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.join-team-button:hover {
-  background-color: #3a5bd9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.team-overview-loading,
-.team-overview-error {
-  height: 400px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  min-width: 120px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.team-overview-error {
-  background-color: #232b3a;
-  border-radius: 12px;
-  padding: 30px;
+.join-team-button:hover:not(:disabled):not(.disabled) {
+  background: #3b5ae0;
+  transform: translateY(-1px);
 }
 
-.team-overview-error h2 {
-  color: #e53e3e;
-  margin-bottom: 12px;
+.join-team-button.disabled,
+.join-team-button:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.7;
+  position: relative;
+}
+
+.join-team-button.disabled:hover,
+.join-team-button:disabled:hover {
+  background-color: #6b7280;
+  transform: none;
+}
+
+.join-team-button.disabled::before {
+  content: "⏳";
+  margin-right: 0.5rem;
+}
+
+/* Loading state for join button */
+.join-team-button.loading {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.join-team-button.loading::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {

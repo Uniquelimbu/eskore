@@ -14,6 +14,7 @@ const TeamOverviewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   useEffect(() => {
     const fetchTeamDetails = async () => {
@@ -32,6 +33,40 @@ const TeamOverviewPage = () => {
     fetchTeamDetails();
   }, [teamId]);
 
+  // Add this useEffect to check for pending requests
+  useEffect(() => {
+    const checkPendingRequests = async () => {
+      if (!team) return;
+      
+      try {
+        const userResponse = await apiClient.get('/auth/me');
+        const currentUserId = userResponse?.id;
+        
+        if (!currentUserId) return;
+        
+        const notificationsResponse = await apiClient.get('/notifications', {
+          params: { status: 'all', limit: 100 }
+        });
+        
+        if (notificationsResponse && notificationsResponse.notifications) {
+          const pendingRequest = notificationsResponse.notifications.find(
+            notification => 
+              notification.type === 'join_request' &&
+              notification.teamId === team.id &&
+              notification.senderUserId === currentUserId &&
+              (notification.status === 'unread' || notification.status === 'read')
+          );
+          
+          setHasPendingRequest(!!pendingRequest);
+        }
+      } catch (error) {
+        console.error('Error checking pending requests:', error);
+      }
+    };
+    
+    checkPendingRequests();
+  }, [team]);
+
   const handleBackClick = () => {
     // Go back to search results
     navigate(-1);
@@ -46,6 +81,8 @@ const TeamOverviewPage = () => {
       // If we get a success response but with pendingApproval flag, 
       // show a different message and don't navigate
       if (joinData.success && joinData.pendingApproval) {
+        // Set pending request state immediately
+        setHasPendingRequest(true);
         // Close dialog
         setShowJoinDialog(false);
       } else {
@@ -65,6 +102,49 @@ const TeamOverviewPage = () => {
       setShowJoinDialog(false);
     }
   };
+
+  // Listen for pending request changes
+  useEffect(() => {
+    const handlePendingRequestsChanged = () => {
+      // Recheck pending requests when notified
+      if (team && !hasPendingRequest) {
+        const recheckRequests = async () => {
+          try {
+            const userResponse = await apiClient.get('/auth/me');
+            const currentUserId = userResponse?.id;
+            
+            if (!currentUserId) return;
+            
+            const notificationsResponse = await apiClient.get('/notifications', {
+              params: { status: 'all', limit: 100 }
+            });
+            
+            if (notificationsResponse && notificationsResponse.notifications) {
+              const pendingRequest = notificationsResponse.notifications.find(
+                notification => 
+                  notification.type === 'join_request' &&
+                  notification.teamId === team.id &&
+                  notification.senderUserId === currentUserId &&
+                  (notification.status === 'unread' || notification.status === 'read')
+              );
+              
+              setHasPendingRequest(!!pendingRequest);
+            }
+          } catch (error) {
+            console.error('Error rechecking pending requests:', error);
+          }
+        };
+        
+        recheckRequests();
+      }
+    };
+    
+    window.addEventListener('pendingRequestsChanged', handlePendingRequestsChanged);
+    
+    return () => {
+      window.removeEventListener('pendingRequestsChanged', handlePendingRequestsChanged);
+    };
+  }, [team, hasPendingRequest]);
 
   if (loading) {
     return (
@@ -160,8 +240,12 @@ const TeamOverviewPage = () => {
           </div>
           
           <div className="team-overview-actions">
-            <button className="join-team-button" onClick={handleJoinClick}>
-              Join Team
+            <button 
+              className={`join-team-button ${hasPendingRequest ? 'disabled' : ''}`}
+              onClick={handleJoinClick}
+              disabled={hasPendingRequest}
+            >
+              {hasPendingRequest ? 'Request Pending' : 'Join Team'}
             </button>
           </div>
         </div>

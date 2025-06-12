@@ -408,26 +408,20 @@ export const applyTeamExtensions = (apiClient) => {
   // Update joinTeam method to support both direct join and request to join
   apiClient.joinTeam = async function(teamId, joinData) {
     try {
-      // Get the current user's ID from auth endpoint
-      const currentUser = await this.get('/auth/me');
-      const userId = currentUser?.id;
+      // Get team details to check requirements
+      const teamResponse = await this.get(`/teams/${teamId}`);
+      const team = teamResponse?.team || teamResponse;
       
-      if (!userId) {
-        throw new Error('Could not determine user ID for team join request');
-      }
+      // Get current user ID
+      const userResponse = await this.get('/auth/me');
+      const userId = userResponse?.id;
       
-      console.log(`Joining team ${teamId} as user ${userId} with role ${joinData.role}`);
-      
-      const team = await this.get(`/teams/${teamId}`);
-      
-      // If team is public and requires approval, send join request
       if (team.requiresApproval || team.visibility === 'private') {
-        console.log('Team requires approval, sending join request');
+        // Send join request for approval
         const joinRequestResponse = await this.post('/notifications/team-join-request', {
           teamId: teamId,
-          role: joinData.role,
-          message: joinData.message || '',
-          playerData: joinData.playerData || null
+          message: joinData.message || `I would like to join ${team.name}.`,
+          playerData: joinData.playerData
         });
         
         return {
@@ -441,7 +435,7 @@ export const applyTeamExtensions = (apiClient) => {
       // If team is public and doesn't require approval, join directly
       const joinResponse = await this.post(`/teams/${teamId}/members`, {
         userId: userId,
-        role: joinData.role
+        role: joinData.role || 'athlete'
       });
       
       // If player data was provided, save that as well
@@ -474,7 +468,7 @@ export const applyTeamExtensions = (apiClient) => {
       
       return response;
     } catch (error) {
-      console.error('Error inviting user to team:', error);
+      console.error('Error inviting to team:', error);
       throw error;
     }
   };
@@ -505,83 +499,140 @@ export const applyTeamExtensions = (apiClient) => {
       return response;
     } catch (error) {
       console.error('Error submitting join request:', error);
+      // Add better error code handling
+      if (error.response?.status === 409) {
+        const errorCode = error.response.data?.code || error.response.data?.errorCode;
+        if (errorCode === 'REQUEST_EXISTS' || errorCode === 'ALREADY_MEMBER' || errorCode === 'REQUEST_PENDING') {
+          error.response.data.code = errorCode; // Ensure error code is available
+        }
+      }
       throw error;
     }
   };
-  
-  // Add method to get notifications
-  apiClient.getNotifications = async function(options = {}) {
+
+  // Add method to get current user info
+  apiClient.getCurrentUser = async function() {
     try {
-      const { status = 'all', limit = 20, offset = 0 } = options;
+      const response = await this.get('/auth/me');
+      return response;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      throw error;
+    }
+  };
+
+  // Add method to check user's join request status for a team
+  apiClient.checkJoinRequestStatus = async function(teamId) {
+    try {
+      // Get current user
+      const userResponse = await this.get('/auth/me');
+      const currentUserId = userResponse?.id;
       
+      if (!currentUserId) return { status: 'unknown' };
+      
+      // Check for pending requests
       const response = await this.get('/notifications', {
-        params: { status, limit, offset }
+        params: { status: 'all', limit: 100 }
       });
       
-      return response;
+      if (response?.notifications) {
+        const pendingRequest = response.notifications.find(
+          notification => 
+            notification.type === 'join_request' &&
+            notification.teamId === teamId &&
+            notification.senderUserId === currentUserId &&
+            (notification.status === 'unread' || notification.status === 'read')
+        );
+        
+        return {
+          status: pendingRequest ? 'pending' : 'none',
+          request: pendingRequest || null
+        };
+      }
+      
+      return { status: 'none' };
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      throw error;
+      console.error('Error checking join request status:', error);
+      return { status: 'error' };
     }
   };
-  
-  // Add method to get unread notification count
-  apiClient.getUnreadNotificationCount = async function() {
-    try {
-      const response = await this.get('/notifications/unread-count');
-      return response?.count || 0;
-    } catch (error) {
-      console.error('Error fetching unread notification count:', error);
-      return 0; // Return 0 as fallback
-    }
-  };
-  
-  // Add methods to handle notification actions
-  apiClient.acceptNotification = async function(notificationId) {
-    try {
-      const response = await this.post(`/notifications/${notificationId}/accept`);
-      return response;
-    } catch (error) {
-      console.error('Error accepting notification:', error);
-      throw error;
-    }
-  };
-  
-  apiClient.rejectNotification = async function(notificationId, reason = '') {
-    try {
-      const response = await this.post(`/notifications/${notificationId}/reject`, { reason });
-      return response;
-    } catch (error) {
-      console.error('Error rejecting notification:', error);
-      throw error;
-    }
-  };
-  
-  apiClient.markNotificationRead = async function(notificationId) {
-    try {
-      const response = await this.put(`/notifications/${notificationId}/read`);
-      return response;
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      throw error;
-    }
-  };
-  
-  // Add method to get team join requests
+
+  // Add method to get team join requests with better error handling
   apiClient.getTeamJoinRequests = async function(teamId) {
     try {
-      const response = await this.get(`/teams/${teamId}/requests`);
-      return response;
+      console.log(`Fetching join requests for team ${teamId}`);
+      
+      // Add retry logic for this critical endpoint
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const response = await this.get(`/teams/${teamId}/join-requests`, {
+            timeout: 10000, // 10 second timeout
+            params: {
+              _t: Date.now() // Cache busting
+            }
+          });
+          
+          console.log('Join requests response:', response);
+          return response;
+        } catch (error) {
+          attempts++;
+          lastError = error;
+          
+          // Log the specific error
+          console.error(`Attempt ${attempts}/${maxAttempts} failed for join requests:`, error);
+          
+          // If it's a 500 error, retry after a delay
+          if (error.response?.status === 500 && attempts < maxAttempts) {
+            console.log(`Retrying join requests fetch in ${1000 * attempts}ms...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+            continue;
+          }
+          
+          // If it's a 403 error, user is not a manager
+          if (error.response?.status === 403) {
+            console.warn('User is not authorized to view join requests');
+            return { success: true, requests: [] };
+          }
+          
+          // For other errors, break the retry loop
+          break;
+        }
+      }
+      
+      // If all retries failed, throw the last error
+      throw lastError;
     } catch (error) {
       console.error('Error fetching team join requests:', error);
+      
+      // Return empty array for UI graceful handling
+      if (error.response?.status === 403) {
+        return { success: true, requests: [] };
+      }
+      
       throw error;
     }
   };
-  
-  // Add method to reject team join requests
-  apiClient.rejectTeamJoinRequest = async function(notificationId, reason = '') {
+
+  // Add accept and reject methods
+  apiClient.acceptTeamJoinRequest = async function(requestId) {
     try {
-      const response = await this.post(`/notifications/${notificationId}/reject`, { reason });
+      const response = await this.post(`/teams/join-requests/${requestId}/accept`);
+      return response;
+    } catch (error) {
+      console.error('Error accepting team join request:', error);
+      throw error;
+    }
+  };
+
+  apiClient.rejectTeamJoinRequest = async function(requestId, reason) {
+    try {
+      const response = await this.post(`/teams/join-requests/${requestId}/reject`, {
+        reason: reason || 'No reason provided'
+      });
       return response;
     } catch (error) {
       console.error('Error rejecting team join request:', error);

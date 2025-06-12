@@ -178,25 +178,92 @@ export const teamService = {
    */
   updateManagerProfile: async (managerData) => {
     try {
-      // Format the data to ensure consistency
-      const formattedData = {
-        playingStyle: managerData.playingStyle || 'balanced',
-        preferredFormation: managerData.preferredFormation || '4-3-3',
-        experience: managerData.experience !== undefined && managerData.experience !== '' ? 
-                   parseInt(managerData.experience, 10) : 0
-      };
-      
-      // Add teamId if provided
-      if (managerData.teamId) {
-        formattedData.teamId = managerData.teamId;
-      }
-      
-      // Use apiClient instead of direct axios
-      const response = await apiClient.post('/managers', formattedData);
-      
+      const response = await apiClient.put('/auth/manager-profile', managerData);
       return response;
     } catch (error) {
       console.error('Error updating manager profile:', error);
+      throw error;
+    }
+  },
+  
+  // Add team join request methods
+  getTeamJoinRequests: async (teamId) => {
+    try {
+      console.log(`Fetching join requests for team ${teamId}`);
+      
+      // Add retry logic for this critical endpoint
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const response = await apiClient.get(`/teams/${teamId}/join-requests`, {
+            timeout: 10000, // 10 second timeout
+            params: {
+              _t: Date.now() // Cache busting
+            }
+          });
+          
+          console.log('Join requests response:', response);
+          return response;
+        } catch (error) {
+          attempts++;
+          lastError = error;
+          
+          // Log the specific error
+          console.error(`Attempt ${attempts}/${maxAttempts} failed for join requests:`, error);
+          
+          // If it's a 500 error, retry after a delay
+          if (error.response?.status === 500 && attempts < maxAttempts) {
+            console.log(`Retrying join requests fetch in ${1000 * attempts}ms...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+            continue;
+          }
+          
+          // If it's a 403 error, user is not a manager
+          if (error.response?.status === 403) {
+            console.warn('User is not authorized to view join requests');
+            return { success: true, requests: [] };
+          }
+          
+          // For other errors, break the retry loop
+          break;
+        }
+      }
+      
+      // If all retries failed, throw the last error
+      throw lastError;
+    } catch (error) {
+      console.error('Error fetching team join requests:', error);
+      
+      // Return empty array for UI graceful handling
+      if (error.response?.status === 403) {
+        return { success: true, requests: [] };
+      }
+      
+      throw error;
+    }
+  },
+  
+  acceptTeamJoinRequest: async (requestId) => {
+    try {
+      const response = await apiClient.post(`/teams/join-requests/${requestId}/accept`);
+      return response;
+    } catch (error) {
+      console.error('Error accepting team join request:', error);
+      throw error;
+    }
+  },
+  
+  rejectTeamJoinRequest: async (requestId, reason) => {
+    try {
+      const response = await apiClient.post(`/teams/join-requests/${requestId}/reject`, {
+        reason: reason || 'No reason provided'
+      });
+      return response;
+    } catch (error) {
+      console.error('Error rejecting team join request:', error);
       throw error;
     }
   },

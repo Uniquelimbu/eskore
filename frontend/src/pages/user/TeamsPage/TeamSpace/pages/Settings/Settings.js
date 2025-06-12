@@ -92,6 +92,7 @@ const Settings = () => {
     const fetchTeamMembers = async () => {
       try {
         if (teamId) {
+          // Use the correct endpoint that exists
           const response = await apiClient.get(`/teams/${teamId}/members`);
           if (response && response.members) {
             setTeamMembers(response.members);
@@ -99,6 +100,7 @@ const Settings = () => {
         }
       } catch (err) {
         console.error('Error fetching team members:', err);
+        // Don't show error to user for this non-critical data
       }
     };
     

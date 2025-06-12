@@ -66,6 +66,70 @@ const Formation = () => {
     };
   }, [currentTeamId]); // Only depend on currentTeamId
 
+  // Listen for team membership changes
+  useEffect(() => {
+    const handleMembershipChanged = () => {
+      // Refetch players when team membership changes
+      if (currentTeamId) {
+        const fetchPlayersUpdate = async () => {
+          try {
+            console.log('Formation: Refreshing player data after membership change');
+            const response = await apiClient.get(`/teams/${currentTeamId}/players`);
+            const playersData = response?.players || [];
+            setPlayers(playersData);
+            console.log('Formation: Updated player data after membership change:', playersData.length);
+            
+            // Force formation to update with new players
+            window.dispatchEvent(new CustomEvent('playersUpdated', { 
+              detail: { players: playersData, teamId: currentTeamId } 
+            }));
+            
+          } catch (error) {
+            console.error('Error updating players after membership change:', error);
+          }
+        };
+        fetchPlayersUpdate();
+      }
+    };
+
+    const handlePlayersChanged = (event) => {
+      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
+        handleMembershipChanged();
+      }
+    };
+
+    const handleForceRefresh = (event) => {
+      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
+        console.log('Formation: Force refresh triggered:', event.detail?.reason || 'unknown');
+        handleMembershipChanged();
+      }
+    };
+
+    const handleReloadFormationData = (event) => {
+      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
+        console.log('Formation: Reload formation data triggered');
+        // Additional delay to ensure backend has processed everything
+        setTimeout(() => {
+          handleMembershipChanged();
+        }, 1000);
+      }
+    };
+
+    window.addEventListener('teamMembershipChanged', handleMembershipChanged);
+    window.addEventListener('teamPlayersChanged', handlePlayersChanged);
+    window.addEventListener('squadMembersChanged', handleMembershipChanged);
+    window.addEventListener('forceFormationRefresh', handleForceRefresh);
+    window.addEventListener('reloadFormationData', handleReloadFormationData);
+    
+    return () => {
+      window.removeEventListener('teamMembershipChanged', handleMembershipChanged);
+      window.removeEventListener('teamPlayersChanged', handlePlayersChanged);
+      window.removeEventListener('squadMembersChanged', handleMembershipChanged);
+      window.removeEventListener('forceFormationRefresh', handleForceRefresh);
+      window.removeEventListener('reloadFormationData', handleReloadFormationData);
+    };
+  }, [currentTeamId]);
+
   // Update roles only when relevant data changes
   useEffect(() => {
     if (!user?.id || !currentTeamId) return;

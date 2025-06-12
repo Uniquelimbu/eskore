@@ -60,6 +60,31 @@ export const applyRequestExtensions = (apiClient) => {
         throw error;
       });
     }
+    
+    // Add special handling for join request acceptance/rejection
+    if (url.includes('join-requests') && (url.includes('/accept') || url.includes('/reject'))) {
+      return originalPost.call(this, url, data, { 
+        ...config, 
+        timeout: TIMEOUT_CONFIG.TEAM_UPDATE,
+        headers: {
+          ...config.headers,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      }).catch(error => {
+        console.error(`Error in POST request to ${url}:`, error);
+        
+        if (error.response?.status === 401) {
+          console.error('Authorization failed - token may be invalid');
+        } else if (error.response?.status === 403) {
+          console.error('Permission denied for this operation');
+        } else if (error.response?.status === 500) {
+          console.error('Server error during operation:', error.response.data);
+        }
+        
+        throw error;
+      });
+    }
+    
     return originalPost.call(this, url, data, config);
   };
 

@@ -145,9 +145,9 @@ export const assignPlayersToFormation = (players, presetName, get, set) => {
  * Map players to their existing positions or intelligently assign if none exist
  */
 export const mapPlayersToPositions = (players, get, set) => {
-  const { starters, subs, preset } = get();
+  const { starters, subs, preset } = get(); // Add preset to destructuring
   
-  if (!players || !players.length) return;
+  console.log('Mapping players to positions:', players.length, 'players available');
   
   // Create a player map for quick lookup
   const playerMap = {};
@@ -165,8 +165,8 @@ export const mapPlayersToPositions = (players, get, set) => {
         const player = playerMap[starter.playerId];
         return {
           ...starter,
-          jerseyNumber: player.jerseyNumber || '',
-          playerName: player.lastName || player.firstName || player.name || ''
+          jerseyNumber: player.jerseyNumber || starter.jerseyNumber || '',
+          playerName: player.lastName || player.firstName || player.name || starter.playerName || ''
         };
       }
       return starter;
@@ -177,47 +177,59 @@ export const mapPlayersToPositions = (players, get, set) => {
         const player = playerMap[sub.playerId];
         return {
           ...sub,
-          jerseyNumber: player.jerseyNumber || '',
-          playerName: player.lastName || player.firstName || player.name || ''
+          jerseyNumber: player.jerseyNumber || sub.jerseyNumber || '',
+          playerName: player.lastName || player.firstName || player.name || sub.playerName || ''
         };
       }
       return sub;
     });
     
-    // Find new players not yet assigned
+    // Find players that aren't assigned to any position
     const assignedPlayerIds = new Set([
       ...newStarters.filter(s => s.playerId).map(s => s.playerId),
       ...newSubs.filter(s => s.playerId).map(s => s.playerId)
     ]);
     
-    const unassignedPlayers = players.filter(p => !assignedPlayerIds.has(p.id));
+    const unassignedPlayers = players.filter(player => !assignedPlayerIds.has(player.id));
     
-    // Replace dummy subs with new players
     if (unassignedPlayers.length > 0) {
+      console.log('Found unassigned players:', unassignedPlayers.length);
+      
+      // Make a copy of subs to modify
       const updatedSubs = [...newSubs];
       
       unassignedPlayers.forEach(player => {
-        // Find a dummy player slot to replace, preferably matching position
-        const dummyIndex = updatedSubs.findIndex(sub => 
-          !sub.playerId && (
-            (sub.position === player.position || sub.position === player.preferredPosition) ||
-            sub.position === 'SUB'
-          )
-        );
+        // Find an empty substitute slot or add new one
+        const emptySlotIndex = updatedSubs.findIndex(sub => !sub.playerId);
         
-        if (dummyIndex !== -1) {
-          updatedSubs[dummyIndex] = {
-            id: `sub-${dummyIndex + 1}`,
+        if (emptySlotIndex !== -1) {
+          // Fill existing empty slot
+          updatedSubs[emptySlotIndex] = {
+            ...updatedSubs[emptySlotIndex],
+            playerId: player.id,
+            jerseyNumber: player.jerseyNumber || String((emptySlotIndex + 12)),
+            playerName: player.lastName || player.firstName || player.name || '',
+            position: player.position || player.preferredPosition || 'SUB'
+          };
+        } else if (updatedSubs.length < 7) {
+          // Add new substitute slot if under limit
+          updatedSubs.push({
+            id: `sub-${updatedSubs.length + 1}`,
             label: player.position || player.preferredPosition || 'SUB',
             position: player.position || player.preferredPosition || 'SUB',
             playerId: player.id,
-            jerseyNumber: player.jerseyNumber || String(dummyIndex + 12),
+            jerseyNumber: player.jerseyNumber || String(updatedSubs.length + 12),
             playerName: player.lastName || player.firstName || player.name || ''
-          };
+          });
         }
       });
       
-      set({ starters: newStarters, subs: updatedSubs, saved: false });
+      console.log('Updated substitutes with new players:', updatedSubs.length);
+      set({ 
+        starters: newStarters, 
+        subs: updatedSubs,
+        saved: false 
+      });
       get().saveFormation();
     } else {
       set({ starters: newStarters, subs: newSubs });

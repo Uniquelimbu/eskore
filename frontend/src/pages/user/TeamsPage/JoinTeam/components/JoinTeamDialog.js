@@ -21,16 +21,39 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
           setPlayerExists(true);
         }
       } catch (error) {
-        // If 404, the player doesn't exist, which is fine
         if (error.response?.status !== 404) {
           console.error('Error checking player profile:', error);
         }
-        // Don't set playerExists to true on error
         setPlayerExists(false);
       }
       
-      // Check for pending join requests
+      // Check for pending join requests and team membership
       try {
+        const userResponse = await apiClient.get('/auth/me');
+        const currentUserId = userResponse?.id;
+        
+        if (!currentUserId) {
+          console.warn('Could not determine current user ID');
+          return;
+        }
+        
+        // Check if user is already a member of this team
+        try {
+          const teamResponse = await apiClient.get(`/teams/${team.id}/members`);
+          const isAlreadyMember = teamResponse?.members?.some(
+            member => member.id === currentUserId
+          );
+          
+          if (isAlreadyMember) {
+            console.log('User is already a member of this team');
+            setHasPendingRequest(true); // Prevent further requests
+            return;
+          }
+        } catch (memberError) {
+          console.warn('Could not check team membership:', memberError);
+        }
+        
+        // Check for pending requests
         const notificationsResponse = await apiClient.get('/notifications', {
           params: { status: 'all', limit: 100 }
         });
@@ -40,22 +63,40 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
             notification => 
               notification.type === 'join_request' &&
               notification.teamId === team.id &&
-              notification.status !== 'archived'
+              notification.senderUserId === currentUserId &&
+              (notification.status === 'unread' || notification.status === 'read')
           );
           
           if (pendingRequest) {
+            console.log('Found pending request:', pendingRequest);
             setHasPendingRequest(true);
+            return;
           }
         }
+        
+        console.log('No pending requests found for team', team.id);
+        setHasPendingRequest(false);
+        
       } catch (error) {
         console.error('Error checking pending requests:', error);
-        // Don't block the UI if we can't check
+        console.warn('Could not verify pending requests - user might be able to send duplicate requests');
       } finally {
         setIsLoading(false);
       }
     };
     
     checkPlayerProfile();
+    
+    // Listen for membership changes
+    const handleMembershipChanged = () => {
+      checkPlayerProfile();
+    };
+    
+    window.addEventListener('teamMembershipChanged', handleMembershipChanged);
+    
+    return () => {
+      window.removeEventListener('teamMembershipChanged', handleMembershipChanged);
+    };
   }, [team.id]);
 
   const handleJoinModeSelect = (mode) => {
@@ -77,6 +118,8 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
       });
       
       if (response && response.success) {
+        // Set pending request state immediately
+        setHasPendingRequest(true);
         toast.success('Join request sent successfully! Team managers will review your request.');
         onJoin({ success: true, pendingApproval: true });
       } else {
@@ -119,6 +162,8 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
       });
       
       if (response && response.success) {
+        // Set pending request state immediately
+        setHasPendingRequest(true);
         toast.success('Join request sent successfully! Team managers will review your request.');
         onJoin({ success: true, pendingApproval: true });
       } else {
@@ -138,22 +183,39 @@ const JoinTeamDialog = ({ team, onJoin, onCancel }) => {
     // Provide a more helpful message based on the error
     let errorMessage = 'Failed to send join request.';
     
-    if (error.response) {
-      if (error.response.status === 409) {
-        // Conflict errors
-        if (error.response.data?.code === 'ALREADY_MEMBER') {
+    if (error.response || error.status) {
+      const status = error.response?.status || error.status;
+      const errorData = error.response?.data || error.data || {};
+      const errorCode = errorData.errorCode || errorData.code;
+      
+      if (status === 409) {
+        // Check error codes from backend
+        if (errorCode === 'ALREADY_MEMBER') {
           errorMessage = 'You are already a member of this team.';
-        } else if (error.response.data?.code === 'REQUEST_EXISTS' || error.response.data?.code === 'REQUEST_PENDING') {
-          errorMessage = error.response.data?.message || 'You already have a pending request to join this team.';
-          // This is actually a success case for the user experience
+        } else if (errorCode === 'REQUEST_EXISTS' || errorCode === 'REQUEST_ALREADY_EXISTS') {
+          errorMessage = 'You already have a pending request to join this team.';
+          // Set the pending request state to update UI immediately
+          setHasPendingRequest(true);
           toast.info(errorMessage);
-          onJoin({ success: true, pendingApproval: true });
+          return;
+        } else if (errorCode === 'REQUEST_PENDING') {
+          errorMessage = 'Your join request is still being reviewed by the team managers.';
+          setHasPendingRequest(true);
+          toast.info(errorMessage);
+          return;
+        } else {
+          // Generic 409 error
+          errorMessage = errorData.message || 'A conflict occurred. You may already have a pending request.';
+          setHasPendingRequest(true);
+          toast.info(errorMessage);
           return;
         }
-      } else if (error.response.status === 404) {
+      } else if (status === 404) {
         errorMessage = 'Team not found or has no managers to approve your request.';
-      } else if (error.response.status === 500) {
+      } else if (status === 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
       }
     } else if (error.message) {
       // Network errors or other issues

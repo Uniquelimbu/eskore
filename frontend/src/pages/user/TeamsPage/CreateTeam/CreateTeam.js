@@ -209,6 +209,9 @@ const CreateTeam = () => {
       if (response && response.success) {
         toast.success("Manager profile created successfully!");
         setManagerData(response.manager);
+        
+        // Emit team membership changed event for new team creation
+        window.dispatchEvent(new CustomEvent('teamMembershipChanged'));
       } else {
         console.error('Unexpected response format:', response);
         toast.warn("Team created but manager profile save was incomplete");

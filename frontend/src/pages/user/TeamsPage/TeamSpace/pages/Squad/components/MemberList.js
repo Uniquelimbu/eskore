@@ -28,7 +28,21 @@ const MemberList = ({ members, team, isManager, onMemberUpdate }) => {
     };
 
     fetchJoinRequests();
-  }, [isManager, teamId]);
+
+    // Listen for membership changes
+    const handleMembershipChanged = () => {
+      fetchJoinRequests();
+      if (onMemberUpdate) {
+        onMemberUpdate();
+      }
+    };
+
+    window.addEventListener('teamMembershipChanged', handleMembershipChanged);
+    
+    return () => {
+      window.removeEventListener('teamMembershipChanged', handleMembershipChanged);
+    };
+  }, [isManager, teamId, onMemberUpdate]);
 
   const handleRequestsClick = () => {
     navigate(`/teams/${teamId}/requests`);
