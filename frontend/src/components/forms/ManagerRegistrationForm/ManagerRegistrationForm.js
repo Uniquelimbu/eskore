@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ManagerRegistrationForm.css';
-import { apiClient } from '../../services';
+import { apiClient } from '../../../services';
 
 
 const ManagerRegistrationForm = ({ onSubmit, onCancel, initialValues = {} }) => {
