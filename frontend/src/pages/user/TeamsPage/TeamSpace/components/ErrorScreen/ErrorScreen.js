@@ -67,29 +67,28 @@ const ErrorScreen = memo(({
     validation: {
       icon: '📝',
       title: 'Validation Error',
-      description: 'The provided data is invalid. Please check your inputs.',
+      description: 'There was an issue with the provided data. Please check and try again.',
       retryable: false,
       autoRetry: false
     },
     generic: {
-      icon: '❌',
-      title: 'Something Went Wrong',
-      description: 'An unexpected error occurred. Please try again.',
+      icon: '❗',
+      title: 'Something went wrong',
+      description: 'We encountered an unexpected error. Please try again.',
       retryable: true,
       autoRetry: false
     }
   };
 
+  // Get current error configuration
   const config = errorConfigs[errorType] || errorConfigs.generic;
+  
+  // ✅ FIXED: Define canRetry variable
+  const canRetry = config.retryable && onRetry && retryCount < maxRetries;
 
   // Auto-retry logic
   useEffect(() => {
-    if (autoRetry && 
-        config.autoRetry && 
-        !hasAutoRetried && 
-        retryCount < maxRetries && 
-        onRetry) {
-      
+    if (autoRetry && config.autoRetry && !hasAutoRetried && canRetry) {
       const timer = setTimeout(() => {
         setHasAutoRetried(true);
         handleRetry();
@@ -97,76 +96,55 @@ const ErrorScreen = memo(({
 
       return () => clearTimeout(timer);
     }
-  }, [autoRetry, config.autoRetry, hasAutoRetried, retryCount, maxRetries, onRetry, retryDelay]);
+  }, [autoRetry, config.autoRetry, hasAutoRetried, canRetry, retryDelay]);
 
-  // Retry countdown timer
+  // Track error for analytics
   useEffect(() => {
-    if (isRetrying && retryTimer > 0) {
-      const timer = setTimeout(() => {
-        setRetryTimer(prev => prev - 1);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+    if (trackError && window.gtag) {
+      window.gtag('event', 'error_screen_view', {
+        error_type: errorType,
+        error_message: error?.message || 'Unknown error',
+        retry_count: retryCount,
+        error_id: errorId,
+        can_retry: canRetry
+      });
     }
-  }, [isRetrying, retryTimer]);
-
-  // Error tracking
-  useEffect(() => {
-    if (trackError && error) {
-      const errorData = {
-        error: error.toString(),
-        errorType,
-        errorId,
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        retryCount
-      };
-
-      // Track to analytics
-      if (window.gtag) {
-        window.gtag('event', 'error_displayed', {
-          error_type: errorType,
-          error_id: errorId,
-          retry_count: retryCount
-        });
-      }
-
-      // Log to console in development
-      if (process.env.NODE_ENV === 'development') {
-        console.error('ErrorScreen displayed:', errorData);
-      }
-    }
-  }, [error, errorType, errorId, retryCount, trackError]);
+  }, [trackError, errorType, error, retryCount, errorId, canRetry]);
 
   /**
-   * Handle retry with delay and loading state
+   * Handle retry with loading state and timer
    */
   const handleRetry = useCallback(async () => {
-    if (!onRetry || isRetrying) return;
+    if (!canRetry || isRetrying) return;
 
     setIsRetrying(true);
-    setRetryTimer(Math.ceil(retryDelay / 1000));
-
+    
     // Track retry attempt
     if (trackError && window.gtag) {
-      window.gtag('event', 'error_retry_attempted', {
+      window.gtag('event', 'error_retry_attempt', {
         error_type: errorType,
-        retry_count: retryCount + 1
+        retry_count: retryCount + 1,
+        error_id: errorId
       });
     }
 
     try {
-      // Add artificial delay for better UX
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      if (retryDelay > 0) {
+        // Show countdown timer
+        for (let i = Math.ceil(retryDelay / 1000); i > 0; i--) {
+          setRetryTimer(i);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        setRetryTimer(0);
+      }
+
       await onRetry();
     } catch (retryError) {
       console.error('Retry failed:', retryError);
     } finally {
       setIsRetrying(false);
-      setRetryTimer(0);
     }
-  }, [onRetry, isRetrying, retryDelay, trackError, errorType, retryCount]);
+  }, [canRetry, isRetrying, onRetry, retryDelay, trackError, errorType, retryCount, errorId]);
 
   /**
    * Handle go back action
@@ -174,7 +152,8 @@ const ErrorScreen = memo(({
   const handleGoBack = useCallback(() => {
     if (trackError && window.gtag) {
       window.gtag('event', 'error_go_back', {
-        error_type: errorType
+        error_type: errorType,
+        error_id: errorId
       });
     }
 
@@ -188,28 +167,30 @@ const ErrorScreen = memo(({
         window.location.href = '/teams';
       }
     }
-  }, [onGoBack, trackError, errorType]);
+  }, [onGoBack, trackError, errorType, errorId]);
 
   /**
-   * Get retry button text based on state
+   * Get retry button text with timer
    */
   const getRetryButtonText = () => {
+    if (isRetrying && retryTimer > 0) {
+      return `Retrying in ${retryTimer}s...`;
+    }
     if (isRetrying) {
-      return retryTimer > 0 ? `Retrying in ${retryTimer}s` : 'Retrying...';
+      return 'Retrying...';
     }
-    if (retryCount > 0) {
-      return `Retry (${retryCount}/${maxRetries})`;
-    }
-    return 'Try Again';
+    return retryCount > 0 ? `Retry (${retryCount + 1}/${maxRetries})` : 'Try Again';
   };
 
   /**
    * Render error icon with animation
    */
   const renderErrorIcon = () => (
-    <div className="error-icon-container" role="img" aria-label={`${errorType} error`}>
+    <div className="error-icon-container">
       <div className="error-icon-wrapper">
-        <span className="error-icon">{config.icon}</span>
+        <span className="error-icon" role="img" aria-label={`${errorType} error`}>
+          {config.icon}
+        </span>
         <div className="error-icon-pulse"></div>
       </div>
     </div>
@@ -223,11 +204,9 @@ const ErrorScreen = memo(({
       return <div className="error-actions">{actions}</div>;
     }
 
-    const canRetry = config.retryable && retryCount < maxRetries;
-
     return (
       <div className="error-actions">
-        {canRetry && onRetry && (
+        {canRetry && (
           <button 
             onClick={handleRetry} 
             disabled={isRetrying}
@@ -409,12 +388,12 @@ const ErrorScreen = memo(({
 
         @keyframes pulse {
           0%, 100% {
+            opacity: 0.4;
             transform: translate(-50%, -50%) scale(1);
-            opacity: 0.7;
           }
           50% {
+            opacity: 0.8;
             transform: translate(-50%, -50%) scale(1.1);
-            opacity: 0.3;
           }
         }
 
@@ -426,23 +405,25 @@ const ErrorScreen = memo(({
         .error-title {
           font-size: 1.5rem;
           font-weight: 600;
+          margin-bottom: 16px;
           color: var(--text-light, #e2e8f0);
-          margin-bottom: 12px;
-          line-height: 1.3;
         }
 
         .error-description {
           font-size: 1rem;
+          line-height: 1.6;
+          margin-bottom: 16px;
           color: var(--text-muted, #a0aec0);
-          line-height: 1.5;
-          margin-bottom: 8px;
         }
 
         .error-message {
           font-size: 0.9rem;
           color: var(--danger-color, #e53e3e);
-          font-weight: 500;
+          background-color: rgba(229, 62, 62, 0.1);
+          padding: 12px;
+          border-radius: 6px;
           margin-bottom: 16px;
+          border: 1px solid rgba(229, 62, 62, 0.2);
         }
 
         .error-id {

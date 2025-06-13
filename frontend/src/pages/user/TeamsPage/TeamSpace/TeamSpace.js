@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams, useLocation, Outlet } from 'react-router-dom';
 import { useTeam } from '../../../../contexts/TeamContext';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { TeamSpaceProvider, useTeamSpace } from './contexts/TeamSpaceContext';
+// ✅ ADD: Import breadcrumb component
+import { TeamSpaceBreadcrumb } from './components';
 import { autoCollapseSidebarForPath } from '../../../../utils/sidebarUtils';
 import './styles/index.css';
 
@@ -33,7 +35,17 @@ const TeamSpaceContent = () => {
   } = useTeamSpace();
 
   // Check if we're on the base team space path
-  const isBasePath = location.pathname === `/teams/${teamId}/space`;
+  const isBasePath = useMemo(() => 
+    location.pathname === `/teams/${teamId}/space`, 
+    [location.pathname, teamId]
+  );
+
+  // Get current page from path
+  const currentPage = useMemo(() => {
+    const pathSegments = location.pathname.split('/');
+    const spaceIndex = pathSegments.findIndex(segment => segment === 'space');
+    return spaceIndex >= 0 ? pathSegments[spaceIndex + 1] : null;
+  }, [location.pathname]);
 
   // Handle sidebar auto-collapse for specific paths
   useEffect(() => {
@@ -86,9 +98,7 @@ const TeamSpaceContent = () => {
   const refreshTeamData = async () => {
     try {
       setLoading(true);
-      console.log('TeamSpace: Refreshing team data');
       await refreshCurrentTeam();
-      console.log('TeamSpace: Team data refreshed successfully');
       clearError();
     } catch (error) {
       console.error('TeamSpace: Error refreshing team data:', error);
@@ -97,18 +107,18 @@ const TeamSpaceContent = () => {
     }
   };
 
+  // Loading state
+  const isLoading = teamLoading || localLoading;
+
   // Context value for child components
   const contextValue = {
-    team: currentTeam,
+    currentTeam,
     isManager,
-    refreshTeam: refreshTeamData,
     teamMembers,
-    loading: teamLoading || localLoading,
-    error: teamError || (hasError ? 'Team system error' : null)
+    isLoading,
+    refreshTeamData,
+    currentPage
   };
-
-  // Combined loading state
-  const isLoading = teamLoading || localLoading;
 
   // Show loading state
   if (isLoading && !currentTeam) {
@@ -117,7 +127,8 @@ const TeamSpaceContent = () => {
         <div className="team-space-container" style={{ paddingTop: 0 }}>
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p>Loading team data...</p>
+            <h3>Loading TeamSpace...</h3>
+            <p>Setting up your team workspace</p>
           </div>
         </div>
       </div>
@@ -144,6 +155,30 @@ const TeamSpaceContent = () => {
   return (
     <div className="team-space-layout">
       <div className="team-space-container" style={{ paddingTop: 0 }}>
+        {/* ✅ ADD: Enhanced Breadcrumb Navigation */}
+        <TeamSpaceBreadcrumb 
+          team={currentTeam}
+          showTeamLogo={true}
+          showIcons={true}
+          trackNavigation={true}
+          enableKeyboardNavigation={true}
+          maxItems={window.innerWidth < 768 ? 3 : 5}
+          collapsible={true}
+          className="team-space-main-breadcrumb"
+          onNavigate={(item, index) => {
+            // Track breadcrumb usage
+            if (window.gtag) {
+              window.gtag('event', 'breadcrumb_navigation', {
+                item_label: item.label,
+                item_path: item.path,
+                team_id: currentTeam?.id,
+                user_role: isManager ? 'manager' : 'member'
+              });
+            }
+            return true; // Allow default navigation
+          }}
+        />
+
         {/* Team Header - Only show on dashboard (isBasePath) */}
         {isBasePath && currentTeam && (
           <div className="team-space-header">

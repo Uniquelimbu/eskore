@@ -1,11 +1,11 @@
 import React, { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTeamSpace } from '../contexts/TeamSpaceContext';
-import { useTeam } from '../../../../../contexts/TeamContext';
-import TeamSpaceBreadcrumb from './TeamSpaceBreadcrumb';
-import LoadingScreen from './LoadingScreen';
-import ErrorScreen from './ErrorScreen';
+import { useTeamSpace } from '../../contexts/TeamSpaceContext';
+import { useTeam } from '../../../../../../contexts/TeamContext';
+import TeamSpaceBreadcrumb from '../Breadcrumb/TeamSpaceBreadcrumb';
+import LoadingScreen from '../LoadingScreen/LoadingScreen';
+import ErrorScreen from '../ErrorScreen/ErrorScreen';
 
 /**
  * Industry-standard Layout Component for TeamSpace
@@ -240,13 +240,31 @@ const TeamSpaceLayout = memo(({
 
   return (
     <div className={containerClasses}>
-      {/* Breadcrumb Navigation */}
+    {/* ✅ ENHANCED: Better breadcrumb integration */}
       {showBreadcrumb && (
         <div className="breadcrumb-section">
           <TeamSpaceBreadcrumb 
             team={currentTeam}
             showTeamLogo={true}
             showIcons={true}
+            trackNavigation={true}
+            enableKeyboardNavigation={true}
+            // ✅ ADD: Better responsive behavior
+            maxItems={5}
+            collapsible={true}
+            hideOnSingleItem={false}
+            // ✅ ADD: Custom navigation handler
+            onNavigate={(item, index) => {
+              // Track breadcrumb usage
+              if (window.gtag) {
+                window.gtag('event', 'breadcrumb_navigation', {
+                  item_label: item.label,
+                  item_path: item.path,
+                  team_id: currentTeam?.id
+                });
+              }
+              return true; // Allow default navigation
+            }}
           />
         </div>
       )}

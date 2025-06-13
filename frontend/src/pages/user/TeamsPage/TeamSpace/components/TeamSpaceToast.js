@@ -891,6 +891,8 @@ TeamSpaceToastContainer.propTypes = {
   onRemove: PropTypes.func
 };
 
+// ✅ FIXED: Add missing exports at the end of the file
+
 // Toast Manager Hook
 export const useTeamSpaceToast = () => {
   const [toasts, setToasts] = useState([]);
@@ -953,30 +955,64 @@ export const useTeamSpaceToast = () => {
   };
 };
 
+// ✅ FIXED: Add missing exports
+export const ToastProvider = TeamSpaceToastContainer;
+export const ToastContainer = TeamSpaceToastContainer;
+
+// Global toast management functions
+let globalToastManager = null;
+
+export const showToast = (config) => {
+  if (globalToastManager) {
+    return globalToastManager.addToast(config);
+  }
+  console.warn('Toast manager not initialized. Use ToastProvider first.');
+  return null;
+};
+
+export const hideToast = (id) => {
+  if (globalToastManager) {
+    return globalToastManager.removeToast(id);
+  }
+  console.warn('Toast manager not initialized. Use ToastProvider first.');
+};
+
+export const clearAllToasts = () => {
+  if (globalToastManager) {
+    return globalToastManager.clearAllToasts();
+  }
+  console.warn('Toast manager not initialized. Use ToastProvider first.');
+};
+
+// Set global toast manager
+export const setGlobalToastManager = (manager) => {
+  globalToastManager = manager;
+};
+
 // Convenience toast functions
 export const showSuccessToast = (message, options = {}) => {
-  return { type: 'success', message, ...options };
+  return showToast({ type: 'success', message, ...options });
 };
 
 export const showErrorToast = (message, options = {}) => {
-  return { type: 'error', message, persistent: true, ...options };
+  return showToast({ type: 'error', message, persistent: true, ...options });
 };
 
 export const showWarningToast = (message, options = {}) => {
-  return { type: 'warning', message, ...options };
+  return showToast({ type: 'warning', message, ...options });
 };
 
 export const showInfoToast = (message, options = {}) => {
-  return { type: 'info', message, ...options };
+  return showToast({ type: 'info', message, ...options });
 };
 
 export const showLoadingToast = (message, options = {}) => {
-  return { 
+  return showToast({ 
     type: 'loading', 
     message, 
     persistent: true, 
     dismissible: false, 
     showProgress: false,
     ...options 
-  };
+  });
 };

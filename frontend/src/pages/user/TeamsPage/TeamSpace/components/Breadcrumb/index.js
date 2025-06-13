@@ -97,7 +97,12 @@ export {
   ToastContainer,
   showToast,
   hideToast,
-  clearAllToasts
+  clearAllToasts,
+  showSuccessToast,
+  showErrorToast,
+  showWarningToast,
+  showInfoToast,
+  showLoadingToast
 } from './TeamSpaceToast';
 
 // ============================================================================
@@ -115,7 +120,6 @@ export * from './ErrorScreen/ErrorScreen';
 export * from './Layout/TeamSpaceLayout';
 export * from './Breadcrumb/TeamSpaceBreadcrumb';
 export * from './Modal/ConfirmationModal';
-export * from './TeamSpaceToast';
 
 // ============================================================================
 // COMPONENT COLLECTIONS
@@ -286,22 +290,13 @@ export const COMPONENT_CATEGORIES = {
 
 /**
  * Get Component by Name
- * Utility function to dynamically retrieve components
- * @param {string} componentName - Name of the component to retrieve
- * @returns {React.Component|null} The requested component or null if not found
+ * @param {string} componentName - Name of the component
+ * @returns {React.Component|null} Component or null if not found
  */
 export const getComponent = (componentName) => {
   const components = {
-    // Core Components
     TeamSpaceErrorBoundary: require('./ErrorBoundary/TeamSpaceErrorBoundary').default,
     LoadingScreen: require('./LoadingScreen/LoadingScreen').default,
-    ErrorScreen: require('./ErrorScreen/ErrorScreen').default,
-    TeamSpaceLayout: require('./Layout/TeamSpaceLayout').default,
-    TeamSpaceBreadcrumb: require('./Breadcrumb/TeamSpaceBreadcrumb').default,
-    ConfirmationModal: require('./Modal/ConfirmationModal').default,
-    TeamSpaceToast: require('./TeamSpaceToast').default,
-    
-    // Specialized Components
     TeamSpaceLoading: require('./LoadingScreen/LoadingScreen').TeamSpaceLoading,
     TeamDataLoading: require('./LoadingScreen/LoadingScreen').TeamDataLoading,
     FormationLoading: require('./LoadingScreen/LoadingScreen').FormationLoading,
@@ -317,7 +312,8 @@ export const getComponent = (componentName) => {
     SplitLayout: require('./Layout/TeamSpaceLayout').SplitLayout,
     DangerConfirmationModal: require('./Modal/ConfirmationModal').DangerConfirmationModal,
     WarningConfirmationModal: require('./Modal/ConfirmationModal').WarningConfirmationModal,
-    SuccessConfirmationModal: require('./Modal/ConfirmationModal').SuccessConfirmationModal
+    SuccessConfirmationModal: require('./Modal/ConfirmationModal').SuccessConfirmationModal,
+    TeamSpaceBreadcrumb: require('./Breadcrumb/TeamSpaceBreadcrumb').default
   };
   
   return components[componentName] || null;
@@ -325,37 +321,23 @@ export const getComponent = (componentName) => {
 
 /**
  * Get Components by Category
- * Utility function to retrieve all components in a specific category
  * @param {string} category - Category name
- * @returns {Object} Object containing all components in the category
+ * @returns {Array} Array of component names in the category
  */
 export const getComponentsByCategory = (category) => {
-  const categoryComponents = COMPONENT_CATEGORIES[category];
-  if (!categoryComponents) return {};
-  
-  const components = {};
-  categoryComponents.forEach(componentName => {
-    const component = getComponent(componentName);
-    if (component) {
-      components[componentName] = component;
-    }
-  });
-  
-  return components;
+  return COMPONENT_CATEGORIES[category] || [];
 };
 
 /**
- * List Available Components
- * Utility function to get a list of all available components
- * @returns {string[]} Array of component names
+ * List all available components
+ * @returns {Array} Array of all component names
  */
 export const listAvailableComponents = () => {
   return Object.keys(COMPONENT_REGISTRY);
 };
 
 /**
- * Get Component Info
- * Utility function to get metadata about a specific component
+ * Get component information
  * @param {string} componentName - Name of the component
  * @returns {Object|null} Component metadata or null if not found
  */
@@ -363,69 +345,26 @@ export const getComponentInfo = (componentName) => {
   return COMPONENT_REGISTRY[componentName] || null;
 };
 
-// ============================================================================
-// DEVELOPMENT UTILITIES
-// ============================================================================
-
 /**
- * Component Development Helper
- * Provides development-time utilities for component testing and debugging
+ * Development Utilities
  */
 export const DevUtils = {
-  /**
-   * Validate Component Props
-   * Development helper to validate component props
-   */
-  validateProps: (componentName, props) => {
-    if (process.env.NODE_ENV !== 'development') return;
-    
-    const componentInfo = getComponentInfo(componentName);
-    if (!componentInfo) {
-      console.warn(`DevUtils: Unknown component "${componentName}"`);
-      return;
-    }
-    
-    const missingProps = componentInfo.props.filter(prop => 
-      prop.required && !(prop in props)
-    );
-    
-    if (missingProps.length > 0) {
-      console.warn(`DevUtils: Missing required props for ${componentName}:`, missingProps);
-    }
-  },
-  
-  /**
-   * List Component Categories
-   */
-  listCategories: () => Object.keys(COMPONENT_CATEGORIES),
-  
-  /**
-   * Component Usage Statistics
-   */
-  getUsageStats: () => ({
-    totalComponents: Object.keys(COMPONENT_REGISTRY).length,
-    categories: Object.keys(COMPONENT_CATEGORIES).length,
-    coreComponents: COMPONENT_CATEGORIES['Error Management'].length + 
-                   COMPONENT_CATEGORIES['Loading States'].length + 
-                   COMPONENT_CATEGORIES['Layout'].length,
-    uiComponents: COMPONENT_CATEGORIES['UI Interaction'].length + 
-                  COMPONENT_CATEGORIES['Navigation'].length
-  })
+  COMPONENT_REGISTRY,
+  COMPONENT_CATEGORIES,
+  getComponent,
+  getComponentsByCategory,
+  listAvailableComponents,
+  getComponentInfo
 };
 
-// ============================================================================
-// VERSION INFORMATION
-// ============================================================================
-
 /**
- * Module Version Information
+ * Version Information
  */
 export const VERSION_INFO = {
   version: '1.0.0',
   buildDate: new Date().toISOString(),
   components: Object.keys(COMPONENT_REGISTRY).length,
-  lastUpdated: '2024-06-13',
-  author: 'TeamSpace Development Team'
+  categories: Object.keys(COMPONENT_CATEGORIES).length
 };
 
 // ============================================================================
@@ -433,8 +372,7 @@ export const VERSION_INFO = {
 // ============================================================================
 
 /**
- * Default Export
- * Provides the most commonly used components for quick access
+ * Default export containing the most commonly used components
  */
 const TeamSpaceComponents = {
   // Most commonly used components
@@ -473,48 +411,9 @@ export default TeamSpaceComponents;
 // Development-time logging
 if (process.env.NODE_ENV === 'development') {
   console.group('🏗️ TeamSpace Components Module Loaded');
-  console.log('📦 Version:', VERSION_INFO.version);
-  console.log('🧩 Total Components:', Object.keys(COMPONENT_REGISTRY).length);
-  console.log('📂 Categories:', Object.keys(COMPONENT_CATEGORIES).length);
-  console.log('🔧 Development utilities available via DevUtils');
+  console.log('📦 Available Components:', Object.keys(COMPONENT_REGISTRY).length);
+  console.log('📁 Component Categories:', Object.keys(COMPONENT_CATEGORIES).length);
+  console.log('🔧 Development Utils:', Object.keys(DevUtils).length);
+  console.log('📋 Version:', VERSION_INFO.version);
   console.groupEnd();
 }
-
-// ============================================================================
-// TYPE DEFINITIONS (for TypeScript support)
-// ============================================================================
-
-/**
- * Type definitions for better IDE support
- * These will be useful when migrating to TypeScript
- */
-
-/*
-// Uncomment when migrating to TypeScript
-
-export interface ComponentInfo {
-  category: string;
-  description: string;
-  props: string[];
-  version: string;
-}
-
-export interface ComponentRegistry {
-  [componentName: string]: ComponentInfo;
-}
-
-export interface ComponentCategories {
-  [categoryName: string]: string[];
-}
-
-export interface VersionInfo {
-  version: string;
-  buildDate: string;
-  components: number;
-  lastUpdated: string;
-  author: string;
-}
-
-export type ComponentName = keyof typeof COMPONENT_REGISTRY;
-export type CategoryName = keyof typeof COMPONENT_CATEGORIES;
-*/
