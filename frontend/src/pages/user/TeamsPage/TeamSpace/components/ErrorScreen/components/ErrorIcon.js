@@ -1,45 +1,71 @@
 /**
  * ErrorIcon Component
- * Displays animated error icons with customizable styling
+ * Displays contextual icons for different error types with animations
  */
 
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
-import { ERROR_TYPES, ERROR_ICONS, ERROR_COLORS } from '../constants';
+import { ERROR_TYPES } from '../constants';
+import './ErrorIcon.css';
 
 /**
- * ErrorIcon component with animation and customization
+ * ErrorIcon component for displaying error type specific icons
  */
 const ErrorIcon = memo(({
   errorType = ERROR_TYPES.GENERIC,
-  size = 'default',
+  size = 'large',
   animated = true,
-  customIcon = null,
-  customColor = null,
+  className = '',
   ariaLabel = null,
-  className = ""
+  showPulse = false,
+  color = null
 }) => {
-  // Get icon and color from configuration
-  const icon = customIcon || ERROR_ICONS[errorType] || ERROR_ICONS[ERROR_TYPES.GENERIC];
-  const color = customColor || ERROR_COLORS[errorType] || ERROR_COLORS[ERROR_TYPES.GENERIC];
-  
-  // Size configurations
-  const sizeConfig = {
-    small: '2.5rem',
-    default: '4rem',
-    large: '5rem'
+  // Icon mapping for different error types
+  const iconMap = {
+    [ERROR_TYPES.NETWORK]: '🌐',
+    [ERROR_TYPES.PERMISSION]: '🔒',
+    [ERROR_TYPES.NOT_FOUND]: '❓',
+    [ERROR_TYPES.SERVER]: '⚠️',
+    [ERROR_TYPES.TIMEOUT]: '⏱️',
+    [ERROR_TYPES.VALIDATION]: '✏️',
+    [ERROR_TYPES.AUTHENTICATION]: '🔐',
+    [ERROR_TYPES.RATE_LIMIT]: '🚦',
+    [ERROR_TYPES.GENERIC]: '❌'
   };
-  
-  const iconSize = sizeConfig[size] || sizeConfig.default;
-  
-  // Generate aria label
+
+  // Color mapping for different error types
+  const colorMap = {
+    [ERROR_TYPES.NETWORK]: '#4299e1',
+    [ERROR_TYPES.PERMISSION]: '#ed8936',
+    [ERROR_TYPES.NOT_FOUND]: '#a0aec0',
+    [ERROR_TYPES.SERVER]: '#e53e3e',
+    [ERROR_TYPES.TIMEOUT]: '#d69e2e',
+    [ERROR_TYPES.VALIDATION]: '#9f7aea',
+    [ERROR_TYPES.AUTHENTICATION]: '#38b2ac',
+    [ERROR_TYPES.RATE_LIMIT]: '#f56565',
+    [ERROR_TYPES.GENERIC]: '#718096'
+  };
+
+  // Size mapping
+  const sizeMap = {
+    small: '2rem',
+    medium: '3rem',
+    large: '4rem',
+    xlarge: '5rem'
+  };
+
+  const icon = iconMap[errorType] || iconMap[ERROR_TYPES.GENERIC];
+  const iconColor = color || colorMap[errorType] || colorMap[ERROR_TYPES.GENERIC];
+  const iconSize = sizeMap[size] || sizeMap.large;
   const label = ariaLabel || `${errorType} error icon`;
-  
+
   // Container classes
   const containerClasses = [
     'error-icon-container',
     `error-icon-${size}`,
+    `error-icon-${errorType}`,
     animated ? 'error-icon-animated' : '',
+    showPulse ? 'error-icon-pulse' : '',
     className
   ].filter(Boolean).join(' ');
 
@@ -52,130 +78,21 @@ const ErrorIcon = memo(({
           aria-label={label}
           style={{ 
             fontSize: iconSize,
-            color: color
+            color: iconColor 
           }}
         >
           {icon}
         </span>
-        {animated && <div className="error-icon-pulse" style={{ color: color }}></div>}
+        
+        {/* Pulse rings for animation effect */}
+        {showPulse && (
+          <>
+            <div className="error-icon-pulse-ring"></div>
+            <div className="error-icon-pulse-ring"></div>
+            <div className="error-icon-pulse-ring"></div>
+          </>
+        )}
       </div>
-
-      {/* Icon Styles */}
-      <style jsx>{`
-        .error-icon-container {
-          margin-bottom: 24px;
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .error-icon-wrapper {
-          position: relative;
-          display: inline-block;
-        }
-
-        .error-icon {
-          display: block;
-          filter: grayscale(0.2);
-          transition: all 0.3s ease;
-        }
-
-        .error-icon-animated .error-icon {
-          animation: iconFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes iconFloat {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        .error-icon-pulse {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 120%;
-          height: 120%;
-          background: radial-gradient(circle, currentColor 0%, transparent 70%);
-          border-radius: 50%;
-          opacity: 0.3;
-          transform: translate(-50%, -50%);
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.2;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          50% {
-            opacity: 0.4;
-            transform: translate(-50%, -50%) scale(1.1);
-          }
-        }
-
-        /* Size variations */
-        .error-icon-small {
-          margin-bottom: 16px;
-        }
-
-        .error-icon-large {
-          margin-bottom: 32px;
-        }
-
-        /* Hover effects */
-        .error-icon-container:hover .error-icon {
-          filter: grayscale(0);
-          transform: scale(1.05);
-        }
-
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-          .error-icon,
-          .error-icon-pulse {
-            animation: none;
-          }
-          
-          .error-icon-container:hover .error-icon {
-            transform: none;
-          }
-        }
-
-        /* High contrast mode */
-        @media (prefers-contrast: high) {
-          .error-icon {
-            filter: none;
-            border: 2px solid currentColor;
-            border-radius: 50%;
-            padding: 8px;
-          }
-          
-          .error-icon-pulse {
-            display: none;
-          }
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-          .error-icon-container {
-            margin-bottom: 20px;
-          }
-          
-          .error-icon {
-            font-size: calc(${iconSize} * 0.8) !important;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .error-icon {
-            font-size: calc(${iconSize} * 0.7) !important;
-          }
-        }
-      `}</style>
     </div>
   );
 });
@@ -183,15 +100,15 @@ const ErrorIcon = memo(({
 // Display name for debugging
 ErrorIcon.displayName = 'ErrorIcon';
 
-// PropTypes
+// PropTypes validation
 ErrorIcon.propTypes = {
   errorType: PropTypes.oneOf(Object.values(ERROR_TYPES)),
-  size: PropTypes.oneOf(['small', 'default', 'large']),
+  size: PropTypes.oneOf(['small', 'medium', 'large', 'xlarge']),
   animated: PropTypes.bool,
-  customIcon: PropTypes.string,
-  customColor: PropTypes.string,
+  className: PropTypes.string,
   ariaLabel: PropTypes.string,
-  className: PropTypes.string
+  showPulse: PropTypes.bool,
+  color: PropTypes.string
 };
 
 export default ErrorIcon;

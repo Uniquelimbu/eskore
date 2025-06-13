@@ -1,0 +1,323 @@
+/* ============================================================================ */
+/* TEAMSPACE LAYOUT - MAIN STYLES */
+/* ============================================================================ */
+
+/* Base Layout Container */
+.team-space-layout-wrapper {
+  min-height: 100vh;
+  background-color: var(--bg-dark, #1a202c);
+  color: var(--text-light, #e2e8f0);
+  position: relative;
+}
+
+/* Background Variants */
+.background-transparent {
+  background-color: transparent;
+}
+
+.background-card {
+  background-color: var(--card-bg, #232b3a);
+  border-radius: 12px;
+  margin: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================================================ */
+/* LAYOUT VARIANTS */
+/* ============================================================================ */
+
+.layout-default {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.layout-centered {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.layout-split {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.layout-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Full width variant */
+.full-width .layout-default,
+.full-width .layout-centered,
+.full-width .layout-split,
+.full-width .layout-dashboard {
+  max-width: 100%;
+}
+
+/* ============================================================================ */
+/* SPACING VARIANTS */
+/* ============================================================================ */
+
+.spacing-compact {
+  padding: 0 12px;
+}
+
+.spacing-compact .layout-content {
+  padding: 16px 0;
+}
+
+.spacing-default .layout-content {
+  padding: 24px 0;
+}
+
+.spacing-spacious .layout-content {
+  padding: 40px 0;
+}
+
+/* ============================================================================ */
+/* BREADCRUMB SECTION */
+/* ============================================================================ */
+
+.breadcrumb-section {
+  padding: 16px 0 0 0;
+}
+
+/* ============================================================================ */
+/* TEAM INFO SECTION */
+/* ============================================================================ */
+
+.team-info-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border-color, #2d3748);
+  margin-bottom: 24px;
+}
+
+.team-logo-container {
+  position: relative;
+}
+
+.team-logo-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--border-color, #2d3748);
+}
+
+.team-logo-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-color, #4a6cf7), var(--primary-dark, #3a5bd9));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: white;
+  border: 2px solid var(--border-color, #2d3748);
+}
+
+.team-details {
+  flex: 1;
+}
+
+.team-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text-light, #e2e8f0);
+}
+
+.team-location {
+  font-size: 1rem;
+  color: var(--text-muted, #a0aec0);
+  margin: 0 0 8px 0;
+}
+
+.user-role-badge {
+  display: inline-block;
+  background-color: var(--primary-color, #4a6cf7);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================ */
+/* HEADER SECTION */
+/* ============================================================================ */
+
+.layout-header {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border-color, #2d3748);
+  margin-bottom: 32px;
+  transition: all 0.3s ease;
+}
+
+.layout-header.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--bg-dark, #1a202c);
+  backdrop-filter: blur(8px);
+}
+
+.layout-header.scrolled {
+  border-bottom-color: var(--primary-color, #4a6cf7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.header-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.page-title-section {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text-light, #e2e8f0);
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted, #a0aec0);
+  margin: 0;
+}
+
+.page-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================================ */
+/* MAIN CONTENT */
+/* ============================================================================ */
+
+.layout-content {
+  flex: 1;
+  width: 100%;
+}
+
+/* ============================================================================ */
+/* SCROLL TO TOP BUTTON */
+/* ============================================================================ */
+
+.scroll-to-top-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  background-color: var(--primary-color, #4a6cf7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-to-top-btn:hover {
+  background-color: var(--primary-dark, #3a5bd9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(74, 108, 247, 0.4);
+}
+
+.scroll-to-top-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================================================ */
+/* ACCESSIBILITY & PRINT STYLES */
+/* ============================================================================ */
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .layout-header {
+    border-bottom-width: 2px;
+  }
+
+  .team-info-section {
+    border-bottom-width: 2px;
+  }
+
+  .scroll-to-top-btn {
+    border: 2px solid #ffffff;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .layout-header,
+  .scroll-to-top-btn {
+    transition: none;
+  }
+
+  .scroll-to-top-btn:hover,
+  .scroll-to-top-btn:active {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .scroll-to-top-btn,
+  .breadcrumb-section {
+    display: none;
+  }
+
+  .layout-header {
+    position: static;
+    box-shadow: none;
+    border-bottom: 1px solid #000;
+  }
+
+  .team-space-layout-wrapper {
+    background-color: transparent;
+  }
+}

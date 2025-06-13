@@ -1,0 +1,150 @@
+/* ============================================================================ */
+/* TEAMSPACE LAYOUT - RESPONSIVE STYLES */
+/* ============================================================================ */
+
+/* Tablet and below (992px) */
+@media (max-width: 992px) {
+  .layout-split {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .layout-default,
+  .layout-centered,
+  .layout-dashboard {
+    padding: 0 16px;
+  }
+
+  .team-info-section {
+    padding: 16px 0;
+  }
+
+  .team-logo-img,
+  .team-logo-placeholder {
+    width: 56px;
+    height: 56px;
+  }
+
+  .team-name {
+    font-size: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Mobile landscape and below (768px) */
+@media (max-width: 768px) {
+  .layout-header {
+    padding: 20px 0;
+    margin-bottom: 24px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-main {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .page-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .team-info-section {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .team-details {
+    width: 100%;
+  }
+
+  .scroll-to-top-btn {
+    bottom: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Mobile portrait and below (576px) */
+@media (max-width: 576px) {
+  .layout-default,
+  .layout-centered,
+  .layout-dashboard {
+    padding: 0 12px;
+  }
+
+  .breadcrumb-section {
+    padding: 12px 0 0 0;
+  }
+
+  .layout-header {
+    padding: 16px 0;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .team-logo-img,
+  .team-logo-placeholder {
+    width: 48px;
+    height: 48px;
+  }
+
+  .team-name {
+    font-size: 1.3rem;
+  }
+
+  .scroll-to-top-btn {
+    width: 40px;
+    height: 40px;
+    bottom: 12px;
+    right: 12px;
+  }
+}
+
+/* Very small screens (480px) */
+@media (max-width: 480px) {
+  .spacing-compact,
+  .spacing-default,
+  .spacing-spacious {
+    padding: 0 8px;
+  }
+
+  .team-info-section {
+    padding: 12px 0;
+    margin-bottom: 16px;
+  }
+
+  .layout-header {
+    padding: 12px 0;
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+  }
+
+  .user-role-badge {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+}

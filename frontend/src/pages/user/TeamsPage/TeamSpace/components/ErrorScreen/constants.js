@@ -33,7 +33,7 @@ export const ERROR_ICONS = {
   [ERROR_TYPES.VALIDATION]: '📝',
   [ERROR_TYPES.GENERIC]: '❗',
   [ERROR_TYPES.AUTHENTICATION]: '🔐',
-  [ERROR_TYPES.RATE_LIMIT]: '🚦',
+  [ERROR_TYPES.RATE_LIMIT]: '⏸️',
   [ERROR_TYPES.MAINTENANCE]: '🔧'
 };
 
@@ -49,26 +49,106 @@ export const ERROR_COLORS = {
   [ERROR_TYPES.TIMEOUT]: '#d69e2e',
   [ERROR_TYPES.VALIDATION]: '#9f7aea',
   [ERROR_TYPES.GENERIC]: '#718096',
-  [ERROR_TYPES.AUTHENTICATION]: '#e53e3e',
-  [ERROR_TYPES.RATE_LIMIT]: '#d69e2e',
+  [ERROR_TYPES.AUTHENTICATION]: '#38b2ac',
+  [ERROR_TYPES.RATE_LIMIT]: '#f56565',
   [ERROR_TYPES.MAINTENANCE]: '#4299e1'
 };
 
 // ============================================================================
-// DEFAULT CONFIGURATIONS
+// DEFAULT ERROR CONFIGURATION
 // ============================================================================
 
 export const DEFAULT_ERROR_CONFIG = {
-  maxRetries: 3,
-  retryDelay: 1000,
-  autoRetry: false,
-  showDetails: process.env.NODE_ENV === 'development',
-  trackError: true,
-  fullScreen: true,
-  enableKeyboardNavigation: true,
-  showRetryCount: true,
-  showErrorId: true,
-  enableAnalytics: true
+  [ERROR_TYPES.NETWORK]: {
+    title: 'Connection Error',
+    description: 'Unable to connect to the server. Please check your internet connection.',
+    actionText: 'Try Again',
+    severity: 'medium',
+    category: 'connectivity',
+    retryable: true,
+    autoRetry: false
+  },
+  [ERROR_TYPES.PERMISSION]: {
+    title: 'Access Denied',
+    description: 'You don\'t have permission to access this resource.',
+    actionText: 'Go Back',
+    severity: 'high',
+    category: 'authorization',
+    retryable: false,
+    autoRetry: false
+  },
+  [ERROR_TYPES.NOT_FOUND]: {
+    title: 'Not Found',
+    description: 'The requested resource could not be found.',
+    actionText: 'Go Back',
+    severity: 'low',
+    category: 'client',
+    retryable: false,
+    autoRetry: false
+  },
+  [ERROR_TYPES.SERVER]: {
+    title: 'Server Error',
+    description: 'An internal server error occurred. Please try again later.',
+    actionText: 'Try Again',
+    severity: 'high',
+    category: 'server',
+    retryable: true,
+    autoRetry: true
+  },
+  [ERROR_TYPES.TIMEOUT]: {
+    title: 'Request Timeout',
+    description: 'The request took too long to complete. Please try again.',
+    actionText: 'Try Again',
+    severity: 'medium',
+    category: 'connectivity',
+    retryable: true,
+    autoRetry: false
+  },
+  [ERROR_TYPES.VALIDATION]: {
+    title: 'Validation Error',
+    description: 'The submitted data contains errors. Please check and try again.',
+    actionText: 'Try Again',
+    severity: 'medium',
+    category: 'client',
+    retryable: true,
+    autoRetry: false
+  },
+  [ERROR_TYPES.AUTHENTICATION]: {
+    title: 'Authentication Required',
+    description: 'You need to sign in to access this feature.',
+    actionText: 'Sign In',
+    severity: 'medium',
+    category: 'authorization',
+    retryable: false,
+    autoRetry: false
+  },
+  [ERROR_TYPES.RATE_LIMIT]: {
+    title: 'Too Many Requests',
+    description: 'You\'ve made too many requests. Please wait a moment.',
+    actionText: 'Wait',
+    severity: 'medium',
+    category: 'server',
+    retryable: true,
+    autoRetry: true
+  },
+  [ERROR_TYPES.MAINTENANCE]: {
+    title: 'Maintenance Mode',
+    description: 'The system is currently under maintenance. Please try again later.',
+    actionText: 'Check Status',
+    severity: 'low',
+    category: 'server',
+    retryable: true,
+    autoRetry: true
+  },
+  [ERROR_TYPES.GENERIC]: {
+    title: 'Something went wrong',
+    description: 'We encountered an unexpected error. Please try again or contact support.',
+    actionText: 'Try Again',
+    severity: 'medium',
+    category: 'unknown',
+    retryable: true,
+    autoRetry: false
+  }
 };
 
 // ============================================================================
@@ -80,25 +160,50 @@ export const RETRY_CONFIGS = {
     maxRetries: 5,
     retryDelay: 2000,
     autoRetry: true,
-    backoffMultiplier: 1.5
+    backoffMultiplier: 1.5,
+    maxRetryDelay: 10000
   },
   [ERROR_TYPES.SERVER]: {
     maxRetries: 3,
-    retryDelay: 5000,
+    retryDelay: 3000,
     autoRetry: true,
-    backoffMultiplier: 2
+    backoffMultiplier: 2,
+    maxRetryDelay: 15000
   },
   [ERROR_TYPES.TIMEOUT]: {
     maxRetries: 3,
-    retryDelay: 3000,
+    retryDelay: 1000,
     autoRetry: false,
-    backoffMultiplier: 1.2
+    backoffMultiplier: 1.5,
+    maxRetryDelay: 5000
+  },
+  [ERROR_TYPES.VALIDATION]: {
+    maxRetries: 2,
+    retryDelay: 500,
+    autoRetry: false,
+    backoffMultiplier: 1,
+    maxRetryDelay: 500
   },
   [ERROR_TYPES.RATE_LIMIT]: {
     maxRetries: 1,
     retryDelay: 60000,
     autoRetry: true,
-    backoffMultiplier: 1
+    backoffMultiplier: 1,
+    maxRetryDelay: 60000
+  },
+  [ERROR_TYPES.MAINTENANCE]: {
+    maxRetries: 10,
+    retryDelay: 30000,
+    autoRetry: true,
+    backoffMultiplier: 1,
+    maxRetryDelay: 30000
+  },
+  [ERROR_TYPES.GENERIC]: {
+    maxRetries: 3,
+    retryDelay: 1000,
+    autoRetry: false,
+    backoffMultiplier: 1.5,
+    maxRetryDelay: 5000
   }
 };
 
@@ -172,58 +277,62 @@ export const A11Y_CONFIG = {
 // ============================================================================
 
 export const ANALYTICS_EVENTS = {
-  ERROR_DISPLAYED: 'error_screen_displayed',
-  RETRY_ATTEMPTED: 'error_retry_attempted',
-  RETRY_SUCCEEDED: 'error_retry_succeeded',
-  RETRY_FAILED: 'error_retry_failed',
-  GO_BACK_CLICKED: 'error_go_back_clicked',
-  DETAILS_VIEWED: 'error_details_viewed',
-  ERROR_REPORTED: 'error_reported',
-  AUTO_RETRY_TRIGGERED: 'error_auto_retry_triggered'
+  ERROR_DISPLAYED: 'error_displayed',
+  ERROR_DISMISSED: 'error_dismissed',
+  RETRY_CLICKED: 'retry_clicked',
+  RETRY_SUCCESS: 'retry_success',
+  RETRY_FAILED: 'retry_failed',
+  GO_BACK_CLICKED: 'go_back_clicked',
+  HELP_CLICKED: 'help_clicked',
+  REPORT_CLICKED: 'report_clicked',
+  DETAILS_TOGGLED: 'details_toggled',
+  AUTO_RETRY_STARTED: 'auto_retry_started',
+  AUTO_RETRY_PAUSED: 'auto_retry_paused',
+  MAX_RETRIES_REACHED: 'max_retries_reached'
 };
 
 // ============================================================================
-// ERROR MESSAGES
+// DEFAULT ERROR MESSAGES
 // ============================================================================
 
 export const DEFAULT_ERROR_MESSAGES = {
   [ERROR_TYPES.NETWORK]: {
-    title: 'Network Connection Error',
-    description: 'Unable to connect to our servers. Please check your internet connection and try again.',
-    actionText: 'Check Connection'
+    title: 'Connection Error',
+    description: 'Unable to connect to the server. Please check your internet connection.',
+    actionText: 'Try Again'
   },
   [ERROR_TYPES.PERMISSION]: {
     title: 'Access Denied',
-    description: 'You don\'t have permission to access this resource. Please contact your team administrator.',
-    actionText: 'Contact Admin'
+    description: 'You don\'t have permission to access this resource.',
+    actionText: 'Go Back'
   },
   [ERROR_TYPES.NOT_FOUND]: {
-    title: 'Resource Not Found',
-    description: 'The resource you\'re looking for doesn\'t exist or has been removed.',
-    actionText: 'Go Home'
+    title: 'Not Found',
+    description: 'The requested resource could not be found.',
+    actionText: 'Go Back'
   },
   [ERROR_TYPES.SERVER]: {
     title: 'Server Error',
-    description: 'Our servers are experiencing issues. Please try again in a few moments.',
+    description: 'An internal server error occurred. Please try again later.',
     actionText: 'Try Again'
   },
   [ERROR_TYPES.TIMEOUT]: {
     title: 'Request Timeout',
     description: 'The request took too long to complete. Please try again.',
-    actionText: 'Retry'
+    actionText: 'Try Again'
   },
   [ERROR_TYPES.VALIDATION]: {
     title: 'Validation Error',
-    description: 'There was an issue with the provided data. Please check and try again.',
-    actionText: 'Fix Issues'
+    description: 'The submitted data contains errors. Please check and try again.',
+    actionText: 'Try Again'
   },
   [ERROR_TYPES.AUTHENTICATION]: {
     title: 'Authentication Required',
-    description: 'Please sign in to access this resource.',
+    description: 'You need to sign in to access this feature.',
     actionText: 'Sign In'
   },
   [ERROR_TYPES.RATE_LIMIT]: {
-    title: 'Rate Limit Exceeded',
+    title: 'Too Many Requests',
     description: 'Too many requests. Please wait a moment before trying again.',
     actionText: 'Wait'
   },
@@ -258,7 +367,10 @@ export const THEME_VARIABLES = {
     '--error-card-bg': '#232b3a',
     '--error-danger': '#e53e3e',
     '--error-warning': '#d69e2e',
-    '--error-info': '#4299e1'
+    '--error-info': '#4299e1',
+    '--error-success': '#48bb78',
+    '--error-primary': '#4a6cf7',
+    '--error-secondary': '#718096'
   },
   [THEME_CONFIG.LIGHT]: {
     '--error-bg': '#ffffff',
@@ -268,7 +380,23 @@ export const THEME_VARIABLES = {
     '--error-card-bg': '#f7fafc',
     '--error-danger': '#e53e3e',
     '--error-warning': '#d69e2e',
-    '--error-info': '#4299e1'
+    '--error-info': '#4299e1',
+    '--error-success': '#48bb78',
+    '--error-primary': '#4a6cf7',
+    '--error-secondary': '#718096'
+  },
+  [THEME_CONFIG.AUTO]: {
+    '--error-bg': 'var(--bg-primary, #1a202c)',
+    '--error-text': 'var(--text-primary, #e2e8f0)',
+    '--error-text-muted': 'var(--text-muted, #a0aec0)',
+    '--error-border': 'var(--border-color, #2d3748)',
+    '--error-card-bg': 'var(--secondary-color, #232b3a)',
+    '--error-danger': 'var(--danger-color, #e53e3e)',
+    '--error-warning': 'var(--warning-color, #d69e2e)',
+    '--error-info': 'var(--info-color, #4299e1)',
+    '--error-success': 'var(--success-color, #48bb78)',
+    '--error-primary': 'var(--primary-color, #4a6cf7)',
+    '--error-secondary': 'var(--secondary-text, #718096)'
   }
 };
 
@@ -324,7 +452,11 @@ export const FEATURE_FLAGS = {
   ENABLE_ERROR_DETAILS: process.env.NODE_ENV === 'development',
   ENABLE_RETRY_ANIMATION: true,
   ENABLE_SOUND_EFFECTS: false,
-  ENABLE_HAPTIC_FEEDBACK: false
+  ENABLE_HAPTIC_FEEDBACK: false,
+  ENABLE_OFFLINE_DETECTION: true,
+  ENABLE_PERFORMANCE_TRACKING: true,
+  ENABLE_A11Y_ANNOUNCEMENTS: true,
+  ENABLE_THEME_DETECTION: true
 };
 
 // ============================================================================
@@ -344,11 +476,162 @@ export const VALIDATION_RULES = {
   },
   titleMaxLength: 100,
   descriptionMaxLength: 500,
-  errorIdPattern: /^[a-zA-Z0-9-_]{8,32}$/
+  errorIdPattern: /^[a-zA-Z0-9-_]{8,32}$/,
+  errorMessageMaxLength: 1000,
+  contextKeyMaxLength: 50,
+  contextValueMaxLength: 200
 };
 
 // ============================================================================
-// EXPORT ALL CONSTANTS
+// PERFORMANCE THRESHOLDS
+// ============================================================================
+
+export const PERFORMANCE_THRESHOLDS = {
+  RETRY_TIMEOUT: 30000, // 30 seconds
+  AUTO_RETRY_MAX_TIME: 300000, // 5 minutes
+  ANALYTICS_BATCH_SIZE: 10,
+  ANALYTICS_FLUSH_INTERVAL: 30000, // 30 seconds
+  LOCAL_STORAGE_MAX_EVENTS: 1000,
+  MEMORY_USAGE_WARNING: 50 * 1024 * 1024, // 50MB
+  NETWORK_TIMEOUT: 10000 // 10 seconds
+};
+
+// ============================================================================
+// SECURITY SETTINGS
+// ============================================================================
+
+export const SECURITY_SETTINGS = {
+  SANITIZE_ERROR_MESSAGES: true,
+  REDACT_SENSITIVE_DATA: true,
+  SENSITIVE_KEYS: [
+    'password', 'token', 'key', 'secret', 'auth', 'authorization',
+    'cookie', 'session', 'credential', 'private', 'secure'
+  ],
+  MAX_STACK_TRACE_LENGTH: 2000,
+  ENABLE_ERROR_REPORTING_CONSENT: true,
+  ANONYMIZE_USER_DATA: true
+};
+
+// ============================================================================
+// COMPONENT DEFAULTS
+// ============================================================================
+
+export const COMPONENT_DEFAULTS = {
+  ERROR_SCREEN: {
+    fullScreen: false,
+    showDetails: process.env.NODE_ENV === 'development',
+    trackError: true,
+    autoRetry: false,
+    maxRetries: 3,
+    retryDelay: 1000,
+    size: SCREEN_SIZES.DEFAULT,
+    theme: THEME_CONFIG.AUTO
+  },
+  ERROR_ICON: {
+    size: 'large',
+    animated: true,
+    showPulse: false
+  },
+  ERROR_CONTENT: {
+    showErrorId: true,
+    showRetryInfo: false,
+    showDetails: false
+  },
+  ERROR_ACTIONS: {
+    actionAlignment: 'center',
+    actionSize: 'medium',
+    showGoBack: true,
+    showHelp: true,
+    showReport: true
+  },
+  RETRY_BUTTON: {
+    size: 'medium',
+    variant: 'primary',
+    showIcon: true,
+    countdown: 0
+  }
+};
+
+// ============================================================================
+// EXPORT GROUPS
+// ============================================================================
+
+// Core error types and configurations
+export const CORE_CONSTANTS = {
+  ERROR_TYPES,
+  ERROR_ICONS,
+  ERROR_COLORS,
+  DEFAULT_ERROR_CONFIG
+};
+
+// Retry and timing configurations
+export const RETRY_CONSTANTS = {
+  RETRY_CONFIGS,
+  PERFORMANCE_THRESHOLDS
+};
+
+// UI and display configurations
+export const UI_CONSTANTS = {
+  SCREEN_SIZES,
+  SCREEN_SIZE_CONFIG,
+  THEME_CONFIG,
+  THEME_VARIABLES,
+  BREAKPOINTS
+};
+
+// Accessibility and interaction configurations
+export const A11Y_CONSTANTS = {
+  A11Y_CONFIG,
+  ANIMATION_CONFIG
+};
+
+// Analytics and tracking configurations
+export const ANALYTICS_CONSTANTS = {
+  ANALYTICS_EVENTS,
+  FEATURE_FLAGS
+};
+
+// Security and validation configurations
+export const SECURITY_CONSTANTS = {
+  VALIDATION_RULES,
+  SECURITY_SETTINGS
+};
+
+// ============================================================================
+// NAMED EXPORTS
+// ============================================================================
+
+export {
+  ERROR_ICONS,
+  ERROR_COLORS,
+  DEFAULT_ERROR_CONFIG,
+  RETRY_CONFIGS,
+  SCREEN_SIZES,
+  SCREEN_SIZE_CONFIG,
+  ANIMATION_CONFIG,
+  A11Y_CONFIG,
+  ANALYTICS_EVENTS,
+  DEFAULT_ERROR_MESSAGES,
+  THEME_CONFIG,
+  THEME_VARIABLES,
+  BREAKPOINTS,
+  ERROR_CATEGORIES,
+  HELP_LINKS,
+  FEATURE_FLAGS,
+  VALIDATION_RULES,
+  PERFORMANCE_THRESHOLDS,
+  SECURITY_SETTINGS,
+  COMPONENT_DEFAULTS,
+  CORE_CONSTANTS,
+  RETRY_CONSTANTS,
+  UI_CONSTANTS,
+  A11Y_CONSTANTS,
+  ANALYTICS_CONSTANTS,
+  SECURITY_CONSTANTS
+};
+
+// ============================================================================
+// DEFAULT EXPORT
 // ============================================================================
 
 export default {
@@ -369,5 +652,14 @@ export default {
   ERROR_CATEGORIES,
   HELP_LINKS,
   FEATURE_FLAGS,
-  VALIDATION_RULES
+  VALIDATION_RULES,
+  PERFORMANCE_THRESHOLDS,
+  SECURITY_SETTINGS,
+  COMPONENT_DEFAULTS,
+  CORE_CONSTANTS,
+  RETRY_CONSTANTS,
+  UI_CONSTANTS,
+  A11Y_CONSTANTS,
+  ANALYTICS_CONSTANTS,
+  SECURITY_CONSTANTS
 };

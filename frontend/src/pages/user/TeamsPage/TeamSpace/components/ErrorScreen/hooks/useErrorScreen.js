@@ -1,292 +1,343 @@
 /**
  * useErrorScreen Hook
- * Main hook for error screen functionality
+ * Main hook for ErrorScreen state management and functionality
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getErrorConfig } from '../utils/errorConfigs';
-import { trackErrorEvent } from '../utils/errorHelpers';
-import { ERROR_TYPES, ANALYTICS_EVENTS } from '../constants';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { ERROR_TYPES } from '../constants';
+import { extractErrorType, formatErrorMessage, generateErrorId } from '../utils/errorHelpers';
+import useRetryLogic from './useRetryLogic';
+import useErrorTracking from './useErrorTracking';
 
 /**
- * Custom hook for error screen management
+ * Custom hook for ErrorScreen functionality
  * @param {Object} options - Hook configuration options
  * @returns {Object} Error screen state and methods
  */
 const useErrorScreen = ({
   error = null,
-  errorType = ERROR_TYPES.GENERIC,
+  errorType = null,
+  errorId = null,
   onRetry = null,
   onGoBack = null,
   trackError = true,
-  errorId = null,
-  customConfig = {}
+  autoRetry = false,
+  maxRetries = 3,
+  retryDelay = 1000,
+  showDetails = false,
+  userId = null,
+  teamId = null,
+  metadata = {}
 } = {}) => {
   // State management
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [retryTimer, setRetryTimer] = useState(0);
-  const [hasAutoRetried, setHasAutoRetried] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [lastRetryTime, setLastRetryTime] = useState(null);
+  const [currentError, setCurrentError] = useState(error);
+  const [currentErrorType, setCurrentErrorType] = useState(errorType);
+  const [currentErrorId, setCurrentErrorId] = useState(errorId);
+  const [isVisible, setIsVisible] = useState(true);
+  const [hasBeenShown, setHasBeenShown] = useState(false);
+  const [showErrorDetails, setShowErrorDetails] = useState(showDetails);
+  const [errorContext, setErrorContext] = useState(metadata);
 
-  // Get error configuration
-  const errorConfig = useMemo(() => {
-    const baseConfig = getErrorConfig(errorType);
-    return {
-      ...baseConfig,
-      ...customConfig,
-      messages: {
-        ...baseConfig.messages,
-        ...(customConfig.messages || {})
-      },
-      retryConfig: {
-        ...baseConfig.retryConfig,
-        ...(customConfig.retryConfig || {})
-      }
-    };
-  }, [errorType, customConfig]);
+  // Refs for cleanup
+  const mountedRef = useRef(true);
+  const errorOccurredAt = useRef(Date.now());
 
-  // Calculate if retry is available
-  const canRetry = useMemo(() => {
-    return errorConfig.retryable && 
-           onRetry && 
-           retryCount < (errorConfig.retryConfig?.maxRetries || 0);
-  }, [errorConfig, onRetry, retryCount]);
+  // Determine error type if not provided
+  const detectedErrorType = useMemo(() => {
+    if (currentErrorType) return currentErrorType;
+    if (currentError) return extractErrorType(currentError);
+    return ERROR_TYPES.GENERIC;
+  }, [currentError, currentErrorType]);
 
-  // Calculate next retry delay with exponential backoff
-  const nextRetryDelay = useMemo(() => {
-    const baseDelay = errorConfig.retryConfig?.retryDelay || 1000;
-    const backoffMultiplier = errorConfig.retryConfig?.backoffMultiplier || 1;
-    return Math.min(baseDelay * Math.pow(backoffMultiplier, retryCount), 30000);
-  }, [errorConfig, retryCount]);
+  // Generate error ID if not provided
+  const errorIdentifier = useMemo(() => {
+    return currentErrorId || generateErrorId();
+  }, [currentErrorId]);
 
-  // Track error display
-  useEffect(() => {
-    if (trackError && error) {
-      trackErrorEvent(ANALYTICS_EVENTS.ERROR_DISPLAYED, {
-        errorType,
-        errorMessage: typeof error === 'string' ? error : error?.message,
-        errorId,
-        canRetry,
-        retryCount
-      });
-    }
-  }, [error, errorType, errorId, trackError, canRetry, retryCount]);
+  // Initialize retry logic
+  const {
+    retryCount,
+    isRetrying,
+    retryTimer,
+    canRetry,
+    retryStats,
+    retryButtonText,
+    retry,
+    cancelRetry,
+    resetRetries
+  } = useRetryLogic({
+    errorType: detectedErrorType,
+    onRetry,
+    maxRetries,
+    initialRetryDelay: retryDelay,
+    autoRetry,
+    errorId: errorIdentifier,
+    onRetrySuccess: handleRetrySuccess,
+    onRetryFailure: handleRetryFailure,
+    onMaxRetriesReached: handleMaxRetriesReached
+  });
 
-  // Auto-retry logic
-  useEffect(() => {
-    if (errorConfig.autoRetry && 
-        !hasAutoRetried && 
-        canRetry && 
-        !isRetrying) {
-      
-      const timer = setTimeout(() => {
-        setHasAutoRetried(true);
-        handleRetry();
-        
-        if (trackError) {
-          trackErrorEvent(ANALYTICS_EVENTS.AUTO_RETRY_TRIGGERED, {
-            errorType,
-            retryCount: retryCount + 1,
-            retryDelay: nextRetryDelay,
-            errorId
-          });
-        }
-      }, nextRetryDelay);
-
-      return () => clearTimeout(timer);
-    }
-  }, [errorConfig.autoRetry, hasAutoRetried, canRetry, isRetrying, nextRetryDelay, trackError, errorType, retryCount, errorId]);
+  // Initialize error tracking
+  const {
+    trackError: trackErrorEvent,
+    trackUserAction,
+    getTrackingSummary,
+    isTracking
+  } = useErrorTracking({
+    errorType: detectedErrorType,
+    errorId: errorIdentifier,
+    userId,
+    teamId,
+    enableAnalytics: trackError,
+    customMetadata: errorContext
+  });
 
   /**
-   * Handle retry with loading state and timer
+   * Handle retry success
    */
-  const handleRetry = useCallback(async () => {
-    if (!canRetry || isRetrying) return;
-
-    setIsRetrying(true);
-    setLastRetryTime(Date.now());
+  function handleRetrySuccess(result, retryInfo) {
+    if (!mountedRef.current) return;
     
-    // Track retry attempt
+    setIsVisible(false);
+    
     if (trackError) {
-      trackErrorEvent(ANALYTICS_EVENTS.RETRY_ATTEMPTED, {
-        errorType,
-        retryCount: retryCount + 1,
-        retryDelay: nextRetryDelay,
-        errorId,
-        isAutoRetry: false
+      trackUserAction('retry_success', {
+        retryCount: retryInfo.attempt,
+        duration: retryInfo.duration,
+        result
       });
     }
+  }
 
-    try {
-      // Show countdown timer if delay is significant
-      if (nextRetryDelay > 1000) {
-        for (let i = Math.ceil(nextRetryDelay / 1000); i > 0; i--) {
-          setRetryTimer(i);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        setRetryTimer(0);
-      }
-
-      // Execute retry
-      await onRetry();
-      
-      // Track successful retry
-      if (trackError) {
-        trackErrorEvent(ANALYTICS_EVENTS.RETRY_SUCCEEDED, {
-          errorType,
-          retryCount: retryCount + 1,
-          totalRetryTime: Date.now() - lastRetryTime,
-          errorId
-        });
-      }
-
-    } catch (retryError) {
-      console.error('Retry failed:', retryError);
-      
-      // Track failed retry
-      if (trackError) {
-        trackErrorEvent(ANALYTICS_EVENTS.RETRY_FAILED, {
-          errorType,
-          retryCount: retryCount + 1,
-          retryError: retryError?.message,
-          errorId
-        });
-      }
-      
-      // Increment retry count only on failure
-      setRetryCount(prev => prev + 1);
-    } finally {
-      setIsRetrying(false);
+  /**
+   * Handle retry failure
+   */
+  function handleRetryFailure(error, retryInfo) {
+    if (!mountedRef.current) return;
+    
+    // Update error if it changed during retry
+    if (error && error !== currentError) {
+      setCurrentError(error);
     }
-  }, [canRetry, isRetrying, onRetry, nextRetryDelay, trackError, errorType, retryCount, errorId, lastRetryTime]);
+    
+    if (trackError) {
+      trackUserAction('retry_failure', {
+        retryCount: retryInfo.attempt,
+        duration: retryInfo.duration,
+        error: error?.message || 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Handle max retries reached
+   */
+  function handleMaxRetriesReached(error, stats) {
+    if (!mountedRef.current) return;
+    
+    if (trackError) {
+      trackUserAction('max_retries_reached', {
+        totalAttempts: stats.totalAttempts,
+        totalRetryTime: stats.totalRetryTime,
+        finalError: error?.message || 'Unknown error'
+      });
+    }
+  }
 
   /**
    * Handle go back action
    */
   const handleGoBack = useCallback(() => {
     if (trackError) {
-      trackErrorEvent(ANALYTICS_EVENTS.GO_BACK_CLICKED, {
-        errorType,
-        retryCount,
-        errorId
+      trackUserAction('go_back_clicked', {
+        errorType: detectedErrorType,
+        errorId: errorIdentifier,
+        retryCount
       });
     }
-
+    
     if (onGoBack) {
       onGoBack();
     } else {
-      // Default behavior
+      // Default go back behavior
       if (window.history.length > 1) {
         window.history.back();
       } else {
         window.location.href = '/teams';
       }
     }
-  }, [onGoBack, trackError, errorType, retryCount, errorId]);
+  }, [trackError, trackUserAction, detectedErrorType, errorIdentifier, retryCount, onGoBack]);
 
   /**
-   * Toggle error details visibility
+   * Handle error details toggle
    */
-  const toggleDetails = useCallback(() => {
-    const newShowDetails = !showDetails;
-    setShowDetails(newShowDetails);
+  const handleToggleDetails = useCallback(() => {
+    const newShowDetails = !showErrorDetails;
+    setShowErrorDetails(newShowDetails);
     
-    if (trackError && newShowDetails) {
-      trackErrorEvent(ANALYTICS_EVENTS.DETAILS_VIEWED, {
-        errorType,
-        errorId
+    if (trackError) {
+      trackUserAction(newShowDetails ? 'details_shown' : 'details_hidden', {
+        errorType: detectedErrorType,
+        errorId: errorIdentifier
       });
     }
-  }, [showDetails, trackError, errorType, errorId]);
+  }, [showErrorDetails, trackError, trackUserAction, detectedErrorType, errorIdentifier]);
 
   /**
-   * Reset error screen state
+   * Handle error dismissal
    */
-  const resetErrorScreen = useCallback(() => {
-    setIsRetrying(false);
-    setRetryCount(0);
-    setRetryTimer(0);
-    setHasAutoRetried(false);
-    setShowDetails(false);
-    setLastRetryTime(null);
-  }, []);
-
-  /**
-   * Get retry button text with timer
-   */
-  const getRetryButtonText = useCallback(() => {
-    if (isRetrying && retryTimer > 0) {
-      return `Retrying in ${retryTimer}s...`;
-    }
-    if (isRetrying) {
-      return 'Retrying...';
-    }
-    if (retryCount > 0) {
-      const maxRetries = errorConfig.retryConfig?.maxRetries || 0;
-      return `Retry (${retryCount + 1}/${maxRetries})`;
-    }
-    return 'Try Again';
-  }, [isRetrying, retryTimer, retryCount, errorConfig]);
-
-  /**
-   * Get retry status information
-   */
-  const getRetryStatus = useCallback(() => {
-    const maxRetries = errorConfig.retryConfig?.maxRetries || 0;
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false);
     
+    if (trackError) {
+      trackUserAction('error_dismissed', {
+        errorType: detectedErrorType,
+        errorId: errorIdentifier,
+        displayDuration: Date.now() - errorOccurredAt.current
+      });
+    }
+  }, [trackError, trackUserAction, detectedErrorType, errorIdentifier]);
+
+  /**
+   * Update error
+   */
+  const updateError = useCallback((newError, newErrorType = null, newMetadata = {}) => {
+    setCurrentError(newError);
+    setCurrentErrorType(newErrorType);
+    setErrorContext(prev => ({ ...prev, ...newMetadata }));
+    
+    // Reset error state
+    setIsVisible(true);
+    setShowErrorDetails(showDetails);
+    resetRetries();
+    
+    // Update error occurred timestamp
+    errorOccurredAt.current = Date.now();
+    
+    // Generate new error ID for new errors
+    if (newError !== currentError) {
+      setCurrentErrorId(generateErrorId());
+    }
+  }, [currentError, showDetails, resetRetries]);
+
+  /**
+   * Clear error
+   */
+  const clearError = useCallback(() => {
+    setCurrentError(null);
+    setCurrentErrorType(null);
+    setCurrentErrorId(null);
+    setIsVisible(false);
+    setErrorContext({});
+    resetRetries();
+  }, [resetRetries]);
+
+  /**
+   * Get error summary
+   */
+  const getErrorSummary = useCallback(() => {
     return {
-      current: retryCount,
-      maximum: maxRetries,
-      remaining: Math.max(0, maxRetries - retryCount),
-      isMaxReached: retryCount >= maxRetries,
-      canRetryAgain: canRetry,
-      nextRetryIn: isRetrying ? retryTimer : null
+      error: currentError,
+      errorType: detectedErrorType,
+      errorId: errorIdentifier,
+      errorMessage: formatErrorMessage(currentError),
+      isVisible,
+      hasBeenShown,
+      showDetails: showErrorDetails,
+      context: errorContext,
+      retry: {
+        ...retryStats,
+        canRetry,
+        isRetrying,
+        retryTimer,
+        retryButtonText
+      },
+      tracking: isTracking ? getTrackingSummary() : null,
+      timing: {
+        occurredAt: errorOccurredAt.current,
+        displayDuration: Date.now() - errorOccurredAt.current
+      }
     };
-  }, [retryCount, errorConfig, canRetry, isRetrying, retryTimer]);
+  }, [
+    currentError,
+    detectedErrorType,
+    errorIdentifier,
+    isVisible,
+    hasBeenShown,
+    showErrorDetails,
+    errorContext,
+    retryStats,
+    canRetry,
+    isRetrying,
+    retryTimer,
+    retryButtonText,
+    isTracking,
+    getTrackingSummary
+  ]);
 
-  /**
-   * Check if error is recoverable
-   */
-  const isRecoverable = useMemo(() => {
-    return errorConfig.canAutoRecover || canRetry;
-  }, [errorConfig.canAutoRecover, canRetry]);
+  // Track error when it changes
+  useEffect(() => {
+    if (currentError && trackError) {
+      trackErrorEvent(currentError, {
+        errorType: detectedErrorType,
+        errorId: errorIdentifier,
+        metadata: errorContext,
+        timestamp: errorOccurredAt.current
+      });
+      
+      setHasBeenShown(true);
+    }
+  }, [currentError, trackError, trackErrorEvent, detectedErrorType, errorIdentifier, errorContext]);
 
-  /**
-   * Get error severity level
-   */
-  const severity = useMemo(() => {
-    return errorConfig.severity || 'medium';
-  }, [errorConfig.severity]);
+  // Update error when prop changes
+  useEffect(() => {
+    if (error !== currentError) {
+      updateError(error, errorType, metadata);
+    }
+  }, [error, errorType, metadata, currentError, updateError]);
 
-  // Return hook interface
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      cancelRetry();
+    };
+  }, [cancelRetry]);
+
   return {
     // State
-    isRetrying,
+    error: currentError,
+    errorType: detectedErrorType,
+    errorId: errorIdentifier,
+    isVisible,
+    hasBeenShown,
+    showDetails: showErrorDetails,
+    errorContext,
+    
+    // Retry functionality
     retryCount,
+    isRetrying,
     retryTimer,
-    hasAutoRetried,
-    showDetails,
     canRetry,
-    isRecoverable,
-    severity,
+    retryStats,
+    retryButtonText,
     
-    // Configuration
-    errorConfig,
-    nextRetryDelay,
-    
-    // Methods
-    handleRetry,
+    // Actions
+    retry,
+    cancelRetry,
+    resetRetries,
     handleGoBack,
-    toggleDetails,
-    resetErrorScreen,
-    getRetryButtonText,
-    getRetryStatus,
+    handleToggleDetails,
+    handleDismiss,
+    updateError,
+    clearError,
     
-    // Computed values
-    retryStatus: getRetryStatus(),
-    retryButtonText: getRetryButtonText()
+    // Utilities
+    getErrorSummary,
+    
+    // Tracking
+    isTracking,
+    trackUserAction
   };
 };
 

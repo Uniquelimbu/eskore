@@ -75,112 +75,56 @@ export * from './types';
  * Grouped by error categories for easy access
  */
 export const ErrorTypeComponents = {
-  Network: require('./ErrorScreen').NetworkErrorScreen,
-  Permission: require('./ErrorScreen').PermissionErrorScreen,
-  NotFound: require('./ErrorScreen').NotFoundErrorScreen,
-  Server: require('./ErrorScreen').ServerErrorScreen,
-  Timeout: require('./ErrorScreen').TimeoutErrorScreen,
-  Validation: require('./ErrorScreen').ValidationErrorScreen,
-  Generic: require('./ErrorScreen').default
+  Network: NetworkErrorScreen,
+  Permission: PermissionErrorScreen,
+  NotFound: NotFoundErrorScreen,
+  Server: ServerErrorScreen,
+  Timeout: TimeoutErrorScreen,
+  Validation: ValidationErrorScreen
 };
 
 /**
- * Component Parts Collection
- * Individual components for custom error screens
+ * Utility Components Collection
+ * Individual building blocks for custom error screens
  */
-export const ErrorScreenParts = {
-  Icon: require('./components/ErrorIcon').default,
-  Content: require('./components/ErrorContent').default,
-  Actions: require('./components/ErrorActions').default,
-  RetryButton: require('./components/RetryButton').default
+export const ErrorUtilityComponents = {
+  ErrorIcon,
+  ErrorContent,
+  ErrorActions,
+  RetryButton
 };
 
 /**
  * Hooks Collection
- * All custom hooks grouped together
+ * All error-related hooks grouped together
  */
-export const ErrorScreenHooks = {
-  useErrorScreen: require('./hooks/useErrorScreen').default,
-  useRetryLogic: require('./hooks/useRetryLogic').default,
-  useErrorTracking: require('./hooks/useErrorTracking').default
+export const ErrorHooks = {
+  useErrorScreen,
+  useRetryLogic,
+  useErrorTracking
 };
 
 // ============================================================================
-// CONVENIENCE FUNCTIONS
+// PRESETS AND FACTORIES
 // ============================================================================
 
 /**
- * Create a custom error screen with specific configuration
- * @param {Object} config - Error screen configuration
- * @returns {React.Component} Configured error screen component
+ * Helper function to create error screen with preset configurations
  */
-export const createErrorScreen = (config = {}) => {
-  const ErrorScreen = require('./ErrorScreen').default;
-  
-  return (props) => <ErrorScreen {...config} {...props} />;
-};
+const createErrorScreen = (config) => (props) => (
+  <ErrorScreen {...config} {...props} />
+);
 
 /**
- * Get error screen component by error type
- * @param {string} errorType - Type of error
- * @returns {React.Component} Appropriate error screen component
- */
-export const getErrorScreenByType = (errorType) => {
-  const typeMap = {
-    'network': require('./ErrorScreen').NetworkErrorScreen,
-    'permission': require('./ErrorScreen').PermissionErrorScreen,
-    'notFound': require('./ErrorScreen').NotFoundErrorScreen,
-    'server': require('./ErrorScreen').ServerErrorScreen,
-    'timeout': require('./ErrorScreen').TimeoutErrorScreen,
-    'validation': require('./ErrorScreen').ValidationErrorScreen
-  };
-  
-  return typeMap[errorType] || require('./ErrorScreen').default;
-};
-
-/**
- * Create error screen with analytics tracking
- * @param {Object} trackingConfig - Analytics configuration
- * @returns {React.Component} Error screen with tracking
- */
-export const createTrackedErrorScreen = (trackingConfig = {}) => {
-  const ErrorScreen = require('./ErrorScreen').default;
-  
-  return (props) => (
-    <ErrorScreen 
-      trackError={true}
-      {...trackingConfig}
-      {...props}
-    />
-  );
-};
-
-// ============================================================================
-// ERROR SCREEN PRESETS
-// ============================================================================
-
-/**
- * Pre-configured error screens for common scenarios
+ * Pre-configured error screen instances for common scenarios
  */
 export const ErrorScreenPresets = {
-  /**
-   * Loading timeout error
-   */
-  LoadingTimeout: createErrorScreen({
-    errorType: 'timeout',
-    title: 'Loading Timeout',
-    description: 'The page is taking longer than expected to load.',
-    autoRetry: true,
-    retryDelay: 2000,
-    maxRetries: 3
-  }),
-  
   /**
    * Network connectivity error
    */
   NetworkError: createErrorScreen({
     errorType: 'network',
-    title: 'Connection Problem',
+    title: 'Connection Error',
     description: 'Please check your internet connection and try again.',
     autoRetry: true,
     retryDelay: 5000,
@@ -217,6 +161,28 @@ export const ErrorScreenPresets = {
     autoRetry: true,
     retryDelay: 30000,
     maxRetries: 10
+  }),
+
+  /**
+   * Session timeout error
+   */
+  SessionTimeout: createErrorScreen({
+    errorType: 'timeout',
+    title: 'Session Timeout',
+    description: 'Your session has expired. Please sign in again.',
+    retryable: false,
+    onRetry: () => window.location.href = '/login'
+  }),
+
+  /**
+   * Validation error
+   */
+  ValidationError: createErrorScreen({
+    errorType: 'validation',
+    title: 'Validation Error',
+    description: 'Please check your input and try again.',
+    retryable: true,
+    maxRetries: 3
   })
 };
 
@@ -269,6 +235,30 @@ export const ERROR_SCREEN_REGISTRY = {
     props: ['validationErrors', 'onRetry'],
     examples: ['Form validation failed', 'Invalid data format'],
     category: 'Validation'
+  },
+  'ErrorIcon': {
+    description: 'Icon component for error screens',
+    props: ['errorType', 'size', 'animated'],
+    examples: ['Network icon', 'Permission icon'],
+    category: 'Utility'
+  },
+  'ErrorContent': {
+    description: 'Content component for error screens',
+    props: ['title', 'description', 'error', 'showDetails'],
+    examples: ['Error title and description', 'Technical details'],
+    category: 'Utility'
+  },
+  'ErrorActions': {
+    description: 'Action buttons component for error screens',
+    props: ['onRetry', 'onGoBack', 'canRetry', 'isRetrying'],
+    examples: ['Retry button', 'Go back button'],
+    category: 'Utility'
+  },
+  'RetryButton': {
+    description: 'Specialized retry button with countdown and loading states',
+    props: ['onRetry', 'isRetrying', 'retryCount', 'maxRetries'],
+    examples: ['Simple retry', 'Retry with countdown'],
+    category: 'Utility'
   }
 };
 
@@ -278,35 +268,53 @@ export const ERROR_SCREEN_REGISTRY = {
 export const ErrorScreenDevUtils = {
   registry: ERROR_SCREEN_REGISTRY,
   presets: ErrorScreenPresets,
-  typeComponents: ErrorTypeComponents,
-  parts: ErrorScreenParts,
-  hooks: ErrorScreenHooks,
   
   /**
-   * Get all available error types
-   */
-  getErrorTypes: () => Object.keys(ErrorTypeComponents).map(key => key.toLowerCase()),
-  
-  /**
-   * Get component info by name
+   * Get component information
    */
   getComponentInfo: (componentName) => ERROR_SCREEN_REGISTRY[componentName],
   
   /**
-   * List all available presets
+   * List all available components
    */
-  listPresets: () => Object.keys(ErrorScreenPresets),
+  listComponents: () => Object.keys(ERROR_SCREEN_REGISTRY),
   
   /**
-   * Get preset configuration
+   * Get components by category
    */
-  getPresetConfig: (presetName) => ErrorScreenPresets[presetName]
+  getComponentsByCategory: (category) => 
+    Object.entries(ERROR_SCREEN_REGISTRY)
+      .filter(([, info]) => info.category === category)
+      .map(([name]) => name),
+  
+  /**
+   * Validate component props (development only)
+   */
+  validateProps: (componentName, props) => {
+    if (process.env.NODE_ENV !== 'development') return;
+    
+    const componentInfo = ERROR_SCREEN_REGISTRY[componentName];
+    if (!componentInfo) {
+      console.warn(`Unknown ErrorScreen component: ${componentName}`);
+      return;
+    }
+    
+    const requiredProps = componentInfo.props || [];
+    const missingProps = requiredProps.filter(prop => !(prop in props));
+    
+    if (missingProps.length > 0) {
+      console.warn(`Missing props for ${componentName}:`, missingProps);
+    }
+  }
 };
 
 // ============================================================================
-// VERSION INFORMATION
+// VERSION AND METADATA
 // ============================================================================
 
+/**
+ * Module version information
+ */
 export const ERROR_SCREEN_VERSION = {
   version: '1.0.0',
   buildDate: new Date().toISOString(),

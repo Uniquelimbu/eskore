@@ -1,314 +1,469 @@
-import React, { memo, useState, useEffect, useCallback } from 'react';
+/**
+ * ErrorScreen Component
+ * Comprehensive error display with retry functionality, analytics tracking, and accessibility
+ */
+
+import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { 
+  ERROR_TYPES, 
+  DEFAULT_ERROR_CONFIG, 
+  RETRY_CONFIGS,
+  SCREEN_SIZES,
+  THEME_CONFIG,
+  COMPONENT_DEFAULTS,
+  DEFAULT_ERROR_MESSAGES,
+  ANALYTICS_EVENTS
+} from './constants';
+import { formatErrorMessage, generateErrorId, extractErrorType } from './utils/errorHelpers';
+import ErrorIcon from './components/ErrorIcon';
+import ErrorContent from './components/ErrorContent';
+import ErrorActions from './components/ErrorActions';
 
 /**
- * Industry-standard Error Screen for TeamSpace
- * Features: Multiple error types, retry logic, analytics, accessibility
+ * Main ErrorScreen component with comprehensive error handling
  */
 const ErrorScreen = memo(({
-  error,
-  errorType = 'generic',
-  onRetry = null,
-  onGoBack = null,
-  showDetails = process.env.NODE_ENV === 'development',
-  retryCount = 0,
-  maxRetries = 3,
-  retryDelay = 1000,
-  autoRetry = false,
-  fullScreen = true,
-  className = "",
+  // Error data
+  error = null,
+  errorType = null,
+  errorId = null,
   title = null,
   description = null,
+  
+  // Functionality
+  onRetry = null,
+  onGoBack = null,
+  onReport = null,
+  showDetails = COMPONENT_DEFAULTS.ERROR_SCREEN.showDetails,
+  
+  // Retry configuration
+  maxRetries = COMPONENT_DEFAULTS.ERROR_SCREEN.maxRetries,
+  retryDelay = COMPONENT_DEFAULTS.ERROR_SCREEN.retryDelay,
+  autoRetry = COMPONENT_DEFAULTS.ERROR_SCREEN.autoRetry,
+  
+  // Display configuration
+  size = COMPONENT_DEFAULTS.ERROR_SCREEN.size,
+  theme = COMPONENT_DEFAULTS.ERROR_SCREEN.theme,
+  fullScreen = COMPONENT_DEFAULTS.ERROR_SCREEN.fullScreen,
+  className = '',
   actions = null,
-  trackError = true,
-  errorId = null
+  
+  // Tracking and analytics
+  trackError = COMPONENT_DEFAULTS.ERROR_SCREEN.trackError,
+  userId = null,
+  teamId = null,
+  metadata = {}
 }) => {
+  // ========================================================================
+  // STATE MANAGEMENT
+  // ========================================================================
+  
+  const [currentRetryCount, setCurrentRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryTimer, setRetryTimer] = useState(0);
-  const [hasAutoRetried, setHasAutoRetried] = useState(false);
-
-  // Error type configurations
-  const errorConfigs = {
-    network: {
-      icon: '🌐',
-      title: 'Network Connection Error',
-      description: 'Unable to connect to our servers. Please check your internet connection.',
-      retryable: true,
-      autoRetry: true
-    },
-    permission: {
-      icon: '🔒',
-      title: 'Access Denied',
-      description: 'You don\'t have permission to access this team or resource.',
-      retryable: false,
-      autoRetry: false
-    },
-    notFound: {
-      icon: '🔍',
-      title: 'Team Not Found',
-      description: 'The team you\'re looking for doesn\'t exist or has been removed.',
-      retryable: false,
-      autoRetry: false
-    },
-    server: {
-      icon: '⚠️',
-      title: 'Server Error',
-      description: 'Our servers are experiencing issues. Please try again in a moment.',
-      retryable: true,
-      autoRetry: true
-    },
-    timeout: {
-      icon: '⏱️',
-      title: 'Request Timeout',
-      description: 'The request took too long to complete. Please try again.',
-      retryable: true,
-      autoRetry: false
-    },
-    validation: {
-      icon: '📝',
-      title: 'Validation Error',
-      description: 'There was an issue with the provided data. Please check and try again.',
-      retryable: false,
-      autoRetry: false
-    },
-    generic: {
-      icon: '❗',
-      title: 'Something went wrong',
-      description: 'We encountered an unexpected error. Please try again.',
-      retryable: true,
-      autoRetry: false
-    }
-  };
-
-  // Get current error configuration
-  const config = errorConfigs[errorType] || errorConfigs.generic;
+  const [autoRetryPaused, setAutoRetryPaused] = useState(false);
+  const [showDetailsExpanded, setShowDetailsExpanded] = useState(false);
+  const [errorOccurredAt] = useState(Date.now());
   
-  // ✅ FIXED: Define canRetry variable
-  const canRetry = config.retryable && onRetry && retryCount < maxRetries;
-
-  // Auto-retry logic
-  useEffect(() => {
-    if (autoRetry && config.autoRetry && !hasAutoRetried && canRetry) {
-      const timer = setTimeout(() => {
-        setHasAutoRetried(true);
-        handleRetry();
-      }, retryDelay);
-
-      return () => clearTimeout(timer);
-    }
-  }, [autoRetry, config.autoRetry, hasAutoRetried, canRetry, retryDelay]);
-
-  // Track error for analytics
-  useEffect(() => {
-    if (trackError && window.gtag) {
-      window.gtag('event', 'error_screen_view', {
-        error_type: errorType,
-        error_message: error?.message || 'Unknown error',
-        retry_count: retryCount,
-        error_id: errorId,
-        can_retry: canRetry
-      });
-    }
-  }, [trackError, errorType, error, retryCount, errorId, canRetry]);
-
+  // ========================================================================
+  // REFS AND CONSTANTS
+  // ========================================================================
+  
+  const mountedRef = useRef(true);
+  const autoRetryTimeoutRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
+  
+  // Generate error ID if not provided
+  const currentErrorId = errorId || generateErrorId();
+  
+  // Detect error type if not provided
+  const detectedErrorType = errorType || extractErrorType(error) || ERROR_TYPES.GENERIC;
+  
+  // Get error configuration
+  const errorConfig = {
+    ...DEFAULT_ERROR_CONFIG,
+    ...DEFAULT_ERROR_MESSAGES[detectedErrorType],
+    ...RETRY_CONFIGS[detectedErrorType]
+  };
+  
+  // Get retry configuration
+  const retryConfig = {
+    maxRetries,
+    retryDelay,
+    autoRetry,
+    ...RETRY_CONFIGS[detectedErrorType]
+  };
+  
+  // Format error message
+  const errorMessage = formatErrorMessage(error);
+  
+  // ========================================================================
+  // COMPUTED VALUES
+  // ========================================================================
+  
   /**
-   * Handle retry with loading state and timer
+   * Check if retry is available
+   */
+  const canRetry = useCallback(() => {
+    return onRetry && 
+           currentRetryCount < maxRetries && 
+           retryTimer === 0 && 
+           !isRetrying;
+  }, [onRetry, currentRetryCount, maxRetries, retryTimer, isRetrying]);
+  
+  /**
+   * Get retry button text based on state
+   */
+  const getRetryButtonText = useCallback(() => {
+    if (retryTimer > 0) return `Retry in ${retryTimer}s`;
+    if (isRetrying) return 'Retrying...';
+    if (currentRetryCount >= maxRetries) return 'Max Retries Reached';
+    if (currentRetryCount > 0) return `Retry (${currentRetryCount + 1}/${maxRetries})`;
+    return 'Try Again';
+  }, [isRetrying, retryTimer, currentRetryCount, maxRetries]);
+  
+  // ========================================================================
+  // EVENT HANDLERS
+  // ========================================================================
+  
+  /**
+   * Handle retry action
    */
   const handleRetry = useCallback(async () => {
-    if (!canRetry || isRetrying) return;
-
+    if (!canRetry() || !onRetry) return;
+    
     setIsRetrying(true);
+    const retryStartTime = Date.now();
     
     // Track retry attempt
-    if (trackError && window.gtag) {
-      window.gtag('event', 'error_retry_attempt', {
-        error_type: errorType,
-        retry_count: retryCount + 1,
-        error_id: errorId
+    if (trackError && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', ANALYTICS_EVENTS.ERROR_RETRY, {
+        event_category: 'error_handling',
+        event_label: detectedErrorType,
+        custom_map: {
+          error_id: currentErrorId,
+          retry_count: currentRetryCount + 1,
+          user_id: userId,
+          team_id: teamId
+        }
       });
     }
-
+    
     try {
-      if (retryDelay > 0) {
-        // Show countdown timer
-        for (let i = Math.ceil(retryDelay / 1000); i > 0; i--) {
-          setRetryTimer(i);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        setRetryTimer(0);
-      }
-
       await onRetry();
+      
+      // Track successful retry
+      if (trackError && typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', ANALYTICS_EVENTS.ERROR_RETRY_SUCCESS, {
+          event_category: 'error_handling',
+          event_label: detectedErrorType,
+          custom_map: {
+            error_id: currentErrorId,
+            retry_count: currentRetryCount + 1,
+            retry_duration: Date.now() - retryStartTime
+          }
+        });
+      }
+      
+      // Reset retry count on success
+      setCurrentRetryCount(0);
+      
     } catch (retryError) {
+      // Track failed retry
+      if (trackError && typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', ANALYTICS_EVENTS.ERROR_RETRY_FAILED, {
+          event_category: 'error_handling',
+          event_label: detectedErrorType,
+          custom_map: {
+            error_id: currentErrorId,
+            retry_count: currentRetryCount + 1,
+            retry_error: formatErrorMessage(retryError)
+          }
+        });
+      }
+      
+      // Increment retry count
+      setCurrentRetryCount(prev => prev + 1);
+      
       console.error('Retry failed:', retryError);
     } finally {
-      setIsRetrying(false);
+      if (mountedRef.current) {
+        setIsRetrying(false);
+      }
     }
-  }, [canRetry, isRetrying, onRetry, retryDelay, trackError, errorType, retryCount, errorId]);
-
+  }, [canRetry, onRetry, trackError, detectedErrorType, currentErrorId, currentRetryCount, userId, teamId]);
+  
   /**
    * Handle go back action
    */
   const handleGoBack = useCallback(() => {
-    if (trackError && window.gtag) {
-      window.gtag('event', 'error_go_back', {
-        error_type: errorType,
-        error_id: errorId
+    // Track go back action
+    if (trackError && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', ANALYTICS_EVENTS.ERROR_GO_BACK, {
+        event_category: 'error_handling',
+        event_label: detectedErrorType,
+        custom_map: {
+          error_id: currentErrorId
+        }
       });
     }
 
     if (onGoBack) {
       onGoBack();
     } else {
-      // Default behavior
+      // Default go back behavior
       if (window.history.length > 1) {
         window.history.back();
       } else {
         window.location.href = '/teams';
       }
     }
-  }, [onGoBack, trackError, errorType, errorId]);
+  }, [onGoBack, detectedErrorType, trackError, currentErrorId]);
 
   /**
-   * Get retry button text with timer
+   * Handle error reporting
    */
-  const getRetryButtonText = () => {
-    if (isRetrying && retryTimer > 0) {
-      return `Retrying in ${retryTimer}s...`;
+  const handleReport = useCallback(() => {
+    // Track report action
+    if (trackError && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', ANALYTICS_EVENTS.ERROR_REPORTED, {
+        event_category: 'error_handling',
+        event_label: detectedErrorType,
+        custom_map: {
+          error_id: currentErrorId
+        }
+      });
     }
-    if (isRetrying) {
-      return 'Retrying...';
+
+    if (onReport) {
+      onReport();
+    } else {
+      // Default report behavior
+      console.log('Error reported:', {
+        errorId: currentErrorId,
+        errorType: detectedErrorType,
+        error: errorMessage,
+        userId,
+        teamId,
+        metadata
+      });
     }
-    return retryCount > 0 ? `Retry (${retryCount + 1}/${maxRetries})` : 'Try Again';
-  };
+  }, [onReport, currentErrorId, detectedErrorType, errorMessage, userId, teamId, metadata, trackError]);
 
   /**
-   * Render error icon with animation
+   * Toggle details visibility
    */
-  const renderErrorIcon = () => (
-    <div className="error-icon-container">
-      <div className="error-icon-wrapper">
-        <span className="error-icon" role="img" aria-label={`${errorType} error`}>
-          {config.icon}
-        </span>
-        <div className="error-icon-pulse"></div>
-      </div>
-    </div>
-  );
+  const handleToggleDetails = useCallback(() => {
+    const newShowDetails = !showDetailsExpanded;
+    setShowDetailsExpanded(newShowDetails);
+    
+    // Track details toggle
+    if (trackError && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', newShowDetails ? ANALYTICS_EVENTS.ERROR_DETAILS_SHOWN : ANALYTICS_EVENTS.ERROR_DETAILS_HIDDEN, {
+        event_category: 'error_handling',
+        event_label: detectedErrorType,
+        custom_map: {
+          error_id: currentErrorId
+        }
+      });
+    }
+  }, [showDetailsExpanded, detectedErrorType, trackError, currentErrorId]);
 
   /**
-   * Render action buttons
+   * Pause/resume auto-retry
    */
-  const renderActions = () => {
-    if (actions) {
-      return <div className="error-actions">{actions}</div>;
+  const toggleAutoRetry = useCallback(() => {
+    setAutoRetryPaused(prev => !prev);
+    
+    if (autoRetryTimeoutRef.current) {
+      clearTimeout(autoRetryTimeoutRef.current);
+      autoRetryTimeoutRef.current = null;
+      setRetryTimer(0);
+    }
+  }, []);
+
+  // ========================================================================
+  // EFFECTS
+  // ========================================================================
+
+  // Track error display on mount
+  useEffect(() => {
+    if (trackError && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', ANALYTICS_EVENTS.ERROR_DISPLAYED, {
+        event_category: 'error_handling',
+        event_label: detectedErrorType,
+        custom_map: {
+          error_id: currentErrorId,
+          error_message: errorMessage,
+          user_id: userId,
+          team_id: teamId,
+          metadata: JSON.stringify(metadata)
+        }
+      });
+    }
+  }, [trackError, detectedErrorType, currentErrorId, errorMessage, userId, teamId, metadata]);
+
+  // Schedule initial auto-retry if enabled
+  useEffect(() => {
+    if (!autoRetry || 
+        !retryConfig.autoRetry || 
+        currentRetryCount >= maxRetries || 
+        autoRetryPaused || 
+        !onRetry) {
+      return;
     }
 
-    return (
-      <div className="error-actions">
-        {canRetry && (
-          <button 
-            onClick={handleRetry} 
-            disabled={isRetrying}
-            className={`btn btn-primary error-retry-btn ${isRetrying ? 'loading' : ''}`}
-            aria-describedby="retry-description"
-          >
-            {getRetryButtonText()}
-          </button>
-        )}
-        
-        <button 
-          onClick={handleGoBack} 
-          className="btn btn-secondary error-back-btn"
-        >
-          Go Back
-        </button>
-        
-        {showDetails && error && (
-          <button 
-            onClick={() => {
-              const details = document.querySelector('.error-details');
-              details.style.display = details.style.display === 'none' ? 'block' : 'none';
-            }}
-            className="btn btn-ghost error-details-btn"
-          >
-            Show Details
-          </button>
-        )}
-      </div>
+    const delay = Math.min(
+      retryConfig.retryDelay * Math.pow(retryConfig.backoffMultiplier || 1.5, currentRetryCount),
+      retryConfig.maxRetryDelay || 30000
     );
-  };
+
+    setRetryTimer(Math.ceil(delay / 1000));
+
+    // Countdown timer
+    const countdownInterval = setInterval(() => {
+      setRetryTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Auto-retry timeout
+    autoRetryTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current && !autoRetryPaused) {
+        handleRetry();
+      }
+      clearInterval(countdownInterval);
+    }, delay);
+
+    return () => {
+      clearInterval(countdownInterval);
+      if (autoRetryTimeoutRef.current) {
+        clearTimeout(autoRetryTimeoutRef.current);
+        autoRetryTimeoutRef.current = null;
+      }
+    };
+  }, [autoRetry, autoRetryPaused, currentRetryCount, maxRetries, retryConfig, handleRetry, onRetry]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      if (autoRetryTimeoutRef.current) {
+        clearTimeout(autoRetryTimeoutRef.current);
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // ========================================================================
+  // RENDER
+  // ========================================================================
 
   // Container classes
   const containerClasses = [
     'error-screen',
-    `error-${errorType}`,
-    fullScreen ? 'error-fullscreen' : 'error-inline',
-    isRetrying ? 'error-retrying' : '',
+    `error-screen-${detectedErrorType}`,
+    `error-screen-${size}`,
+    `error-screen-theme-${theme}`,
+    fullScreen ? 'error-screen-fullscreen' : 'error-screen-inline',
+    isRetrying ? 'error-screen-retrying' : '',
+    autoRetryPaused ? 'error-screen-auto-retry-paused' : '',
     className
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={containerClasses} role="alert" aria-live="assertive">
+    <div 
+      className={containerClasses} 
+      role="alert" 
+      aria-live="assertive"
+      aria-labelledby="error-title"
+      aria-describedby="error-description"
+    >
       <div className="error-screen-container">
         {/* Error Icon */}
-        {renderErrorIcon()}
+        <ErrorIcon 
+          errorType={detectedErrorType}
+          size={size === SCREEN_SIZES.SMALL ? 'medium' : size === SCREEN_SIZES.LARGE ? 'xlarge' : 'large'}
+          animated={!isRetrying}
+          showPulse={isRetrying}
+        />
 
         {/* Error Content */}
-        <div className="error-content">
-          <h2 className="error-title">
-            {title || config.title}
-          </h2>
-          
-          <p className="error-description">
-            {description || config.description}
-          </p>
-          
-          {error && typeof error === 'string' && error !== (description || config.description) && (
-            <p className="error-message">
-              {error}
-            </p>
-          )}
+        <ErrorContent
+          title={title || errorConfig.title}
+          description={description || errorConfig.description}
+          error={error}
+          errorId={currentErrorId}
+          errorType={detectedErrorType}
+          showErrorId={true}
+          showRetryInfo={currentRetryCount > 0}
+          showDetails={showDetails}
+          retryCount={currentRetryCount}
+          maxRetries={maxRetries}
+          onToggleDetails={handleToggleDetails}
+          titleId="error-title"
+          descriptionId="error-description"
+        />
 
-          {/* Error ID for support */}
-          {errorId && (
-            <div className="error-id">
-              <small>Error ID: <code>{errorId}</code></small>
+        {/* Custom Actions or Default Actions */}
+        {actions || (
+          <ErrorActions
+            onRetry={canRetry() ? handleRetry : null}
+            onGoBack={handleGoBack}
+            onHelp={() => window.open(errorConfig.helpLink || '/help', '_blank')}
+            onReport={handleReport}
+            canRetry={canRetry()}
+            isRetrying={isRetrying}
+            retryCount={currentRetryCount}
+            maxRetries={maxRetries}
+            retryButtonText={getRetryButtonText()}
+            showGoBack={true}
+            showHelp={true}
+            showReport={true}
+            errorType={detectedErrorType}
+            actionAlignment="center"
+            actionSize={size === SCREEN_SIZES.SMALL ? 'small' : size === SCREEN_SIZES.LARGE ? 'large' : 'medium'}
+          />
+        )}
+
+        {/* Auto-retry controls */}
+        {autoRetry && retryConfig.autoRetry && currentRetryCount < maxRetries && (
+          <div className="error-auto-retry-controls">
+            <button
+              type="button"
+              onClick={toggleAutoRetry}
+              className="btn btn-ghost btn-small"
+              aria-describedby="auto-retry-description"
+            >
+              {autoRetryPaused ? '▶' : '⏸'} {autoRetryPaused ? 'Resume' : 'Pause'} Auto-retry
+            </button>
+            
+            <div id="auto-retry-description" className="sr-only">
+              {autoRetryPaused ? 'Resume automatic retry attempts' : 'Pause automatic retry attempts'}
             </div>
-          )}
-
-          {/* Retry information */}
-          {retryCount > 0 && (
-            <div className="retry-info">
-              <small>
-                {retryCount >= maxRetries 
-                  ? `Maximum retry attempts reached (${maxRetries})`
-                  : `Attempt ${retryCount} of ${maxRetries}`
-                }
-              </small>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        {renderActions()}
-
-        {/* Error Details (Development) */}
-        {showDetails && error && (
-          <details className="error-details" style={{ display: 'none' }}>
-            <summary>Technical Details</summary>
-            <pre className="error-stack">
-              {typeof error === 'object' ? JSON.stringify(error, null, 2) : error}
-            </pre>
-          </details>
+            
+            {retryTimer > 0 && !autoRetryPaused && (
+              <div className="auto-retry-countdown">
+                Next retry in {retryTimer} seconds
+              </div>
+            )}
+          </div>
         )}
 
         {/* Accessibility descriptions */}
-        <div id="retry-description" className="sr-only">
-          {canRetry && onRetry && retryCount < maxRetries
-            ? `You can try again. This is attempt ${retryCount + 1} of ${maxRetries}.`
-            : 'Retry option is not available for this error.'
-          }
+        <div className="sr-only">
+          <div id="error-context-description">
+            Error occurred at {new Date(errorOccurredAt).toLocaleString()}.
+            {currentRetryCount > 0 && ` ${currentRetryCount} retry attempts have been made.`}
+            {canRetry() && ` You can try again up to ${maxRetries - currentRetryCount} more times.`}
+          </div>
         </div>
       </div>
 
@@ -318,35 +473,39 @@ const ErrorScreen = memo(({
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: var(--bg-dark, #1a202c);
-          color: var(--text-light, #e2e8f0);
+          background-color: var(--error-bg, #1a202c);
+          color: var(--error-text, #e2e8f0);
           text-align: center;
           position: relative;
+          min-height: 400px;
+          padding: 40px 20px;
         }
 
-        .error-fullscreen {
+        .error-screen-fullscreen {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
           z-index: 9999;
+          min-height: 100vh;
         }
 
-        .error-inline {
-          min-height: 400px;
-          width: 100%;
+        .error-screen-inline {
           border-radius: 12px;
-          border: 1px solid var(--border-color, #2d3748);
+          border: 1px solid var(--error-border, #2d3748);
+          margin: 20px 0;
         }
 
         .error-screen-container {
-          max-width: 500px;
-          padding: 40px 20px;
-          animation: fadeInUp 0.5s ease-out;
+          max-width: 600px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 20px;
+          animation: errorFadeIn 0.5s ease-out;
         }
 
-        @keyframes fadeInUp {
+        @keyframes errorFadeIn {
           from {
             opacity: 0;
             transform: translateY(20px);
@@ -357,207 +516,107 @@ const ErrorScreen = memo(({
           }
         }
 
-        /* Error Icon */
-        .error-icon-container {
-          margin-bottom: 24px;
-          position: relative;
+        /* Size Variants */
+        .error-screen-small .error-screen-container {
+          max-width: 400px;
+          padding: 20px 15px;
         }
 
-        .error-icon-wrapper {
-          position: relative;
-          display: inline-block;
+        .error-screen-large .error-screen-container {
+          max-width: 700px;
+          padding: 60px 40px;
         }
 
-        .error-icon {
-          font-size: 4rem;
-          display: block;
-          filter: grayscale(0.3);
+        /* Theme Variants */
+        .error-screen-theme-light {
+          background-color: var(--error-bg, #ffffff);
+          color: var(--error-text, #2d3748);
+          border-color: var(--error-border, #e2e8f0);
         }
 
-        .error-icon-pulse {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle, rgba(229, 62, 62, 0.3) 0%, transparent 70%);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.4;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          50% {
-            opacity: 0.8;
-            transform: translate(-50%, -50%) scale(1.1);
-          }
-        }
-
-        /* Error Content */
-        .error-content {
-          margin-bottom: 32px;
-        }
-
-        .error-title {
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin-bottom: 16px;
-          color: var(--text-light, #e2e8f0);
-        }
-
-        .error-description {
-          font-size: 1rem;
-          line-height: 1.6;
-          margin-bottom: 16px;
-          color: var(--text-muted, #a0aec0);
-        }
-
-        .error-message {
-          font-size: 0.9rem;
-          color: var(--danger-color, #e53e3e);
-          background-color: rgba(229, 62, 62, 0.1);
-          padding: 12px;
-          border-radius: 6px;
-          margin-bottom: 16px;
-          border: 1px solid rgba(229, 62, 62, 0.2);
-        }
-
-        .error-id {
-          background-color: var(--secondary-color, #232b3a);
-          border: 1px solid var(--border-color, #2d3748);
-          border-radius: 6px;
-          padding: 8px 12px;
-          margin: 12px 0;
-          font-size: 0.8rem;
-        }
-
-        .error-id code {
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-          color: var(--primary-color, #4a6cf7);
-          font-weight: 600;
-        }
-
-        .retry-info {
-          margin-top: 8px;
-          color: var(--text-muted, #a0aec0);
-          font-size: 0.85rem;
-        }
-
-        /* Action Buttons */
-        .error-actions {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-          flex-wrap: wrap;
-          margin-bottom: 20px;
-        }
-
-        .error-retry-btn {
-          min-width: 120px;
-          position: relative;
-        }
-
-        .error-retry-btn.loading {
-          color: transparent;
-        }
-
-        .error-retry-btn.loading::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 16px;
-          height: 16px;
-          border: 2px solid #ffffff;
-          border-top: 2px solid transparent;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          transform: translate(-50%, -50%);
-        }
-
-        @keyframes spin {
-          0% { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .error-back-btn,
-        .error-details-btn {
-          min-width: 100px;
-        }
-
-        /* Error Details */
-        .error-details {
-          margin-top: 20px;
-          text-align: left;
-          background-color: var(--secondary-color, #232b3a);
-          border: 1px solid var(--border-color, #2d3748);
-          border-radius: 8px;
-          padding: 16px;
-        }
-
-        .error-details summary {
-          cursor: pointer;
-          font-weight: 600;
-          color: var(--text-light, #e2e8f0);
-          margin-bottom: 12px;
-        }
-
-        .error-details summary:hover {
-          color: var(--primary-color, #4a6cf7);
-        }
-
-        .error-stack {
-          background-color: #1a1a1a;
-          border: 1px solid #333;
-          border-radius: 4px;
-          padding: 12px;
-          overflow-x: auto;
-          font-size: 0.8rem;
-          line-height: 1.4;
-          color: #f8f8f2;
-          margin: 0;
-          white-space: pre-wrap;
-          word-break: break-all;
+        .error-screen-theme-dark {
+          background-color: var(--error-bg, #1a202c);
+          color: var(--error-text, #e2e8f0);
+          border-color: var(--error-border, #2d3748);
         }
 
         /* Error Type Specific Styles */
-        .error-network .error-icon {
-          color: #4299e1;
+        .error-screen-network {
+          border-left: 4px solid #4299e1;
         }
 
-        .error-permission .error-icon {
-          color: #ed8936;
+        .error-screen-permission {
+          border-left: 4px solid #ed8936;
         }
 
-        .error-notFound .error-icon {
-          color: #a0aec0;
+        .error-screen-notFound {
+          border-left: 4px solid #a0aec0;
         }
 
-        .error-server .error-icon {
-          color: #e53e3e;
+        .error-screen-server {
+          border-left: 4px solid #e53e3e;
         }
 
-        .error-timeout .error-icon {
-          color: #d69e2e;
+        .error-screen-timeout {
+          border-left: 4px solid #d69e2e;
         }
 
-        .error-validation .error-icon {
-          color: #9f7aea;
+        .error-screen-validation {
+          border-left: 4px solid #9f7aea;
         }
 
-        /* Retrying State */
-        .error-retrying .error-icon-wrapper {
-          animation: shake 0.5s ease-in-out;
+        /* Auto-retry Controls */
+        .error-auto-retry-controls {
+          margin-top: 24px;
+          padding-top: 16px;
+          border-top: 1px solid var(--error-border, #2d3748);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
         }
 
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
+        .auto-retry-countdown {
+          font-size: 0.8rem;
+          color: var(--error-text-muted, #a0aec0);
+          animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        /* Button Styles */
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 500;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          border: 1px solid transparent;
+          cursor: pointer;
+          background: none;
+        }
+
+        .btn-ghost {
+          color: var(--error-text-muted, #a0aec0);
+          border-color: var(--error-border, #2d3748);
+        }
+
+        .btn-ghost:hover {
+          background-color: var(--error-card-bg, #232b3a);
+          color: var(--error-text, #e2e8f0);
+        }
+
+        .btn-small {
+          padding: 6px 12px;
+          font-size: 0.75rem;
         }
 
         /* Accessibility */
@@ -575,59 +634,75 @@ const ErrorScreen = memo(({
 
         /* Responsive Design */
         @media (max-width: 768px) {
-          .error-screen-container {
+          .error-screen {
             padding: 20px 15px;
+            min-height: 300px;
           }
 
-          .error-title {
-            font-size: 1.3rem;
+          .error-screen-container {
+            max-width: 100%;
           }
 
-          .error-description {
-            font-size: 0.9rem;
+          .error-auto-retry-controls {
+            margin-top: 16px;
+            padding-top: 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .error-screen {
+            padding: 15px 10px;
           }
 
-          .error-actions {
-            flex-direction: column;
-            align-items: center;
+          .error-screen-small .error-screen-container {
+            padding: 15px 10px;
           }
 
-          .error-actions .btn {
-            width: 100%;
-            max-width: 250px;
-          }
-
-          .error-icon {
-            font-size: 3rem;
+          .error-screen-large .error-screen-container {
+            padding: 30px 20px;
           }
         }
 
         /* High Contrast Mode */
         @media (prefers-contrast: high) {
           .error-screen {
-            background-color: #000;
-            color: #fff;
+            border-width: 2px;
           }
 
-          .error-details {
-            background-color: #222;
-            border-color: #666;
+          .error-auto-retry-controls {
+            border-top-width: 2px;
           }
 
-          .error-stack {
-            background-color: #111;
-            border-color: #555;
-            color: #fff;
+          .btn-ghost {
+            border-width: 2px;
           }
         }
 
         /* Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
-          .error-screen-container,
-          .error-icon-pulse,
-          .error-retrying .error-icon-wrapper,
-          .error-retry-btn.loading::after {
+          .error-screen-container {
             animation: none;
+          }
+
+          .auto-retry-countdown {
+            animation: none;
+          }
+
+          .btn {
+            transition: none;
+          }
+        }
+
+        /* Print Styles */
+        @media print {
+          .error-screen {
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+          }
+
+          .error-auto-retry-controls {
+            display: none;
           }
         }
       `}</style>
@@ -638,52 +713,124 @@ const ErrorScreen = memo(({
 // Display name for debugging
 ErrorScreen.displayName = 'ErrorScreen';
 
-// PropTypes
+// PropTypes validation
 ErrorScreen.propTypes = {
+  // Error data
   error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  errorType: PropTypes.oneOf([
-    'network', 'permission', 'notFound', 'server', 
-    'timeout', 'validation', 'generic'
-  ]),
+  errorType: PropTypes.oneOf(Object.values(ERROR_TYPES)),
+  errorId: PropTypes.string,
+  title: PropTypes.string,
+  description: PropTypes.string,
+  
+  // Functionality
   onRetry: PropTypes.func,
   onGoBack: PropTypes.func,
+  onReport: PropTypes.func,
   showDetails: PropTypes.bool,
-  retryCount: PropTypes.number,
+  
+  // Retry configuration
   maxRetries: PropTypes.number,
   retryDelay: PropTypes.number,
   autoRetry: PropTypes.bool,
+  
+  // Display configuration
+  size: PropTypes.oneOf(Object.values(SCREEN_SIZES)),
+  theme: PropTypes.oneOf(Object.values(THEME_CONFIG)),
   fullScreen: PropTypes.bool,
   className: PropTypes.string,
-  title: PropTypes.string,
-  description: PropTypes.string,
   actions: PropTypes.node,
+  
+  // Tracking and analytics
   trackError: PropTypes.bool,
-  errorId: PropTypes.string
+  userId: PropTypes.string,
+  teamId: PropTypes.string,
+  metadata: PropTypes.object
 };
 
+// ============================================================================
+// SPECIALIZED ERROR SCREEN COMPONENTS
+// ============================================================================
+
+/**
+ * Network Error Screen - Pre-configured for network issues
+ */
+export const NetworkErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.NETWORK}
+    autoRetry={true}
+    maxRetries={5}
+    retryDelay={2000}
+    {...props} 
+  />
+));
+
+/**
+ * Permission Error Screen - Pre-configured for access issues
+ */
+export const PermissionErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.PERMISSION}
+    onRetry={null}
+    {...props} 
+  />
+));
+
+/**
+ * Not Found Error Screen - Pre-configured for 404 errors
+ */
+export const NotFoundErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.NOT_FOUND}
+    onRetry={null}
+    {...props} 
+  />
+));
+
+/**
+ * Server Error Screen - Pre-configured for server issues
+ */
+export const ServerErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.SERVER}
+    autoRetry={true}
+    maxRetries={3}
+    retryDelay={3000}
+    {...props} 
+  />
+));
+
+/**
+ * Timeout Error Screen - Pre-configured for timeout issues
+ */
+export const TimeoutErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.TIMEOUT}
+    autoRetry={false}
+    maxRetries={3}
+    retryDelay={1000}
+    {...props} 
+  />
+));
+
+/**
+ * Validation Error Screen - Pre-configured for validation issues
+ */
+export const ValidationErrorScreen = memo((props) => (
+  <ErrorScreen 
+    errorType={ERROR_TYPES.VALIDATION}
+    autoRetry={false}
+    maxRetries={2}
+    retryDelay={500}
+    {...props} 
+  />
+));
+
+// Add display names for all specialized components
+NetworkErrorScreen.displayName = 'NetworkErrorScreen';
+PermissionErrorScreen.displayName = 'PermissionErrorScreen';
+NotFoundErrorScreen.displayName = 'NotFoundErrorScreen';
+ServerErrorScreen.displayName = 'ServerErrorScreen';
+TimeoutErrorScreen.displayName = 'TimeoutErrorScreen';
+ValidationErrorScreen.displayName = 'ValidationErrorScreen';
+
 export default ErrorScreen;
-
-// Convenience components for specific error types
-export const NetworkErrorScreen = (props) => (
-  <ErrorScreen errorType="network" autoRetry {...props} />
-);
-
-export const PermissionErrorScreen = (props) => (
-  <ErrorScreen errorType="permission" {...props} />
-);
-
-export const NotFoundErrorScreen = (props) => (
-  <ErrorScreen errorType="notFound" {...props} />
-);
-
-export const ServerErrorScreen = (props) => (
-  <ErrorScreen errorType="server" autoRetry {...props} />
-);
-
-export const TimeoutErrorScreen = (props) => (
-  <ErrorScreen errorType="timeout" {...props} />
-);
-
-export const ValidationErrorScreen = (props) => (
-  <ErrorScreen errorType="validation" {...props} />
-);
