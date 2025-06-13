@@ -3,16 +3,24 @@ import { Link } from 'react-router-dom';
 import './SearchResults.css';
 
 const SearchResults = ({ results, query, type }) => {
-  // Function to highlight the search query in text
+  // Function to highlight the search query in text - FIXED REGEX ISSUE
   const highlightMatch = (text) => {
     if (!query || !text) return text;
     
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, i) => 
-      regex.test(part) ? <span key={i} className="highlight">{part}</span> : part
-    );
+    try {
+      // Escape special regex characters to prevent syntax errors
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedQuery})`, 'gi');
+      const parts = text.split(regex);
+      
+      return parts.map((part, i) => 
+        regex.test(part) ? <span key={i} className="highlight">{part}</span> : part
+      );
+    } catch (error) {
+      // If regex fails for any reason, return original text
+      console.warn('Regex error in highlightMatch:', error);
+      return text;
+    }
   };
   
   // Get position display name

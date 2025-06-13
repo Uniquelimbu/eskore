@@ -1,31 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { apiClient } from '../../../../services'; // Updated import path
-import { isUserManager } from '../../../../utils/permissions';
-import PageLayout from '../../../../components/layout/PageLayout/PageLayout';
-import './styles/index.css'; // Updated import to use the new modular CSS
+import React, { useEffect } from 'react';
+import { useParams, useLocation, Outlet } from 'react-router-dom';
+import { useTeam } from '../../../../contexts/TeamContext';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { TeamSpaceProvider, useTeamSpace } from './contexts/TeamSpaceContext';
 import { autoCollapseSidebarForPath } from '../../../../utils/sidebarUtils';
+import './styles/index.css';
 
-const TeamSpace = () => {
+// Internal component that uses TeamSpaceContext
+const TeamSpaceContent = () => {
   const { teamId } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [team, setTeam] = useState(null);
-  const [isManager, setIsManager] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  // Use TeamContext for global team data
+  const { 
+    currentTeam, 
+    isManager, 
+    teamMembers, 
+    loading: teamLoading, 
+    error: teamError,
+    hasError,
+    switchToTeam,
+    getTeamById,
+    refreshCurrentTeam
+  } = useTeam();
+  
+  // Use TeamSpaceContext for local UI state
+  const {
+    loading: localLoading,
+    setLoading,
+    clearError
+  } = useTeamSpace();
 
+  // Check if we're on the base team space path
   const isBasePath = location.pathname === `/teams/${teamId}/space`;
 
-  // Auto-collapse sidebar for TeamSpace sub-pages
+  // Handle sidebar auto-collapse for specific paths
   useEffect(() => {
     autoCollapseSidebarForPath(location.pathname);
     
     // Cleanup on unmount - expand sidebar when leaving TeamSpace
     return () => {
-      if (!location.pathname.includes('/teams/') || location.pathname.includes('/teams') && !location.pathname.includes('/space/')) {
+      if (!location.pathname.includes('/teams/') || 
+          (location.pathname.includes('/teams') && !location.pathname.includes('/space/'))) {
         import('../../../../utils/sidebarUtils').then(({ expandSidebar }) => {
           expandSidebar();
         });
@@ -33,131 +50,159 @@ const TeamSpace = () => {
     };
   }, [location.pathname]);
 
-  // Function to refresh team data
-  const refreshTeam = async () => {
-    try {
-      setIsLoading(true);
-      const response = await apiClient.get(`/teams/${teamId}`);
-      console.log('TeamSpace: Team data received:', response);
-
-      if (response && response.id) {
-        setTeam(response);
-
-        const isUserManagerFlag = isUserManager(response, user);
-        console.log(`TeamSpace: Setting isManager to ${isUserManagerFlag} for user ${user?.id}`);
-        setIsManager(isUserManagerFlag);
-      } else {
-        console.error('Received unexpected data structure for team. Expected team object, got:', response);
-        throw new Error('Team data not found in response or response format is incorrect.');
+  // Ensure we're viewing the correct team
+  useEffect(() => {
+    const ensureCorrectTeam = async () => {
+      if (!teamId || !user) return;
+      
+      console.log(`TeamSpace: Ensuring correct team - URL: ${teamId}, Current: ${currentTeam?.id}`);
+      
+      // If no current team or different team, switch to the requested team
+      if (!currentTeam || currentTeam.id.toString() !== teamId) {
+        setLoading(true);
+        try {
+          console.log(`TeamSpace: Fetching team ${teamId}`);
+          const team = await getTeamById(teamId);
+          
+          if (team) {
+            console.log(`TeamSpace: Switching to team ${team.name}`);
+            await switchToTeam(team);
+            clearError(); // Clear any previous errors
+          } else {
+            console.error('TeamSpace: Team not found');
+          }
+        } catch (error) {
+          console.error('TeamSpace: Error ensuring correct team:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error('Error fetching team data:', err);
-      setError('Failed to load team information. Please try again later.');
+    };
+
+    ensureCorrectTeam();
+  }, [teamId, currentTeam, user, getTeamById, switchToTeam, setLoading, clearError]);
+
+  // Enhanced refresh function using TeamContext
+  const refreshTeamData = async () => {
+    try {
+      setLoading(true);
+      console.log('TeamSpace: Refreshing team data');
+      await refreshCurrentTeam();
+      console.log('TeamSpace: Team data refreshed successfully');
+      clearError();
+    } catch (error) {
+      console.error('TeamSpace: Error refreshing team data:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Initial load
-  useEffect(() => {
-    refreshTeam();
-  }, [teamId, user]);
-
-  const handleBackClick = () => {
-    navigate('/teams');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="loading-container">
-        <div className="loader"></div>
-        <p>Loading team space...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-container">
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={handleBackClick} className="back-button">
-          Back to Teams
-        </button>
-      </div>
-    );
-  }
-
-  // Context value with refreshTeam function
+  // Context value for child components
   const contextValue = {
-    team,
+    team: currentTeam,
     isManager,
-    refreshTeam
+    refreshTeam: refreshTeamData,
+    teamMembers,
+    loading: teamLoading || localLoading,
+    error: teamError || (hasError ? 'Team system error' : null)
   };
+
+  // Combined loading state
+  const isLoading = teamLoading || localLoading;
+
+  // Show loading state
+  if (isLoading && !currentTeam) {
+    return (
+      <div className="team-space-layout">
+        <div className="team-space-container" style={{ paddingTop: 0 }}>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading team data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (teamError || hasError) {
+    return (
+      <div className="team-space-layout">
+        <div className="team-space-container" style={{ paddingTop: 0 }}>
+          <div className="error-container">
+            <h3>Error Loading Team</h3>
+            <p>{teamError || 'Something went wrong loading the team data.'}</p>
+            <button onClick={refreshTeamData} className="retry-button">
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="team-space-layout">
       <div className="team-space-container" style={{ paddingTop: 0 }}>
         {/* Team Header - Only show on dashboard (isBasePath) */}
-        {isBasePath && (
+        {isBasePath && currentTeam && (
           <div className="team-space-header">
             <div className="team-identity-section">
               <div className="team-logo">
-                {team?.logoUrl ? (
-                  <img src={team.logoUrl} alt={`${team.name} logo`} />
+                {currentTeam.logoUrl ? (
+                  <img src={currentTeam.logoUrl} alt={`${currentTeam.name} logo`} />
                 ) : (
                   <div className="team-logo-placeholder">
-                    {team?.abbreviation || (team?.name ? team.name.substring(0, 3).toUpperCase() : 'T')}
+                    {currentTeam.abbreviation || 
+                     (currentTeam.name ? currentTeam.name.substring(0, 3).toUpperCase() : 'T')}
                   </div>
                 )}
               </div>
               <div className="team-details">
-                <h1>{team?.name || 'Team Name'}</h1>
-                {team?.nickname && <div className="team-nickname">{team.nickname}</div>}
+                <h1>{currentTeam.name || 'Team Name'}</h1>
+                {currentTeam.nickname && <div className="team-nickname">{currentTeam.nickname}</div>}
                 <div className="team-meta">
-                  {team?.city && <span>{team.city}</span>}
-                  {team?.foundedYear && <span>Est. {team.foundedYear}</span>}
-                  {team?.teamIdentifier && <span className="team-identifier">{team.teamIdentifier}</span>}
+                  {currentTeam.city && <span className="team-location">{currentTeam.city}</span>}
+                  {currentTeam.foundedYear && (
+                    <span className="team-founded">Est. {currentTeam.foundedYear}</span>
+                  )}
+                  <span className="team-members">{teamMembers?.length || 0} members</span>
                 </div>
               </div>
             </div>
+            
             <div className="team-actions">
-              {/* Settings button removed */}
+              {isManager && (
+                <button className="btn btn-primary" onClick={refreshTeamData}>
+                  Refresh Data
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        <div className="team-space-main-content">
-          {/* If a child route is active (e.g., squad, formation), render it via Outlet.
-              Otherwise (on the base /teams/:teamId path), render the dashboard tiles. */}
-          {isBasePath ? (
-            <div className="container-layout">
-              <div className="container-main clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/formation`)}>
-                <h2>Formation</h2>
-              </div>
-              
-              <div className="container-right">
-                <div className="container-top clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/squad`)}>
-                  <h2>Squad</h2>
-                </div>
-                
-                <div className="container-bottom-grid">
-                  <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/calendar`)}>
-                    <h3>Calendar</h3>
-                  </div>
-                  
-                  <div className="container-small clickable-tile" onClick={() => navigate(`/teams/${teamId}/space/settings`)}>
-                    <h3>Settings</h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Outlet context={contextValue} />
-          )}
+        {/* Loading overlay for partial updates */}
+        {isLoading && currentTeam && (
+          <div className="team-space-loading-overlay">
+            <div className="loading-content">Updating...</div>
+          </div>
+        )}
+
+        {/* Team Content */}
+        <div className="team-space-content">
+          <Outlet context={contextValue} />
         </div>
       </div>
     </div>
+  );
+};
+
+// Main component wrapper with TeamSpaceProvider
+const TeamSpace = () => {
+  return (
+    <TeamSpaceProvider>
+      <TeamSpaceContent />
+    </TeamSpaceProvider>
   );
 };
 
