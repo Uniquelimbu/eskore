@@ -1,0 +1,385 @@
+/* ============================================================================ */
+/* TEAMSPACE TOAST ANIMATIONS */
+/* ============================================================================ */
+
+/* Animation custom properties */
+:root {
+  --toast-animation-duration-fast: 0.2s;
+  --toast-animation-duration-normal: 0.3s;
+  --toast-animation-duration-slow: 0.5s;
+  --toast-animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --toast-animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --toast-slide-distance: 20px;
+  --toast-scale-start: 0.9;
+}
+
+/* ============================================================================ */
+/* ENTRANCE ANIMATIONS */
+/* ============================================================================ */
+
+/* Fade in animation */
+.toast-animated.toast-visible {
+  opacity: 1;
+  animation: toastFadeIn var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from right (default for top-right, bottom-right) */
+.toast-container-top-right .toast-animated.toast-visible,
+.toast-container-bottom-right .toast-animated.toast-visible {
+  animation: toastSlideInRight var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from left (for top-left, bottom-left) */
+.toast-container-top-left .toast-animated.toast-visible,
+.toast-container-bottom-left .toast-animated.toast-visible {
+  animation: toastSlideInLeft var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from top (for top-center) */
+.toast-container-top-center .toast-animated.toast-visible {
+  animation: toastSlideInTop var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideInTop {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from bottom (for bottom-center) */
+.toast-container-bottom-center .toast-animated.toast-visible {
+  animation: toastSlideInBottom var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================ */
+/* EXIT ANIMATIONS */
+/* ============================================================================ */
+
+/* Fade out animation */
+.toast-animated.toast-exiting {
+  animation: toastFadeOut var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+/* Slide out to right */
+.toast-container-top-right .toast-animated.toast-exiting,
+.toast-container-bottom-right .toast-animated.toast-exiting {
+  animation: toastSlideOutRight var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Slide out to left */
+.toast-container-top-left .toast-animated.toast-exiting,
+.toast-container-bottom-left .toast-animated.toast-exiting {
+  animation: toastSlideOutLeft var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+/* Slide out to top */
+.toast-container-top-center .toast-animated.toast-exiting {
+  animation: toastSlideOutTop var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideOutTop {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+/* Slide out to bottom */
+.toast-container-bottom-center .toast-animated.toast-exiting {
+  animation: toastSlideOutBottom var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastSlideOutBottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+}
+
+/* ============================================================================ */
+/* SPECIAL ANIMATIONS */
+/* ============================================================================ */
+
+/* Bounce animation for success toasts */
+.toast-success.toast-animated.toast-visible {
+  animation: toastBounceIn var(--toast-animation-duration-slow) var(--toast-animation-easing-bounce);
+}
+
+@keyframes toastBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shake animation for error toasts */
+.toast-error.toast-animated.toast-visible {
+  animation: toastShakeIn var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastShakeIn {
+  0%, 100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-3px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(3px);
+  }
+}
+
+/* Pulse animation for warning toasts */
+.toast-warning.toast-animated.toast-visible {
+  animation: toastPulseIn var(--toast-animation-duration-normal) var(--toast-animation-easing);
+}
+
+@keyframes toastPulseIn {
+  0% {
+    opacity: 0;
+    transform: scale(var(--toast-scale-start));
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================================ */
+/* PROGRESS BAR ANIMATIONS */
+/* ============================================================================ */
+
+/* Progress bar fill animation */
+.toast-progress-fill {
+  transition: width 0.1s linear;
+  transform-origin: left center;
+}
+
+/* Paused state glow animation */
+.toast-paused .toast-progress-fill {
+  animation: progressGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes progressGlow {
+  from {
+    opacity: 0.7;
+    box-shadow: 0 0 5px currentColor;
+  }
+  to {
+    opacity: 1;
+    box-shadow: 0 0 10px currentColor;
+  }
+}
+
+/* ============================================================================ */
+/* LOADING ANIMATIONS */
+/* ============================================================================ */
+
+/* Loading spinner animation */
+@keyframes toastSpinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner-small {
+  animation: toastSpinner 1s linear infinite;
+}
+
+/* Loading pulse animation */
+@keyframes toastPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-icon {
+  animation: toastPulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================================================ */
+/* HOVER ANIMATIONS */
+/* ============================================================================ */
+
+/* Toast hover effect */
+.team-space-toast:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  transition: transform var(--toast-animation-duration-fast) var(--toast-animation-easing),
+              box-shadow var(--toast-animation-duration-fast) var(--toast-animation-easing);
+}
+
+/* Button hover animations */
+.toast-action-btn,
+.toast-dismiss-btn {
+  transition: all var(--toast-animation-duration-fast) var(--toast-animation-easing);
+}
+
+.toast-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.toast-dismiss-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Icon animations */
+.toast-icon {
+  transition: transform var(--toast-animation-duration-fast) var(--toast-animation-easing);
+}
+
+.team-space-toast:hover .toast-icon {
+  transform: scale(1.1);
+}
+
+/* ============================================================================ */
+/* ACCESSIBILITY - REDUCED MOTION */
+/* ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-animated.toast-visible,
+  .toast-animated.toast-exiting,
+  .toast-success.toast-animated.toast-visible,
+  .toast-error.toast-animated.toast-visible,
+  .toast-warning.toast-animated.toast-visible {
+    animation: none;
+  }
+  
+  .team-space-toast:hover,
+  .toast-action-btn:hover,
+  .toast-dismiss-btn:hover,
+  .team-space-toast:hover .toast-icon {
+    transform: none;
+  }
+  
+  .toast-paused .toast-progress-fill {
+    animation: none;
+  }
+  
+  .loading-spinner-small,
+  .loading-icon {
+    animation: none;
+  }
+  
+  /* Still allow opacity transitions for visual feedback */
+  .team-space-toast,
+  .toast-action-btn,
+  .toast-dismiss-btn {
+    transition: opacity var(--toast-animation-duration-fast) ease;
+  }
+}

@@ -1,0 +1,305 @@
+/* ============================================================================ */
+/* TEAMSPACE TOAST POSITIONING */
+/* ============================================================================ */
+
+/* Container positioning custom properties */
+:root {
+  --toast-container-gap: 16px;
+  --toast-container-edge-gap: 20px;
+  --toast-container-mobile-gap: 12px;
+  --toast-item-spacing: var(--toast-spacing, 8px);
+}
+
+/* ============================================================================ */
+/* TOAST CONTAINER BASE */
+/* ============================================================================ */
+
+.toast-container {
+  position: fixed;
+  z-index: var(--toast-container-z-index, 9999);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--toast-item-spacing);
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.toast-container > * {
+  pointer-events: auto;
+}
+
+/* ============================================================================ */
+/* TOP POSITIONS */
+/* ============================================================================ */
+
+/* Top Right */
+.toast-container-top-right {
+  top: var(--toast-container-gap);
+  right: var(--toast-container-gap);
+  align-items: flex-end;
+}
+
+/* Top Left */
+.toast-container-top-left {
+  top: var(--toast-container-gap);
+  left: var(--toast-container-gap);
+  align-items: flex-start;
+}
+
+/* Top Center */
+.toast-container-top-center {
+  top: var(--toast-container-gap);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+/* ============================================================================ */
+/* BOTTOM POSITIONS */
+/* ============================================================================ */
+
+/* Bottom Right */
+.toast-container-bottom-right {
+  bottom: var(--toast-container-gap);
+  right: var(--toast-container-gap);
+  align-items: flex-end;
+  flex-direction: column-reverse;
+}
+
+/* Bottom Left */
+.toast-container-bottom-left {
+  bottom: var(--toast-container-gap);
+  left: var(--toast-container-gap);
+  align-items: flex-start;
+  flex-direction: column-reverse;
+}
+
+/* Bottom Center */
+.toast-container-bottom-center {
+  bottom: var(--toast-container-gap);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+  flex-direction: column-reverse;
+}
+
+/* ============================================================================ */
+/* TOAST POSITIONING WITHIN CONTAINER */
+/* ============================================================================ */
+
+/* Individual toast positioning */
+.team-space-toast {
+  position: relative;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Ensure toasts don't overlap */
+.toast-container .team-space-toast + .team-space-toast {
+  margin-top: var(--toast-item-spacing);
+}
+
+/* Bottom containers reverse the margin */
+.toast-container-bottom-right .team-space-toast + .team-space-toast,
+.toast-container-bottom-left .team-space-toast + .team-space-toast,
+.toast-container-bottom-center .team-space-toast + .team-space-toast {
+  margin-top: 0;
+  margin-bottom: var(--toast-item-spacing);
+}
+
+/* ============================================================================ */
+/* SIZE-BASED POSITIONING ADJUSTMENTS */
+/* ============================================================================ */
+
+/* Small toasts - tighter spacing */
+.toast-small {
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.toast-container .toast-small + .toast-small {
+  margin-top: calc(var(--toast-item-spacing) * 0.75);
+}
+
+/* Large toasts - more spacing */
+.toast-large {
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.toast-container .toast-large + .toast-large {
+  margin-top: calc(var(--toast-item-spacing) * 1.25);
+}
+
+/* ============================================================================ */
+/* STACKING BEHAVIOR */
+/* ============================================================================ */
+
+/* Z-index stacking for overlapping toasts */
+.team-space-toast {
+  z-index: var(--toast-z-index, 10000);
+}
+
+/* Newer toasts appear above older ones */
+.team-space-toast:nth-child(1) { z-index: calc(var(--toast-z-index, 10000) + 10); }
+.team-space-toast:nth-child(2) { z-index: calc(var(--toast-z-index, 10000) + 9); }
+.team-space-toast:nth-child(3) { z-index: calc(var(--toast-z-index, 10000) + 8); }
+.team-space-toast:nth-child(4) { z-index: calc(var(--toast-z-index, 10000) + 7); }
+.team-space-toast:nth-child(5) { z-index: calc(var(--toast-z-index, 10000) + 6); }
+
+/* ============================================================================ */
+/* VIEWPORT EDGE HANDLING */
+/* ============================================================================ */
+
+/* Prevent toasts from going off-screen */
+.toast-container {
+  max-width: calc(100vw - (var(--toast-container-gap) * 2));
+  box-sizing: border-box;
+}
+
+/* Adjust for narrow viewports */
+@media (max-width: 500px) {
+  .toast-container-top-center,
+  .toast-container-bottom-center {
+    left: var(--toast-container-mobile-gap);
+    right: var(--toast-container-mobile-gap);
+    transform: none;
+    width: calc(100vw - (var(--toast-container-mobile-gap) * 2));
+  }
+  
+  .toast-container-top-right,
+  .toast-container-bottom-right {
+    right: var(--toast-container-mobile-gap);
+  }
+  
+  .toast-container-top-left,
+  .toast-container-bottom-left {
+    left: var(--toast-container-mobile-gap);
+  }
+}
+
+/* ============================================================================ */
+/* SIDEBAR AWARENESS */
+/* ============================================================================ */
+
+/* Adjust positioning when sidebar is present */
+body.with-sidebar .toast-container-top-left,
+body.with-sidebar .toast-container-bottom-left {
+  left: calc(var(--sidebar-current-width, 240px) + var(--toast-container-gap));
+}
+
+/* Adjust for collapsed sidebar */
+body.with-sidebar.sidebar-collapsed .toast-container-top-left,
+body.with-sidebar.sidebar-collapsed .toast-container-bottom-left {
+  left: calc(var(--sidebar-collapsed-width, 60px) + var(--toast-container-gap));
+}
+
+/* ============================================================================ */
+/* NAVBAR AWARENESS */
+/* ============================================================================ */
+
+/* Adjust top positioning when top navbar is present */
+body.with-navbar .toast-container-top-right,
+body.with-navbar .toast-container-top-left,
+body.with-navbar .toast-container-top-center {
+  top: calc(var(--top-navbar-height, 60px) + var(--toast-container-gap));
+}
+
+/* ============================================================================ */
+/* FULLSCREEN HANDLING */
+/* ============================================================================ */
+
+/* Adjust positioning in fullscreen mode */
+.fullscreen .toast-container-top-right,
+.fullscreen .toast-container-top-left,
+.fullscreen .toast-container-top-center {
+  top: var(--toast-container-gap);
+}
+
+.fullscreen .toast-container-bottom-right,
+.fullscreen .toast-container-bottom-left,
+.fullscreen .toast-container-bottom-center {
+  bottom: var(--toast-container-gap);
+}
+
+/* ============================================================================ */
+/* CONTAINER OVERFLOW HANDLING */
+/* ============================================================================ */
+
+/* When too many toasts, enable scrolling */
+.toast-container {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.toast-container::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+/* Fade effect for overflow */
+.toast-container::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  height: 20px;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-dark, #1a202c) 0%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.toast-container::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  height: 20px;
+  background: linear-gradient(
+    to top,
+    var(--bg-dark, #1a202c) 0%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Hide fade effects when not overflowing */
+.toast-container:not(.overflowing)::before,
+.toast-container:not(.overflowing)::after {
+  display: none;
+}
+
+/* ============================================================================ */
+/* POSITION UTILITIES */
+/* ============================================================================ */
+
+/* Position classes for individual toasts */
+.toast-position-top-right { align-self: flex-end; }
+.toast-position-top-left { align-self: flex-start; }
+.toast-position-top-center { align-self: center; }
+.toast-position-bottom-right { align-self: flex-end; }
+.toast-position-bottom-left { align-self: flex-start; }
+.toast-position-bottom-center { align-self: center; }
+
+/* Container state classes */
+.toast-container.container-empty {
+  display: none;
+}
+
+.toast-container.container-overflowing {
+  padding-right: 4px; /* Space for potential scrollbar */
+}
+
+/* ============================================================================ */
+/* PRINT STYLES */
+/* ============================================================================ */
+
+@media print {
+  .toast-container {
+    display: none !important;
+  }
+}
