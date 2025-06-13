@@ -1,0 +1,314 @@
+/* ============================================================================ */
+/* MODAL ANIMATIONS - OPTIMIZED WITH CUSTOM PROPERTIES */
+/* ============================================================================ */
+
+/* Animation custom properties */
+:root {
+  --modal-animation-duration-fast: 0.2s;
+  --modal-animation-duration-normal: 0.3s;
+  --modal-animation-duration-slow: 0.5s;
+  --modal-animation-easing: ease-out;
+  --modal-animation-easing-in: ease-in;
+  --modal-spinner-duration: 1s;
+  --modal-backdrop-blur: 4px;
+}
+
+/* ============================================================================ */
+/* BASE MODAL ANIMATIONS - Consolidated similar patterns */
+/* ============================================================================ */
+
+/* Fade animation - base pattern */
+.modal-animated .confirmation-modal-overlay {
+  animation: modalFadeIn var(--modal-animation-duration-normal) var(--modal-animation-easing);
+}
+
+.modal-animated.modal-closing .confirmation-modal-overlay {
+  animation: modalFadeOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in);
+}
+
+/* Scale animation - base pattern */
+.modal-animated .modal-container {
+  animation: modalScaleIn var(--modal-animation-duration-normal) var(--modal-animation-easing);
+}
+
+.modal-animated.modal-closing .modal-container {
+  animation: modalScaleOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in);
+}
+
+/* ============================================================================ */
+/* KEYFRAME DEFINITIONS - Optimized and organized */
+/* ============================================================================ */
+
+/* Fade animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Scale animations */
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Slide animations - consolidated top/bottom */
+@keyframes modalSlideTop {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideTopOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideBottom {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideBottomOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+}
+
+/* Advanced animations */
+@keyframes modalBounce {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalZoom {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes modalZoomOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+/* Blur animations */
+@keyframes modalBlurIn {
+  from { backdrop-filter: blur(0px); }
+  to { backdrop-filter: blur(var(--modal-backdrop-blur)); }
+}
+
+@keyframes modalBlurOut {
+  from { backdrop-filter: blur(var(--modal-backdrop-blur)); }
+  to { backdrop-filter: blur(0px); }
+}
+
+/* Button spinner animation */
+@keyframes buttonSpinner {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Success/Error feedback animations */
+@keyframes successFlash {
+  0% {
+    background-color: var(--secondary-color, #232b3a);
+  }
+  50% {
+    background-color: rgba(from var(--success-color) r g b / 0.1);
+  }
+  100% {
+    background-color: var(--secondary-color, #232b3a);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+/* ============================================================================ */
+/* ANIMATION VARIANT CLASSES - Using custom properties */
+/* ============================================================================ */
+
+/* Slide variants */
+.modal-slide-top .modal-container {
+  animation: modalSlideTop var(--modal-animation-duration-normal) var(--modal-animation-easing);
+}
+
+.modal-slide-top.modal-closing .modal-container {
+  animation: modalSlideTopOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in);
+}
+
+.modal-slide-bottom .modal-container {
+  animation: modalSlideBottom var(--modal-animation-duration-normal) var(--modal-animation-easing);
+}
+
+.modal-slide-bottom.modal-closing .modal-container {
+  animation: modalSlideBottomOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in);
+}
+
+/* Bounce animation */
+.modal-bounce .modal-container {
+  animation: modalBounce var(--modal-animation-duration-slow) var(--modal-animation-easing);
+}
+
+/* Zoom animations */
+.modal-zoom .modal-container {
+  animation: modalZoom var(--modal-animation-duration-normal) var(--modal-animation-easing);
+}
+
+.modal-zoom.modal-closing .modal-container {
+  animation: modalZoomOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in);
+}
+
+/* Blur backdrop animation */
+.modal-blur .confirmation-modal-overlay {
+  backdrop-filter: blur(0px);
+  animation: modalBlurIn var(--modal-animation-duration-normal) var(--modal-animation-easing) forwards;
+}
+
+.modal-blur.modal-closing .confirmation-modal-overlay {
+  animation: modalBlurOut var(--modal-animation-duration-normal) var(--modal-animation-easing-in) forwards;
+}
+
+/* ============================================================================ */
+/* BUTTON ANIMATIONS - Consolidated hover effects */
+/* ============================================================================ */
+
+.modal-cancel-btn,
+.modal-confirm-btn {
+  transform: translateY(0);
+  transition: transform var(--modal-animation-duration-fast) ease, 
+              box-shadow var(--modal-animation-duration-fast) ease;
+}
+
+.modal-cancel-btn:hover,
+.modal-confirm-btn:hover {
+  transform: translateY(-1px);
+}
+
+.modal-cancel-btn:active,
+.modal-confirm-btn:active {
+  transform: translateY(0);
+}
+
+/* Loading spinner */
+.btn-loading-spinner {
+  animation: buttonSpinner var(--modal-spinner-duration) linear infinite;
+}
+
+/* ============================================================================ */
+/* FEEDBACK ANIMATIONS */
+/* ============================================================================ */
+
+.modal-success-flash .modal-container {
+  animation: successFlash 0.6s var(--modal-animation-easing);
+}
+
+.modal-error-shake .modal-container {
+  animation: errorShake 0.6s ease-in-out;
+}
+
+/* ============================================================================ */
+/* ACCESSIBILITY - Disable animations for reduced motion */
+/* ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-animated .confirmation-modal-overlay,
+  .modal-animated .modal-container,
+  .modal-slide-top .modal-container,
+  .modal-slide-bottom .modal-container,
+  .modal-bounce .modal-container,
+  .modal-zoom .modal-container,
+  .modal-blur .confirmation-modal-overlay,
+  .modal-success-flash .modal-container,
+  .modal-error-shake .modal-container,
+  .btn-loading-spinner {
+    animation: none;
+  }
+  
+  .modal-cancel-btn:hover,
+  .modal-confirm-btn:hover {
+    transform: none;
+  }
+}

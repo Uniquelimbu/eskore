@@ -1,0 +1,195 @@
+/* ============================================================================ */
+/* RESPONSIVE DESIGN */
+/* ============================================================================ */
+
+/* Tablet and below (768px) */
+@media (max-width: 768px) {
+  .loading-container {
+    padding: 30px 15px;
+  }
+
+  .loading-skeleton {
+    width: 250px;
+  }
+
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeout-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .timeout-actions .btn {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* Mobile and below (480px) */
+@media (max-width: 480px) {
+  .loading-container {
+    padding: 20px 10px;
+  }
+
+  .loading-message h3 {
+    font-size: 1.1rem;
+  }
+
+  .loading-skeleton {
+    width: 200px;
+  }
+
+  .loading-bars {
+    height: 30px;
+  }
+
+  .bar {
+    width: 4px;
+  }
+
+  @keyframes bar-scale {
+    0%, 40%, 100% {
+      height: 8px;
+    }
+    20% {
+      height: 30px;
+    }
+  }
+
+  /* Adjust fullscreen padding on mobile */
+  .loading-fullscreen .loading-container {
+    padding: 40px 20px;
+  }
+
+  /* Smaller timeout actions on mobile */
+  .timeout-actions .btn {
+    min-width: 100px;
+    font-size: 0.9rem;
+    padding: 10px 16px;
+  }
+}
+
+/* Very small screens (320px) */
+@media (max-width: 320px) {
+  .loading-container {
+    padding: 16px 8px;
+  }
+
+  .loading-message h3 {
+    font-size: 1rem;
+  }
+
+  .loading-skeleton {
+    width: 180px;
+  }
+
+  .loading-spinner {
+    width: 36px;
+    height: 36px;
+  }
+
+  .loading-pulse,
+  .loading-ripple {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pulse-circle,
+  .ripple-circle {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ============================================================================ */
+/* HIGH CONTRAST MODE */
+/* ============================================================================ */
+
+@media (prefers-contrast: high) {
+  .loading-spinner {
+    border-color: #000;
+    border-left-color: #fff;
+  }
+
+  .progress-bar {
+    border-width: 2px;
+  }
+
+  .elapsed-time {
+    border-width: 2px;
+  }
+
+  .dot,
+  .pulse-circle,
+  .bar,
+  .ripple-circle {
+    border: 1px solid currentColor;
+  }
+}
+
+/* ============================================================================ */
+/* REDUCED MOTION */
+/* ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .dot,
+  .pulse-circle,
+  .bar,
+  .ripple-circle,
+  .skeleton-line,
+  .skeleton-card,
+  .progress-fill::after,
+  .loading-custom-icon {
+    animation: none;
+  }
+
+  .loading-spinner {
+    border-left-color: var(--primary-color, #4a6cf7);
+  }
+
+  .loading-screen {
+    transition: none;
+  }
+
+  .progress-fill {
+    transition: none;
+  }
+}
+
+/* ============================================================================ */
+/* PRINT STYLES */
+/* ============================================================================ */
+
+@media print {
+  .loading-screen {
+    display: none !important;
+  }
+}
+
+/* ============================================================================ */
+/* LANDSCAPE ORIENTATION */
+/* ============================================================================ */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .loading-fullscreen .loading-container {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .loading-message h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .loading-details {
+    font-size: 0.8rem;
+  }
+
+  .loading-animation {
+    margin-bottom: 12px;
+  }
+}

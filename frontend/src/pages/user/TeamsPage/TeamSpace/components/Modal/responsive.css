@@ -1,0 +1,289 @@
+/* ============================================================================ */
+/* MODAL RESPONSIVE DESIGN - COMBINED BREAKPOINTS */
+/* ============================================================================ */
+
+/* Large screens (1200px+) */
+@media (min-width: 1200px) {
+  .modal-large .modal-container {
+    max-width: 700px;
+  }
+
+  .modal-large .modal-content {
+    padding: 48px;
+  }
+
+  .modal-large .modal-title {
+    font-size: 2rem;
+  }
+
+  .modal-large .modal-message {
+    font-size: 1.2rem;
+  }
+
+  .modal-large .modal-icon-emoji {
+    font-size: 4rem;
+  }
+}
+
+/* Tablet and below (768px) - Combined similar styles */
+@media (max-width: 768px) {
+  .confirmation-modal-overlay {
+    padding: 16px;
+  }
+
+  .modal-container {
+    max-width: 90vw;
+    max-height: 85vh;
+  }
+
+  .modal-content {
+    padding: 24px;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+  }
+
+  .modal-message {
+    font-size: 0.9rem;
+  }
+
+  .modal-icon-emoji {
+    font-size: 2.5rem;
+  }
+
+  /* Button adjustments for tablet */
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-cancel-btn,
+  .modal-confirm-btn {
+    width: 100%;
+    min-width: auto;
+    justify-content: center;
+  }
+
+  /* Touch-friendly close button */
+  .modal-close-button {
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+}
+
+/* Mobile portrait and small screens (480px) - Combined */
+@media (max-width: 480px) {
+  .confirmation-modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-container {
+    max-width: 95vw;
+    max-height: 90vh;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  .modal-message {
+    font-size: 0.85rem;
+  }
+
+  .modal-icon-emoji {
+    font-size: 2rem;
+  }
+
+  .modal-cancel-btn,
+  .modal-confirm-btn {
+    padding: 14px 20px;
+    font-size: 0.9rem;
+  }
+
+  /* Stack content vertically */
+  .modal-header {
+    margin-bottom: 12px;
+  }
+
+  .modal-body {
+    margin-bottom: 24px;
+  }
+
+  /* Larger touch targets */
+  .modal-close-button {
+    width: 40px;
+    height: 40px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* Very small screens (320px) - Combined minimal styles */
+@media (max-width: 320px) {
+  .confirmation-modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-container {
+    max-width: 98vw;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-message {
+    font-size: 0.8rem;
+  }
+
+  .modal-icon-emoji {
+    font-size: 1.8rem;
+  }
+
+  .modal-cancel-btn,
+  .modal-confirm-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================================================ */
+/* ORIENTATION & SPECIAL CASES - Combined */
+/* ============================================================================ */
+
+/* Landscape orientation with limited height */
+@media (orientation: landscape) and (max-height: 500px) {
+  .modal-container {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    padding: 16px 24px;
+  }
+
+  .modal-icon {
+    margin-bottom: 12px;
+  }
+
+  .modal-icon-emoji {
+    font-size: 2rem;
+  }
+
+  .modal-header {
+    margin-bottom: 12px;
+  }
+
+  .modal-body {
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  .modal-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+/* ============================================================================ */
+/* DEVICE-SPECIFIC OPTIMIZATIONS - Combined */
+/* ============================================================================ */
+
+/* Touch devices - consolidated touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .modal-cancel-btn,
+  .modal-confirm-btn {
+    min-height: var(--modal-button-height);
+    padding: 12px 20px;
+  }
+
+  .modal-close-button {
+    min-width: var(--modal-button-height);
+    min-height: var(--modal-button-height);
+  }
+
+  /* Remove hover effects on touch devices */
+  .modal-cancel-btn:hover,
+  .modal-confirm-btn:hover,
+  .modal-close-button:hover {
+    transform: none;
+    background-color: initial;
+    border-color: initial;
+    color: initial;
+    box-shadow: none;
+  }
+
+  /* Add active states for touch feedback */
+  .modal-cancel-btn:active {
+    background-color: var(--secondary-light, #2d3748);
+    transform: scale(0.98);
+  }
+
+  .modal-confirm-btn:active {
+    background-color: var(--primary-dark, #3a5bd9);
+    transform: scale(0.98);
+  }
+
+  .modal-close-button:active {
+    background-color: var(--secondary-light, #2d3748);
+    transform: scale(0.95);
+  }
+}
+
+/* High-precision devices - better focus handling */
+@media (hover: hover) and (pointer: fine) {
+  .modal-cancel-btn:focus-visible,
+  .modal-confirm-btn:focus-visible,
+  .modal-close-button:focus-visible {
+    outline: var(--modal-focus-outline);
+    outline-offset: var(--modal-focus-offset);
+    box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.1);
+  }
+}
+
+/* High DPI displays - enhanced shadows */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .modal-container {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ============================================================================ */
+/* PRINT STYLES - Consolidated */
+/* ============================================================================ */
+
+@media print {
+  .confirmation-modal-overlay {
+    position: static;
+    background: none;
+    padding: 0;
+  }
+
+  .modal-container {
+    box-shadow: none;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+  }
+
+  .modal-actions,
+  .modal-close-button {
+    display: none;
+  }
+}

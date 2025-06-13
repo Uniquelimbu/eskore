@@ -1,0 +1,160 @@
+/* ============================================================================ */
+/* SIZE VARIANTS */
+/* ============================================================================ */
+
+.loading-small .loading-container {
+  padding: 20px 10px;
+  max-width: 300px;
+}
+
+.loading-small .loading-message h3 {
+  font-size: 1rem;
+}
+
+.loading-large .loading-container {
+  padding: 60px 30px;
+  max-width: 700px;
+}
+
+.loading-large .loading-message h3 {
+  font-size: 1.4rem;
+}
+
+/* ============================================================================ */
+/* THEME VARIANTS */
+/* ============================================================================ */
+
+.loading-theme-dark {
+  background-color: var(--bg-dark, #1a202c);
+  color: var(--text-light, #e2e8f0);
+}
+
+.loading-theme-light {
+  background-color: var(--bg-light, #ffffff);
+  color: var(--text-dark, #2d3748);
+}
+
+.loading-theme-auto {
+  background-color: var(--bg-primary, #1a202c);
+  color: var(--text-primary, #e2e8f0);
+}
+
+/* Light theme skeleton adjustments */
+.loading-theme-light .skeleton-line,
+.loading-theme-light .skeleton-card {
+  background: linear-gradient(
+    90deg,
+    #f7fafc 25%,
+    #edf2f7 50%,
+    #f7fafc 75%
+  );
+}
+
+.loading-theme-light .progress-bar {
+  background-color: #edf2f7;
+}
+
+.loading-theme-light .elapsed-time {
+  background-color: #f7fafc;
+  border-color: #e2e8f0;
+}
+
+/* ============================================================================ */
+/* VARIANT COMBINATIONS */
+/* ============================================================================ */
+
+/* Small spinner variant */
+.loading-small .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* Large spinner variant */
+.loading-large .loading-spinner {
+  width: 64px;
+  height: 64px;
+  border-width: 5px;
+}
+
+/* Small dots variant */
+.loading-small .dot {
+  width: 8px;
+  height: 8px;
+}
+
+/* Large dots variant */
+.loading-large .dot {
+  width: 16px;
+  height: 16px;
+}
+
+/* Small bars variant */
+.loading-small .loading-bars {
+  height: 30px;
+}
+
+.loading-small .bar {
+  width: 4px;
+}
+
+/* Large bars variant */
+.loading-large .loading-bars {
+  height: 50px;
+}
+
+.loading-large .bar {
+  width: 8px;
+}
+
+/* Small pulse variant */
+.loading-small .loading-pulse {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-small .pulse-circle {
+  width: 40px;
+  height: 40px;
+}
+
+/* Large pulse variant */
+.loading-large .loading-pulse {
+  width: 80px;
+  height: 80px;
+}
+
+.loading-large .pulse-circle {
+  width: 80px;
+  height: 80px;
+}
+
+/* Small ripple variant */
+.loading-small .loading-ripple {
+  width: 40px;
+  height: 40px;
+}
+
+/* Large ripple variant */
+.loading-large .loading-ripple {
+  width: 80px;
+  height: 80px;
+}
+
+/* Small skeleton variant */
+.loading-small .loading-skeleton {
+  width: 200px;
+}
+
+.loading-small .skeleton-line {
+  height: 12px;
+}
+
+/* Large skeleton variant */
+.loading-large .loading-skeleton {
+  width: 400px;
+}
+
+.loading-large .skeleton-line {
+  height: 20px;
+}

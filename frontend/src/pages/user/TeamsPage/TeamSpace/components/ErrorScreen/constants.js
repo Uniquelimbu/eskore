@@ -598,39 +598,6 @@ export const SECURITY_CONSTANTS = {
 };
 
 // ============================================================================
-// NAMED EXPORTS
-// ============================================================================
-
-export {
-  ERROR_ICONS,
-  ERROR_COLORS,
-  DEFAULT_ERROR_CONFIG,
-  RETRY_CONFIGS,
-  SCREEN_SIZES,
-  SCREEN_SIZE_CONFIG,
-  ANIMATION_CONFIG,
-  A11Y_CONFIG,
-  ANALYTICS_EVENTS,
-  DEFAULT_ERROR_MESSAGES,
-  THEME_CONFIG,
-  THEME_VARIABLES,
-  BREAKPOINTS,
-  ERROR_CATEGORIES,
-  HELP_LINKS,
-  FEATURE_FLAGS,
-  VALIDATION_RULES,
-  PERFORMANCE_THRESHOLDS,
-  SECURITY_SETTINGS,
-  COMPONENT_DEFAULTS,
-  CORE_CONSTANTS,
-  RETRY_CONSTANTS,
-  UI_CONSTANTS,
-  A11Y_CONSTANTS,
-  ANALYTICS_CONSTANTS,
-  SECURITY_CONSTANTS
-};
-
-// ============================================================================
 // DEFAULT EXPORT
 // ============================================================================
 

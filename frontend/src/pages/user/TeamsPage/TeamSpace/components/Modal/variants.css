@@ -1,0 +1,238 @@
+/* ============================================================================ */
+/* MODAL VARIANTS - OPTIMIZED WITH CUSTOM PROPERTIES */
+/* ============================================================================ */
+
+/* Variant color custom properties */
+:root {
+  --modal-danger-color: var(--danger-color, #e53e3e);
+  --modal-danger-dark: var(--danger-dark, #c53030);
+  --modal-warning-color: var(--warning-color, #ed8936);
+  --modal-warning-dark: var(--warning-dark, #dd7124);
+  --modal-success-color: var(--success-color, #48bb78);
+  --modal-success-dark: var(--success-dark, #38a169);
+  --modal-info-color: var(--info-color, #4299e1);
+  --modal-info-dark: var(--info-dark, #3182ce);
+  
+  /* Animation timing */
+  --modal-urgent-animation-duration: 2s;
+  --modal-shadow-opacity: 0.3;
+}
+
+/* ============================================================================ */
+/* COLOR VARIANTS - Consolidated similar patterns */
+/* ============================================================================ */
+
+/* Danger Variant */
+.modal-danger {
+  --variant-color: var(--modal-danger-color);
+  --variant-dark: var(--modal-danger-dark);
+}
+
+/* Warning Variant */
+.modal-warning {
+  --variant-color: var(--modal-warning-color);
+  --variant-dark: var(--modal-warning-dark);
+}
+
+/* Success Variant */
+.modal-success {
+  --variant-color: var(--modal-success-color);
+  --variant-dark: var(--modal-success-dark);
+}
+
+/* Info Variant */
+.modal-info {
+  --variant-color: var(--modal-info-color);
+  --variant-dark: var(--modal-info-dark);
+}
+
+/* Apply variant colors - consolidated pattern */
+.modal-danger .modal-title,
+.modal-warning .modal-title,
+.modal-success .modal-title,
+.modal-info .modal-title {
+  color: var(--variant-color);
+}
+
+.modal-danger .modal-confirm-btn,
+.modal-warning .modal-confirm-btn,
+.modal-success .modal-confirm-btn,
+.modal-info .modal-confirm-btn {
+  background-color: var(--variant-color);
+  border-color: var(--variant-color);
+}
+
+.modal-danger .modal-confirm-btn:hover,
+.modal-warning .modal-confirm-btn:hover,
+.modal-success .modal-confirm-btn:hover,
+.modal-info .modal-confirm-btn:hover {
+  background-color: var(--variant-dark);
+  border-color: var(--variant-dark);
+  box-shadow: 0 4px 12px rgba(from var(--variant-color) r g b / var(--modal-shadow-opacity));
+}
+
+.modal-danger .modal-icon-emoji,
+.modal-warning .modal-icon-emoji,
+.modal-success .modal-icon-emoji,
+.modal-info .modal-icon-emoji {
+  color: var(--variant-color);
+}
+
+/* ============================================================================ */
+/* THEME VARIANTS - Consolidated light/dark patterns */
+/* ============================================================================ */
+
+/* Light theme variant */
+.modal-theme-light .modal-container {
+  background-color: #ffffff;
+  color: #2d3748;
+}
+
+.modal-theme-light .modal-title {
+  color: #2d3748;
+}
+
+.modal-theme-light .modal-message {
+  color: #4a5568;
+}
+
+.modal-theme-light .modal-cancel-btn {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border-color: #e2e8f0;
+}
+
+.modal-theme-light .modal-cancel-btn:hover {
+  background-color: #edf2f7;
+  color: #2d3748;
+  border-color: #cbd5e0;
+}
+
+.modal-theme-light .modal-close-button {
+  color: #4a5568;
+}
+
+.modal-theme-light .modal-close-button:hover {
+  background-color: #edf2f7;
+  color: #2d3748;
+}
+
+/* Auto theme variant with system preference */
+.modal-theme-auto .modal-container {
+  background-color: var(--modal-bg, var(--secondary-color, #232b3a));
+}
+
+@media (prefers-color-scheme: light) {
+  .modal-theme-auto .modal-container {
+    background-color: #ffffff;
+    color: #2d3748;
+  }
+  
+  .modal-theme-auto .modal-title {
+    color: #2d3748;
+  }
+  
+  .modal-theme-auto .modal-message {
+    color: #4a5568;
+  }
+  
+  .modal-theme-auto .modal-cancel-btn {
+    background-color: #f7fafc;
+    color: #4a5568;
+    border-color: #e2e8f0;
+  }
+  
+  .modal-theme-auto .modal-cancel-btn:hover {
+    background-color: #edf2f7;
+    color: #2d3748;
+    border-color: #cbd5e0;
+  }
+}
+
+/* ============================================================================ */
+/* SPECIAL VARIANTS - Using custom properties */
+/* ============================================================================ */
+
+/* Destructive action variant */
+.modal-destructive .modal-confirm-btn {
+  background-color: var(--modal-danger-color);
+  border-color: var(--modal-danger-color);
+}
+
+.modal-destructive .modal-confirm-btn:hover {
+  background-color: var(--modal-danger-dark);
+  border-color: var(--modal-danger-dark);
+}
+
+.modal-destructive .modal-title {
+  color: var(--modal-danger-color);
+}
+
+/* Urgent variant with optimized animation */
+.modal-urgent .modal-container {
+  animation: urgent-pulse var(--modal-urgent-animation-duration) ease-in-out infinite;
+}
+
+@keyframes urgent-pulse {
+  0%, 100% {
+    box-shadow: var(--modal-shadow);
+  }
+  50% {
+    box-shadow: 0 20px 25px -5px rgba(from var(--modal-danger-color) r g b / var(--modal-shadow-opacity)), 
+                0 10px 10px -5px rgba(from var(--modal-danger-color) r g b / 0.1);
+  }
+}
+
+/* Compact variant for mobile-first approach */
+.modal-compact .modal-content {
+  padding: 20px;
+}
+
+.modal-compact .modal-title {
+  font-size: 1.2rem;
+}
+
+.modal-compact .modal-message {
+  font-size: 0.9rem;
+}
+
+.modal-compact .modal-icon-emoji {
+  font-size: 2rem;
+}
+
+.modal-compact .modal-actions {
+  gap: 8px;
+}
+
+.modal-compact .modal-cancel-btn,
+.modal-compact .modal-confirm-btn {
+  min-width: 80px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+}
+
+/* ============================================================================ */
+/* RESPONSIVE VARIANTS - Combined breakpoints */
+/* ============================================================================ */
+
+@media (max-width: 768px) {
+  /* Automatically apply compact variant on mobile */
+  .modal-container:not(.modal-large) {
+    --modal-content-padding: 20px;
+  }
+  
+  .modal-title:not(.modal-large .modal-title) {
+    font-size: 1.2rem;
+  }
+  
+  .modal-message:not(.modal-large .modal-message) {
+    font-size: 0.9rem;
+  }
+}
+
+/* Disable animations for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .modal-urgent .modal-container {
+    animation: none;
+  }
+}

@@ -1,0 +1,366 @@
+/* ============================================================================ */
+/* CONFIRMATION MODAL - BASE STYLES */
+/* ============================================================================ */
+
+/* CSS Custom Properties for consistent values */
+:root {
+  --modal-z-index: 9999;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.75);
+  --modal-border-radius: 12px;
+  --modal-transition: 0.3s ease;
+  --modal-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --modal-button-min-width: 100px;
+  --modal-button-height: 44px;
+  --modal-close-button-size: 32px;
+  --modal-focus-outline: 2px solid var(--primary-color, #4a6cf7);
+  --modal-focus-offset: 2px;
+}
+
+/* Modal Overlay */
+.confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--modal-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--modal-z-index);
+  padding: 20px;
+  opacity: 0;
+  transition: opacity var(--modal-transition);
+}
+
+.confirmation-modal-overlay.modal-visible {
+  opacity: 1;
+}
+
+/* Modal Container */
+.modal-container {
+  background-color: var(--secondary-color, #232b3a);
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--modal-shadow);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  transform: scale(0.95);
+  transition: transform var(--modal-transition);
+}
+
+.modal-visible .modal-container {
+  transform: scale(1);
+}
+
+/* ============================================================================ */
+/* SIZE VARIANTS */
+/* ============================================================================ */
+
+.modal-small .modal-container {
+  max-width: 400px;
+}
+
+.modal-large .modal-container {
+  max-width: 600px;
+}
+
+/* ============================================================================ */
+/* MODAL CONTENT */
+/* ============================================================================ */
+
+.modal-content {
+  padding: 32px;
+  text-align: center;
+}
+
+.modal-small .modal-content {
+  padding: 24px;
+}
+
+.modal-large .modal-content {
+  padding: 40px;
+}
+
+/* ============================================================================ */
+/* MODAL ICON */
+/* ============================================================================ */
+
+.modal-icon {
+  margin-bottom: 20px;
+}
+
+.modal-icon-emoji {
+  font-size: 3rem;
+  display: block;
+  line-height: 1;
+}
+
+.modal-small .modal-icon-emoji {
+  font-size: 2.5rem;
+}
+
+.modal-large .modal-icon-emoji {
+  font-size: 3.5rem;
+}
+
+/* ============================================================================ */
+/* MODAL HEADER */
+/* ============================================================================ */
+
+.modal-header {
+  margin-bottom: 16px;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-light, #e2e8f0);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.modal-small .modal-title {
+  font-size: 1.3rem;
+}
+
+.modal-large .modal-title {
+  font-size: 1.75rem;
+}
+
+/* ============================================================================ */
+/* MODAL BODY */
+/* ============================================================================ */
+
+.modal-body {
+  margin-bottom: 32px;
+}
+
+.modal-message {
+  font-size: 1rem;
+  color: var(--text-muted, #a0aec0);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-small .modal-message {
+  font-size: 0.9rem;
+}
+
+.modal-large .modal-message {
+  font-size: 1.1rem;
+}
+
+/* ============================================================================ */
+/* MODAL ACTIONS & BUTTONS (Consolidated) */
+/* ============================================================================ */
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Base button styles - consolidated similar hover effects */
+.modal-cancel-btn,
+.modal-confirm-btn,
+.modal-close-button {
+  position: relative;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Action buttons specific styles */
+.modal-cancel-btn,
+.modal-confirm-btn {
+  min-width: var(--modal-button-min-width);
+  min-height: var(--modal-button-height);
+  padding: 12px 24px;
+  font-size: 0.9rem;
+}
+
+.modal-cancel-btn {
+  background-color: var(--secondary-color, #232b3a);
+  color: var(--text-muted, #a0aec0);
+  border: 1px solid var(--border-color, #2d3748);
+}
+
+.modal-confirm-btn {
+  background-color: var(--primary-color, #4a6cf7);
+  color: white;
+  border: 1px solid var(--primary-color, #4a6cf7);
+}
+
+/* Close button specific styles */
+.modal-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  color: var(--text-muted, #a0aec0);
+  font-size: 1.5rem;
+  padding: 4px;
+  width: var(--modal-close-button-size);
+  height: var(--modal-close-button-size);
+  border-radius: 4px;
+}
+
+/* Consolidated hover effects */
+.modal-cancel-btn:hover:not(:disabled) {
+  background-color: var(--secondary-light, #2d3748);
+  color: var(--text-light, #e2e8f0);
+  border-color: var(--border-hover, #4a5568);
+  transform: translateY(-1px);
+}
+
+.modal-confirm-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark, #3a5bd9);
+  border-color: var(--primary-dark, #3a5bd9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+}
+
+.modal-close-button:hover {
+  background-color: var(--secondary-light, #2d3748);
+  color: var(--text-light, #e2e8f0);
+  transform: translateY(-1px);
+}
+
+/* Active states */
+.modal-cancel-btn:active,
+.modal-confirm-btn:active,
+.modal-close-button:active {
+  transform: translateY(0);
+}
+
+/* ============================================================================ */
+/* BUTTON STATES (Consolidated) */
+/* ============================================================================ */
+
+/* Loading state */
+.modal-confirm-btn.loading {
+  color: transparent;
+  pointer-events: none;
+}
+
+.btn-loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  transform: translate(-50%, -50%);
+}
+
+.btn-loading-text {
+  opacity: 0;
+}
+
+@keyframes spin {
+  0% { 
+    transform: translate(-50%, -50%) rotate(0deg); 
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(360deg); 
+  }
+}
+
+/* Disabled state */
+.modal-cancel-btn:disabled,
+.modal-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.modal-cancel-btn:disabled:hover,
+.modal-confirm-btn:disabled:hover {
+  background-color: initial;
+  border-color: initial;
+  color: initial;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ============================================================================ */
+/* FOCUS MANAGEMENT (Consolidated) */
+/* ============================================================================ */
+
+.modal-cancel-btn:focus,
+.modal-confirm-btn:focus,
+.modal-close-button:focus {
+  outline: var(--modal-focus-outline);
+  outline-offset: var(--modal-focus-offset);
+}
+
+/* ============================================================================ */
+/* ACCESSIBILITY & PRINT (Combined) */
+/* ============================================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Combined accessibility media queries */
+@media (prefers-contrast: high) {
+  .modal-container {
+    border: 2px solid var(--text-light, #e2e8f0);
+  }
+  
+  .modal-cancel-btn,
+  .modal-confirm-btn {
+    border-width: 2px;
+  }
+  
+  .modal-close-button {
+    border: 1px solid currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirmation-modal-overlay,
+  .modal-container,
+  .modal-cancel-btn,
+  .modal-confirm-btn,
+  .modal-close-button {
+    transition: none;
+  }
+  
+  .modal-cancel-btn:hover,
+  .modal-confirm-btn:hover,
+  .modal-close-button:hover {
+    transform: none;
+  }
+  
+  .btn-loading-spinner {
+    animation: none;
+  }
+}
+
+@media print {
+  .confirmation-modal-overlay {
+    display: none !important;
+  }
+}
