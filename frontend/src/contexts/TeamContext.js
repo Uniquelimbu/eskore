@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { apiClient } from '../services';
 import { useAuth } from './AuthContext';
 import { useNotification } from './NotificationContext';
@@ -16,41 +16,177 @@ export const TeamProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  // Team role and permissions
+  // Team role and permissions for current team
   const [userRole, setUserRole] = useState(null);
   const [isManager, setIsManager] = useState(false);
   const [isPlayer, setIsPlayer] = useState(false);
+  
+  // Enhanced caching system
+  const [teamCache, setTeamCache] = useState(new Map());
+  const [memberCache, setMemberCache] = useState(new Map());
+  const [lastFetchTime, setLastFetchTime] = useState(new Map());
+  
+  // Refs to prevent multiple simultaneous requests
+  const loadingTeamsRef = useRef(false);
+  const loadingTeamRef = useRef(new Set());
+  
+  // Cache configuration
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const MEMBER_CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
 
-  // Load user teams when user authentication changes
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      loadUserTeams();
-    } else {
-      // Clear team data when user logs out
-      setCurrentTeam(null);
-      setUserTeams([]);
-      setTeamMembers([]);
-      setUserRole(null);
-      setIsManager(false);
-      setIsPlayer(false);
-      localStorage.removeItem('lastTeamId');
+  // =============================================================================
+  // CACHE MANAGEMENT UTILITIES
+  // =============================================================================
+
+  const isCacheValid = useCallback((key, duration = CACHE_DURATION) => {
+    const lastFetch = lastFetchTime.get(key);
+    return lastFetch && (Date.now() - lastFetch) < duration;
+  }, [lastFetchTime]);
+
+  const getCachedData = useCallback((key, cache, duration = CACHE_DURATION) => {
+    if (isCacheValid(key, duration)) {
+      console.log(`TeamContext: Using cached data for ${key}`);
+      return cache.get(key);
     }
-  }, [isAuthenticated, user?.id]);
+    return null;
+  }, [isCacheValid]);
 
-  // Load user's teams
-  const loadUserTeams = async () => {
-    if (!user?.id) return;
+  const setCachedData = useCallback((key, data, cache, setCache) => {
+    console.log(`TeamContext: Caching data for ${key}`);
+    setCache(prev => new Map(prev).set(key, data));
+    setLastFetchTime(prev => new Map(prev).set(key, Date.now()));
+  }, []);
+
+  const invalidateCache = useCallback((pattern) => {
+    console.log(`TeamContext: Invalidating cache for pattern: ${pattern}`);
+    
+    const keysToRemove = [];
+    
+    // Find keys matching pattern
+    teamCache.forEach((_, key) => {
+      if (key.includes(pattern)) keysToRemove.push(key);
+    });
+    memberCache.forEach((_, key) => {
+      if (key.includes(pattern)) keysToRemove.push(key);
+    });
+    lastFetchTime.forEach((_, key) => {
+      if (key.includes(pattern)) keysToRemove.push(key);
+    });
+
+    // Remove matched keys
+    if (keysToRemove.length > 0) {
+      setTeamCache(prev => {
+        const newCache = new Map(prev);
+        keysToRemove.forEach(key => newCache.delete(key));
+        return newCache;
+      });
+      setMemberCache(prev => {
+        const newCache = new Map(prev);
+        keysToRemove.forEach(key => newCache.delete(key));
+        return newCache;
+      });
+      setLastFetchTime(prev => {
+        const newTimes = new Map(prev);
+        keysToRemove.forEach(key => newTimes.delete(key));
+        return newTimes;
+      });
+    }
+  }, [teamCache, memberCache, lastFetchTime]);
+
+  // =============================================================================
+  // CORE DATA FETCHING FUNCTIONS
+  // =============================================================================
+
+  const fetchTeamById = useCallback(async (teamId, bypassCache = false) => {
+    const cacheKey = `team_${teamId}`;
+    
+    if (!bypassCache) {
+      const cached = getCachedData(cacheKey, teamCache);
+      if (cached) return cached;
+    }
+
+    // Prevent multiple simultaneous requests for same team
+    if (loadingTeamRef.current.has(teamId)) {
+      console.log(`TeamContext: Request for team ${teamId} already in progress`);
+      return null;
+    }
+
+    try {
+      loadingTeamRef.current.add(teamId);
+      console.log(`TeamContext: Fetching team ${teamId} from API`);
+      
+      const response = await apiClient.get(`/teams/${teamId}`);
+      setCachedData(cacheKey, response, teamCache, setTeamCache);
+      
+      return response;
+    } catch (err) {
+      console.error(`TeamContext: Error fetching team ${teamId}:`, err);
+      throw err;
+    } finally {
+      loadingTeamRef.current.delete(teamId);
+    }
+  }, [getCachedData, teamCache, setCachedData]);
+
+  const fetchTeamMembers = useCallback(async (teamId, bypassCache = false) => {
+    const cacheKey = `members_${teamId}`;
+    
+    if (!bypassCache) {
+      const cached = getCachedData(cacheKey, memberCache, MEMBER_CACHE_DURATION);
+      if (cached) return cached;
+    }
+
+    try {
+      console.log(`TeamContext: Fetching members for team ${teamId}`);
+      const response = await apiClient.getTeamMembers(teamId);
+      const members = response?.members || [];
+      
+      setCachedData(cacheKey, members, memberCache, setMemberCache);
+      return members;
+    } catch (err) {
+      console.error(`TeamContext: Error fetching team members for ${teamId}:`, err);
+      throw err;
+    }
+  }, [getCachedData, memberCache, setCachedData]);
+
+  const fetchUserTeams = useCallback(async (bypassCache = false) => {
+    if (!user?.id) return [];
+
+    const cacheKey = `user_teams_${user.id}`;
+    
+    if (!bypassCache) {
+      const cached = getCachedData(cacheKey, teamCache);
+      if (cached) return cached;
+    }
+
+    try {
+      console.log(`TeamContext: Fetching teams for user ${user.id}`);
+      const response = await apiClient.get(`/teams/user/${user.id}`);
+      const teams = response?.teams || [];
+      
+      setCachedData(cacheKey, teams, teamCache, setTeamCache);
+      return teams;
+    } catch (err) {
+      console.error('TeamContext: Error fetching user teams:', err);
+      throw err;
+    }
+  }, [user?.id, getCachedData, teamCache, setCachedData]);
+
+  // =============================================================================
+  // MAIN TEAM OPERATIONS
+  // =============================================================================
+
+  const loadUserTeams = useCallback(async (bypassCache = false) => {
+    if (!user?.id || loadingTeamsRef.current) return;
     
     try {
       setLoading(true);
       setError(null);
+      loadingTeamsRef.current = true;
       
-      const response = await apiClient.get(`/teams/user/${user.id}`);
-      const teams = response?.teams || [];
-      
+      const teams = await fetchUserTeams(bypassCache);
       setUserTeams(teams);
       
-      // Set current team from localStorage or first team
+      // Auto-select team logic
       const lastTeamId = localStorage.getItem('lastTeamId');
       let teamToSelect = null;
       
@@ -58,104 +194,176 @@ export const TeamProvider = ({ children }) => {
         teamToSelect = teams.find(t => t.id.toString() === lastTeamId);
       }
       
-      // Fallback to first team if no valid lastTeamId
       if (!teamToSelect && teams.length > 0) {
         teamToSelect = teams[0];
       }
       
-      if (teamToSelect) {
-        await switchToTeam(teamToSelect, false); // false = don't save to localStorage again
+      if (teamToSelect && (!currentTeam || currentTeam.id !== teamToSelect.id)) {
+        await switchToTeam(teamToSelect, false);
       }
       
     } catch (err) {
-      console.error('Error loading user teams:', err);
+      console.error('TeamContext: Error loading user teams:', err);
       setError('Failed to load teams');
       showError('Failed to load your teams');
     } finally {
       setLoading(false);
+      loadingTeamsRef.current = false;
     }
-  };
+  }, [user?.id, fetchUserTeams, currentTeam, showError]);
 
-  // Switch to a specific team
-  const switchToTeam = async (team, saveToStorage = true) => {
-    if (!team) return;
+  const switchToTeam = useCallback(async (team, saveToStorage = true) => {
+    if (!team || !team.id) {
+      console.warn('TeamContext: Invalid team provided to switchToTeam');
+      return;
+    }
+    
+    // Don't switch if already on this team
+    if (currentTeam && currentTeam.id === team.id) {
+      console.log(`TeamContext: Already on team ${team.id}, skipping switch`);
+      return;
+    }
     
     try {
       setLoading(true);
+      console.log(`TeamContext: Switching to team ${team.id} (${team.name})`);
       
-      // Set current team
-      setCurrentTeam(team);
+      // Get fresh team data
+      const freshTeamData = await fetchTeamById(team.id);
+      setCurrentTeam(freshTeamData);
       
       // Save to localStorage
       if (saveToStorage) {
         localStorage.setItem('lastTeamId', team.id.toString());
       }
       
-      // Determine user role in this team
-      const userTeamData = userTeams.find(ut => ut.id === team.id);
-      const role = userTeamData?.role || team.userRole || null;
+      // Load team members first to get accurate role info
+      const members = await fetchTeamMembers(team.id);
+      setTeamMembers(members);
+      
+      // Enhanced role determination with multiple fallbacks
+      let role = null;
+      
+      // 1. Check if user is the team creator/owner
+      if (freshTeamData?.createdBy === user?.id || freshTeamData?.ownerId === user?.id) {
+        role = 'manager';
+        console.log(`TeamContext: User ${user?.id} is team creator/owner, setting role to manager`);
+      }
+      
+      // 2. Check user's role in team members
+      if (!role && members.length > 0) {
+        const memberData = members.find(member => 
+          member.userId === user?.id || member.user?.id === user?.id || member.id === user?.id
+        );
+        if (memberData) {
+          role = memberData.role || memberData.position;
+          console.log(`TeamContext: Found user in team members with role: ${role}`);
+        }
+      }
+      
+      // 3. Check userTeams data
+      if (!role) {
+        const userTeamData = userTeams.find(ut => ut.id === team.id);
+        if (userTeamData) {
+          role = userTeamData.role || userTeamData.userRole;
+          console.log(`TeamContext: Found role in userTeams: ${role}`);
+        }
+      }
+      
+      // 4. Check freshTeamData for user role
+      if (!role) {
+        role = freshTeamData?.userRole || freshTeamData?.role;
+        console.log(`TeamContext: Found role in freshTeamData: ${role}`);
+      }
+      
+      // 5. Final fallback - if user created the team, they're the manager
+      if (!role && freshTeamData && user && 
+          (freshTeamData.createdBy === user.id || freshTeamData.ownerId === user.id)) {
+        role = 'manager';
+        console.log(`TeamContext: Final fallback - user is team owner, setting to manager`);
+      }
+      
+      console.log(`TeamContext: Final determined role for user ${user?.id} in team ${team.id}: ${role}`);
+      console.log(`TeamContext: Team data:`, {
+        teamId: freshTeamData?.id,
+        teamName: freshTeamData?.name,
+        createdBy: freshTeamData?.createdBy,
+        ownerId: freshTeamData?.ownerId,
+        userId: user?.id,
+        membersCount: members.length,
+        userTeamsEntry: userTeams.find(ut => ut.id === team.id)
+      });
       
       setUserRole(role);
-      setIsManager(role === 'manager' || role === 'assistant_manager');
-      setIsPlayer(role === 'athlete');
+      const isManagerRole = role === 'manager' || role === 'assistant_manager' || 
+                           (freshTeamData?.createdBy === user?.id) || 
+                           (freshTeamData?.ownerId === user?.id);
+      const isPlayerRole = role === 'athlete' || role === 'player';
       
-      // Load team members
-      await loadTeamMembers(team.id);
+      setIsManager(isManagerRole);
+      setIsPlayer(isPlayerRole);
+      
+      console.log(`TeamContext: Role flags set - isManager: ${isManagerRole}, isPlayer: ${isPlayerRole}`);
+      console.log(`TeamContext: Successfully switched to team ${team.name}`);
       
     } catch (err) {
-      console.error('Error switching to team:', err);
+      console.error('TeamContext: Error switching to team:', err);
       setError('Failed to switch team');
+      showError('Failed to switch to team');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentTeam, userTeams, fetchTeamById, fetchTeamMembers, showError, user?.id]);
 
-  // Load team members
-  const loadTeamMembers = async (teamId) => {
-    if (!teamId) return;
-    
-    try {
-      const response = await apiClient.getTeamMembers(teamId);
-      const members = response?.members || [];
-      setTeamMembers(members);
-    } catch (err) {
-      console.error('Error loading team members:', err);
-      // Don't show error to user for this, as it's not critical
+  const refreshCurrentTeam = useCallback(async () => {
+    if (!currentTeam?.id) {
+      console.warn('TeamContext: No current team to refresh');
+      return;
     }
-  };
-
-  // Refresh current team data
-  const refreshCurrentTeam = async () => {
-    if (!currentTeam?.id) return;
     
     try {
-      const response = await apiClient.get(`/teams/${currentTeam.id}`);
-      const updatedTeam = response;
+      console.log(`TeamContext: Refreshing current team ${currentTeam.id}`);
       
-      setCurrentTeam(updatedTeam);
+      // Invalidate caches for this team
+      invalidateCache(`team_${currentTeam.id}`);
+      invalidateCache(`members_${currentTeam.id}`);
       
-      // Update the team in userTeams array as well
+      // Fetch fresh data
+      const [freshTeamData, freshMembers] = await Promise.all([
+        fetchTeamById(currentTeam.id, true),
+        fetchTeamMembers(currentTeam.id, true)
+      ]);
+      
+      setCurrentTeam(freshTeamData);
+      setTeamMembers(freshMembers);
+      
+      // Update team in userTeams array
       setUserTeams(prev => 
         prev.map(team => 
-          team.id === updatedTeam.id ? { ...team, ...updatedTeam } : team
+          team.id === freshTeamData.id ? { ...team, ...freshTeamData } : team
         )
       );
       
     } catch (err) {
-      console.error('Error refreshing team:', err);
+      console.error('TeamContext: Error refreshing team:', err);
       setError('Failed to refresh team data');
+      showError('Failed to refresh team data');
     }
-  };
+  }, [currentTeam?.id, invalidateCache, fetchTeamById, fetchTeamMembers, showError]);
 
-  // Create a new team and switch to it
-  const createAndSwitchToTeam = async (teamData) => {
+  const createAndSwitchToTeam = useCallback(async (teamData) => {
     try {
       setLoading(true);
+      console.log('TeamContext: Creating new team:', teamData.name);
+      
       const response = await apiClient.post('/teams', teamData);
       const newTeam = response.team || response;
       
-      // Reload user teams to include the new team
-      await loadUserTeams();
+      console.log('TeamContext: Team created successfully:', newTeam.id);
+      
+      // Invalidate user teams cache and reload
+      invalidateCache(`user_teams_${user.id}`);
+      await loadUserTeams(true);
       
       // Switch to the new team
       await switchToTeam(newTeam);
@@ -164,23 +372,26 @@ export const TeamProvider = ({ children }) => {
       return newTeam;
       
     } catch (err) {
-      console.error('Error creating team:', err);
+      console.error('TeamContext: Error creating team:', err);
       showError('Failed to create team');
       throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, [invalidateCache, user?.id, loadUserTeams, switchToTeam, showSuccess, showError]);
 
-  // Join a team and refresh user teams
-  const joinTeam = async (teamId, joinData) => {
+  const joinTeam = useCallback(async (teamId, joinData) => {
     try {
       setLoading(true);
+      console.log(`TeamContext: Joining team ${teamId}`);
+      
       const response = await apiClient.joinTeam(teamId, joinData);
       
       if (response.success && !response.isPending) {
-        // If successfully joined (not pending approval), reload teams
-        await loadUserTeams();
+        console.log('TeamContext: Successfully joined team, reloading teams');
+        // Invalidate caches and reload
+        invalidateCache(`user_teams_${user.id}`);
+        await loadUserTeams(true);
         showSuccess('Successfully joined the team!');
       } else if (response.isPending) {
         showSuccess('Join request sent! Waiting for team manager approval.');
@@ -189,42 +400,102 @@ export const TeamProvider = ({ children }) => {
       return response;
       
     } catch (err) {
-      console.error('Error joining team:', err);
+      console.error('TeamContext: Error joining team:', err);
       const errorMessage = err.response?.data?.message || 'Failed to join team';
       showError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, [invalidateCache, user?.id, loadUserTeams, showSuccess, showError]);
 
-  // Utility functions for role checking
+  // =============================================================================
+  // UTILITY FUNCTIONS
+  // =============================================================================
+
+  const getTeamById = useCallback(async (teamId) => {
+    return await fetchTeamById(teamId);
+  }, [fetchTeamById]);
+
+  const getTeamMembersById = useCallback(async (teamId) => {
+    return await fetchTeamMembers(teamId);
+  }, [fetchTeamMembers]);
+
+  const hasRoleInCurrentTeam = useCallback((role) => {
+    return userRole === role;
+  }, [userRole]);
+
+  const hasAnyRoleInCurrentTeam = useCallback((roles) => {
+    return roles.includes(userRole);
+  }, [userRole]);
+
+  const getTeamMember = useCallback((userId) => {
+    return teamMembers.find(member => 
+      member.userId === userId || member.id === userId
+    );
+  }, [teamMembers]);
+
+  const isUserMemberOfCurrentTeam = useCallback((userId = user?.id) => {
+    if (!userId || !currentTeam) return false;
+    return teamMembers.some(member => 
+      member.userId === userId || member.id === userId
+    );
+  }, [user?.id, currentTeam, teamMembers]);
+
+  // Enhanced role checking
   const isCurrentUserManager = useMemo(() => {
-    return isManager || (currentTeam && user && currentTeam.createdBy === user.id);
-  }, [isManager, currentTeam, user]);
+    // Check explicit manager role
+    if (isManager) return true;
+    
+    // Check if user is team creator/owner
+    if (currentTeam && user) {
+      if (currentTeam.createdBy === user.id || currentTeam.ownerId === user.id) {
+        console.log(`TeamContext: User ${user.id} is team owner/creator, treating as manager`);
+        return true;
+      }
+    }
+    
+    // Check role string
+    if (userRole === 'manager' || userRole === 'assistant_manager') {
+      return true;
+    }
+    
+    console.log(`TeamContext: Manager check - isManager: ${isManager}, userRole: ${userRole}, isOwner: ${currentTeam?.createdBy === user?.id || currentTeam?.ownerId === user?.id}`);
+    return false;
+  }, [isManager, currentTeam, user, userRole]);
 
   const isCurrentUserPlayer = useMemo(() => {
     return isPlayer;
   }, [isPlayer]);
 
-  const hasRoleInCurrentTeam = (role) => {
-    return userRole === role;
-  };
+  // =============================================================================
+  // EFFECTS
+  // =============================================================================
 
-  const hasAnyRoleInCurrentTeam = (roles) => {
-    return roles.includes(userRole);
-  };
+  // Load user teams when authentication changes
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      console.log(`TeamContext: User authenticated, loading teams for ${user.id}`);
+      loadUserTeams();
+    } else {
+      // Clear all data when user logs out
+      console.log('TeamContext: Clearing team data (user logged out)');
+      setCurrentTeam(null);
+      setUserTeams([]);
+      setTeamMembers([]);
+      setUserRole(null);
+      setIsManager(false);
+      setIsPlayer(false);
+      setTeamCache(new Map());
+      setMemberCache(new Map());
+      setLastFetchTime(new Map());
+      localStorage.removeItem('lastTeamId');
+    }
+  }, [isAuthenticated, user?.id, loadUserTeams]);
 
-  // Get team member by user ID
-  const getTeamMember = (userId) => {
-    return teamMembers.find(member => member.userId === userId || member.id === userId);
-  };
-
-  // Check if user is member of current team
-  const isUserMemberOfCurrentTeam = (userId = user?.id) => {
-    if (!userId || !currentTeam) return false;
-    return teamMembers.some(member => member.userId === userId || member.id === userId);
-  };
+  // =============================================================================
+  // CONTEXT VALUE
+  // =============================================================================
 
   const value = useMemo(() => ({
     // Core state
@@ -245,13 +516,23 @@ export const TeamProvider = ({ children }) => {
     createAndSwitchToTeam,
     joinTeam,
     loadUserTeams,
-    loadTeamMembers,
     
-    // Utility functions
+    // Data fetching utilities
+    getTeamById,
+    getTeamMembersById,
+    
+    // Role checking utilities
     hasRoleInCurrentTeam,
     hasAnyRoleInCurrentTeam,
     getTeamMember,
     isUserMemberOfCurrentTeam,
+    
+    // Cache management
+    invalidateCache: (pattern) => invalidateCache(pattern),
+    refreshTeamData: (teamId) => {
+      invalidateCache(`team_${teamId}`);
+      invalidateCache(`members_${teamId}`);
+    },
     
   }), [
     currentTeam,
@@ -262,6 +543,18 @@ export const TeamProvider = ({ children }) => {
     userRole,
     isCurrentUserManager,
     isCurrentUserPlayer,
+    switchToTeam,
+    refreshCurrentTeam,
+    createAndSwitchToTeam,
+    joinTeam,
+    loadUserTeams,
+    getTeamById,
+    getTeamMembersById,
+    hasRoleInCurrentTeam,
+    hasAnyRoleInCurrentTeam,
+    getTeamMember,
+    isUserMemberOfCurrentTeam,
+    invalidateCache
   ]);
 
   return (

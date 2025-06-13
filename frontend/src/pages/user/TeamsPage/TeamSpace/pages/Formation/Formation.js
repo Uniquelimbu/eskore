@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate, useOutletContext, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useTeam } from '../../../../../../contexts/TeamContext';
+import { useAuth } from '../../../../../../contexts/AuthContext';
 import FormationContainer from './components/FormationContainer';
 import TeamLogoOverlay from './components/TeamLogoOverlay';
-import { apiClient } from '../../../../../../services';
-import { useAuth } from '../../../../../../contexts/AuthContext';
-import { isUserManager, isUserPlayer } from '../../../../../../utils/permissions';
 import { collapseSidebar, expandSidebar } from '../../../../../../utils/sidebarUtils';
 import './Formation.css';
 
@@ -12,255 +11,320 @@ const Formation = () => {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { team: contextTeam, isManager: contextIsManager } = useOutletContext() || {};
-  const [players, setPlayers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isManager, setIsManager] = useState(contextIsManager || false);
-  const [isPlayer, setIsPlayer] = useState(false);
-  const [showTeamLogoOverlay, setShowTeamLogoOverlay] = useState(false);
   const { user } = useAuth();
   
-  console.log('Formation: Initial context values:', { 
-    contextTeam: contextTeam?.id || 'None', 
-    contextIsManager: contextIsManager || false,
-    userId: user?.id
-  });
+  // Use TeamContext instead of manual API calls
+  const {
+    currentTeam,
+    teamMembers,
+    isManager,
+    isPlayer,
+    loading: teamLoading,
+    error: teamError,
+    switchToTeam,
+    getTeamById,
+    refreshCurrentTeam,
+    isUserMemberOfCurrentTeam
+  } = useTeam();
 
-  // Memoize the team ID to prevent unnecessary re-renders
-  const currentTeamId = useMemo(() => {
-    return contextTeam?.id || teamId;
-  }, [contextTeam?.id, teamId]);
+  // Local state for Formation-specific functionality
+  const [showTeamLogoOverlay, setShowTeamLogoOverlay] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Fetch players only when team ID changes
-  useEffect(() => {
-    let isMounted = true;
+  // Derived state - players from team members
+  const players = useMemo(() => {
+    if (!teamMembers || teamMembers.length === 0) return [];
     
-    const fetchPlayers = async () => {
-      if (!currentTeamId) return;
+    // Convert team members to player format expected by FormationContainer
+    return teamMembers
+      .filter(member => member.role === 'athlete') // Only athletes can be in formations
+      .map(member => ({
+        id: member.id || member.userId,
+        userId: member.userId || member.id,
+        firstName: member.firstName || member.user?.firstName || '',
+        lastName: member.lastName || member.user?.lastName || '',
+        email: member.email || member.user?.email || '',
+        role: member.role,
+        jerseyNumber: member.jerseyNumber || null,
+        position: member.position || null,
+        // Include full member object for compatibility
+        ...member,
+        user: member.user || member
+      }));
+  }, [teamMembers]);
+
+  // Check if user is a member of current team
+  const isMember = isUserMemberOfCurrentTeam(user?.id);
+
+  // Ensure we're on the correct team
+  useEffect(() => {
+    const ensureCorrectTeam = async () => {
+      if (!teamId || !currentTeam) return;
       
-      try {
-        setLoading(true);
-        const response = await apiClient.get(`/teams/${currentTeamId}/players`);
-        
-        if (isMounted) {
-          const playersData = response?.players || [];
-          setPlayers(playersData);
-          console.log('Formation: Fetched player data:', playersData.length);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Error fetching players:', error);
-          setPlayers([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
+      // If current team doesn't match URL team, switch to it
+      if (currentTeam.id.toString() !== teamId) {
+        try {
+          setLocalLoading(true);
+          console.log(`Formation: Switching from team ${currentTeam.id} to ${teamId}`);
+          const team = await getTeamById(teamId);
+          await switchToTeam(team);
+        } catch (err) {
+          console.error('Formation: Error switching to team:', err);
+          setLocalError('Failed to load team data');
+        } finally {
+          setLocalLoading(false);
         }
       }
     };
 
-    fetchPlayers();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [currentTeamId]); // Only depend on currentTeamId
+    ensureCorrectTeam();
+  }, [teamId, currentTeam, getTeamById, switchToTeam]);
 
-  // Listen for team membership changes
+  // Handle initial loading state
   useEffect(() => {
-    const handleMembershipChanged = () => {
-      // Refetch players when team membership changes
-      if (currentTeamId) {
-        const fetchPlayersUpdate = async () => {
-          try {
-            console.log('Formation: Refreshing player data after membership change');
-            const response = await apiClient.get(`/teams/${currentTeamId}/players`);
-            const playersData = response?.players || [];
-            setPlayers(playersData);
-            console.log('Formation: Updated player data after membership change:', playersData.length);
-            
-            // Force formation to update with new players
-            window.dispatchEvent(new CustomEvent('playersUpdated', { 
-              detail: { players: playersData, teamId: currentTeamId } 
-            }));
-            
-          } catch (error) {
-            console.error('Error updating players after membership change:', error);
-          }
-        };
-        fetchPlayersUpdate();
+    if (currentTeam && teamMembers !== null) {
+      setInitialLoad(false);
+    }
+  }, [currentTeam, teamMembers]);
+
+  // Listen for team membership changes and refresh team data
+  useEffect(() => {
+    const handleMembershipChanged = async () => {
+      if (!currentTeam) return;
+      
+      console.log('Formation: Team membership changed, refreshing team data');
+      try {
+        await refreshCurrentTeam();
+        console.log('Formation: Team data refreshed successfully');
+      } catch (error) {
+        console.error('Formation: Error refreshing team data:', error);
+      }
+    };
+
+    // Enhanced event listeners
+    const handleTeamMembershipChanged = (event) => {
+      if (event.detail?.teamId === currentTeam?.id || !event.detail?.teamId) {
+        handleMembershipChanged();
       }
     };
 
     const handlePlayersChanged = (event) => {
-      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
+      if (event.detail?.teamId === currentTeam?.id || !event.detail?.teamId) {
         handleMembershipChanged();
       }
     };
 
     const handleForceRefresh = (event) => {
-      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
+      if (event.detail?.teamId === currentTeam?.id || !event.detail?.teamId) {
         console.log('Formation: Force refresh triggered:', event.detail?.reason || 'unknown');
         handleMembershipChanged();
       }
     };
 
-    const handleReloadFormationData = (event) => {
-      if (event.detail?.teamId === currentTeamId || !event.detail?.teamId) {
-        console.log('Formation: Reload formation data triggered');
-        // Additional delay to ensure backend has processed everything
-        setTimeout(() => {
-          handleMembershipChanged();
-        }, 1000);
-      }
-    };
-
-    window.addEventListener('teamMembershipChanged', handleMembershipChanged);
+    // Add event listeners
+    window.addEventListener('teamMembershipChanged', handleTeamMembershipChanged);
     window.addEventListener('teamPlayersChanged', handlePlayersChanged);
-    window.addEventListener('squadMembersChanged', handleMembershipChanged);
+    window.addEventListener('squadMembersChanged', handleTeamMembershipChanged);
     window.addEventListener('forceFormationRefresh', handleForceRefresh);
-    window.addEventListener('reloadFormationData', handleReloadFormationData);
+    window.addEventListener('reloadFormationData', handleForceRefresh);
     
     return () => {
-      window.removeEventListener('teamMembershipChanged', handleMembershipChanged);
+      window.removeEventListener('teamMembershipChanged', handleTeamMembershipChanged);
       window.removeEventListener('teamPlayersChanged', handlePlayersChanged);
-      window.removeEventListener('squadMembersChanged', handleMembershipChanged);
+      window.removeEventListener('squadMembersChanged', handleTeamMembershipChanged);
       window.removeEventListener('forceFormationRefresh', handleForceRefresh);
-      window.removeEventListener('reloadFormationData', handleReloadFormationData);
+      window.removeEventListener('reloadFormationData', handleForceRefresh);
     };
-  }, [currentTeamId]);
+  }, [currentTeam?.id, refreshCurrentTeam]);
 
-  // Update roles only when relevant data changes
-  useEffect(() => {
-    if (!user?.id || !currentTeamId) return;
-
-    const updateRoles = () => {
-      const managerStatus = contextIsManager || isUserManager(user, currentTeamId);
-      const playerStatus = isUserPlayer(user, currentTeamId);
-      
-      setIsManager(managerStatus);
-      setIsPlayer(playerStatus);
-      
-      console.log('Formation: Final roles before render - manager:', managerStatus, 'player:', playerStatus);
-    };
-
-    updateRoles();
-  }, [user?.id, currentTeamId, contextIsManager]); // Only update when these specific values change
-
-  // Ensure sidebar is collapsed when Formation page loads
+  // Sidebar management
   useEffect(() => {
     console.log('Formation: Attempting to collapse sidebar');
     
-    // Use a small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       collapseSidebar();
     }, 50);
     
     return () => {
       clearTimeout(timer);
-      // Don't expand here - let TeamSpace handle it
     };
-  }, []); // Empty dependency array - only run once when component mounts
+  }, []);
 
+  // Navigation handlers
   const handleBack = () => {
     console.log('Formation: Expanding sidebar and navigating back');
     expandSidebar();
     navigate(`/teams/${teamId}/space`);
   };
 
-  const handleTeamLogoClick = () => {
-    setShowTeamLogoOverlay(true);
-  };
-
   const handleInMatchRoles = () => {
-    // Navigate to in-match roles or show functionality
-    console.log('Navigate to In-Match Roles');
-    navigate(`/teams/${teamId}/space/formation/in-match-roles`); // Corrected navigation
-
+    console.log('Formation: Navigating to in-match roles');
+    // Navigate to in-match roles page when implemented
+    // navigate(`/teams/${teamId}/space/roles`);
   };
 
   const handleEditPlayerNumber = () => {
-    // Navigate to edit player numbers or show functionality
-    console.log('Navigate to Edit Player Number');
-    // navigate(`/teams/${teamId}/space/squad?edit=numbers`);
+    console.log('Formation: Navigating to edit player numbers');
+    // Navigate to edit player numbers page when implemented
+    // navigate(`/teams/${teamId}/space/players/edit`);
   };
 
   const handleLineups = () => {
-    // Navigate to lineups or show functionality
-    console.log('Navigate to Lineups');
+    console.log('Formation: Navigating to lineups');
+    // Navigate to lineups page when implemented
     // navigate(`/teams/${teamId}/space/lineups`);
   };
 
-  // Fallback: if user created the team, they should be manager
-  useEffect(() => {
-    if (!isManager && user && contextTeam && contextTeam.createdBy === user.id) {
-      console.log('Formation: User is team creator, setting as manager');
-      setIsManager(true);
-    }
-  }, [user, contextTeam, isManager]);
+  // Enhanced role checking using TeamContext
+  const canEditFormation = useMemo(() => {
+    // Managers can always edit formations
+    if (isManager) return true;
+    
+    // Team creators can edit even if not explicitly marked as manager
+    if (user && currentTeam && currentTeam.createdBy === user.id) return true;
+    
+    return false;
+  }, [isManager, user, currentTeam]);
 
-  console.log('Formation: Final roles before render - manager:', isManager, 'player:', isPlayer);
+  const canViewFormation = useMemo(() => {
+    // Members can view formations
+    if (isMember) return true;
+    
+    // Managers can always view
+    if (isManager) return true;
+    
+    return false;
+  }, [isMember, isManager]);
 
-  if (loading) {
-    return <div className="formation-loading">Loading formation...</div>;
+  // Determine view mode
+  const viewMode = useMemo(() => {
+    if (canEditFormation) return 'manager';
+    if (isPlayer) return 'player';
+    return 'viewer';
+  }, [canEditFormation, isPlayer]);
+
+  // Loading states
+  const isLoading = teamLoading || localLoading;
+  const error = teamError || localError;
+
+  // Loading state for initial load
+  if (initialLoad && isLoading) {
+    return (
+      <div className="formation-loading">
+        <div className="loader"></div>
+        <p>Loading formation...</p>
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="formation-error">
+        <h3>Error Loading Formation</h3>
+        <p>{error}</p>
+        <button onClick={() => navigate('/teams')} className="back-button">
+          Back to Teams
+        </button>
+      </div>
+    );
   }
 
-  // View mode - either manager, player, or viewer
-  let viewMode = 'viewer';
-  if (isManager) viewMode = 'manager';
-  else if (isPlayer) viewMode = 'player';
+  // No team selected state
+  if (!currentTeam) {
+    return (
+      <div className="formation-error">
+        <h3>No Team Selected</h3>
+        <p>Please select a team to view formation.</p>
+        <button onClick={() => navigate('/teams')} className="back-button">
+          Back to Teams
+        </button>
+      </div>
+    );
+  }
+
+  // Permission check
+  if (!canViewFormation) {
+    return (
+      <div className="formation-error">
+        <h3>Access Denied</h3>
+        <p>You don't have permission to view this team's formation.</p>
+        <button onClick={() => navigate('/teams')} className="back-button">
+          Back to Teams
+        </button>
+      </div>
+    );
+  }
+
+  console.log('Formation: Rendering with data:', {
+    team: currentTeam.name,
+    playersCount: players.length,
+    isManager,
+    isPlayer,
+    canEditFormation,
+    viewMode
+  });
 
   return (
     <div className="formation-page">
+      {isLoading && !initialLoad && (
+        <div className="formation-loading-overlay">
+          <div className="formation-loading-content">Updating formation...</div>
+        </div>
+      )}
+
       <div className="page-header">
         <button className="back-button" onClick={handleBack}>
           &larr; Back
         </button>
-        <h1 className="formation-title">
-          Formation
-          {viewMode === 'manager' && <span className="view-mode-label"> (Manager View)</span>}
-          {viewMode === 'player' && <span className="view-mode-label"> (Player View)</span>}
-          {viewMode === 'viewer' && <span className="view-mode-label"> (Viewer)</span>}
-        </h1>
-        <div className="header-spacer"></div>
-      </div>
-      <div className="formation-content">
-        <div className="formation-layout">
-          <div className="formation-team-logo-container">
-            <button 
-              className="formation-team-logo-button"
-              onClick={handleTeamLogoClick}
-              title="Team Options"
-            >
-              {contextTeam?.logoUrl ? (
-                <img 
-                  src={contextTeam.logoUrl} 
-                  alt={contextTeam.name} 
-                  className="formation-team-logo-img"
-                />
-              ) : (
-                <div className="formation-team-logo-placeholder">
-                  {contextTeam?.abbreviation || contextTeam?.name?.substring(0, 3).toUpperCase() || 'TM'}
-                </div>
-              )}
-            </button>
-          </div>
-          <FormationContainer 
-            teamId={teamId} 
-            isManager={isManager}
-            viewMode={viewMode}
-            players={players} 
-          />
+        
+        <div className="page-title">
+          <h1>Formation</h1>
+          <span className="team-name">{currentTeam.name}</span>
         </div>
+
+        <div className="page-actions">
+          <button 
+            className="team-logo-button"
+            onClick={() => setShowTeamLogoOverlay(true)}
+            title="Team Options"
+          >
+            {currentTeam.logoUrl ? (
+              <img 
+                src={currentTeam.logoUrl} 
+                alt={`${currentTeam.name} logo`} 
+                className="team-logo"
+              />
+            ) : (
+              <div className="team-logo-placeholder">
+                {currentTeam.abbreviation || currentTeam.name?.substring(0, 3).toUpperCase() || 'TM'}
+              </div>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="formation-content">
+        <FormationContainer 
+          teamId={teamId} 
+          team={currentTeam}
+          isManager={canEditFormation}
+          isPlayer={isPlayer}
+          viewMode={viewMode}
+          players={players}
+          onPlayersUpdate={refreshCurrentTeam}
+        />
       </div>
 
       {/* Team Logo Overlay */}
       <TeamLogoOverlay
         isOpen={showTeamLogoOverlay}
         onClose={() => setShowTeamLogoOverlay(false)}
-        teamLogo={contextTeam?.logoUrl}
-        teamName={contextTeam?.name}
-        teamAbbreviation={contextTeam?.abbreviation}
+        teamLogo={currentTeam?.logoUrl}
+        teamName={currentTeam?.name}
+        teamAbbreviation={currentTeam?.abbreviation}
         onInMatchRoles={handleInMatchRoles}
         onEditPlayerNumber={handleEditPlayerNumber}
         onLineups={handleLineups}
