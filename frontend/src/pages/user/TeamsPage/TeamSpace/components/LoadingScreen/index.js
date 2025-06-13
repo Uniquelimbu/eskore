@@ -1,17 +1,24 @@
 /**
- * LoadingScreen Components - Export Module
+ * LoadingScreen Module Exports
+ * CRITICAL: Must export LoadingScreen as default
  */
 
-export { 
-  default,
+// Import components first
+import LoadingScreenComponent, {
   TeamSpaceLoading,
   TeamDataLoading,
   FormationLoading,
-  SkeletonLoading,
-  UploadLoading,
-  SyncLoading,
-  CustomIconLoading,
-  useLoadingScreen
+  SkeletonLoading
 } from './LoadingScreen';
 
-// CSS files are imported by the component automatically
+// ✅ CRITICAL: Export LoadingScreen as DEFAULT
+export default LoadingScreenComponent;
+
+// Named exports
+export { default as LoadingScreen } from './LoadingScreen';
+export {
+  TeamSpaceLoading,
+  TeamDataLoading,
+  FormationLoading,
+  SkeletonLoading
+} from './LoadingScreen';

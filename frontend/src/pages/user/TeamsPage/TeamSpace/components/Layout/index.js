@@ -1,18 +1,24 @@
 /**
- * Layout Module - Simple Re-exports
- * Lightweight module that only re-exports Layout components
+ * Layout Module Exports
+ * CRITICAL: Must export TeamSpaceLayout as default
  */
 
-// Re-export main component as default
-export { default } from './TeamSpaceLayout';
-
-// Re-export all named exports
-export {
+// Import components first
+import TeamSpaceLayoutComponent, {
   DashboardLayout,
   CenteredLayout,
   SplitLayout,
   useTeamSpaceLayout
 } from './TeamSpaceLayout';
 
-// Named export for main component
+// ✅ CRITICAL: Export TeamSpaceLayout as DEFAULT
+export default TeamSpaceLayoutComponent;
+
+// Named exports
 export { default as TeamSpaceLayout } from './TeamSpaceLayout';
+export {
+  DashboardLayout,
+  CenteredLayout,
+  SplitLayout,
+  useTeamSpaceLayout
+} from './TeamSpaceLayout';
