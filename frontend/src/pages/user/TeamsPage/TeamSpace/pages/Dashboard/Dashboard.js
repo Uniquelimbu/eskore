@@ -278,37 +278,6 @@ const Dashboard = memo(() => {
         />
       </div>
 
-      {/* Dashboard Stats Section (if available) */}
-      {stats && (
-        <div className="dashboard-stats-section">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.totalMembers}</div>
-                <div className="stat-label">Total Members</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">⚽</div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.activePlayers}</div>
-                <div className="stat-label">Active Players</div>
-              </div>
-            </div>
-            {manager && stats.pendingRequests > 0 && (
-              <div className="stat-card">
-                <div className="stat-icon">📝</div>
-                <div className="stat-content">
-                  <div className="stat-value">{stats.pendingRequests}</div>
-                  <div className="stat-label">Pending Requests</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Error notification */}
       {(error || teamError) && (
         <div className="dashboard-error-notification">

@@ -1,10 +1,9 @@
 /* ============================================================================ */
-/* TEAMSPACE LAYOUT - CLEAN COMPONENT SYSTEM (NO BREADCRUMB/HEADER) */
+/* TEAMSPACE LAYOUT v5.1.0 - CONDITIONAL NO-SCROLL COMPONENT SYSTEM */
 /* ============================================================================ */
 
-/* Base Layout Container */
+/* Base Layout Container - CONDITIONAL SCROLL VERSION */
 .team-space-layout-wrapper {
-  min-height: 100vh;
   background-color: var(--bg-dark, #1a202c);
   color: var(--text-light, #e2e8f0);
   position: relative;
@@ -13,6 +12,36 @@
   /* Performance optimizations */
   will-change: contents;
   contain: layout style;
+  
+  /* ✅ Default: Allow scrolling */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* ✅ DASHBOARD NO-SCROLL STYLES - Only applied to Dashboard */
+.team-space-layout-wrapper.no-scroll {
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* ✅ OTHER PAGES SCROLL STYLES - Applied to Squad, Formation, Calendar, Settings */
+.team-space-layout-wrapper.allow-scroll {
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ✅ GLOBAL NO-SCROLL CLASSES for body/html - Only when Dashboard is active */
+body.dashboard-no-scroll,
+html.dashboard-no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Background Variants */
@@ -28,30 +57,114 @@
   border: 1px solid var(--border-color, #2d3748);
 }
 
+/* ✅ CONDITIONAL: Card background for no-scroll (Dashboard) */
+.no-scroll .background-card {
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+}
+
+/* ✅ CONDITIONAL: Card background for allow-scroll (Other pages) */
+.allow-scroll .background-card {
+  min-height: calc(100vh - 32px);
+}
+
 .background-default {
   background-color: var(--bg-dark, #1a202c);
 }
 
 /* ============================================================================ */
-/* LAYOUT VARIANTS - IMPROVED CENTERING */
+/* MAIN LAYOUT STRUCTURE - CONDITIONAL SCROLL */
 /* ============================================================================ */
 
-.layout-default {
+/* ✅ NO-SCROLL LAYOUT (Dashboard only) */
+.no-scroll .teamspace-layout__main {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-scroll .teamspace-layout__content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  
+  /* ✅ CRITICAL: Fixed height container for Dashboard */
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  
+  /* ✅ Flex layout for content distribution */
+  display: flex;
+  flex-direction: column;
+}
+
+.no-scroll .layout-content {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  
+  /* ✅ CRITICAL: No scrolling on Dashboard layout content */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ✅ ALLOW-SCROLL LAYOUT (Squad, Formation, Calendar, Settings) */
+.allow-scroll .teamspace-layout__main {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.allow-scroll .teamspace-layout__content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.allow-scroll .layout-content {
+  width: 100%;
+  min-height: calc(100vh - 48px);
+  box-sizing: border-box;
+}
+
+/* ============================================================================ */
+/* LAYOUT VARIANTS - CONDITIONAL SCROLL VERSIONS */
+/* ============================================================================ */
+
+/* ✅ NO-SCROLL VARIANTS (Dashboard) */
+.no-scroll.layout-default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 40px;
   box-sizing: border-box;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-.layout-centered {
+.no-scroll.layout-centered {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 40px;
   text-align: center;
   box-sizing: border-box;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-.layout-split {
+.no-scroll.layout-split {
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 32px;
@@ -60,9 +173,12 @@
   padding: 0 40px;
   align-items: start;
   box-sizing: border-box;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-.layout-dashboard {
+.no-scroll.layout-dashboard {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
@@ -70,94 +186,203 @@
   margin: 0 auto;
   padding: 0 40px;
   box-sizing: border-box;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-/* Full width variant */
-.full-width .layout-default,
-.full-width .layout-centered,
-.full-width .layout-split,
-.full-width .layout-dashboard {
-  max-width: 100%;
-  padding: 0 20px;
-}
-
-/* ============================================================================ */
-/* SPACING VARIANTS - OPTIMIZED FOR NO HEADER/BREADCRUMB */
-/* ============================================================================ */
-
-.spacing-compact .layout-content {
-  padding: 16px 0;
-  gap: 16px;
-}
-
-.spacing-default .layout-content {
-  padding: 24px 0; /* Clean start without header spacing */
-  gap: 20px;
-}
-
-.spacing-spacious .layout-content {
-  padding: 32px 0;
-  gap: 32px;
-}
-
-/* ✅ NEW: No breadcrumb/header layout adjustments */
-.no-breadcrumb .teamspace-layout__content {
-  padding-top: 20px;
-}
-
-.no-header .teamspace-layout__content {
-  padding-top: 24px; /* Start content immediately */
-}
-
-.no-header .layout-content {
-  margin-top: 0; /* Remove any header margin */
-}
-
-/* ============================================================================ */
-/* MAIN CONTENT - ENHANCED */
-/* ============================================================================ */
-
-.teamspace-layout__main {
-  width: 100%;
-}
-
-.teamspace-layout__content {
-  width: 100%;
+/* ✅ ALLOW-SCROLL VARIANTS (Other pages) */
+.allow-scroll.layout-default {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 40px;
   box-sizing: border-box;
+  min-height: 100vh;
 }
 
-.layout-content {
-  flex: 1;
+.allow-scroll.layout-centered {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 40px;
+  text-align: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.allow-scroll.layout-split {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  align-items: start;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.allow-scroll.layout-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+/* Full width variants */
+.full-width.no-scroll .layout-default,
+.full-width.no-scroll .layout-centered,
+.full-width.no-scroll .layout-split,
+.full-width.no-scroll .layout-dashboard {
+  max-width: 100%;
+  padding: 0 20px;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.full-width.allow-scroll .layout-default,
+.full-width.allow-scroll .layout-centered,
+.full-width.allow-scroll .layout-split,
+.full-width.allow-scroll .layout-dashboard {
+  max-width: 100%;
+  padding: 0 20px;
+  min-height: 100vh;
+}
+
+/* ============================================================================ */
+/* SPACING VARIANTS - CONDITIONAL SCROLL OPTIMIZED */
+/* ============================================================================ */
+
+/* ✅ NO-SCROLL SPACING (Dashboard) */
+.no-scroll.spacing-compact .layout-content {
+  padding: 16px 0;
+  gap: 16px;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.no-scroll.spacing-default .layout-content {
+  padding: 24px 0;
+  gap: 20px;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.no-scroll.spacing-spacious .layout-content {
+  padding: 32px 0;
+  gap: 32px;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+/* ✅ ALLOW-SCROLL SPACING (Other pages) */
+.allow-scroll.spacing-compact .layout-content {
+  padding: 16px 0;
+  gap: 16px;
+  min-height: calc(100vh - 32px);
+}
+
+.allow-scroll.spacing-default .layout-content {
+  padding: 24px 0;
+  gap: 20px;
+  min-height: calc(100vh - 48px);
+}
+
+.allow-scroll.spacing-spacious .layout-content {
+  padding: 32px 0;
+  gap: 32px;
+  min-height: calc(100vh - 64px);
+}
+
+/* ✅ NO BREADCRUMB/HEADER LAYOUT ADJUSTMENTS */
+.no-breadcrumb.no-scroll .teamspace-layout__content {
+  padding-top: 20px;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.no-breadcrumb.allow-scroll .teamspace-layout__content {
+  padding-top: 20px;
+  min-height: 100vh;
+}
+
+.no-header.no-scroll .teamspace-layout__content {
+  padding-top: 24px;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.no-header.allow-scroll .teamspace-layout__content {
+  padding-top: 24px;
+  min-height: 100vh;
+}
+
+.no-header.no-scroll .layout-content {
+  margin-top: 0;
+  height: calc(100vh - 24px);
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+}
+
+.no-header.allow-scroll .layout-content {
+  margin-top: 0;
+  min-height: calc(100vh - 24px);
+}
+
+/* ============================================================================ */
+/* NO SIDEBAR LAYOUT - MAIN APP SIDEBAR ONLY */
+/* ============================================================================ */
+
+.no-sidebar.no-scroll .teamspace-layout__main {
+  margin-left: 0;
   width: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-/* Content animations */
-.layout-content > * {
-  animation: content-fade-in 0.6s ease-out;
+.no-sidebar.allow-scroll .teamspace-layout__main {
+  margin-left: 0;
+  width: 100%;
+  min-height: 100vh;
 }
 
-@keyframes content-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.no-sidebar.no-scroll .teamspace-layout__content {
+  max-width: var(--max-width, 1200px);
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.no-sidebar.allow-scroll .teamspace-layout__content {
+  max-width: var(--max-width, 1200px);
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 100vh;
 }
 
 /* ============================================================================ */
-/* SCROLL TO TOP BUTTON - IMPROVED */
+/* SCROLL TO TOP BUTTON - CONDITIONAL DISPLAY */
 /* ============================================================================ */
 
-.scroll-to-top-btn {
+/* ✅ DISABLED: Hide scroll to top button for no-scroll pages (Dashboard) */
+.no-scroll .scroll-to-top-btn {
+  display: none !important;
+}
+
+/* ✅ ENABLED: Show scroll to top button for scrollable pages */
+.allow-scroll .scroll-to-top-btn {
   position: fixed;
   bottom: 24px;
   right: 24px;
@@ -183,29 +408,29 @@
   transform: translateY(20px);
 }
 
-.scroll-to-top-btn.visible {
+.allow-scroll .scroll-to-top-btn.visible {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.scroll-to-top-btn:hover {
+.allow-scroll .scroll-to-top-btn:hover {
   background-color: var(--primary-dark, #3a5bd9);
   transform: translateY(-2px);
   box-shadow: var(--shadow-xl, 0 6px 16px rgba(74, 108, 247, 0.4));
 }
 
-.scroll-to-top-btn:active {
+.allow-scroll .scroll-to-top-btn:active {
   transform: translateY(0);
 }
 
-.scroll-to-top-btn:focus-visible {
+.allow-scroll .scroll-to-top-btn:focus-visible {
   outline: 2px solid var(--text-light, #e2e8f0);
   outline-offset: 2px;
 }
 
 /* ============================================================================ */
-/* STATE VARIANTS - ENHANCED */
+/* STATE VARIANTS - CONDITIONAL SCROLL VERSIONS */
 /* ============================================================================ */
 
 /* Layout visibility animation */
@@ -224,11 +449,26 @@
   }
 }
 
-/* Loading State */
-.layout-loading .layout-content {
+/* Layout mounted state */
+.layout-mounted {
+  transition: opacity 0.3s ease;
+}
+
+/* Loading State - conditional scroll */
+.no-scroll.layout-loading .layout-content {
   opacity: 0.6;
   pointer-events: none;
   position: relative;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.allow-scroll.layout-loading .layout-content {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+  min-height: 100vh;
 }
 
 .layout-loading .layout-content::before {
@@ -248,140 +488,277 @@
   100% { transform: translateX(100%); }
 }
 
-/* Error State */
-.layout-error .layout-content {
+/* Error State - conditional scroll */
+.no-scroll.layout-error .layout-content {
   filter: grayscale(0.3);
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-/* Success State (for future use) */
-.layout-success .layout-content {
+.allow-scroll.layout-error .layout-content {
+  filter: grayscale(0.3);
+  min-height: 100vh;
+}
+
+/* Success State - conditional scroll */
+.no-scroll.layout-success .layout-content {
   filter: saturate(1.1);
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.allow-scroll.layout-success .layout-content {
+  filter: saturate(1.1);
+  min-height: 100vh;
 }
 
 /* ============================================================================ */
-/* NO SIDEBAR LAYOUT - MAIN APP SIDEBAR ONLY */
-/* ============================================================================ */
-
-.no-sidebar .teamspace-layout__main {
-  margin-left: 0;
-  width: 100%;
-}
-
-.no-sidebar .teamspace-layout__content {
-  max-width: var(--max-width, 1200px);
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* ============================================================================ */
-/* RESPONSIVE DESIGN - INDUSTRY STANDARD */
+/* RESPONSIVE DESIGN - CONDITIONAL SCROLL VERSIONS */
 /* ============================================================================ */
 
 /* Large Desktop (1400px+) */
 @media (min-width: 1400px) {
-  .layout-default,
-  .layout-centered,
-  .layout-split,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-split,
+  .no-scroll.layout-dashboard {
     padding: 0 60px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-split,
+  .allow-scroll.layout-dashboard {
     padding: 0 60px;
+    min-height: 100vh;
+  }
+  
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 60px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 60px;
+    min-height: 100vh;
   }
 }
 
 /* Desktop (1200px-1399px) */
 @media (max-width: 1399px) {
-  .layout-default,
-  .layout-centered,
-  .layout-split,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-split,
+  .no-scroll.layout-dashboard {
     max-width: 1200px;
     padding: 0 40px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-split,
+  .allow-scroll.layout-dashboard {
+    max-width: 1200px;
     padding: 0 40px;
+    min-height: 100vh;
+  }
+  
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 40px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 40px;
+    min-height: 100vh;
   }
 }
 
 /* Small Desktop/Tablet (992px-1199px) */
 @media (max-width: 1199px) {
-  .layout-default,
-  .layout-centered,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-dashboard {
     max-width: 1000px;
     padding: 0 30px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .layout-split {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-dashboard {
+    max-width: 1000px;
+    padding: 0 30px;
+    min-height: 100vh;
+  }
+  
+  .no-scroll.layout-split {
     grid-template-columns: 1fr;
     max-width: 1000px;
     padding: 0 30px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-split {
+    grid-template-columns: 1fr;
+    max-width: 1000px;
     padding: 0 30px;
+    min-height: 100vh;
+  }
+  
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 30px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 30px;
+    min-height: 100vh;
   }
 }
 
 /* Tablet (768px-991px) */
 @media (max-width: 991px) {
-  .layout-default,
-  .layout-centered,
-  .layout-split,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-split,
+  .no-scroll.layout-dashboard {
     max-width: 100%;
     padding: 0 20px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-split,
+  .allow-scroll.layout-dashboard {
+    max-width: 100%;
     padding: 0 20px;
+    min-height: 100vh;
+  }
+  
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 20px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 20px;
+    min-height: 100vh;
   }
 }
 
 /* Mobile (576px-767px) */
 @media (max-width: 767px) {
-  .layout-default,
-  .layout-centered,
-  .layout-split,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-split,
+  .no-scroll.layout-dashboard {
     padding: 0 16px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-split,
+  .allow-scroll.layout-dashboard {
     padding: 0 16px;
+    min-height: 100vh;
   }
   
-  .spacing-default .layout-content {
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 16px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 16px;
+    min-height: 100vh;
+  }
+  
+  .no-scroll.spacing-default .layout-content {
     padding: 16px 0;
+    height: calc(100vh - 32px);
+    max-height: calc(100vh - 32px);
+    overflow: hidden;
   }
   
-  .no-breadcrumb .teamspace-layout__content,
-  .no-header .teamspace-layout__content {
+  .allow-scroll.spacing-default .layout-content {
+    padding: 16px 0;
+    min-height: calc(100vh - 32px);
+  }
+  
+  .no-breadcrumb.no-scroll .teamspace-layout__content,
+  .no-header.no-scroll .teamspace-layout__content {
     padding-top: 20px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .scroll-to-top-btn {
-    bottom: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
+  .no-breadcrumb.allow-scroll .teamspace-layout__content,
+  .no-header.allow-scroll .teamspace-layout__content {
+    padding-top: 20px;
+    min-height: 100vh;
   }
 }
 
 /* Small Mobile (320px-575px) */
 @media (max-width: 575px) {
-  .layout-default,
-  .layout-centered,
-  .layout-split,
-  .layout-dashboard {
+  .no-scroll.layout-default,
+  .no-scroll.layout-centered,
+  .no-scroll.layout-split,
+  .no-scroll.layout-dashboard {
     padding: 0 12px;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
   }
   
-  .no-sidebar .teamspace-layout__content {
+  .allow-scroll.layout-default,
+  .allow-scroll.layout-centered,
+  .allow-scroll.layout-split,
+  .allow-scroll.layout-dashboard {
     padding: 0 12px;
+    min-height: 100vh;
+  }
+  
+  .no-sidebar.no-scroll .teamspace-layout__content {
+    padding: 0 12px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .no-sidebar.allow-scroll .teamspace-layout__content {
+    padding: 0 12px;
+    min-height: 100vh;
   }
 }
 
@@ -389,51 +766,84 @@
 /* ACCESSIBILITY - INDUSTRY STANDARD */
 /* ============================================================================ */
 
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .team-space-layout-wrapper {
     background-color: #000000;
     color: #ffffff;
+    border: 2px solid #ffffff;
   }
   
-  .scroll-to-top-btn {
-    border: 2px solid #ffffff;
+  .no-scroll {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .allow-scroll {
+    min-height: 100vh;
   }
 }
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .scroll-to-top-btn,
   .layout-content > *,
-  .layout-visible {
+  .layout-visible,
+  .layout-mounted {
     transition: none;
     animation: none;
-  }
-  
-  .scroll-to-top-btn:hover,
-  .scroll-to-top-btn:active {
-    transform: none;
   }
   
   .layout-loading .layout-content::before {
     animation: none;
   }
+  
+  .allow-scroll .scroll-to-top-btn {
+    transition: none;
+  }
+  
+  .allow-scroll .scroll-to-top-btn:hover,
+  .allow-scroll .scroll-to-top-btn:active {
+    transform: none;
+  }
 }
 
-/* Focus Visible */
-.scroll-to-top-btn:focus-visible {
-  outline: 2px solid var(--primary-color, #4a6cf7);
-  outline-offset: 2px;
+/* Focus management */
+.team-space-layout-wrapper:focus-within {
+  outline: none;
 }
 
 /* ============================================================================ */
-/* DARK/LIGHT THEME SUPPORT */
+/* DARK/LIGHT THEME SUPPORT - CONDITIONAL SCROLL */
 /* ============================================================================ */
 
 @media (prefers-color-scheme: light) {
   .team-space-layout-wrapper {
     background-color: #f7fafc;
     color: #2d3748;
+  }
+  
+  .no-scroll {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .allow-scroll {
+    min-height: 100vh;
   }
 
   .background-card {
@@ -443,18 +853,30 @@
   }
 }
 
+/* Auto theme support */
+.theme-auto {
+  color-scheme: light dark;
+}
+
 /* ============================================================================ */
-/* PRINT STYLES - INDUSTRY STANDARD */
+/* PRINT STYLES - ALLOW SCROLLING FOR PRINT */
 /* ============================================================================ */
 
 @media print {
-  .scroll-to-top-btn {
-    display: none !important;
-  }
-
   .team-space-layout-wrapper {
     background-color: transparent !important;
     color: #000000 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .no-scroll,
+  .allow-scroll {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
   .layout-default,
@@ -463,14 +885,38 @@
   .layout-dashboard {
     max-width: 100% !important;
     padding: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
   .no-sidebar .teamspace-layout__content {
     padding: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
   .layout-content {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
     break-inside: avoid;
+  }
+
+  /* Restore scrolling for print */
+  body.dashboard-no-scroll,
+  html.dashboard-no-scroll {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  .scroll-to-top-btn {
+    display: none !important;
   }
 }
 
@@ -478,21 +924,49 @@
 /* PERFORMANCE OPTIMIZATIONS */
 /* ============================================================================ */
 
-/* GPU Acceleration for smooth animations */
-.scroll-to-top-btn {
-  will-change: transform;
-}
-
-/* Contain layout changes */
+/* Contain layout changes for better performance */
 .team-space-layout-wrapper {
   contain: layout style;
 }
 
-.layout-content {
+.no-scroll {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.allow-scroll {
+  min-height: 100vh;
+}
+
+.no-scroll .layout-content {
   contain: layout;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.allow-scroll .layout-content {
+  contain: layout;
+  min-height: calc(100vh - 48px);
 }
 
 /* Optimize font loading */
 .team-space-layout-wrapper {
   font-display: swap;
+}
+
+/* GPU acceleration for smooth transitions */
+.layout-visible,
+.layout-mounted {
+  will-change: opacity, transform;
+}
+
+/* Memory optimization */
+.layout-loading .layout-content::before {
+  will-change: transform;
+}
+
+.allow-scroll .scroll-to-top-btn {
+  will-change: transform;
 }
