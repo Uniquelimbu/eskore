@@ -8,9 +8,9 @@
   /* Background colors */
   --secondary-color: #232b3a;
   --secondary-dark: #1a202c;
-  --secondary-light: #4a5568; /* MISSING - ADD THIS */
+  --secondary-light: #4a5568;
   --bg-dark: #1a202c;
-  --card-bg: #232b3a; /* MISSING - ADD THIS */
+  --card-bg: #232b3a;
   
   /* Text colors */
   --text-light: #e2e8f0;
@@ -18,14 +18,29 @@
   
   /* Status colors */
   --danger-color: #e53e3e;
-  --danger-dark: #c53030; /* MISSING - ADD THIS */
+  --danger-dark: #c53030;
   --success-color: #48bb78;
   --warning-color: #ed8936;
 
-  /* Border and UI colors - MISSING - ADD THESE */
+  /* Border and UI colors */
   --border-color: #2d3748;
   
-  /* Sidebar widths - referenced from other files */
+  /* Sidebar widths */
   --sidebar-main-width: 260px;
-  --sidebar-collapsed-main-width: 72px; /* Updated to match global standard */
+  --sidebar-collapsed-main-width: 72px;
+  
+  /* ✅ ADD: Dashboard-specific variables */
+  --dashboard-grid-gap: 20px;
+  --navigation-card-border-radius: 12px;
+  --team-header-height: 120px;
+  
+  /* ✅ ADD: Animation variables */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* ✅ ADD: Shadow variables */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
